@@ -6,7 +6,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, CalendarDays, CheckSquare, UserCircle, LogOut, BookOpen, FileText, Plug, RefreshCw, Loader2, ChevronRight, Briefcase, Settings, Rocket } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, CheckSquare, UserCircle, LogOut, BookOpen, FileText, Plug, RefreshCw, Loader2, ChevronRight, Briefcase, Settings, Rocket, TrendingUp, BarChart3, Map, Bell } from 'lucide-react';
 import { useMyPermissions, CONSULTANT_MODULES_CONFIG } from '@/hooks/useConsultantPermissions';
 import { Button } from '@/components/ui/button';
 import { SevenLogo } from '@/components/SevenLogo';
