@@ -479,11 +479,14 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
 
 export function ContractJourneyCard({ 
   contrato, 
-  isEditing = false
+  isEditing = false,
+  expanded = false
 }: { 
   contrato: any, 
-  isEditing?: boolean
+  isEditing?: boolean,
+  expanded?: boolean
 }) {
+
   const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
