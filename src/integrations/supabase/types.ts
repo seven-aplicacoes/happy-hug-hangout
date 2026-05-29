@@ -420,6 +420,59 @@ export type Database = {
           },
         ]
       }
+      consultant_kpi_targets: {
+        Row: {
+          active: boolean | null
+          comparison_operator: string
+          consultant_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          kpi_key: string
+          target_unit: string | null
+          target_value: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          comparison_operator?: string
+          consultant_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          kpi_key: string
+          target_unit?: string | null
+          target_value: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          comparison_operator?: string
+          consultant_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          kpi_key?: string
+          target_unit?: string | null
+          target_value?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_kpi_targets_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultant_permissions: {
         Row: {
           can_create: boolean

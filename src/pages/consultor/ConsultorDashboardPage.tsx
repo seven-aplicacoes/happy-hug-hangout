@@ -10,6 +10,14 @@ import { ListRow } from '@/components/ListRow';
 import { EmptyState } from '@/components/EmptyState';
 import { PeriodFilter } from '@/components/PeriodFilter';
 import { BenchmarkBadge } from '@/components/BenchmarkBadge';
+import { useKPITargets } from '@/hooks/useKPITargets';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DataTable, Column } from '@/components/DataTable';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   labelEngajamento, calcularEngajamento, variantEngajamento,
@@ -53,6 +61,10 @@ export default function ConsultorDashboardPage() {
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
   const [periodo, setPeriodo] = useState(() => getPeriodo('30d'));
+  const { targets, isLoading: loadingTargets } = useKPITargets();
+  const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
+    isOpen: false, title: '', type: null 
+  });
 
   useEffect(() => {
     if (!loadingPermissions && !can('dashboard') && Array.isArray(permissions)) {
@@ -110,8 +122,12 @@ export default function ConsultorDashboardPage() {
     const alertasContrato = getAlertasContrato({ consultorId });
 
     const proximasReunioes = reunioes
-      .filter(r => r.meetingDate >= hojeStr && r.status === 'agendada')
-      .sort((a, b) => a.data.localeCompare(b.data) || a.startTime.localeCompare(b.startTime))
+      .filter(r => {
+        const isFuture = r.meetingDate > hojeStr;
+        const isTodayPending = r.meetingDate === hojeStr && r.startTime >= new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        return (isFuture || isTodayPending) && r.status === 'agendada';
+      })
+      .sort((a, b) => a.meetingDate.localeCompare(b.meetingDate) || a.startTime.localeCompare(b.startTime))
       .slice(0, 5);
 
     // Métricas do consultor
@@ -156,15 +172,29 @@ export default function ConsultorDashboardPage() {
     metricas
   } = stats;
 
+  const targetMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    if (targets) {
+      targets.forEach(t => {
+        map[t.kpi_key] = { esperado: t.target_value, tolerancia: 0, unidade: t.target_unit || '', descricao: t.description || '' };
+      });
+    }
+    return map;
+  }, [targets]);
+
+  const getBench = (key: string, defaultBench: any) => {
+    return targetMap[key] || defaultBench;
+  };
+
   const aplicarFiltro = (f: CarteiraFiltro) => {
-    setFiltro(f);
     if (!f) return;
-    const param =
-      f === 'critico' ? 'engajamento=critico' :
-      f === 'atencao' ? 'engajamento=atencao' :
-      f === 'encerrando' ? 'encerrando=90' :
-      'upsell=1';
-    navigate(`/consultor/clientes?${param}`);
+    const titles = {
+      critico: 'Clínicas em Crítico',
+      atencao: 'Clínicas em Atenção',
+      encerrando: 'Encerrando em 90d',
+      upsell: 'Potencial Upsell'
+    };
+    setModalList({ isOpen: true, title: titles[f], type: f });
   };
 
   const fmtData = (d: string) => d.split('-').reverse().join('/');
@@ -192,7 +222,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Reuniões realizadas</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
-              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={BENCHMARKS.reunioesRealizadas} />
+              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('reunioes_realizadas', BENCHMARKS.reunioesRealizadas)} />
             </CardContent>
           </Card>
           <Card>
@@ -212,7 +242,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Adesão CSAT</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
-              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={BENCHMARKS.csatTaxaAdesao} />
+              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adesao', BENCHMARKS.csatTaxaAdesao)} />
             </CardContent>
           </Card>
           <Card>
@@ -222,7 +252,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Nota CSAT</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
-              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={BENCHMARKS.csatNotaMedia} />
+              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_nota', BENCHMARKS.csatNotaMedia)} />
             </CardContent>
           </Card>
           <Card>
@@ -232,7 +262,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">NPS</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
-              <BenchmarkBadge valor={metricas.npsAtual} bench={BENCHMARKS.npsAtual} />
+              <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.npsAtual)} />
             </CardContent>
           </Card>
           <Card>
@@ -242,7 +272,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Encontros / cliente</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
-              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={BENCHMARKS.encontrosPorClienteAtivo} />
+              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('encontros_por_cliente', BENCHMARKS.encontrosPorClienteAtivo)} />
             </CardContent>
           </Card>
         </div>
@@ -287,8 +317,7 @@ export default function ConsultorDashboardPage() {
         </div>
 
         {/* KPIs operacionais (existentes) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard titulo="Reuniões hoje" valor={reunioesHoje.length} icon={CalendarDays} size="compact" onClick={() => navigate('/consultor/reunioes')} />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <StatCard titulo="Tarefas ativas" valor={minhasTarefas.filter(t => t.status !== 'concluida').length} icon={CheckSquare} size="compact" onClick={() => navigate('/consultor/tarefas')} />
           <StatCard titulo="Meus clientes" valor={meusClientes.length} icon={Users} size="compact" onClick={() => navigate('/consultor/clientes')} />
           <StatCard titulo="Meu perfil" valor="→" icon={UserCircle} size="compact" subtitulo="Indicadores e carteira" onClick={() => navigate('/consultor/meu-perfil')} />
