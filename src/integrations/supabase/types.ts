@@ -1864,7 +1864,7 @@ export type Database = {
           objective: string | null
           objectives: string[] | null
           order_index: number
-          phase_key: string
+          phase_key: string | null
           plan_id: string | null
           product_id: string | null
           purpose: string | null
@@ -1888,8 +1888,8 @@ export type Database = {
           name: string
           objective?: string | null
           objectives?: string[] | null
-          order_index: number
-          phase_key: string
+          order_index?: number
+          phase_key?: string | null
           plan_id?: string | null
           product_id?: string | null
           purpose?: string | null
@@ -1914,7 +1914,7 @@ export type Database = {
           objective?: string | null
           objectives?: string[] | null
           order_index?: number
-          phase_key?: string
+          phase_key?: string | null
           plan_id?: string | null
           product_id?: string | null
           purpose?: string | null
@@ -1954,6 +1954,8 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          objective: string | null
+          order_index: number | null
           product_id: string | null
           status: string | null
           updated_at: string | null
@@ -1964,6 +1966,8 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          objective?: string | null
+          order_index?: number | null
           product_id?: string | null
           status?: string | null
           updated_at?: string | null
@@ -1974,6 +1978,8 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          objective?: string | null
+          order_index?: number | null
           product_id?: string | null
           status?: string | null
           updated_at?: string | null
