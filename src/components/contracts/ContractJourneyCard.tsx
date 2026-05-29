@@ -90,10 +90,10 @@ function ProductItem({ product }: { product: any }) {
             <div className="hidden md:grid grid-cols-12 gap-4 text-[10px] font-bold text-muted-foreground uppercase py-2 px-4 bg-muted/10 border-b tracking-wider">
               <div className="md:col-span-3">Módulo da Jornada</div>
               <div className="md:col-span-2">Tipo</div>
+              <div className="md:col-span-2">Responsável</div>
               <div className="md:col-span-2">Status</div>
               <div className="md:col-span-2">Duração</div>
-              <div className="md:col-span-2">Encontros</div>
-              <div className="md:col-span-1 text-right pr-1">Resp.</div>
+              <div className="md:col-span-1 text-right pr-1">Enc.</div>
             </div>
             <div className="divide-y">
               {phases.map(phase => <PhaseRow key={phase.id} phase={phase} />)}
