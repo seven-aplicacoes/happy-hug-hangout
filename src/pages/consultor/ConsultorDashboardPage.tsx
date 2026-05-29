@@ -62,7 +62,7 @@ export default function ConsultorDashboardPage() {
 
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
-  const [periodo, setPeriodo] = useState(() => getPeriodo('30d'));
+  const [periodo, setPeriodo] = useState(() => getPeriodo('mes_atual'));
   const { mergedGoals: targets, isLoading: loadingTargets } = useConsultantGoals(consultorId);
   const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
     isOpen: false, title: '', type: null 
@@ -145,46 +145,24 @@ export default function ConsultorDashboardPage() {
   const targetMap = useMemo(() => {
     const map: Record<string, any> = {};
     if (targets && periodo) {
-      const diffTime = Math.abs(periodo.to.getTime() - periodo.from.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-      const isCustom = periodo.preset === 'custom';
-      const isWeekly = periodo.preset === '7d' || periodo.preset === '30d';
+      // Calcular número de meses no período
+      const numMonths = (periodo.to.getFullYear() - periodo.from.getFullYear()) * 12 + (periodo.to.getMonth() - periodo.from.getMonth()) + 1;
+      const isMultipleMonths = numMonths > 1;
 
       targets.forEach(t => {
         let expected = t.goal_value;
-        let isProportional = false;
         
-        // Scale count-based indicators based on the selected period
-        // Percentage/Averages (CSAT Adherence, Score, NPS) remain same regardless of period
-        const isCountBased = ['meetings_completed', 'csat_responses', 'meetings_per_client'].includes(t.indicator_key);
+        // Multiplicar indicadores de quantidade absoluta pela quantidade de meses
+        const isAbsoluteQuantity = ['meetings_completed', 'csat_responses'].includes(t.indicator_key);
         
-        if (isCountBased) {
-          if (isCustom) {
-            // Se for personalizado, proporcionalizar baseando na meta mensal (30 dias)
-            const baseValue = t.period_type === 'monthly' ? t.goal_value : t.goal_value * 4.33;
-            expected = (baseValue / 30) * diffDays;
-            isProportional = true;
-          } else if (isWeekly) {
-            // Se for filtro semanal, usar meta semanal se disponível, senão proporcionalizar mensal
-            if (t.period_type === 'monthly') {
-              expected = t.goal_value / 4; // Aproximação para semana
-            } else {
-              expected = t.goal_value;
-            }
-          } else {
-            // Se for filtro mensal, usar meta mensal se disponível, senão quadruplicar semanal
-            if (t.period_type === 'weekly') {
-              expected = t.goal_value * 4;
-            } else {
-              expected = t.goal_value;
-            }
-          }
+        if (isAbsoluteQuantity) {
+          expected = t.goal_value * numMonths;
         } else {
-            // Se não for count-based (CSAT nota, NPS, etc), a meta é a mesma
-            expected = t.goal_value;
+          // Indicadores percentuais, médias ou por cliente não multiplicam
+          expected = t.goal_value;
         }
 
-        // Arredondar valores de contagem para inteiros
+        // Formatação conforme regra
         if (['meetings_completed', 'csat_responses', 'nps'].includes(t.indicator_key)) {
           expected = Math.round(expected);
         } else {
@@ -195,10 +173,12 @@ export default function ConsultorDashboardPage() {
           esperado: expected, 
           tolerancia: 0, 
           unidade: t.indicator_key === 'csat_adherence' ? '%' : '', 
-          descricao: isProportional ? 'Meta proporcional para o período' : t.indicator_label,
+          descricao: isMultipleMonths && isAbsoluteQuantity 
+            ? `Meta para ${numMonths} meses (${t.goal_value} × ${numMonths})` 
+            : t.indicator_label,
           goal_type: t.goal_type,
           comparison_operator: t.comparison_operator,
-          is_proportional: isProportional
+          is_proportional: isMultipleMonths && isAbsoluteQuantity
         };
       });
     }

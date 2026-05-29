@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useConsultantGoals, IndicatorGoal } from '@/hooks/useConsultantGoals';
-import { Loader2, Save, Users, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Save, Users } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -38,7 +38,10 @@ export default function AdminConsultantGoalsPage() {
 
   const handleSave = async () => {
     if (!editValues.id) return;
-    await upsertConsultantGoal.mutateAsync(editValues);
+    await upsertConsultantGoal.mutateAsync({
+      ...editValues,
+      period_type: 'monthly'
+    });
     setEditingId(null);
   };
 
@@ -91,7 +94,6 @@ export default function AdminConsultantGoalsPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Indicador</TableHead>
-                          <TableHead>Meta Semanal</TableHead>
                           <TableHead>Meta Mensal</TableHead>
                           <TableHead>Meta por Cliente Ativo</TableHead>
                           <TableHead>Status</TableHead>
@@ -107,23 +109,7 @@ export default function AdminConsultantGoalsPage() {
                                 <Input 
                                   type="number" 
                                   className="w-24"
-                                  value={editValues.period_type === 'weekly' ? editValues.goal_value : ''}
-                                  placeholder="Semanal"
-                                  onChange={(e) => {
-                                    const val = parseFloat(e.target.value) || 0;
-                                    setEditValues({ ...editValues, goal_value: val, period_type: 'weekly' });
-                                  }}
-                                />
-                              ) : (
-                                goal.period_type === 'weekly' ? goal.goal_value : '-'
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {editingId === goal.id ? (
-                                <Input 
-                                  type="number" 
-                                  className="w-24"
-                                  value={editValues.period_type === 'monthly' ? editValues.goal_value : ''}
+                                  value={editValues.goal_value || ''}
                                   placeholder="Mensal"
                                   onChange={(e) => {
                                     const val = parseFloat(e.target.value) || 0;
@@ -131,7 +117,7 @@ export default function AdminConsultantGoalsPage() {
                                   }}
                                 />
                               ) : (
-                                goal.period_type === 'monthly' ? goal.goal_value : '-'
+                                goal.goal_value
                               )}
                             </TableCell>
                             <TableCell>

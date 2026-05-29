@@ -9,7 +9,7 @@ export interface IndicatorGoal {
   goal_value: number;
   goal_type: 'minimum' | 'maximum' | 'target' | 'informational';
   comparison_operator: 'greater_or_equal' | 'less_or_equal' | 'equal' | 'none';
-  period_type: 'weekly' | 'monthly';
+  period_type: 'monthly';
   is_active: boolean;
   is_per_client: boolean;
   consultant_id?: string;
