@@ -1466,13 +1466,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_documents_client"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_documents_uploaded_by"
             columns: ["uploaded_by"]
             isOneToOne: false
