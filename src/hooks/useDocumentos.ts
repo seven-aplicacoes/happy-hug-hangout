@@ -104,6 +104,7 @@ export function useDocumentos() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentos'] });
       queryClient.invalidateQueries({ queryKey: ['cliente-documentos'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-documents'] });
       toast({ title: 'Sucesso', description: 'Documento salvo com sucesso.' });
     },
   });
