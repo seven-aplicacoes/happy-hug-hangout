@@ -173,11 +173,18 @@ export function useMyPermissions() {
 
   const getFirstAllowedRoute = () => {
     if (isLoading) return null;
-    if (permissions === 'admin') return ADMIN_MODULES_CONFIG[0].path;
+    if (permissions === 'admin') return perfil === 'admin' ? ADMIN_MODULES_CONFIG[0].path : CONSULTANT_MODULES_CONFIG[0].path;
     if (!permissions || !Array.isArray(permissions)) return '/no-access';
 
-    const allowedModules = CONSULTANT_MODULES_CONFIG.filter(m => can(m.key));
+    const config = perfil === 'admin' ? ADMIN_MODULES_CONFIG : CONSULTANT_MODULES_CONFIG;
+    const allowedModules = config.filter(m => can(m.key));
+    
     if (allowedModules.length > 0) return allowedModules[0].path;
+    
+    // If not found in primary config, check the other one
+    const otherConfig = perfil === 'admin' ? CONSULTANT_MODULES_CONFIG : ADMIN_MODULES_CONFIG;
+    const allowedInOther = otherConfig.filter(m => can(m.key));
+    if (allowedInOther.length > 0) return allowedInOther[0].path;
     
     return '/no-access';
   };
