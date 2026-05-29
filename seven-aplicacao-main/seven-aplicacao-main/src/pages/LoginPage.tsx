@@ -164,8 +164,19 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full h-11" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar no sistema'}
+            <Button 
+              type="submit" 
+              className="w-full h-11 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-primary/20" 
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Entrando...
+                </div>
+              ) : (
+                'Entrar no sistema'
+              )}
             </Button>
             <Button
               type="button"
