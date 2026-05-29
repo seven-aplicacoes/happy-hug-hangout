@@ -14,7 +14,7 @@ import {
 import { DataTable, Column } from '@/components/DataTable';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useConsultantGoals, IndicatorGoal } from '@/hooks/useConsultantGoals';
-import { Loader2, Plus, RefreshCw, Save, Trash2 } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Save, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 const KPI_KEYS = [
