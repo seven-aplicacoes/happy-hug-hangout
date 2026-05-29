@@ -142,8 +142,8 @@ export function calcularMetricasConsultor(
     : getCsatRespostas(realizadas);
 
   const npsCons = npsRespostas.length > 0
-    ? npsRespostas.filter(n => (n.consultant_id || n.consultantId) === consultorId && dentro(n.date || n.data))
-    : getNpsRespostas(clientes).filter(n => n.consultantId === consultorId && dentro(n.data));
+    ? npsRespostas.filter(n => (n.consultant_id || n.consultorId) === consultorId && dentro(n.date || n.data))
+    : getNpsRespostas(clientes).filter(n => n.consultorId === consultorId && dentro(n.data));
 
   const npsConcluidos = npsCons.filter(n => n.status === 'concluida' && n.score !== undefined);
 
