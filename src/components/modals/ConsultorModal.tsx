@@ -76,7 +76,7 @@ export const ConsultorModal = ({
     hours_available: 160,
   });
 
-  const { consultantGoals, upsertConsultantGoal, defaultGoals } = useConsultantGoals(consultor?.id);
+  const { consultantGoals } = useConsultantGoals(consultor?.id);
   const [kpiTargets, setKpiTargets] = useState<Record<string, number>>({});
 
   useEffect(() => {
