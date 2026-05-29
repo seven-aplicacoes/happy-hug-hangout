@@ -190,7 +190,15 @@ export const ModalDocumento = ({ open, onClose, documento }: Props) => {
 
         <div className="space-y-1">
           <Label>Visibilidade *</Label>
-          <Select value={visibility} onValueChange={(v: any) => setVisibility(v)}>
+          <Select value={visibility} onValueChange={(v: any) => {
+            setVisibility(v);
+            // Auto-adjust type based on visibility if it's one of the module types
+            if (v === 'client') {
+              setTipo('entregavel_metodologico');
+            } else if (v === 'internal') {
+              setTipo('materiais_apoio');
+            }
+          }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="internal">Interno (Apenas Seven)</SelectItem>
