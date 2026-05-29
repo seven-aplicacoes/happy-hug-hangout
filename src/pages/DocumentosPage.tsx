@@ -189,13 +189,13 @@ export default function DocumentosPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8 p-8">
-        <Skeleton className="h-12 w-[300px]" />
+      <div className="space-y-8">
+        <PageHeader titulo="Documentos" subtitulo="Carregando..." />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Skeleton className="h-24" /><Skeleton className="h-24" />
           <Skeleton className="h-24" /><Skeleton className="h-24" />
         </div>
-        <Skeleton className="h-[400px]" />
+        <Skeleton className="h-[400px] w-full" />
       </div>
     );
   }
