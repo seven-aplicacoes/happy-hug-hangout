@@ -126,18 +126,23 @@ export function useMyPermissions() {
         .eq('id', user.id)
         .single();
       
-      if (profile?.role === 'admin') {
-        // Admins have all permissions
-        return 'admin' as const;
-      }
-
-      const { data, error } = await supabase
+      const { data: permissionData, error: permError } = await supabase
         .from('consultant_permissions')
         .select('*')
         .eq('consultant_id', user.id);
 
-      if (error) throw error;
-      return data as ConsultantPermission[];
+      if (permError) throw permError;
+
+      if (permissionData && permissionData.length > 0) {
+        return permissionData as ConsultantPermission[];
+      }
+
+      if (profile?.role === 'admin') {
+        // Admins with no specific permission records have all permissions
+        return 'admin' as const;
+      }
+
+      return [] as ConsultantPermission[];
     },
     enabled: !!authUser,
   });
