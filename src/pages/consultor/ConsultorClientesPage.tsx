@@ -72,7 +72,7 @@ export default function ConsultorClientesPage() {
   
   const isLoading = loadingClientes || loadingContratos || loadingPermissions;
   const meusClientes = clientes || [];
-  const [novoClienteOpen, setNovoClienteOpen] = useState(false);
+  
 
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
