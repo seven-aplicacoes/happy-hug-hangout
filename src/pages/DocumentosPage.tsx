@@ -60,9 +60,16 @@ export default function DocumentosPage() {
   const isLoading = authLoading || loadingClientes || isLoadingDocs || loadingPermissions;
 
   const filterConfigs: FilterConfig[] = [
+    { key: 'clienteId', label: 'Cliente', options: (clientes || []).map(c => ({ value: c.id, label: c.nomeFantasia || c.razaoSocial })) },
     { key: 'tipo', label: 'Tipo', options: Object.entries(labelTipoDoc).map(([v, l]) => ({ value: v, label: l })) },
     { key: 'status', label: 'Status', options: Object.entries(labelStatusDoc).map(([v, l]) => ({ value: v, label: l })) },
+    { key: 'visibility', label: 'Visibilidade', options: [
+      { value: 'internal', label: 'Interno' },
+      { value: 'client', label: 'Cliente' },
+      { value: 'all', label: 'Todos' },
+    ]},
   ];
+
 
   const data = useMemo(() => {
     if (!documentos) return [];
