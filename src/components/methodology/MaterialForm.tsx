@@ -74,7 +74,8 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
 
       if (file) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const cleanFileName = file.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        const fileName = `${Date.now()}_${cleanFileName}.${fileExt}`;
         const filePath = `phases/${phaseId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
