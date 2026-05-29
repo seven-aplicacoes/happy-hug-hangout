@@ -214,8 +214,8 @@ export const ModalEditarCliente = ({ open, onClose, cliente }: Props) => {
           <h3 className="text-sm font-semibold text-primary/80 border-b pb-1">Perfil e Gestão</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Segmento</Label>
-              <Input value={form.segmento} onChange={e => set('segmento', e.target.value)} />
+              <Label>Especialidade da clínica</Label>
+              <Input value={form.clinicSpecialty} onChange={e => set('clinicSpecialty', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Porte da Empresa</Label>
