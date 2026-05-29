@@ -18,6 +18,17 @@ import {
 } from "@/components/ui/select";
 import { ConsultantProfile } from "@/hooks/useConsultores";
 import { useToast } from "@/hooks/use-toast";
+import { useKPITargets, KPITarget } from "@/hooks/useKPITargets";
+import { Separator } from "@/components/ui/separator";
+
+const KPI_CONFIG = [
+  { key: 'reunioes_realizadas', label: 'Reuniões Realizadas', unit: 'un' },
+  { key: 'csat_respostas', label: 'CSAT Respostas', unit: 'un' },
+  { key: 'csat_adesao', label: 'Adesão CSAT', unit: '%' },
+  { key: 'csat_nota', label: 'Nota CSAT', unit: '/5' },
+  { key: 'nps', label: 'NPS', unit: 'pts' },
+  { key: 'encontros_por_cliente', label: 'Encontros por Cliente', unit: 'un' },
+];
 
 interface ConsultorModalProps {
   isOpen: boolean;
@@ -71,6 +82,19 @@ export const ConsultorModal = ({
     max_clients: 10,
     hours_available: 160,
   });
+
+  const { targets, upsertTarget } = useKPITargets(consultor?.id);
+  const [kpiTargets, setKpiTargets] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (targets) {
+      const targetMap: Record<string, number> = {};
+      targets.forEach(t => {
+        targetMap[t.kpi_key] = t.target_value;
+      });
+      setKpiTargets(targetMap);
+    }
+  }, [targets]);
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -149,6 +173,22 @@ export const ConsultorModal = ({
     }
 
     await onSave(formData);
+    
+    // Save KPI targets
+    if (consultor?.id) {
+      for (const [key, value] of Object.entries(kpiTargets)) {
+        const existing = targets?.find(t => t.kpi_key === key);
+        await upsertTarget.mutateAsync({
+          id: existing?.id,
+          consultant_id: consultor.id,
+          kpi_key: key,
+          target_value: value,
+          comparison_operator: 'gte',
+          active: true
+        });
+      }
+    }
+    
     onClose();
   };
 
@@ -333,6 +373,35 @@ export const ConsultorModal = ({
                 </SelectContent>
               </Select>
             </div>
+
+            {consultor && (
+              <div className="col-span-2 space-y-4 pt-4">
+                <Separator />
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">Metas de KPIs</h4>
+                  <p className="text-xs text-muted-foreground">Defina os benchmarks operacionais para este consultor.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {KPI_CONFIG.map((kpi) => (
+                    <div key={kpi.key} className="space-y-1.5">
+                      <Label htmlFor={`kpi-${kpi.key}`} className="text-xs">
+                        {kpi.label} ({kpi.unit})
+                      </Label>
+                      <Input
+                        id={`kpi-${kpi.key}`}
+                        type="number"
+                        step="0.1"
+                        value={kpiTargets[kpi.key] || ""}
+                        onChange={(e) =>
+                          setKpiTargets({ ...kpiTargets, [kpi.key]: parseFloat(e.target.value) || 0 })
+                        }
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           <DialogFooter className="pt-4">
