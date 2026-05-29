@@ -275,16 +275,18 @@ export default function ConsultorDashboardPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Star className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Nota CSAT</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
-              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_score', BENCHMARKS.csat_score)} />
-            </CardContent>
-          </Card>
+          {targetMap['csat_score'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Star className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Nota CSAT</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
+                <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_score', BENCHMARKS.csat_score)} />
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="p-4 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
