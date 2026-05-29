@@ -9,19 +9,27 @@ interface BenchmarkBadgeProps {
 }
 
 const ICONES: Record<BenchmarkStatus, LucideIcon> = {
-  acima: TrendingUp, dentro: Minus, abaixo: TrendingDown,
+  acima: TrendingUp, 
+  dentro: Minus, 
+  abaixo: TrendingDown,
+  acima_limite: TrendingUp,
+  informativo: Info
 };
 
 const CORES: Record<BenchmarkStatus, string> = {
   acima: 'text-seven-success',
   dentro: 'text-muted-foreground',
   abaixo: 'text-seven-danger',
+  acima_limite: 'text-seven-danger',
+  informativo: 'text-primary',
 };
 
 const LABELS: Record<BenchmarkStatus, string> = {
   acima: 'Acima do esperado',
   dentro: 'Dentro do esperado',
   abaixo: 'Abaixo do esperado',
+  acima_limite: 'Acima do limite',
+  informativo: 'Informativo',
 };
 
 export function BenchmarkBadge({ valor, bench, size = 'sm' }: BenchmarkBadgeProps) {
