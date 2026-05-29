@@ -10,7 +10,7 @@ import { ListRow } from '@/components/ListRow';
 import { EmptyState } from '@/components/EmptyState';
 import { PeriodFilter } from '@/components/PeriodFilter';
 import { BenchmarkBadge } from '@/components/BenchmarkBadge';
-import { useKPITargets } from '@/hooks/useKPITargets';
+import { useConsultantGoals } from '@/hooks/useConsultantGoals';
 import {
   Dialog,
   DialogContent,
