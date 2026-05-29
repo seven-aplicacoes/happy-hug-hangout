@@ -437,7 +437,7 @@ export default function MetodologiaPage() {
                    </Button>
                    <Button variant="ghost" size="sm" className="h-7 w-7" onClick={async () => {
                      try {
-                       let url = g.file_url || g.url;
+                       let url = g.file_url;
                        if (g.file_path) {
                          url = await getFileUrl(g.file_path);
                        }
@@ -484,6 +484,15 @@ export default function MetodologiaPage() {
         onClose={() => setNoteModalOpen(false)}
         note={selectedNote}
         phases={phases}
+      />
+
+      <FilePreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        fileTitle={previewMaterial?.title || ''}
+        filePath={previewMaterial?.file_path}
+        fileUrl={previewMaterial?.file_url || previewMaterial?.url}
+        fileType={previewMaterial?.file_type}
       />
     </div>
   );
