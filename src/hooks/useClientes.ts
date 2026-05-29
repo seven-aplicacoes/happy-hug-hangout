@@ -72,6 +72,7 @@ export function useClientes() {
         trade_name: newCliente.nomeFantasia,
         cnpj: newCliente.cnpj,
         segment: newCliente.segmento,
+        clinic_specialty: newCliente.clinicSpecialty,
         region: newCliente.regiao,
         consultant_id: newCliente.consultorId || (perfil === 'consultor' ? user?.consultorId : null),
         company_size: newCliente.porte,
