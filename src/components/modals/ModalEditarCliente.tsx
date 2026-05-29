@@ -55,7 +55,7 @@ export const ModalEditarCliente = ({ open, onClose, cliente }: Props) => {
         razaoSocial: cliente.razaoSocial || '',
         nomeFantasia: cliente.nomeFantasia || '',
         cnpj: cliente.cnpj || '',
-        segmento: cliente.segmento || '',
+        clinicSpecialty: cliente.clinicSpecialty || '',
         regiao: cliente.regiao || 'sudeste',
         porte: cliente.porte || 'Pequena',
         consultorId: cliente.consultorId || '',
