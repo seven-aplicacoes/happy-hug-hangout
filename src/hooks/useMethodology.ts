@@ -67,28 +67,6 @@ export function useMethodology() {
     }
   });
  
-  const { data: notes, isLoading: isLoadingNotes } = useQuery({
-    queryKey: ['methodology-notes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('methodology_notes')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map((n: any) => ({
-        id: n.id,
-        title: n.title,
-        description: n.description,
-        type: n.type,
-        status: n.status,
-        priority: n.priority,
-        related_area: n.related_area,
-        related_phase_id: n.related_phase_id,
-        created_at: n.created_at,
-        updated_at: n.updated_at
-      })) as MethodologyNote[];
-    }
-  });
 
   return { 
     phases, 
