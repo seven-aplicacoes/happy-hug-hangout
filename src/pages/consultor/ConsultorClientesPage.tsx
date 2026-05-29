@@ -227,7 +227,7 @@ export default function ConsultorClientesPage() {
     <div className="space-y-12">
       <PageHeader titulo="Meus Clientes" subtitulo="Carteira de clientes sob sua gestão">
         {can('clientes', 'create') && (
-          <Button size="sm" onClick={() => setNovoClienteOpen(true)}>
+          <Button size="sm" onClick={() => navigate('/consultor/cliente/novo')}>
             <Plus className="h-4 w-4 mr-1" />Novo Cliente
           </Button>
         )}
