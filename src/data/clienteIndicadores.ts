@@ -135,10 +135,11 @@ export function calcularMetricasConsultor(
 
   const reunsCons = reunioes.filter(r => r.consultorId === consultorId);
   const realizadas = reunsCons.filter(r => r.status === 'realizada' && dentro(r.meetingDate));
+  const realizadaIds = new Set(realizadas.map(r => r.id));
   
   // Usar dados reais se fornecidos, caso contrário mock (para compatibilidade temporária)
   const csats = csatRespostas.length > 0 
-    ? csatRespostas.filter(c => dentro(c.date))
+    ? csatRespostas.filter(c => realizadaIds.has(c.meeting_id) && dentro(c.date))
     : getCsatRespostas(realizadas);
 
   const npsCons = npsRespostas.length > 0
