@@ -239,7 +239,7 @@ function ProductItem({ product, isEditing: isParentEditing }: { product: any, is
       </div>
       
       <div className="p-0">
-        {isLoading ? (
+      {isLoadingProducts ? (
           <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" /> <span className="text-sm text-muted-foreground">Carregando jornada...</span></div>
         ) : localPhases && localPhases.length > 0 ? (
           <div className="bg-white">
@@ -295,7 +295,7 @@ interface ContractJourneyCardProps {
 }
 
 export const ContractJourneyCard = ({ contrato, expanded = false, isEditing = false }: ContractJourneyCardProps) => {
-  const { products, isLoading } = useContractProducts(contrato.id);
+  const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
   
   const content = (
     <div className="pt-6 border-t mt-1">
