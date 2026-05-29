@@ -67,6 +67,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/login" replace />} />
              <Route path="/login" element={<LoginPage />} />
              <Route path="/selecionar-ambiente" element={<Navigate to="/admin/dashboard" replace />} />
+             <Route path="/no-access" element={<NoAccess />} />
             <Route path="/portal" element={<PortalClientePage />} />
 
             <Route path="/admin" element={<AdminLayout />}>
