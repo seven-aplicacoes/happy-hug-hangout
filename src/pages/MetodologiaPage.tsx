@@ -16,8 +16,8 @@ import {
 import { labelTipoMaterial, labelCategoria } from '@/data/metodologia';
 import { toast } from '@/hooks/use-toast';
 import { useMethodologyCRUD } from '@/hooks/useMethodologyCRUD';
-import { ModalMethodologyNote } from '@/components/modals/ModalMethodologyNote';
-import { MethodologyNote } from '@/types';
+// ... keep existing code
+
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PhaseForm } from '@/components/methodology/PhaseForm';
