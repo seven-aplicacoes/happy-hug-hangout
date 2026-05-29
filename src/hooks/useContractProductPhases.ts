@@ -41,7 +41,8 @@ export function useContractProductPhases(contractProductId?: string) {
         internalNotes: p.internal_notes,
         clientNotes: p.client_notes,
         clientVisible: p.client_visible,
-      })) as (ContractProductPhase & { responsibleConsultantNome?: string })[];
+        meetingsScheduled: p.meetingsScheduled,
+      })) as (ContractProductPhase & { responsibleConsultantNome?: string; meetingsScheduled?: number })[];
     },
     enabled: !!contractProductId,
   });
