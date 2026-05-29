@@ -1366,6 +1366,59 @@ export type Database = {
           },
         ]
       }
+      methodology_notes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          priority: string | null
+          related_area: string | null
+          related_phase_id: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          priority?: string | null
+          related_area?: string | null
+          related_phase_id?: string | null
+          status?: string
+          title: string
+          type: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          priority?: string | null
+          related_area?: string | null
+          related_phase_id?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_notes_related_phase_id_fkey"
+            columns: ["related_phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       methodology_phases: {
         Row: {
           alerts: string[] | null
