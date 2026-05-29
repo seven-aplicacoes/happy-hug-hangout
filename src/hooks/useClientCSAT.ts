@@ -7,9 +7,14 @@ export interface MeetingCSAT {
   id: string;
   meeting_id: string;
   client_id: string;
-  contract_id: string;
-  rating: number;
-  feedback?: string;
+  contract_id?: string;
+  consultant_id?: string;
+  rating_meeting?: number;
+  rating_consultant?: number;
+  rating_clarity?: number;
+  nps_score?: number;
+  comment?: string;
+  submitted_at: string;
   created_at: string;
 }
 
@@ -32,10 +37,13 @@ export function useClientCSAT(clientId?: string) {
   });
 
   const submitCSAT = useMutation({
-    mutationFn: async (csat: Omit<MeetingCSAT, 'id' | 'created_at'>) => {
+    mutationFn: async (csat: Omit<MeetingCSAT, 'id' | 'created_at' | 'submitted_at'>) => {
       const { data, error } = await supabase
         .from('meeting_csat_responses')
-        .insert(csat)
+        .insert({
+          ...csat,
+          submitted_at: new Date().toISOString()
+        })
         .select()
         .single();
       if (error) throw error;
