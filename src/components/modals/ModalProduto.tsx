@@ -164,7 +164,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       name, 
       description, 
       category, 
-      status,
+      status: status === 'ativo' ? 'active' : 'inactive',
       consultant_hours: cHoursTotal || undefined,
       silvane_hours: sHoursTotal || undefined
     };
