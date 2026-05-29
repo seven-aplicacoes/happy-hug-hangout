@@ -43,7 +43,7 @@ import type { Documento } from '@/types';
 
 export default function DocumentosPage() {
   const navigate = useNavigate();
-  const { perfil } = useAuth();
+  const { perfil, isLoading: authLoading } = useAuth();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<Documento | null>(null);
