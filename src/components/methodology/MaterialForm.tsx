@@ -40,6 +40,7 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
     url: material?.url || '',
     is_essential: material?.is_essential || false,
     status: material?.status || 'active',
+    type: material?.type || 'pdf',
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
