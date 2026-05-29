@@ -304,49 +304,11 @@ export default function ConsultorDashboardPage() {
       </section>
       )}
 
-      {/* KPIs principais */}
-      <section className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            titulo="Clínicas em Crítico"
-            valor={criticos.length}
-            icon={Flame}
-            variant={avaliarBenchmark(criticos.length, getBench('critical_clinics', BENCHMARKS.critical_clinics)) === 'acima_limite' ? 'danger' : 'success'}
-            subtitulo="Sem reunião >15 dias"
-            onClick={() => aplicarFiltro('critico')}
-          />
-          <StatCard
-            titulo="Clínicas em Atenção"
-            valor={atencao.length}
-            icon={AlertTriangle}
-            variant={avaliarBenchmark(atencao.length, getBench('attention_clinics', BENCHMARKS.attention_clinics)) === 'acima_limite' ? 'danger' : 'success'}
-            subtitulo="9–15 dias sem reunião"
-            onClick={() => aplicarFiltro('atencao')}
-          />
-          <StatCard
-            titulo="Encerrando em 90d"
-            valor={contratosEncerrando.length}
-            icon={FileClock}
-            variant={avaliarBenchmark(contratosEncerrando.length, getBench('contracts_ending_90_days', { esperado: 0, tolerancia: 0, goal_type: 'informational', comparison_operator: 'none', descricao: '' })) === 'acima_limite' ? 'warning' : 'default'}
-            subtitulo="Contratos próximos do fim"
-            onClick={() => aplicarFiltro('encerrando')}
-          />
-          <StatCard
-            titulo="Potencial Upsell"
-            valor={upsell.length}
-            icon={Sparkles}
-            variant={avaliarBenchmark(upsell.length, getBench('upsell_potential', BENCHMARKS.upsell_potential)) === 'abaixo' ? 'warning' : 'success'}
-            subtitulo="Oportunidades identificadas"
-            onClick={() => aplicarFiltro('upsell')}
-          />
-        </div>
-
-        {/* KPIs operacionais (existentes) */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard titulo="Tarefas ativas" valor={minhasTarefas.filter(t => t.status !== 'concluida').length} icon={CheckSquare} size="compact" onClick={() => navigate('/consultor/tarefas')} />
-          <StatCard titulo="Meus clientes" valor={meusClientes.length} icon={Users} size="compact" onClick={() => navigate('/consultor/clientes')} />
-          <StatCard titulo="Meu perfil" valor="→" icon={UserCircle} size="compact" subtitulo="Indicadores e carteira" onClick={() => navigate('/consultor/meu-perfil')} />
-        </div>
+      {/* Atalhos rápidos */}
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard titulo="Tarefas ativas" valor={minhasTarefas.filter(t => t.status !== 'concluida').length} icon={CheckSquare} size="compact" onClick={() => navigate('/consultor/tarefas')} />
+        <StatCard titulo="Meus clientes" valor={meusClientes.length} icon={Users} size="compact" onClick={() => navigate('/consultor/clientes')} />
+        <StatCard titulo="Meu perfil" valor="→" icon={UserCircle} size="compact" subtitulo="Indicadores e carteira" onClick={() => navigate('/consultor/meu-perfil')} />
       </section>
 
       {/* Alertas de Contrato */}
