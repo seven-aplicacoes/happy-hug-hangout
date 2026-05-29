@@ -21,10 +21,10 @@ import { DataTable, Column } from '@/components/DataTable';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   labelEngajamento, calcularEngajamento, variantEngajamento,
-  diasDesdeUltimaReuniao, labelStatus, avaliarBenchmark
+  diasDesdeUltimaReuniao, labelStatus,
 } from '@/data/mockData';
 import { getAlertasContrato, labelAlertaContrato } from '@/data/contratoExtras';
-import { getPeriodo, calcularMetricasConsultor, BENCHMARKS } from '@/data/clienteIndicadores';
+import { getPeriodo, calcularMetricasConsultor, BENCHMARKS, avaliarBenchmark } from '@/data/clienteIndicadores';
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { useClientes } from '@/hooks/useClientes';
