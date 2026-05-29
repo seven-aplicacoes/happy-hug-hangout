@@ -263,16 +263,18 @@ export default function ConsultorDashboardPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Gauge className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Adesão CSAT</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
-              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adherence', BENCHMARKS.csat_adherence)} />
-            </CardContent>
-          </Card>
+          {targetMap['csat_adherence'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Gauge className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Adesão CSAT</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
+                <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adherence', BENCHMARKS.csat_adherence)} />
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="p-4 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
