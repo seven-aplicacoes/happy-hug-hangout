@@ -438,7 +438,7 @@ export default function ClienteDetalhePage() {
         ) : contratosCliente.length > 0 ? (
           <Accordion type="single" collapsible className="w-full space-y-4">
             {contratosCliente.map(contrato => (
-              <ContractAccordionItem key={contrato.id} contrato={contrato} />
+              <ContractJourneyCard key={contrato.id} contrato={contrato} />
             ))}
           </Accordion>
         ) : (
