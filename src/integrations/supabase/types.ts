@@ -476,6 +476,201 @@ export type Database = {
           },
         ]
       }
+      contract_methodology_deliverables: {
+        Row: {
+          contract_meeting_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          contract_meeting_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          contract_meeting_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_methodology_deliverables_contract_meeting_id_fkey"
+            columns: ["contract_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_methodology_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_methodology_meetings: {
+        Row: {
+          area: string | null
+          completed_at: string | null
+          contract_module_id: string | null
+          created_at: string | null
+          duration_development: number | null
+          duration_meeting: number | null
+          id: string
+          meeting_number: number | null
+          notes: string | null
+          objective: string | null
+          order_index: number | null
+          scheduled_at: string | null
+          status: string | null
+          theme: string | null
+          title: string
+          what_is_structured: string | null
+        }
+        Insert: {
+          area?: string | null
+          completed_at?: string | null
+          contract_module_id?: string | null
+          created_at?: string | null
+          duration_development?: number | null
+          duration_meeting?: number | null
+          id?: string
+          meeting_number?: number | null
+          notes?: string | null
+          objective?: string | null
+          order_index?: number | null
+          scheduled_at?: string | null
+          status?: string | null
+          theme?: string | null
+          title: string
+          what_is_structured?: string | null
+        }
+        Update: {
+          area?: string | null
+          completed_at?: string | null
+          contract_module_id?: string | null
+          created_at?: string | null
+          duration_development?: number | null
+          duration_meeting?: number | null
+          id?: string
+          meeting_number?: number | null
+          notes?: string | null
+          objective?: string | null
+          order_index?: number | null
+          scheduled_at?: string | null
+          status?: string | null
+          theme?: string | null
+          title?: string
+          what_is_structured?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_methodology_meetings_contract_module_id_fkey"
+            columns: ["contract_module_id"]
+            isOneToOne: false
+            referencedRelation: "contract_methodology_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_methodology_modules: {
+        Row: {
+          contract_phase_id: string | null
+          created_at: string | null
+          description: string | null
+          estimated_hours: number | null
+          estimated_meetings: number | null
+          id: string
+          name: string
+          objective: string | null
+          order_index: number | null
+          responsible_role: string | null
+          status: string | null
+        }
+        Insert: {
+          contract_phase_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_hours?: number | null
+          estimated_meetings?: number | null
+          id?: string
+          name: string
+          objective?: string | null
+          order_index?: number | null
+          responsible_role?: string | null
+          status?: string | null
+        }
+        Update: {
+          contract_phase_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_hours?: number | null
+          estimated_meetings?: number | null
+          id?: string
+          name?: string
+          objective?: string | null
+          order_index?: number | null
+          responsible_role?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_methodology_modules_contract_phase_id_fkey"
+            columns: ["contract_phase_id"]
+            isOneToOne: false
+            referencedRelation: "contract_methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_methodology_phases: {
+        Row: {
+          contract_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          objective: string | null
+          order_index: number | null
+          original_phase_id: string | null
+          result_summary: string | null
+          status: string | null
+          strategic_name: string | null
+          subtitle: string | null
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          objective?: string | null
+          order_index?: number | null
+          original_phase_id?: string | null
+          result_summary?: string | null
+          status?: string | null
+          strategic_name?: string | null
+          subtitle?: string | null
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          objective?: string | null
+          order_index?: number | null
+          original_phase_id?: string | null
+          result_summary?: string | null
+          status?: string | null
+          strategic_name?: string | null
+          subtitle?: string | null
+        }
+        Relationships: []
+      }
       contract_product_phase_consultants: {
         Row: {
           assigned_by: string | null
@@ -843,6 +1038,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_links: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          document_id: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          is_required: boolean | null
+          order_index: number | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          document_id?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_required?: boolean | null
+          order_index?: number | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          document_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_required?: boolean | null
+          order_index?: number | null
+          title?: string | null
+        }
+        Relationships: []
       }
       documents: {
         Row: {
@@ -1461,23 +1692,186 @@ export type Database = {
         }
         Relationships: []
       }
+      methodology_plan_deliverables: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_required: boolean | null
+          meeting_id: string | null
+          order_index: number | null
+          title: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_required?: boolean | null
+          meeting_id?: string | null
+          order_index?: number | null
+          title: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_required?: boolean | null
+          meeting_id?: string | null
+          order_index?: number | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_plan_deliverables_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_plan_meetings: {
+        Row: {
+          area: string | null
+          created_at: string | null
+          duration_development: number | null
+          duration_meeting: number | null
+          id: string
+          meeting_number: number | null
+          module_id: string | null
+          objective: string | null
+          order_index: number | null
+          status: string | null
+          theme: string | null
+          title: string
+          updated_at: string | null
+          what_is_structured: string | null
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string | null
+          duration_development?: number | null
+          duration_meeting?: number | null
+          id?: string
+          meeting_number?: number | null
+          module_id?: string | null
+          objective?: string | null
+          order_index?: number | null
+          status?: string | null
+          theme?: string | null
+          title: string
+          updated_at?: string | null
+          what_is_structured?: string | null
+        }
+        Update: {
+          area?: string | null
+          created_at?: string | null
+          duration_development?: number | null
+          duration_meeting?: number | null
+          id?: string
+          meeting_number?: number | null
+          module_id?: string | null
+          objective?: string | null
+          order_index?: number | null
+          status?: string | null
+          theme?: string | null
+          title?: string
+          updated_at?: string | null
+          what_is_structured?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_plan_meetings_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_plan_modules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          estimated_hours: number | null
+          estimated_meetings: number | null
+          id: string
+          name: string
+          objective: string | null
+          order_index: number | null
+          phase_id: string | null
+          responsible_role: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          estimated_hours?: number | null
+          estimated_meetings?: number | null
+          id?: string
+          name: string
+          objective?: string | null
+          order_index?: number | null
+          phase_id?: string | null
+          responsible_role?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          estimated_hours?: number | null
+          estimated_meetings?: number | null
+          id?: string
+          name?: string
+          objective?: string | null
+          order_index?: number | null
+          phase_id?: string | null
+          responsible_role?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_plan_modules_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       methodology_plan_phases: {
         Row: {
           alerts: string[] | null
           average_duration: string | null
           created_at: string | null
           deliverables: string[] | null
+          description: string | null
           duration_minutes: number | null
           executor_type: string | null
           id: string
           meetings_count: number | null
+          methodology_plan_id: string | null
           name: string
+          objective: string | null
           objectives: string[] | null
           order_index: number
-          phase_key: string
+          phase_key: string | null
           plan_id: string | null
           product_id: string | null
           purpose: string | null
+          result_summary: string | null
+          status: string | null
+          strategic_name: string | null
+          subtitle: string | null
           tools: string[] | null
         }
         Insert: {
@@ -1485,17 +1879,24 @@ export type Database = {
           average_duration?: string | null
           created_at?: string | null
           deliverables?: string[] | null
+          description?: string | null
           duration_minutes?: number | null
           executor_type?: string | null
           id?: string
           meetings_count?: number | null
+          methodology_plan_id?: string | null
           name: string
+          objective?: string | null
           objectives?: string[] | null
-          order_index: number
-          phase_key: string
+          order_index?: number
+          phase_key?: string | null
           plan_id?: string | null
           product_id?: string | null
           purpose?: string | null
+          result_summary?: string | null
+          status?: string | null
+          strategic_name?: string | null
+          subtitle?: string | null
           tools?: string[] | null
         }
         Update: {
@@ -1503,20 +1904,34 @@ export type Database = {
           average_duration?: string | null
           created_at?: string | null
           deliverables?: string[] | null
+          description?: string | null
           duration_minutes?: number | null
           executor_type?: string | null
           id?: string
           meetings_count?: number | null
+          methodology_plan_id?: string | null
           name?: string
+          objective?: string | null
           objectives?: string[] | null
           order_index?: number
-          phase_key?: string
+          phase_key?: string | null
           plan_id?: string | null
           product_id?: string | null
           purpose?: string | null
+          result_summary?: string | null
+          status?: string | null
+          strategic_name?: string | null
+          subtitle?: string | null
           tools?: string[] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "methodology_plan_phases_methodology_plan_id_fkey"
+            columns: ["methodology_plan_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "methodology_plan_phases_plan_id_fkey"
             columns: ["plan_id"]
@@ -1539,6 +1954,8 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          objective: string | null
+          order_index: number | null
           product_id: string | null
           status: string | null
           updated_at: string | null
@@ -1549,6 +1966,8 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          objective?: string | null
+          order_index?: number | null
           product_id?: string | null
           status?: string | null
           updated_at?: string | null
@@ -1559,6 +1978,8 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          objective?: string | null
+          order_index?: number | null
           product_id?: string | null
           status?: string | null
           updated_at?: string | null
@@ -1701,7 +2122,9 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          service_track_position: number | null
           silvane_hours: number | null
+          slug: string | null
           status: string | null
           updated_at: string | null
           updated_by: string | null
@@ -1714,7 +2137,9 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          service_track_position?: number | null
           silvane_hours?: number | null
+          slug?: string | null
           status?: string | null
           updated_at?: string | null
           updated_by?: string | null
@@ -1727,7 +2152,9 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          service_track_position?: number | null
           silvane_hours?: number | null
+          slug?: string | null
           status?: string | null
           updated_at?: string | null
           updated_by?: string | null
