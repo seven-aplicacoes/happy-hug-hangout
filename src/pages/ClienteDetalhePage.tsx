@@ -20,9 +20,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { ClientDocumentsTab } from '@/components/clients/ClientDocumentsTab';
+import { TimelineCard } from '@/components/TimelineCard';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
