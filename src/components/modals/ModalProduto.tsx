@@ -160,11 +160,11 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       return;
     }
 
-    const data = { 
+    const data: any = { 
       name, 
       description, 
       category, 
-      status,
+      status: status === 'ativo' ? 'active' : 'inactive',
       consultant_hours: cHoursTotal || undefined,
       silvane_hours: sHoursTotal || undefined
     };
@@ -172,10 +172,10 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
     try {
       let productId = produto?.id;
       if (produto) {
-        await updateProduto.mutateAsync({ ...data, id: produto.id });
+        await updateProduto.mutateAsync({ ...data, id: produto.id } as any);
       } else {
-        const savedProd = await createProduto.mutateAsync(data);
-        productId = (savedProd as any)?.[0]?.id;
+        const savedProd = await createProduto.mutateAsync(data as any);
+        productId = (savedProd as any)?.[0]?.id || (Array.isArray(savedProd) ? savedProd[0]?.id : (savedProd as any)?.id);
       }
 
       if (productId) {
@@ -225,6 +225,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
         }
 
         queryClient.invalidateQueries({ queryKey: ['methodology-plan-phases'] });
+        queryClient.invalidateQueries({ queryKey: ['produtos'] });
       }
 
       toast({ title: 'Sucesso', description: 'Produto e etapas salvos com sucesso.' });

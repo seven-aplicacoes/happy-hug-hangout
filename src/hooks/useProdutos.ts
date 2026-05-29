@@ -38,7 +38,7 @@ export function useProdutos() {
 
   const updateProduto = useMutation({
     mutationFn: async (produto: Partial<Product> & { id: string }) => {
-      const { data, error } = await supabase.from('products').update(produto as any).eq('id', produto.id);
+      const { data, error } = await supabase.from('products').update(produto as any).eq('id', produto.id).select();
       if (error) throw error;
       return data;
     },
