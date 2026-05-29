@@ -222,7 +222,11 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       onClose();
     } catch (error: any) {
       console.error('Error saving product:', error);
-      toast({ variant: "destructive", title: "Erro ao salvar", description: error.message });
+      let errorMessage = error.message;
+      if (errorMessage.includes('methodology_plan_phases_executor_type_check')) {
+        errorMessage = "O responsável do módulo possui um valor inválido. Verifique o campo Responsável.";
+      }
+      toast({ variant: "destructive", title: "Erro ao salvar", description: errorMessage });
     }
   };
 
@@ -307,8 +311,6 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
                         <SelectContent>
                           <SelectItem value="consultor">Consultor</SelectItem>
                           <SelectItem value="silvane">Silvane</SelectItem>
-                          <SelectItem value="cliente">Cliente</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
