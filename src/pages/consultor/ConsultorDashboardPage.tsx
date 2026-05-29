@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { PeriodFilter } from '@/components/PeriodFilter';
 import { BenchmarkBadge } from '@/components/BenchmarkBadge';
 import { useConsultantGoals } from '@/hooks/useConsultantGoals';
+import { useSurveys } from '@/hooks/useSurveys';
 import {
   Dialog,
   DialogContent,
