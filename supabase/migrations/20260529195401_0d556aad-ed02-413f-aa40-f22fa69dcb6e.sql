@@ -1,0 +1,1 @@
+ALTER TABLE public.documents DROP CONSTRAINT IF EXISTS fk_documents_client;
