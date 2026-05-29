@@ -41,7 +41,7 @@ export function useDocumentos() {
         status: d.status,
         visibility: d.visibility,
         autor: d.profile?.full_name || 'Desconhecido',
-        feedbacks: [],
+        feedbacks: d.feedbacks || [],
       })) as Documento[];
     },
   });
