@@ -4,7 +4,7 @@ import { DataTable, Column } from '@/components/DataTable';
 import { StatusTag } from '@/components/StatusTag';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Download, Trash2, FileText, ExternalLink, MoreVertical } from 'lucide-react';
+import { Plus, Download, Trash2, FileText, ExternalLink, MoreVertical, Loader2 } from 'lucide-react';
 import { labelTipoDoc, labelStatusDoc, variantStatusDoc } from '@/data/documentos';
 import { ModalDocumento } from '@/components/modals/ModalDocumento';
 import { useAuth } from '@/contexts/AuthContext';
@@ -99,6 +99,15 @@ export const ClientDocumentsTab = ({ clientId }: ClientDocumentsTabProps) => {
     }
   ];
 
+  if (isLoading) {
+    return (
+      <div className="py-20 text-center">
+        <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary/40" />
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Carregando documentos...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
@@ -116,7 +125,6 @@ export const ClientDocumentsTab = ({ clientId }: ClientDocumentsTabProps) => {
           <DataTable 
             data={clientDocs} 
             columns={columns} 
-            isLoading={isLoading}
             emptyMessage="Nenhum documento encontrado para este cliente."
           />
         </CardContent>
