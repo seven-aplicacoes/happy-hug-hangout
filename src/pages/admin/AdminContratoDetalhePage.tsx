@@ -4,23 +4,50 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   ArrowLeft, Briefcase, Calendar, DollarSign, Users, 
-  ExternalLink, Loader2, Package, ListChecks, CheckCircle2 
+  ExternalLink, Loader2, Package, ListChecks, CheckCircle2,
+  Pencil, Save, X
 } from 'lucide-react';
 import { useContratos } from '@/hooks/useContratos';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
-import { labelStatus } from '@/data/mockData';
+import { labelStatus, labelRisco } from '@/data/mockData';
 import { StatusTag } from '@/components/StatusTag';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useClientes } from '@/hooks/useClientes';
+import { useConsultores } from '@/hooks/useConsultores';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminContratoDetalhePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { contratos, isLoading: loadingContratos } = useContratos();
+  const { toast } = useToast();
+  const { contratos, isLoading: loadingContratos, upsertContrato } = useContratos();
+  const { clientes } = useClientes();
+  const { consultores } = useConsultores();
   
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<any>(null);
+
   const contrato = useMemo(() => {
     return contratos?.find(c => c.id === id);
   }, [contratos, id]);
+
+  useEffect(() => {
+    if (contrato && !isEditing) {
+      setFormData({
+        tipo: contrato.tipo,
+        status: contrato.status,
+        valor: contrato.valor,
+        dataInicio: contrato.dataInicio,
+        dataFim: contrato.dataFim,
+        consultorId: contrato.consultorId,
+        risco: contrato.risco,
+        clienteId: contrato.clienteId
+      });
+    }
+  }, [contrato, isEditing]);
 
   const { products, isLoading: loadingProducts } = useContractProducts(id || '');
 
@@ -28,9 +55,21 @@ export default function AdminContratoDetalhePage() {
     if (!products) return { totalProducts: 0, totalModules: 0 };
     return {
       totalProducts: products.length,
-      totalModules: 0 // Simplificado para evitar erro TS, dados reais vêm via subcomponentes
+      totalModules: 0
     };
   }, [products]);
+
+  const handleSave = async () => {
+    try {
+      await upsertContrato.mutateAsync({
+        id: contrato?.id,
+        ...formData
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (loadingContratos) {
     return (
@@ -70,24 +109,74 @@ export default function AdminContratoDetalhePage() {
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-black text-foreground tracking-tight">{contrato.tipo}</h1>
-                <StatusTag label={labelStatus[contrato.status] || contrato.status} />
+                {isEditing ? (
+                  <Input 
+                    value={formData?.tipo} 
+                    onChange={e => setFormData({...formData, tipo: e.target.value})}
+                    className="text-2xl font-black h-10 w-[400px]"
+                  />
+                ) : (
+                  <h1 className="text-3xl font-black text-foreground tracking-tight">{contrato.tipo}</h1>
+                )}
+                {isEditing ? (
+                  <Select value={formData?.status} onValueChange={v => setFormData({...formData, status: v})}>
+                    <SelectTrigger className="w-[180px] h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(labelStatus).map(([val, label]) => (
+                        <SelectItem key={val} value={val}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <StatusTag label={labelStatus[contrato.status] || contrato.status} />
+                )}
               </div>
               <div className="flex items-center gap-2 text-muted-foreground font-medium">
                 <span>Cliente:</span>
-                <button 
-                  onClick={() => navigate(`/admin/cliente/${contrato.clienteId}`)}
-                  className="text-primary hover:underline flex items-center gap-1"
-                >
-                  {contrato.clienteNome}
-                  <ExternalLink className="h-3 w-3" />
-                </button>
+                {isEditing ? (
+                  <Select value={formData?.clienteId} onValueChange={v => setFormData({...formData, clienteId: v})}>
+                    <SelectTrigger className="w-[300px] h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientes?.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <button 
+                    onClick={() => navigate(`/admin/cliente/${contrato.clienteId}`)}
+                    className="text-primary hover:underline flex items-center gap-1"
+                  >
+                    {contrato.clienteNome}
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-             {/* Future: Add Edit button that opens ModalContrato */}
+            {isEditing ? (
+              <>
+                <Button variant="outline" onClick={() => setIsEditing(false)} className="gap-2">
+                  <X className="h-4 w-4" />
+                  Cancelar
+                </Button>
+                <Button onClick={handleSave} className="gap-2">
+                  <Save className="h-4 w-4" />
+                  Salvar Alterações
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
+                <Pencil className="h-4 w-4" />
+                Editar Contrato
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -101,7 +190,19 @@ export default function AdminContratoDetalhePage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Valor Total</p>
-              <p className="text-lg font-black tabular-nums">R$ {contrato.valor.toLocaleString('pt-BR')}</p>
+              {isEditing ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground">R$</span>
+                  <Input 
+                    type="number" 
+                    value={formData?.valor} 
+                    onChange={e => setFormData({...formData, valor: Number(e.target.value)})}
+                    className="h-8 font-black tabular-nums"
+                  />
+                </div>
+              ) : (
+                <p className="text-lg font-black tabular-nums">R$ {contrato.valor.toLocaleString('pt-BR')}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -113,9 +214,26 @@ export default function AdminContratoDetalhePage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vigência</p>
-              <p className="text-sm font-bold">
-                {new Date(contrato.dataInicio).toLocaleDateString()} - {new Date(contrato.dataFim).toLocaleDateString()}
-              </p>
+              {isEditing ? (
+                <div className="flex flex-col gap-1">
+                  <Input 
+                    type="date" 
+                    value={formData?.dataInicio} 
+                    onChange={e => setFormData({...formData, dataInicio: e.target.value})}
+                    className="h-7 text-[10px]"
+                  />
+                  <Input 
+                    type="date" 
+                    value={formData?.dataFim} 
+                    onChange={e => setFormData({...formData, dataFim: e.target.value})}
+                    className="h-7 text-[10px]"
+                  />
+                </div>
+              ) : (
+                <p className="text-sm font-bold">
+                  {new Date(contrato.dataInicio).toLocaleDateString()} - {new Date(contrato.dataFim).toLocaleDateString()}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -139,7 +257,20 @@ export default function AdminContratoDetalhePage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Responsável</p>
-              <p className="text-sm font-bold truncate max-w-[150px]">{contrato.consultorNome}</p>
+              {isEditing ? (
+                <Select value={formData?.consultorId} onValueChange={v => setFormData({...formData, consultorId: v})}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {consultores?.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm font-bold truncate max-w-[150px]">{contrato.consultorNome}</p>
+              )}
             </div>
           </CardContent>
         </Card>

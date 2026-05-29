@@ -16,9 +16,9 @@ export function useContratos() {
         .from('contracts')
         .select(`
           *,
-          clients (trade_name),
-          profiles (full_name),
-          products (name)
+          clients (id, trade_name, corporate_name),
+          profiles (id, full_name),
+          products (id, name, description, category, consultant_hours, silvane_hours)
         `);
 
       if (perfil === 'consultor' && user?.consultorId) {
@@ -31,7 +31,7 @@ export function useContratos() {
       return data.map((c: any) => ({
         id: c.id,
         clienteId: c.client_id,
-        clienteNome: c.clients?.trade_name || 'Desconhecido',
+        clienteNome: c.clients?.trade_name || c.clients?.corporate_name || 'Desconhecido',
         tipo: c.type || c.products?.name || 'Consultoria',
         valor: Number(c.value) || 0,
         dataInicio: c.start_date,

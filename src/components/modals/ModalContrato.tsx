@@ -33,7 +33,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   const { consultores } = useConsultores();
   const { produtos } = useProdutos();
   const { planPhases } = useMethodology();
-  const { products: existingProducts, upsertContractProducts } = useContractProducts(contrato?.id);
+  const { products: existingProducts } = useContractProducts(contrato?.id);
 
   const [clienteId, setClienteId] = useState('');
   const [contractNumber, setContractNumber] = useState('');
@@ -341,7 +341,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     try {
       console.log('Saving contract payload:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
       
-      const contractData: Partial<Contrato> = {
+      const contractData: any = {
         id: contrato?.id || undefined,
         clienteId,
         contractNumber,
@@ -352,10 +352,14 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         status,
         risco,
         consultorId,
+        productId: contractProducts.length > 0 ? contractProducts[0].productId : undefined,
       };
       
       const savedContractResult = await upsertContrato.mutateAsync(contractData);
-      const contractId = contrato?.id || (savedContractResult as any)?.[0]?.id;
+      
+      // Since upsert might return multiple or just one, let's be careful
+      const savedContract = Array.isArray(savedContractResult) ? savedContractResult[0] : savedContractResult;
+      const contractId = contrato?.id || savedContract?.id;
 
       if (!contractId) throw new Error('Falha ao obter ID do contrato salvo.');
 
