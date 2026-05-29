@@ -20,6 +20,7 @@ import { useConsultores } from '@/hooks/useConsultores';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
+import { ModalDocumento } from '@/components/modals/ModalDocumento';
 import { cn } from '@/lib/utils';
 import type { ContractModuleMeeting, Documento } from '@/types';
 
