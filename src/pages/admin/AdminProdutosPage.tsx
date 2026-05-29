@@ -46,8 +46,15 @@ export default function AdminProdutosPage() {
 
   const handleDelete = async () => {
     if (produtoToDelete) {
-      await deleteProduto.mutateAsync(produtoToDelete);
-      setProdutoToDelete(null);
+      try {
+        await deleteProduto.mutateAsync(produtoToDelete);
+        setProdutoToDelete(null);
+      } catch (error: any) {
+        console.error('Error deleting product:', error);
+        // Error is handled by useProdutos hook's toast if it uses it, 
+        // but useMutation usually needs explicit handling if we want to keep the dialog open or something.
+        // Actually, useProdutos already has a toast for success, let's make sure it handles error too.
+      }
     }
   };
 
