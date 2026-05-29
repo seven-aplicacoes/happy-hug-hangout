@@ -144,10 +144,27 @@ export default function ConsultorDashboardPage() {
 
   const targetMap = useMemo(() => {
     const map: Record<string, any> = {};
-    if (targets) {
+    if (targets && periodo) {
+      const diffTime = Math.abs(periodo.to.getTime() - periodo.from.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
       targets.forEach(t => {
+        let expected = t.goal_value;
+        
+        // Scale count-based indicators based on the selected period
+        // Percentage/Averages (CSAT Adherence, Score, NPS) remain same regardless of period
+        const isCountBased = ['meetings_completed', 'csat_responses', 'meetings_per_client'].includes(t.indicator_key);
+        
+        if (isCountBased) {
+          if (t.period_type === 'weekly') {
+            expected = (t.goal_value / 7) * diffDays;
+          } else if (t.period_type === 'monthly') {
+            expected = (t.goal_value / 30) * diffDays;
+          }
+        }
+
         map[t.indicator_key] = { 
-          esperado: t.goal_value, 
+          esperado: expected, 
           tolerancia: 0, 
           unidade: '', 
           descricao: t.indicator_label,
@@ -157,7 +174,7 @@ export default function ConsultorDashboardPage() {
       });
     }
     return map;
-  }, [targets]);
+  }, [targets, periodo]);
 
   if (isLoading) {
     return (
