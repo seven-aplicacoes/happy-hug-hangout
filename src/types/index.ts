@@ -10,7 +10,7 @@ export type StatusContrato =
   | 'cancelado'
   | 'churn'
   | 'encerrado';
-export type StatusReuniao = 'agendada' | 'realizada' | 'cancelada' | 'remarcada';
+export type StatusReuniao = 'agendada' | 'realizada' | 'cancelada' | 'remarcada' | 'reagendada';
 export type StatusTarefa = 'a_fazer' | 'em_andamento' | 'impedida' | 'concluida';
 export type NivelRisco = 'baixo' | 'medio' | 'alto' | 'critico';
 export type NivelEngajamento = 'em_dia' | 'atencao' | 'critico';
@@ -224,6 +224,24 @@ export interface Reuniao {
   meetingUrl?: string;
   location?: string;
   scheduledBy?: string;
+  contractModuleMeetingId?: string;
+}
+
+export interface ContractModuleMeeting {
+  id: string;
+  contractId: string;
+  clientId: string;
+  contractProductId: string;
+  moduleId: string;
+  meetingNumber: number;
+  title: string;
+  status: 'pendente' | 'agendado' | 'realizado' | 'cancelado' | 'reagendado';
+  scheduledMeetingId?: string;
+  consultantId?: string;
+  scheduledAt?: string;
+  completedAt?: string;
+  orderIndex: number;
+  consultantName?: string;
 }
 
 export interface Tarefa {
