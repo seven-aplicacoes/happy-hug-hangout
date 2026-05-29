@@ -31,10 +31,10 @@ const consultorConfigLinks = [
 
 const comingSoonLinks = [
   { title: 'Metodologia Seven', url: '/consultor/metodologia', icon: BookOpen, module: 'metodologia' },
-  { title: 'Inteligência', url: '/consultor/inteligencia', icon: RefreshCw, module: 'inteligencia' },
-  { title: 'Análise Avançada', url: '/consultor/analise-avancada', icon: RefreshCw, module: 'analise-avancada' },
-  { title: 'Mapa da Carteira', url: '/consultor/mapa-carteira', icon: RefreshCw, module: 'mapa-carteira' },
-  { title: 'Notificações', url: '/consultor/notificacoes', icon: RefreshCw, module: 'notificacoes' },
+  { title: 'Inteligência', url: '/consultor/inteligencia', icon: TrendingUp, module: 'inteligencia' },
+  { title: 'Análise Avançada', url: '/consultor/analise-avancada', icon: BarChart3, module: 'analise-avancada' },
+  { title: 'Mapa da Carteira', url: '/consultor/mapa-carteira', icon: Map, module: 'mapa-carteira' },
+  { title: 'Notificações', url: '/consultor/notificacoes', icon: Bell, module: 'notificacoes' },
 ];
 
 
