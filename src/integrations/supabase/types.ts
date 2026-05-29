@@ -1873,6 +1873,7 @@ export type Database = {
           strategic_name: string | null
           subtitle: string | null
           tools: string[] | null
+          updated_at: string | null
         }
         Insert: {
           alerts?: string[] | null
@@ -1898,6 +1899,7 @@ export type Database = {
           strategic_name?: string | null
           subtitle?: string | null
           tools?: string[] | null
+          updated_at?: string | null
         }
         Update: {
           alerts?: string[] | null
@@ -1923,6 +1925,7 @@ export type Database = {
           strategic_name?: string | null
           subtitle?: string | null
           tools?: string[] | null
+          updated_at?: string | null
         }
         Relationships: [
           {
