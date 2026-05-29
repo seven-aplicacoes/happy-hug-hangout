@@ -526,7 +526,7 @@ export function ContractJourneyCard({
   return (
     <AccordionItem value={contrato.id} className="border-none">
       <Card className="shadow-lg border-muted/40 overflow-hidden bg-white hover:border-primary/20 transition-all">
-        <AccordionTrigger className="p-0 hover:no-underline [&[data-state=open]>div>div>div>.chevron]:rotate-180">
+        <AccordionTrigger className="p-0 hover:no-underline [&[data-state=open]>div>div>div>.chevron]:rotate-180 [&>svg]:hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between w-full p-6 text-left gap-4">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
