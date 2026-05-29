@@ -4,6 +4,7 @@
 import { labelStatus, labelFase, labelEngajamento, variantEngajamento, calcularEngajamento, diasDesdeUltimaReuniao } from './mockData';
 import { getProdutoAtualCliente } from './contratoExtras';
 import type { Cliente, Contrato, Reuniao, Tarefa } from '@/types';
+import { differenceInMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 // ---------- CSAT / NPS (mock determinístico) ----------
 
@@ -33,9 +34,6 @@ const hash = (s: string) => {
   return Math.abs(h);
 };
 
-// Mock CSAT: ~60% das reuniões realizadas têm resposta
-// Note: This logic might need to be adapted to fetch real data from Supabase in the future.
-// For now, it stays as a helper that would ideally take data as input.
 export const getCsatRespostas = (reunioes: Reuniao[]) => reunioes
   .filter(r => r.status === 'realizada')
   .filter(r => hash(r.id) % 10 < 6)
@@ -51,7 +49,6 @@ export const getCsatRespostas = (reunioes: Reuniao[]) => reunioes
     };
   });
 
-// Mock NPS: 4x ano por cliente — gera 1-3 respostas anteriores
 export const getNpsRespostas = (clientes: Cliente[]) => (clientes || []).flatMap(c => {
   const seed = hash(c.id);
   const qtd = 1 + (seed % 3);
@@ -76,7 +73,7 @@ export const getNpsRespostas = (clientes: Cliente[]) => (clientes || []).flatMap
 
 // ---------- Filtros e métricas por período ----------
 
-export type PeriodoPreset = '7d' | '30d' | 'mes_atual' | 'mes_anterior' | 'custom';
+export type PeriodoPreset = 'mes_atual' | 'mes_anterior' | 'custom';
 
 export interface Periodo {
   preset: PeriodoPreset;
@@ -86,40 +83,29 @@ export interface Periodo {
 
 export function getPeriodo(preset: PeriodoPreset, custom?: { from?: Date; to?: Date }): Periodo {
   const hoje = new Date();
-  const to = new Date(hoje); to.setHours(23, 59, 59, 999);
-  let from = new Date(hoje); from.setHours(0, 0, 0, 0);
   
-  if (preset === '7d') {
-    // Esta semana (segunda a hoje)
-    const day = from.getDay();
-    const diff = from.getDate() - day + (day === 0 ? -6 : 1);
-    from.setDate(diff);
-  } else if (preset === '30d') {
-    // Semana passada (segunda a domingo da anterior)
-    const day = from.getDay();
-    const diff = from.getDate() - day + (day === 0 ? -6 : 1) - 7;
-    from.setDate(diff);
-    const sunday = new Date(from);
-    sunday.setDate(sunday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
-    return { preset, from, to: sunday };
-  } else if (preset === 'mes_atual') {
-    from = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  if (preset === 'mes_atual') {
+    const from = startOfMonth(hoje);
+    const to = endOfMonth(hoje);
+    return { preset, from, to };
   } else if (preset === 'mes_anterior') {
-    from = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-    const lastDay = new Date(hoje.getFullYear(), hoje.getMonth(), 0, 23, 59, 59, 999);
-    return { preset, from, to: lastDay };
+    const from = startOfMonth(new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1));
+    const to = endOfMonth(from);
+    return { preset, from, to };
   } else if (preset === 'custom' && custom) {
-    return { preset, from: custom.from || from, to: custom.to || to };
+    // Garantir que o período personalizado comece no início do mês 'from' e termine no fim do mês 'to'
+    const from = custom.from ? startOfMonth(custom.from) : startOfMonth(hoje);
+    const to = custom.to ? endOfMonth(custom.to) : endOfMonth(hoje);
+    return { preset, from, to };
   }
-  return { preset, from, to };
+  
+  // Default to current month
+  return { preset: 'mes_atual', from: startOfMonth(hoje), to: endOfMonth(hoje) };
 }
 
 export const labelPreset: Record<PeriodoPreset, string> = {
-  '7d': 'Esta semana',
-  '30d': 'Semana passada',
-  'mes_atual': 'Este mês',
-  'mes_anterior': 'Mês passado',
+  'mes_atual': 'Mês atual',
+  'mes_anterior': 'Mês anterior',
   'custom': 'Personalizado',
 };
 
@@ -152,7 +138,6 @@ export function calcularMetricasConsultor(
   const realizadas = reunsCons.filter(r => r.status === 'realizada' && dentro(r.meetingDate));
   const realizadaIds = new Set(realizadas.map(r => r.id));
   
-  // Usar dados reais se fornecidos, caso contrário mock (para compatibilidade temporária)
   const csats = csatRespostas.length > 0 
     ? csatRespostas.filter(c => realizadaIds.has(c.meeting_id) && dentro(c.date))
     : getCsatRespostas(realizadas);
@@ -175,7 +160,7 @@ export function calcularMetricasConsultor(
     csatRespostas: csats.length,
     csatTaxaAdesao: realizadas.length > 0 ? Number(((csats.length / realizadas.length) * 100).toFixed(1)) : 0,
     csatNotaMedia: csats.length > 0 ? Number((csats.reduce((a, c) => a + (c.score || c.nota), 0) / csats.length).toFixed(1)) : 0,
-    npsAtual: total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0,
+    npsAtual,
     encontrosPorClienteAtivo: clientesAtivos > 0 ? Number((realizadas.length / clientesAtivos).toFixed(1)) : 0,
     clientesAtivos,
   };
@@ -219,7 +204,6 @@ export function avaliarBenchmark(valor: number, bench: Benchmark): BenchmarkStat
     return 'dentro';
   }
 
-  // Fallback para lógica original se necessário
   if (valor >= bench.esperado + bench.tolerancia) return 'acima';
   if (valor < bench.esperado - bench.tolerancia) return 'abaixo';
   return 'dentro';
@@ -308,7 +292,6 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
   if (eng === 'critico') { score += 40; fatores.push(`${dias}d sem reunião`); }
   else if (eng === 'atencao') { score += 20; fatores.push(`${dias}d sem reunião`); }
 
-  // Risco do contrato vigente
   const ct = contratos.find(c => c.clienteId === cliente.id && (c.status === 'ativo' || c.status === 'em_renovacao'));
   if (ct) {
     if (ct.risco === 'critico') { score += 30; fatores.push('Contrato em risco crítico'); }
@@ -317,15 +300,12 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
   if (cliente.status === 'bloqueado' || cliente.status === 'suspenso') { score += 25; fatores.push('Contrato bloqueado'); }
   if (cliente.status === 'em_renovacao') { score += 10; fatores.push('Em renovação'); }
 
-  // Tarefas pendentes
   const tarefasPendentes = tarefas.filter(t => t.clienteId === cliente.id && t.status !== 'concluida');
   const atrasadas = tarefasPendentes.filter(t => new Date(t.dataVencimento) < new Date()).length;
   if (atrasadas > 0) { score += Math.min(20, atrasadas * 5); fatores.push(`${atrasadas} tarefa(s) atrasada(s)`); }
 
-  // Fase metodológica — diagnóstico/onboarding precisa atenção
   if (cliente.faseMetodologica === 'diagnostico') { score += 5; fatores.push('Em diagnóstico (atenção inicial)'); }
 
-  // Tempo de contrato — contratos novos (<60d) ou maduros (>270d) precisam atenção
   if (ct) {
     const diasContrato = (Date.now() - new Date(ct.dataInicio).getTime()) / 86400000;
     if (diasContrato < 60) { score += 8; fatores.push('Contrato recente'); }
@@ -346,7 +326,6 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
 export function isClienteAtivoConsultor(cliente: Cliente, consultorId: string, contratos: Contrato[] = []): boolean {
   if (cliente.consultorId !== consultorId) return false;
   if (!['ativo', 'em_onboarding', 'em_renovacao'].includes(cliente.status)) return false;
-  // Tem contrato vigente
   const hoje = new Date();
   const ct = (contratos || []).find(c =>
     c.clienteId === cliente.id &&
