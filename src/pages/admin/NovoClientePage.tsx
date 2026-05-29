@@ -263,7 +263,11 @@ export default function NovoClientePage() {
               </div>
               <div className="space-y-2">
                 <Label>Responsável *</Label>
-                <Select value={form.consultorId} onValueChange={v => set('consultorId', v)}>
+                <Select 
+                  value={form.consultorId} 
+                  onValueChange={v => set('consultorId', v)}
+                  disabled={!isAdmin}
+                >
                   <SelectTrigger><SelectValue placeholder={loadingConsultores ? "Carregando..." : "Selecione..."} /></SelectTrigger>
                   <SelectContent>
                     {consultores && consultores.map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
