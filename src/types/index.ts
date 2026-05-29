@@ -45,6 +45,7 @@ export interface Cliente {
   nomeFantasia: string;
   cnpj: string;
   segmento: string;
+  clinicSpecialty?: string;
   regiao: Regiao;
   porte?: PorteEmpresa;
   consultorId: string;

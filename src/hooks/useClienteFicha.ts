@@ -33,6 +33,7 @@ export function useClienteFicha(clientId?: string) {
         nomeFantasia: data.trade_name,
         cnpj: data.cnpj,
         segmento: data.segment,
+        clinicSpecialty: data.clinic_specialty,
         regiao: data.region,
         consultorId: data.consultant_id,
         porte: data.company_size as any,
@@ -72,6 +73,7 @@ export function useClienteFicha(clientId?: string) {
       if (updates.nomeFantasia !== undefined) payload.trade_name = updates.nomeFantasia;
       if (updates.cnpj !== undefined) payload.cnpj = updates.cnpj;
       if (updates.segmento !== undefined) payload.segment = updates.segmento;
+      if (updates.clinicSpecialty !== undefined) payload.clinic_specialty = updates.clinicSpecialty;
       if (updates.regiao !== undefined) payload.region = updates.regiao;
       if (updates.consultorId !== undefined) payload.consultant_id = updates.consultorId;
       if (updates.porte !== undefined) payload.company_size = updates.porte;
