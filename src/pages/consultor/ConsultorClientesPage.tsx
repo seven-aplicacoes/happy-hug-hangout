@@ -313,7 +313,7 @@ export default function ConsultorClientesPage() {
         </div>
       </div>
       <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} />
-      {can('clientes', 'create') && <ModalNovoCliente open={novoClienteOpen} onClose={() => setNovoClienteOpen(false)} />}
+      
     </div>
   );
 }
