@@ -16,7 +16,7 @@ import { getProdutoAtualCliente, PRODUTOS } from '@/data/contratoExtras';
 import { getPorte, labelPorte, PORTE_OPTIONS } from '@/data/clienteExtras';
 import { calcularPrioridade, labelPrioridade, variantPrioridade, ordemPrioridade, getClienteContexto } from '@/data/clienteIndicadores';
 import { MethodologyStepper } from '@/components/MethodologyStepper';
-import { ModalNovoCliente } from '@/components/modals/ModalNovoCliente';
+// Removed ModalNovoCliente import as it's no longer used here
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Target, Loader2 } from 'lucide-react';
