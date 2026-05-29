@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { PeriodFilter } from '@/components/PeriodFilter';
 import { BenchmarkBadge } from '@/components/BenchmarkBadge';
 import { useConsultantGoals } from '@/hooks/useConsultantGoals';
+import { useSurveys } from '@/hooks/useSurveys';
 import {
   Dialog,
   DialogContent,
@@ -55,8 +56,9 @@ export default function ConsultorDashboardPage() {
   const { contratos, isLoading: loadingContratos } = useContratos();
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
+  const { csatSurveys, npsSurveys, isLoading: loadingSurveys } = useSurveys(consultorId);
 
-  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions;
+  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions || loadingSurveys;
 
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
@@ -131,9 +133,7 @@ export default function ConsultorDashboardPage() {
       .slice(0, 5);
 
     // Métricas do consultor
-    // This function might need update to use real data instead of mockData inside it
-    // For now we assume it takes the data or we might need to refactor it
-    const metricas = calcularMetricasConsultor(consultorId, periodo, reunioes, clientes);
+    const metricas = calcularMetricasConsultor(consultorId, periodo, reunioes, clientes, csatSurveys, npsSurveys);
 
     return {
       meusClientes, reunioesHoje, minhasTarefas, tarefasPrioritarias, criticos,
@@ -144,10 +144,27 @@ export default function ConsultorDashboardPage() {
 
   const targetMap = useMemo(() => {
     const map: Record<string, any> = {};
-    if (targets) {
+    if (targets && periodo) {
+      const diffTime = Math.abs(periodo.to.getTime() - periodo.from.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
       targets.forEach(t => {
+        let expected = t.goal_value;
+        
+        // Scale count-based indicators based on the selected period
+        // Percentage/Averages (CSAT Adherence, Score, NPS) remain same regardless of period
+        const isCountBased = ['meetings_completed', 'csat_responses', 'meetings_per_client'].includes(t.indicator_key);
+        
+        if (isCountBased) {
+          if (t.period_type === 'weekly') {
+            expected = (t.goal_value / 7) * diffDays;
+          } else if (t.period_type === 'monthly') {
+            expected = (t.goal_value / 30) * diffDays;
+          }
+        }
+
         map[t.indicator_key] = { 
-          esperado: t.goal_value, 
+          esperado: expected, 
           tolerancia: 0, 
           unidade: '', 
           descricao: t.indicator_label,
@@ -157,7 +174,7 @@ export default function ConsultorDashboardPage() {
       });
     }
     return map;
-  }, [targets]);
+  }, [targets, periodo]);
 
   if (isLoading) {
     return (
@@ -287,49 +304,11 @@ export default function ConsultorDashboardPage() {
       </section>
       )}
 
-      {/* KPIs principais */}
-      <section className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            titulo="Clínicas em Crítico"
-            valor={criticos.length}
-            icon={Flame}
-            variant={avaliarBenchmark(criticos.length, getBench('critical_clinics', BENCHMARKS.critical_clinics)) === 'acima_limite' ? 'danger' : 'success'}
-            subtitulo="Sem reunião >15 dias"
-            onClick={() => aplicarFiltro('critico')}
-          />
-          <StatCard
-            titulo="Clínicas em Atenção"
-            valor={atencao.length}
-            icon={AlertTriangle}
-            variant={avaliarBenchmark(atencao.length, getBench('attention_clinics', BENCHMARKS.attention_clinics)) === 'acima_limite' ? 'danger' : 'success'}
-            subtitulo="9–15 dias sem reunião"
-            onClick={() => aplicarFiltro('atencao')}
-          />
-          <StatCard
-            titulo="Encerrando em 90d"
-            valor={contratosEncerrando.length}
-            icon={FileClock}
-            variant={avaliarBenchmark(contratosEncerrando.length, getBench('contracts_ending_90_days', { esperado: 0, tolerancia: 0, goal_type: 'informational', comparison_operator: 'none', descricao: '' })) === 'acima_limite' ? 'warning' : 'default'}
-            subtitulo="Contratos próximos do fim"
-            onClick={() => aplicarFiltro('encerrando')}
-          />
-          <StatCard
-            titulo="Potencial Upsell"
-            valor={upsell.length}
-            icon={Sparkles}
-            variant={avaliarBenchmark(upsell.length, getBench('upsell_potential', BENCHMARKS.upsell_potential)) === 'abaixo' ? 'warning' : 'success'}
-            subtitulo="Oportunidades identificadas"
-            onClick={() => aplicarFiltro('upsell')}
-          />
-        </div>
-
-        {/* KPIs operacionais (existentes) */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard titulo="Tarefas ativas" valor={minhasTarefas.filter(t => t.status !== 'concluida').length} icon={CheckSquare} size="compact" onClick={() => navigate('/consultor/tarefas')} />
-          <StatCard titulo="Meus clientes" valor={meusClientes.length} icon={Users} size="compact" onClick={() => navigate('/consultor/clientes')} />
-          <StatCard titulo="Meu perfil" valor="→" icon={UserCircle} size="compact" subtitulo="Indicadores e carteira" onClick={() => navigate('/consultor/meu-perfil')} />
-        </div>
+      {/* Atalhos rápidos */}
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard titulo="Tarefas ativas" valor={minhasTarefas.filter(t => t.status !== 'concluida').length} icon={CheckSquare} size="compact" onClick={() => navigate('/consultor/tarefas')} />
+        <StatCard titulo="Meus clientes" valor={meusClientes.length} icon={Users} size="compact" onClick={() => navigate('/consultor/clientes')} />
+        <StatCard titulo="Meu perfil" valor="→" icon={UserCircle} size="compact" subtitulo="Indicadores e carteira" onClick={() => navigate('/consultor/meu-perfil')} />
       </section>
 
       {/* Alertas de Contrato */}

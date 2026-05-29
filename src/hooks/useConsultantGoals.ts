@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useMemo } from 'react';
 
 export interface IndicatorGoal {
   id: string;
@@ -10,37 +9,25 @@ export interface IndicatorGoal {
   goal_value: number;
   goal_type: 'minimum' | 'maximum' | 'target' | 'informational';
   comparison_operator: 'greater_or_equal' | 'less_or_equal' | 'equal' | 'none';
-  period_type: string;
+  period_type: 'weekly' | 'monthly';
   is_active: boolean;
+  is_per_client: boolean;
   consultant_id?: string;
 }
+
+export const KPI_CONFIGS = [
+  { key: 'meetings_completed', label: 'Reuniões Realizadas', perClient: false },
+  { key: 'csat_responses', label: 'CSAT Respostas', perClient: false },
+  { key: 'csat_adherence', label: 'Adesão CSAT', perClient: false },
+  { key: 'csat_score', label: 'Nota CSAT', perClient: false },
+  { key: 'nps', label: 'NPS', perClient: false },
+  { key: 'meetings_per_client', label: 'Encontros por Cliente', perClient: true },
+];
 
 export function useConsultantGoals(consultantId?: string) {
   const queryClient = useQueryClient();
 
-  const { data: defaultGoals, isLoading: loadingDefaults } = useQuery({
-    queryKey: ['default-indicator-goals'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('default_indicator_goals')
-        .select('*')
-        .eq('is_active', true);
-      if (error) throw error;
-      
-      return data.map(dg => ({
-        id: dg.id,
-        indicator_key: dg.indicator_key,
-        indicator_label: dg.indicator_label,
-        goal_value: dg.default_goal_value || 0,
-        goal_type: dg.goal_type as any,
-        comparison_operator: dg.comparison_operator as any,
-        period_type: dg.period_type || 'monthly',
-        is_active: dg.is_active || false
-      })) as IndicatorGoal[];
-    },
-  });
-
-  const { data: consultantGoals, isLoading: loadingConsultant } = useQuery({
+  const { data: consultantGoals, isLoading } = useQuery({
     queryKey: ['consultant-indicator-goals', consultantId],
     queryFn: async () => {
       if (!consultantId) return [];
@@ -48,7 +35,8 @@ export function useConsultantGoals(consultantId?: string) {
         .from('consultant_indicator_goals')
         .select('*')
         .eq('consultant_id', consultantId)
-        .eq('is_active', true);
+        .order('indicator_label', { ascending: true });
+      
       if (error) throw error;
       return data as unknown as IndicatorGoal[];
     },
@@ -59,7 +47,10 @@ export function useConsultantGoals(consultantId?: string) {
     mutationFn: async (goal: any) => {
       const { data, error } = await supabase
         .from('consultant_indicator_goals')
-        .upsert(goal)
+        .upsert({
+          ...goal,
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single();
       if (error) throw error;
@@ -75,66 +66,10 @@ export function useConsultantGoals(consultantId?: string) {
     },
   });
 
-  const deleteConsultantGoal = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('consultant_indicator_goals')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['consultant-indicator-goals'] });
-      toast.success('Meta removida');
-    },
-  });
-
-  const restoreDefaults = useMutation({
-    mutationFn: async (cId: string) => {
-      if (!defaultGoals) return;
-      
-      const goalsToInsert = defaultGoals.map(dg => ({
-        consultant_id: cId,
-        indicator_key: dg.indicator_key,
-        indicator_label: dg.indicator_label,
-        goal_value: dg.goal_value,
-        goal_type: dg.goal_type,
-        comparison_operator: dg.comparison_operator,
-        period_type: dg.period_type,
-        is_active: true
-      }));
-
-      const { error } = await supabase
-        .from('consultant_indicator_goals')
-        .upsert(goalsToInsert);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['consultant-indicator-goals'] });
-      toast.success('Metas padrão restauradas para o consultor');
-    },
-  });
-
-  // Merged goals: consultant goals override defaults
-  const mergedGoals = useMemo(() => {
-    if (!defaultGoals) return [];
-    if (!consultantGoals || consultantGoals.length === 0) return defaultGoals;
-
-    const goalsMap = new Map<string, IndicatorGoal>();
-    defaultGoals.forEach(dg => goalsMap.set(dg.indicator_key, dg));
-    consultantGoals.forEach(cg => goalsMap.set(cg.indicator_key, cg));
-    
-    return Array.from(goalsMap.values());
-  }, [defaultGoals, consultantGoals]);
-
   return {
-    defaultGoals,
     consultantGoals,
-    mergedGoals,
-    isLoading: loadingDefaults || (!!consultantId && loadingConsultant),
+    mergedGoals: consultantGoals || [], // All goals are now in consultantGoals due to seeding
+    isLoading,
     upsertConsultantGoal,
-    deleteConsultantGoal,
-    restoreDefaults,
   };
 }

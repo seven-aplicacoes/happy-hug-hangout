@@ -21,20 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConsultantGoals, IndicatorGoal } from "@/hooks/useConsultantGoals";
 import { Separator } from "@/components/ui/separator";
 
-const KPI_CONFIG = [
-  { key: 'meetings_completed', label: 'Reuniões Realizadas', unit: 'un' },
-  { key: 'csat_responses', label: 'CSAT Respostas', unit: 'un' },
-  { key: 'csat_adherence', label: 'Adesão CSAT', unit: '%' },
-  { key: 'csat_score', label: 'Nota CSAT', unit: '/5' },
-  { key: 'nps', label: 'NPS', unit: 'pts' },
-  { key: 'meetings_per_client', label: 'Encontros por Cliente', unit: 'un' },
-  { key: 'critical_clinics', label: 'Clínicas em crítico', unit: 'un' },
-  { key: 'attention_clinics', label: 'Clínicas em atenção', unit: 'un' },
-  { key: 'contracts_ending_90_days', label: 'Encerrando em 90 dias', unit: 'un' },
-  { key: 'upsell_potential', label: 'Potencial upsell', unit: 'un' },
-  { key: 'active_tasks', label: 'Tarefas ativas', unit: 'un' },
-  { key: 'client_portfolio', label: 'Meus clientes', unit: 'un' },
-];
+// KPI_CONFIG removed - managed in AdminConsultantGoalsPage
 
 interface ConsultorModalProps {
   isOpen: boolean;
@@ -89,7 +76,7 @@ export const ConsultorModal = ({
     hours_available: 160,
   });
 
-  const { consultantGoals, upsertConsultantGoal, defaultGoals } = useConsultantGoals(consultor?.id);
+  const { consultantGoals } = useConsultantGoals(consultor?.id);
   const [kpiTargets, setKpiTargets] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -179,27 +166,6 @@ export const ConsultorModal = ({
     }
 
     await onSave(formData);
-    
-    // Save KPI targets
-    if (consultor?.id) {
-      for (const [key, value] of Object.entries(kpiTargets)) {
-        const existing = consultantGoals?.find(t => t.indicator_key === key);
-        const config = KPI_CONFIG.find(c => c.key === key);
-        const defaultConfig = defaultGoals?.find(d => d.indicator_key === key);
-
-        await upsertConsultantGoal.mutateAsync({
-          id: existing?.id,
-          consultant_id: consultor.id,
-          indicator_key: key,
-          indicator_label: config?.label || key,
-          goal_value: value,
-          goal_type: existing?.goal_type || defaultConfig?.goal_type || 'minimum',
-          comparison_operator: existing?.comparison_operator || defaultConfig?.comparison_operator || 'greater_or_equal',
-          active: true
-        } as any);
-      }
-    }
-    
     onClose();
   };
 
@@ -364,55 +330,6 @@ export const ConsultorModal = ({
               </Select>
             </div>
 
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="specialty">Especialidade Principal</Label>
-              <Select
-                value={formData.specialty}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, specialty: value })
-                }
-              >
-                <SelectTrigger id="specialty">
-                  <SelectValue placeholder="Selecione uma especialidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ESPECIALIDADES.map((esp) => (
-                    <SelectItem key={esp.value} value={esp.value}>
-                      {esp.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {consultor && (
-              <div className="col-span-2 space-y-4 pt-4">
-                <Separator />
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Metas de KPIs</h4>
-                  <p className="text-xs text-muted-foreground">Defina os benchmarks operacionais para este consultor.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  {KPI_CONFIG.map((kpi) => (
-                    <div key={kpi.key} className="space-y-1.5">
-                      <Label htmlFor={`kpi-${kpi.key}`} className="text-xs">
-                        {kpi.label} ({kpi.unit})
-                      </Label>
-                      <Input
-                        id={`kpi-${kpi.key}`}
-                        type="number"
-                        step="0.1"
-                        value={kpiTargets[kpi.key] || ""}
-                        onChange={(e) =>
-                          setKpiTargets({ ...kpiTargets, [kpi.key]: parseFloat(e.target.value) || 0 })
-                        }
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
           
           <DialogFooter className="pt-4">
