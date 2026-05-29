@@ -1,1 +1,0 @@
-ALTER TABLE public.contracts ADD COLUMN contract_number TEXT;
