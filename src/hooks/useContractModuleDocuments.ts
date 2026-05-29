@@ -12,7 +12,15 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
     queryFn: async () => {
       if (!moduleId) return [];
       
-      // Fetch both generic module documents and client-specific documents
+      // 1. Fetch documents directly linked to this phase in the main documents table
+      const { data: directDocs, error: directError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('contract_product_phase_id', moduleId);
+
+      if (directError) throw directError;
+
+      // 2. Fetch documents linked via the many-to-many relationship (library documents)
       const { data: contractDocs, error: contractDocsError } = await supabase
         .from('contract_module_documents')
         .select('*, document:documents(*)')
@@ -20,14 +28,24 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
 
       if (contractDocsError) throw contractDocsError;
 
-      // Also could fetch generic documents linked to the base methodology module
-      // But for now let's focus on contract-specific ones as per user request
-      
-      return (contractDocs || []).map((cd: any) => ({
-        ...cd.document,
-        visibility: cd.visibility_type,
-        // map other fields if needed
+      const directDocumentos = (directDocs || []).map((d: any) => ({
+        ...d,
+        arquivo: d.file_name, // Mapping for compatibility
       })) as Documento[];
+
+      const linkedDocumentos = (contractDocs || [])
+        .filter((cd: any) => cd.document)
+        .map((cd: any) => ({
+          ...cd.document,
+          visibility: cd.visibility_type,
+          arquivo: cd.document.file_name,
+        })) as Documento[];
+
+      // Merge and remove duplicates by ID
+      const allDocs = [...directDocumentos, ...linkedDocumentos];
+      const uniqueDocs = Array.from(new Map(allDocs.map(item => [item.id, item])).values());
+      
+      return uniqueDocs;
     },
     enabled: !!moduleId,
   });
@@ -52,21 +70,32 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-documents', moduleId, contractId] });
+      toast({ title: "Sucesso", description: "Documento vinculado com sucesso." });
     },
   });
 
   const unlinkDocument = useMutation({
     mutationFn: async (documentId: string) => {
-      const { error } = await supabase
+      // We need to decide if we just remove the link or update the document if it's a direct link
+      // First try to delete from contract_module_documents
+      const { error: unlinkError } = await supabase
         .from('contract_module_documents')
         .delete()
         .eq('module_id', moduleId)
         .eq('document_id', documentId);
 
-      if (error) throw error;
+      // Also try to clear the contract_product_phase_id if it was a direct link
+      const { error: updateError } = await supabase
+        .from('documents')
+        .update({ contract_product_phase_id: null })
+        .eq('id', documentId)
+        .eq('contract_product_phase_id', moduleId);
+
+      if (unlinkError && updateError) throw unlinkError || updateError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-documents', moduleId, contractId] });
+      toast({ title: "Sucesso", description: "Vínculo removido." });
     },
   });
 

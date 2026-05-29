@@ -20,9 +20,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { ClientDocumentsTab } from '@/components/clients/ClientDocumentsTab';
+import { TimelineCard } from '@/components/TimelineCard';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
@@ -219,243 +222,272 @@ export default function ClienteDetalhePage() {
         </div>
       </div>
 
-      {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="h-8 w-1.5 rounded-full bg-primary" />
-          <h2 className="text-xl font-black uppercase tracking-tight">Ficha Cadastral</h2>
-        </div>
+      {/* --- Conteúdo em Abas --- */}
+      <Tabs defaultValue="ficha" className="space-y-8">
+        <TabsList className="bg-muted/30 p-1 h-12 gap-2">
+          <TabsTrigger value="ficha" className="px-6 font-bold uppercase text-[11px] tracking-wider data-[state=active]:shadow-md">
+            Ficha Cadastral
+          </TabsTrigger>
+          <TabsTrigger value="jornada" className="px-6 font-bold uppercase text-[11px] tracking-wider data-[state=active]:shadow-md">
+            Jornada de Valor
+          </TabsTrigger>
+          <TabsTrigger value="documentos" className="px-6 font-bold uppercase text-[11px] tracking-wider data-[state=active]:shadow-md">
+            Documentos
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="px-6 font-bold uppercase text-[11px] tracking-wider data-[state=active]:shadow-md">
+            Histórico
+          </TabsTrigger>
+        </TabsList>
 
-        <Card className="shadow-xl border-muted/40 overflow-hidden bg-white/50 backdrop-blur-sm">
-          <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              
-              {/* Coluna 1: Identificação e Contato */}
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Identificação</h4>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Razão Social</Label>
-                      <Input value={fichaForm?.razaoSocial} onChange={e => setF('razaoSocial', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Nome Fantasia</Label>
-                      <Input value={fichaForm?.nomeFantasia} onChange={e => setF('nomeFantasia', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">CNPJ</Label>
-                      <Input value={fichaForm?.cnpj} onChange={e => setF('cnpj', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Canais de Contato</h4>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">E-mail Principal</Label>
-                      <Input value={fichaForm?.email} onChange={e => setF('email', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">E-mail Institucional</Label>
-                      <Input value={fichaForm?.institutional_email} onChange={e => setF('institutional_email', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Coluna 2: Localização e Perfil */}
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Localização</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Logradouro</Label>
-                      <Input value={fichaForm?.street} onChange={e => setF('street', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Número</Label>
-                      <Input value={fichaForm?.number} onChange={e => setF('number', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Complemento</Label>
-                      <Input value={fichaForm?.complement} onChange={e => setF('complement', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Bairro</Label>
-                      <Input value={fichaForm?.neighborhood} onChange={e => setF('neighborhood', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">CEP</Label>
-                      <Input value={fichaForm?.cep} onChange={e => setF('cep', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Região</Label>
-                      <Select value={fichaForm?.regiao} onValueChange={v => setF('regiao', v)} disabled={!isEditing}>
-                        <SelectTrigger className="bg-white font-medium">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="sudeste">Sudeste</SelectItem>
-                          <SelectItem value="sul">Sul</SelectItem>
-                          <SelectItem value="centro_oeste">Centro-Oeste</SelectItem>
-                          <SelectItem value="nordeste">Nordeste</SelectItem>
-                          <SelectItem value="norte">Norte</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Perfil Corporativo</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Responsável no Cliente</Label>
-                      <Input value={fichaForm?.contact_name} onChange={e => setF('contact_name', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Telefone Responsável</Label>
-                      <Input value={fichaForm?.contact_phone} onChange={e => setF('contact_phone', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Porte</Label>
-                      <Select value={fichaForm?.porte} onValueChange={v => setF('porte', v)} disabled={!isEditing}>
-                        <SelectTrigger className="bg-white font-medium">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pequena">Pequena</SelectItem>
-                          <SelectItem value="Média">Média</SelectItem>
-                          <SelectItem value="Grande">Grande</SelectItem>
-                          <SelectItem value="Multinacional">Multinacional</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Status Geral</Label>
-                      <Select value={fichaForm?.status} onValueChange={v => setF('status', v)} disabled={!isEditing}>
-                        <SelectTrigger className="bg-white font-medium">
-                          <SelectValue placeholder="Selecione o status..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ativo">Ativo</SelectItem>
-                          <SelectItem value="pausado">Pausado</SelectItem>
-                          <SelectItem value="cancelado">Cancelado</SelectItem>
-                          <SelectItem value="churn">Churn</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Responsável Interno</Label>
-                      <Select value={fichaForm?.consultorId} onValueChange={v => setF('consultorId', v)} disabled={!isEditing}>
-                        <SelectTrigger className="bg-white font-medium">
-                          <SelectValue placeholder="Selecione o consultor..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {consultores?.map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Coluna 3: Gestão e Alinhamento */}
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Alinhamento Estratégico</h4>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Objetivo Atual</Label>
-                      <Textarea value={fichaForm?.current_objective} onChange={e => setF('current_objective', e.target.value)} disabled={!isEditing} className="bg-white font-medium min-h-[80px]" />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Dores e Problemas</Label>
-                      {isEditing && (
-                        <div className="flex gap-2">
-                          <Input value={fichaNewPain} onChange={e => setFichaNewPain(e.target.value)} placeholder="Nova dor..." className="h-8 text-xs" />
-                          <Button size="sm" onClick={addPain} type="button" className="h-8"><PlusCircle className="h-4 w-4" /></Button>
-                        </div>
-                      )}
-                      <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-muted/20 border border-dashed">
-                        {fichaPains.length > 0 ? fichaPains.map(p => (
-                          <Badge key={p} variant="secondary" className="pr-1 gap-1 py-1 font-medium bg-white border">
-                            {p}
-                            {isEditing && <MinusCircle className="h-3 w-3 text-destructive cursor-pointer hover:scale-110 transition-transform" onClick={() => removePain(p)} />}
-                          </Badge>
-                        )) : <span className="text-[10px] text-muted-foreground italic self-center">Nenhuma dor registrada</span>}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Fatores de Sucesso</Label>
-                      {isEditing && (
-                        <div className="flex gap-2">
-                          <Input value={fichaNewSuccessFactor} onChange={e => setFichaNewSuccessFactor(e.target.value)} placeholder="Novo fator..." className="h-8 text-xs" />
-                          <Button size="sm" onClick={addSuccessFactor} type="button" className="h-8"><PlusCircle className="h-4 w-4" /></Button>
-                        </div>
-                      )}
-                      <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-muted/20 border border-dashed">
-                        {fichaSuccessFactors.length > 0 ? fichaSuccessFactors.map(s => (
-                          <Badge key={s} variant="secondary" className="pr-1 gap-1 py-1 font-medium bg-white border">
-                            {s}
-                            {isEditing && <MinusCircle className="h-3 w-3 text-destructive cursor-pointer hover:scale-110 transition-transform" onClick={() => removeSuccessFactor(s)} />}
-                          </Badge>
-                        )) : <span className="text-[10px] text-muted-foreground italic self-center">Nenhum fator registrado</span>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Briefing / Observações</h4>
-                  <Textarea value={fichaForm?.briefing} onChange={e => setF('briefing', e.target.value)} disabled={!isEditing} className="bg-white font-medium min-h-[120px]" placeholder="Notas adicionais sobre o cliente..." />
-                </div>
-              </div>
-
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* --- Seção 2: Contratos e Jornada --- */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="h-8 w-1.5 rounded-full bg-seven-warning" />
-          <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
-        </div>
-
-        {loadingContratos ? (
-          <div className="py-20 text-center">
-            <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary/40" />
-            <p className="text-muted-foreground">Carregando contratos e produtos...</p>
+        <TabsContent value="ficha" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-8 w-1.5 rounded-full bg-primary" />
+            <h2 className="text-xl font-black uppercase tracking-tight">Ficha Cadastral</h2>
           </div>
-        ) : contratosCliente.length > 0 ? (
-          <Accordion type="single" collapsible className="w-full space-y-4">
-            {contratosCliente.map(contrato => (
-              <ContractJourneyCard key={contrato.id} contrato={contrato} />
-            ))}
-          </Accordion>
-        ) : (
-          <Card className="border-dashed shadow-none bg-muted/10">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                <Briefcase className="h-8 w-8 text-muted-foreground/40" />
+
+          <Card className="shadow-xl border-muted/40 overflow-hidden bg-white/50 backdrop-blur-sm">
+            <CardContent className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                
+                {/* Coluna 1: Identificação e Contato */}
+                <div className="space-y-8">
+                  <div>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Identificação</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Razão Social</Label>
+                        <Input value={fichaForm?.razaoSocial} onChange={e => setF('razaoSocial', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Nome Fantasia</Label>
+                        <Input value={fichaForm?.nomeFantasia} onChange={e => setF('nomeFantasia', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">CNPJ</Label>
+                        <Input value={fichaForm?.cnpj} onChange={e => setF('cnpj', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Canais de Contato</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">E-mail Principal</Label>
+                        <Input value={fichaForm?.email} onChange={e => setF('email', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">E-mail Institucional</Label>
+                        <Input value={fichaForm?.institutional_email} onChange={e => setF('institutional_email', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coluna 2: Localização e Perfil */}
+                <div className="space-y-8">
+                  <div>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Localização</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Logradouro</Label>
+                        <Input value={fichaForm?.street} onChange={e => setF('street', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Número</Label>
+                        <Input value={fichaForm?.number} onChange={e => setF('number', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Complemento</Label>
+                        <Input value={fichaForm?.complement} onChange={e => setF('complement', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Bairro</Label>
+                        <Input value={fichaForm?.neighborhood} onChange={e => setF('neighborhood', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">CEP</Label>
+                        <Input value={fichaForm?.cep} onChange={e => setF('cep', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Região</Label>
+                        <Select value={fichaForm?.regiao} onValueChange={v => setF('regiao', v)} disabled={!isEditing}>
+                          <SelectTrigger className="bg-white font-medium">
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sudeste">Sudeste</SelectItem>
+                            <SelectItem value="sul">Sul</SelectItem>
+                            <SelectItem value="centro_oeste">Centro-Oeste</SelectItem>
+                            <SelectItem value="nordeste">Nordeste</SelectItem>
+                            <SelectItem value="norte">Norte</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Perfil Corporativo</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Responsável no Cliente</Label>
+                        <Input value={fichaForm?.contact_name} onChange={e => setF('contact_name', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Telefone Responsável</Label>
+                        <Input value={fichaForm?.contact_phone} onChange={e => setF('contact_phone', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Porte</Label>
+                        <Select value={fichaForm?.porte} onValueChange={v => setF('porte', v)} disabled={!isEditing}>
+                          <SelectTrigger className="bg-white font-medium">
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pequena">Pequena</SelectItem>
+                            <SelectItem value="Média">Média</SelectItem>
+                            <SelectItem value="Grande">Grande</SelectItem>
+                            <SelectItem value="Multinacional">Multinacional</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Status Geral</Label>
+                        <Select value={fichaForm?.status} onValueChange={v => setF('status', v)} disabled={!isEditing}>
+                          <SelectTrigger className="bg-white font-medium">
+                            <SelectValue placeholder="Selecione o status..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ativo">Ativo</SelectItem>
+                            <SelectItem value="pausado">Pausado</SelectItem>
+                            <SelectItem value="cancelado">Cancelado</SelectItem>
+                            <SelectItem value="churn">Churn</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Responsável Interno</Label>
+                        <Select value={fichaForm?.consultorId} onValueChange={v => setF('consultorId', v)} disabled={!isEditing}>
+                          <SelectTrigger className="bg-white font-medium">
+                            <SelectValue placeholder="Selecione o consultor..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {consultores?.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coluna 3: Gestão e Alinhamento */}
+                <div className="space-y-8">
+                  <div>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Alinhamento Estratégico</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Objetivo Atual</Label>
+                        <Textarea value={fichaForm?.current_objective} onChange={e => setF('current_objective', e.target.value)} disabled={!isEditing} className="bg-white font-medium min-h-[80px]" />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Dores e Problemas</Label>
+                        {isEditing && (
+                          <div className="flex gap-2">
+                            <Input value={fichaNewPain} onChange={e => setFichaNewPain(e.target.value)} placeholder="Nova dor..." className="h-8 text-xs" />
+                            <Button size="sm" onClick={addPain} type="button" className="h-8"><PlusCircle className="h-4 w-4" /></Button>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-muted/20 border border-dashed">
+                          {fichaPains.length > 0 ? fichaPains.map(p => (
+                            <Badge key={p} variant="secondary" className="pr-1 gap-1 py-1 font-medium bg-white border">
+                              {p}
+                              {isEditing && <MinusCircle className="h-3 w-3 text-destructive cursor-pointer hover:scale-110 transition-transform" onClick={() => removePain(p)} />}
+                            </Badge>
+                          )) : <span className="text-[10px] text-muted-foreground italic self-center">Nenhuma dor registrada</span>}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Fatores de Sucesso</Label>
+                        {isEditing && (
+                          <div className="flex gap-2">
+                            <Input value={fichaNewSuccessFactor} onChange={e => setFichaNewSuccessFactor(e.target.value)} placeholder="Novo fator..." className="h-8 text-xs" />
+                            <Button size="sm" onClick={addSuccessFactor} type="button" className="h-8"><PlusCircle className="h-4 w-4" /></Button>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-muted/20 border border-dashed">
+                          {fichaSuccessFactors.length > 0 ? fichaSuccessFactors.map(s => (
+                            <Badge key={s} variant="secondary" className="pr-1 gap-1 py-1 font-medium bg-white border">
+                              {s}
+                              {isEditing && <MinusCircle className="h-3 w-3 text-destructive cursor-pointer hover:scale-110 transition-transform" onClick={() => removeSuccessFactor(s)} />}
+                            </Badge>
+                          )) : <span className="text-[10px] text-muted-foreground italic self-center">Nenhum fator registrado</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Briefing / Observações</h4>
+                    <Textarea value={fichaForm?.briefing} onChange={e => setF('briefing', e.target.value)} disabled={!isEditing} className="bg-white font-medium min-h-[120px]" placeholder="Notas adicionais sobre o cliente..." />
+                  </div>
+                </div>
+
               </div>
-              <h3 className="text-lg font-bold text-muted-foreground">Nenhum contrato ativo</h3>
-              <p className="text-sm text-muted-foreground max-w-xs text-center mt-2">
-                Este cliente ainda não possui contratos registrados ou todos os contratos foram encerrados.
-              </p>
             </CardContent>
           </Card>
-        )}
-      </section>
+        </TabsContent>
 
+        <TabsContent value="jornada" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-8 w-1.5 rounded-full bg-seven-warning" />
+            <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
+          </div>
+
+          {loadingContratos ? (
+            <div className="py-20 text-center">
+              <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary/40" />
+              <p className="text-muted-foreground">Carregando contratos e produtos...</p>
+            </div>
+          ) : contratosCliente.length > 0 ? (
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              {contratosCliente.map(contrato => (
+                <ContractJourneyCard key={contrato.id} contrato={contrato} />
+              ))}
+            </Accordion>
+          ) : (
+            <Card className="border-dashed shadow-none bg-muted/10">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <Briefcase className="h-8 w-8 text-muted-foreground/40" />
+                </div>
+                <h3 className="text-lg font-bold text-muted-foreground">Nenhum contrato ativo</h3>
+                <p className="text-sm text-muted-foreground max-w-xs text-center mt-2">
+                  Este cliente ainda não possui contratos registrados ou todos os contratos foram encerrados.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="documentos" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <ClientDocumentsTab clientId={id!} />
+        </TabsContent>
+
+        <TabsContent value="historico" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+           <div className="flex items-center gap-2 mb-6">
+            <div className="h-8 w-1.5 rounded-full bg-seven-success" />
+            <h2 className="text-xl font-black uppercase tracking-tight">Linha do Tempo</h2>
+          </div>
+          <div className="space-y-4">
+             <p className="text-sm text-muted-foreground italic">Nenhum evento registrado recentemente.</p>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
