@@ -129,41 +129,6 @@ function AdminSidebar() {
                 </Collapsible>
               )}
 
-              {filteredIntel.length > 0 && (
-                <Collapsible asChild className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="h-10">
-                        <BarChart className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                        {!collapsed && (
-                          <>
-                            <span className="text-[13px]">Inteligência</span>
-                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                          </>
-                        )}
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {filteredIntel.map((item) => (
-                          <SidebarMenuSubItem key={item.title}>
-                            <SidebarMenuSubButton asChild>
-                              <NavLink
-                                to={item.url}
-                                className="hover:text-sidebar-foreground transition-colors"
-                                activeClassName="text-primary font-medium"
-                              >
-                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                                <span>{item.title}</span>
-                              </NavLink>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              )}
 
               {filteredConfig.length > 0 && (
                 <Collapsible asChild className="group/collapsible">
