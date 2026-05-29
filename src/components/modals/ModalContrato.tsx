@@ -178,6 +178,15 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     updated[index][field] = value;
 
     if (field === 'productId') {
+      const selectedProduct = produtos?.find(p => p.id === value);
+      if (selectedProduct) {
+        updated[index].productName = selectedProduct.name;
+        updated[index].productDescription = selectedProduct.description;
+        updated[index].productCategory = selectedProduct.category;
+        updated[index].consultantHours = selectedProduct.consultant_hours;
+        updated[index].silvaneHours = selectedProduct.silvane_hours;
+      }
+
       const productPhases = planPhases?.filter((pp: any) => pp.productId === value) || [];
       const defaultPhases = productPhases.map((pp: any) => ({
         name: pp.name,
