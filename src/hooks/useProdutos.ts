@@ -57,6 +57,14 @@ export function useProdutos() {
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
       toast({ title: 'Sucesso', description: 'Produto excluído.' });
     },
+    onError: (error: any) => {
+      console.error('Error deleting product:', error);
+      toast({ 
+        variant: "destructive", 
+        title: 'Erro ao excluir', 
+        description: error.message || 'Ocorreu um erro ao tentar excluir o produto.' 
+      });
+    },
   });
 
   return { produtos, isLoading, error, createProduto, updateProduto, deleteProduto };
