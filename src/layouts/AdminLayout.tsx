@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { NavLink } from '@/components/NavLink';
@@ -5,7 +6,8 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FolderKanban, TrendingUp, Users, LogOut, Menu, ShieldAlert, Map, GitBranch, BookOpen, FileText, Heart, Bell, Plug, FileSignature, Sparkles, RefreshCw, BarChart3, ShieldCheck, FileCheck, Clock, ChevronRight, Rocket, Briefcase, Activity, BarChart, Settings } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, TrendingUp, Users, LogOut, Menu, ShieldAlert, Map, GitBranch, BookOpen, FileText, Heart, Bell, Plug, FileSignature, Sparkles, RefreshCw, BarChart3, ShieldCheck, FileCheck, Clock, ChevronRight, Rocket, Briefcase, Activity, BarChart, Settings, Loader2 } from 'lucide-react';
+import { useMyPermissions, ADMIN_MODULES_CONFIG } from '@/hooks/useConsultantPermissions';
 import { Button } from '@/components/ui/button';
 import { SevenLogo } from '@/components/SevenLogo';
 import { ProfileSwitcher } from '@/components/ProfileSwitcher';
@@ -13,39 +15,39 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 
 const adminCoreLinks = [
-  { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
-  { title: 'Clientes', url: '/admin/clientes', icon: Users },
-  { title: 'Contratos', url: '/admin/contratos', icon: FileSignature },
-  { title: 'Produtos', url: '/admin/produtos', icon: Sparkles },
+  { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard, module: 'dashboard' },
+  { title: 'Clientes', url: '/admin/clientes', icon: Users, module: 'clientes' },
+  { title: 'Contratos', url: '/admin/contratos', icon: FileSignature, module: 'contratos' },
+  { title: 'Produtos', url: '/admin/produtos', icon: Sparkles, module: 'produtos' },
 ];
 
 const adminOperationalLinks = [
-  { title: 'Reuniões', url: '/admin/reunioes', icon: Clock },
-  { title: 'Tarefas', url: '/admin/tarefas', icon: FileCheck },
-  { title: 'Documentos', url: '/admin/documentos', icon: FileText },
-  { title: 'Notificações', url: '/admin/notificacoes', icon: Bell },
+  { title: 'Reuniões', url: '/admin/reunioes', icon: Clock, module: 'reunioes' },
+  { title: 'Tarefas', url: '/admin/tarefas', icon: FileCheck, module: 'tarefas' },
+  { title: 'Documentos', url: '/admin/documentos', icon: FileText, module: 'documentos' },
+  { title: 'Notificações', url: '/admin/notificacoes', icon: Bell, module: 'notificacoes' },
 ];
 
 const adminIntelligenceLinks = [
-  { title: 'Análise Avançada', url: '/admin/analise-avancada', icon: BarChart3 },
-  { title: 'Mapa da Carteira', url: '/admin/mapa-carteira', icon: Map },
+  { title: 'Análise Avançada', url: '/admin/analise-avancada', icon: BarChart3, module: 'analise-avancada' },
+  { title: 'Mapa da Carteira', url: '/admin/mapa-carteira', icon: Map, module: 'mapa-carteira' },
 ];
 
 const adminConfigLinks = [
-  { title: 'Usuários', url: '/admin/consultores', icon: Users },
-  { title: 'Permissões', url: '/admin/permissoes-consultores', icon: ShieldCheck },
-  { title: 'Metas dos Consultores', url: '/admin/metas-consultores', icon: TrendingUp },
-  { title: 'Metodologia Seven', url: '/admin/metodologia', icon: BookOpen },
-  { title: 'Integrações', url: '/admin/integracoes', icon: Plug },
+  { title: 'Usuários', url: '/admin/consultores', icon: Users, module: 'consultores' },
+  { title: 'Permissões', url: '/admin/permissoes-consultores', icon: ShieldCheck, module: 'permissoes-consultores' },
+  { title: 'Metas dos Consultores', url: '/admin/metas-consultores', icon: TrendingUp, module: 'metas-consultores' },
+  { title: 'Metodologia Seven', url: '/admin/metodologia', icon: BookOpen, module: 'metodologia' },
+  { title: 'Integrações', url: '/admin/integracoes', icon: Plug, module: 'integracoes' },
 ];
 
 const comingSoonLinks = [
-  { title: 'Pipeline de Renovação', url: '/admin/renovacao', icon: RefreshCw },
-  { title: 'Pipeline', url: '/admin/pipeline', icon: GitBranch },
-  { title: 'Alertas', url: '/admin/alertas', icon: ShieldAlert },
-  { title: 'Inteligência', url: '/admin/inteligencia', icon: TrendingUp },
-  { title: 'IA Analítica', url: '/admin/ia', icon: Sparkles },
-  { title: 'Relacionamento', url: '/admin/relacionamento', icon: Heart },
+  { title: 'Pipeline de Renovação', url: '/admin/renovacao', icon: RefreshCw, module: 'renovacao' },
+  { title: 'Pipeline', url: '/admin/pipeline', icon: GitBranch, module: 'pipeline' },
+  { title: 'Alertas', url: '/admin/alertas', icon: ShieldAlert, module: 'alertas' },
+  { title: 'Inteligência', url: '/admin/inteligencia', icon: TrendingUp, module: 'inteligencia' },
+  { title: 'IA Analítica', url: '/admin/ia', icon: Sparkles, module: 'ia' },
+  { title: 'Relacionamento', url: '/admin/relacionamento', icon: Heart, module: 'relacionamento' },
 ];
 
 
@@ -54,6 +56,13 @@ function AdminSidebar() {
   const collapsed = state === 'collapsed';
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { can } = useMyPermissions();
+
+  const filteredCore = adminCoreLinks.filter(l => can(l.module));
+  const filteredOps = adminOperationalLinks.filter(l => can(l.module));
+  const filteredIntel = adminIntelligenceLinks.filter(l => can(l.module));
+  const filteredConfig = adminConfigLinks.filter(l => can(l.module));
+  const filteredSoon = comingSoonLinks.filter(l => can(l.module));
 
   return (
     <Sidebar collapsible="icon">
@@ -72,7 +81,7 @@ function AdminSidebar() {
           )}
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminCoreLinks.map((item) => (
+              {filteredCore.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="h-10">
                     <NavLink
@@ -88,141 +97,149 @@ function AdminSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <Briefcase className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Operacional</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {adminOperationalLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredOps.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <Briefcase className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Operacional</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredOps.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <BarChart className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Inteligência</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {adminIntelligenceLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredIntel.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <BarChart className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Inteligência</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredIntel.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <Settings className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Configuração</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {adminConfigLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredConfig.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <Settings className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Configuração</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredConfig.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <Rocket className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Em breve</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {comingSoonLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredSoon.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <Rocket className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Em breve</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredSoon.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -243,7 +260,37 @@ function AdminSidebar() {
 }
 
 export default function AdminLayout() {
-  const { user } = useAuth();
+  const { user, isLoading: loadingAuth } = useAuth();
+  const { can, getFirstAllowedRoute, isLoading: loadingPermissions } = useMyPermissions();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loadingAuth && !loadingPermissions) {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      // Check current route permission
+      const currentPath = location.pathname;
+      const matchedModule = ADMIN_MODULES_CONFIG.find(m => currentPath.startsWith(m.path));
+      
+      if (matchedModule && !can(matchedModule.key)) {
+        const firstRoute = getFirstAllowedRoute();
+        if (firstRoute) navigate(firstRoute);
+      }
+    }
+  }, [loadingAuth, loadingPermissions, user, location.pathname, can, getFirstAllowedRoute, navigate]);
+
+  if (loadingAuth || loadingPermissions) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">

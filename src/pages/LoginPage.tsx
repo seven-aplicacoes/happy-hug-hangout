@@ -53,32 +53,39 @@ export default function LoginPage() {
         if (profile.role === 'admin') {
           selecionarPerfil('admin');
           navigate('/admin/dashboard');
-        } else {
+        } else if (profile.role === 'consultor') {
           selecionarPerfil('consultor');
           
-          // Find first allowed module for consultant
           const { data: permissions } = await supabase
             .from('consultant_permissions')
             .select('module_key')
             .eq('consultant_id', profile.id)
-            .eq('can_view', true)
-            .order('created_at');
+            .eq('can_view', true);
             
-          if (permissions && permissions.length > 0) {
-            const modulePaths: Record<string, string> = {
-              dashboard: '/consultor/dashboard',
-              clientes: '/consultor/clientes',
-              reunioes: '/consultor/reunioes',
-              tarefas: '/consultor/tarefas',
-              documentos: '/consultor/documentos',
-              metodologia: '/consultor/metodologia',
-              perfil: '/consultor/meu-perfil'
-            };
-            const path = modulePaths[permissions[0].module_key] || '/consultor/dashboard';
-            navigate(path);
+          const modulePaths: Record<string, string> = {
+            dashboard: '/consultor/dashboard',
+            clientes: '/consultor/clientes',
+            reunioes: '/consultor/reunioes',
+            tarefas: '/consultor/tarefas',
+            documentos: '/consultor/documentos',
+            metodologia: '/consultor/metodologia',
+            perfil: '/consultor/meu-perfil'
+          };
+
+          // Define priority order for redirection
+          const priorityOrder = ['dashboard', 'clientes', 'reunioes', 'tarefas', 'documentos', 'metodologia', 'perfil'];
+          
+          const allowedModule = priorityOrder.find(key => 
+            permissions?.some(p => p.module_key === key)
+          );
+
+          if (allowedModule) {
+            navigate(modulePaths[allowedModule]);
           } else {
-            navigate('/consultor/dashboard');
+            navigate('/no-access');
           }
+        } else {
+          navigate('/portal');
         }
       }
     } catch (error: any) {

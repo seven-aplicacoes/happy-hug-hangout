@@ -17,6 +17,40 @@ export interface ConsultantPermission {
   updated_at: string;
 }
 
+export const CONSULTANT_MODULES_CONFIG = [
+  { key: 'dashboard', path: '/consultor/dashboard' },
+  { key: 'clientes', path: '/consultor/clientes' },
+  { key: 'reunioes', path: '/consultor/reunioes' },
+  { key: 'tarefas', path: '/consultor/tarefas' },
+  { key: 'documentos', path: '/consultor/documentos' },
+  { key: 'metodologia', path: '/consultor/metodologia' },
+  { key: 'perfil', path: '/consultor/meu-perfil' },
+];
+
+export const ADMIN_MODULES_CONFIG = [
+  { key: 'dashboard', path: '/admin/dashboard' },
+  { key: 'clientes', path: '/admin/clientes' },
+  { key: 'contratos', path: '/admin/contratos' },
+  { key: 'produtos', path: '/admin/produtos' },
+  { key: 'reunioes', path: '/admin/reunioes' },
+  { key: 'tarefas', path: '/admin/tarefas' },
+  { key: 'documentos', path: '/admin/documentos' },
+  { key: 'notificacoes', path: '/admin/notificacoes' },
+  { key: 'analise-avancada', path: '/admin/analise-avancada' },
+  { key: 'mapa-carteira', path: '/admin/mapa-carteira' },
+  { key: 'consultores', path: '/admin/consultores' },
+  { key: 'permissoes-consultores', path: '/admin/permissoes-consultores' },
+  { key: 'metas-consultores', path: '/admin/metas-consultores' },
+  { key: 'metodologia', path: '/admin/metodologia' },
+  { key: 'integracoes', path: '/admin/integracoes' },
+  { key: 'ia', path: '/admin/ia' },
+  { key: 'inteligencia', path: '/admin/inteligencia' },
+  { key: 'relacionamento', path: '/admin/relacionamento' },
+  { key: 'pipeline', path: '/admin/pipeline' },
+  { key: 'renovacao', path: '/admin/renovacao' },
+  { key: 'alertas', path: '/admin/alertas' },
+];
+
 export function useConsultantPermissions(consultantId?: string) {
   const queryClient = useQueryClient();
 
@@ -84,7 +118,7 @@ export function useConsultantPermissions(consultantId?: string) {
 }
 
 export function useMyPermissions() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, perfil } = useAuth();
   const { data: permissions, isLoading } = useQuery({
     queryKey: ['my-permissions', authUser?.id],
     queryFn: async () => {
@@ -98,19 +132,25 @@ export function useMyPermissions() {
         .eq('id', user.id)
         .single();
       
-      if (profile?.role === 'admin') {
-        // Admins have all permissions
-        return 'admin' as const;
-      }
-
-      const { data, error } = await supabase
+      const { data: permissionData, error: permError } = await supabase
         .from('consultant_permissions')
         .select('*')
         .eq('consultant_id', user.id);
 
-      if (error) throw error;
-      return data as ConsultantPermission[];
+      if (permError) throw permError;
+
+      if (permissionData && permissionData.length > 0) {
+        return permissionData as ConsultantPermission[];
+      }
+
+      if (profile?.role === 'admin') {
+        // Admins with no specific permission records have all permissions
+        return 'admin' as const;
+      }
+
+      return [] as ConsultantPermission[];
     },
+    enabled: !!authUser,
   });
 
   const can = (moduleKey: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' = 'view') => {
@@ -131,9 +171,28 @@ export function useMyPermissions() {
     }
   };
 
+  const getFirstAllowedRoute = () => {
+    if (isLoading) return null;
+    if (permissions === 'admin') return perfil === 'admin' ? ADMIN_MODULES_CONFIG[0].path : CONSULTANT_MODULES_CONFIG[0].path;
+    if (!permissions || !Array.isArray(permissions)) return '/no-access';
+
+    const config = perfil === 'admin' ? ADMIN_MODULES_CONFIG : CONSULTANT_MODULES_CONFIG;
+    const allowedModules = config.filter(m => can(m.key));
+    
+    if (allowedModules.length > 0) return allowedModules[0].path;
+    
+    // If not found in primary config, check the other one
+    const otherConfig = perfil === 'admin' ? CONSULTANT_MODULES_CONFIG : ADMIN_MODULES_CONFIG;
+    const allowedInOther = otherConfig.filter(m => can(m.key));
+    if (allowedInOther.length > 0) return allowedInOther[0].path;
+    
+    return '/no-access';
+  };
+
   return {
     permissions,
     isLoading,
     can,
+    getFirstAllowedRoute,
   };
 }
