@@ -36,14 +36,14 @@ function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: an
           <div className="flex items-center gap-4">
             <div className={cn(
               "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-              meeting.status === 'realizado' ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
+              meeting.status === 'realizada' ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
             )}>
               #{meeting.meetingNumber}
             </div>
             <div>
               <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{meeting.title}</p>
               <div className="flex items-center gap-3 mt-1">
-                <StatusTag label={meeting.status} variant={meeting.status === 'realizado' ? 'success' : meeting.status === 'agendado' ? 'info' : 'neutral'} />
+                <StatusTag label={meeting.status} variant={meeting.status === 'realizada' ? 'success' : meeting.status === 'agendado' ? 'info' : 'neutral'} />
                 {meeting.scheduledAt && (
                   <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" /> {new Date(meeting.scheduledAt).toLocaleDateString('pt-BR')} às {new Date(meeting.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
