@@ -6,7 +6,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, CalendarDays, CheckSquare, UserCircle, LogOut, BookOpen, FileText, Plug, RefreshCw, Loader2, ChevronRight, Briefcase, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, CheckSquare, UserCircle, LogOut, BookOpen, FileText, Plug, RefreshCw, Loader2, ChevronRight, Briefcase, Settings, Rocket, TrendingUp, BarChart3, Map, Bell } from 'lucide-react';
 import { useMyPermissions, CONSULTANT_MODULES_CONFIG } from '@/hooks/useConsultantPermissions';
 import { Button } from '@/components/ui/button';
 import { SevenLogo } from '@/components/SevenLogo';
@@ -26,7 +26,15 @@ const consultorOperationalLinks = [
 ];
 
 const consultorConfigLinks = [
+  // Any remaining config links
+];
+
+const comingSoonLinks = [
   { title: 'Metodologia Seven', url: '/consultor/metodologia', icon: BookOpen, module: 'metodologia' },
+  { title: 'Inteligência', url: '/consultor/inteligencia', icon: TrendingUp, module: 'inteligencia' },
+  { title: 'Análise Avançada', url: '/consultor/analise-avancada', icon: BarChart3, module: 'analise-avancada' },
+  { title: 'Mapa da Carteira', url: '/consultor/mapa-carteira', icon: Map, module: 'mapa-carteira' },
+  { title: 'Notificações', url: '/consultor/notificacoes', icon: Bell, module: 'notificacoes' },
 ];
 
 
@@ -48,6 +56,7 @@ function ConsultorSidebar() {
   const filteredCore = consultorCoreLinks.filter(link => can(link.module));
   const filteredOps = consultorOperationalLinks.filter(link => can(link.module));
   const filteredConfig = consultorConfigLinks.filter(link => can(link.module));
+  const filteredSoon = comingSoonLinks.filter(link => can(link.module));
 
   return (
     <Sidebar collapsible="icon">
@@ -151,6 +160,42 @@ function ConsultorSidebar() {
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         {filteredConfig.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
+
+              {filteredSoon.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <Rocket className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Em breve</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredSoon.map((item) => (
                           <SidebarMenuSubItem key={item.title}>
                             <SidebarMenuSubButton asChild>
                               <NavLink
