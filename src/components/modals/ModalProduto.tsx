@@ -54,7 +54,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
         orderIndex: p.orderIndex,
         durationMinutes: minutesToHHMM(p.durationMinutes),
         executorType: p.executorType || 'consultor',
-        meetingsCount: p.meetingsCount || 0,
+        meetingsCount: p.meetingsCount || 1,
         purpose: p.purpose || ''
       })));
     } else {
@@ -70,12 +70,15 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
   }, [produto, allPlanPhases]);
 
   const addPhase = () => {
+    const nextOrder = phases.length > 0 
+      ? Math.max(...phases.map(p => p.orderIndex || 0)) + 1 
+      : 1;
     setPhases([...phases, { 
       name: '', 
-      orderIndex: phases.length + 1, 
+      orderIndex: nextOrder, 
       durationMinutes: '', 
       executorType: 'consultor',
-      meetingsCount: 0,
+      meetingsCount: 1,
       purpose: '' 
     }]);
   };
@@ -115,7 +118,8 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
     let totalConsultantMinutes = 0;
     let totalSilvaneMinutes = 0;
 
-    for (const p of phases) {
+    const sortedPhases = [...phases].sort((a, b) => a.orderIndex - b.orderIndex);
+    for (const p of sortedPhases) {
       if (!p.name.trim()) {
         toast({ variant: "destructive", title: "Módulo inválido", description: "Todos os módulos precisam de um nome." });
         return;
@@ -134,7 +138,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       else totalSilvaneMinutes += pMinutes;
 
       if (!p.orderIndex || p.orderIndex < 1) {
-        toast({ variant: "destructive", title: "Módulo inválido", description: "A ordem do módulo deve ser pelo menos 1." });
+        toast({ variant: "destructive", title: "Módulo inválido", description: `A ordem do módulo "${p.name || 'sem nome'}" deve ser pelo menos 1.` });
         return;
       }
       if (orderIndices.has(p.orderIndex)) {
@@ -183,7 +187,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
             order_index: Math.floor(p.orderIndex),
             duration_minutes: hhmmToMinutes(p.durationMinutes),
             executor_type: p.executorType,
-            meetings_count: Math.floor(p.meetingsCount || 0),
+            meetings_count: Math.max(1, Math.floor(p.meetingsCount || 1)),
             purpose: (p.purpose || '').trim(),
             phase_key: p.name.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, "")
           };
@@ -278,8 +282,8 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
             {phases.map((p, index) => (
               <Card key={index} className="bg-muted/30">
                 <CardContent className="p-4 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                    <div className="md:col-span-4 space-y-1">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                    <div className="md:col-span-3 space-y-1">
                       <Label className="text-xs">Nome do Módulo *</Label>
                       <Input 
                         value={p.name} 
@@ -289,7 +293,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
                       />
                     </div>
                     
-                    <div className="md:col-span-3 space-y-1">
+                    <div className="md:col-span-2 space-y-1">
                       <Label className="text-xs flex items-center gap-1">
                         <Users className="h-3 w-3" /> Responsável
                       </Label>
@@ -319,27 +323,27 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
                       />
                     </div>
 
-                    <div className="md:col-span-1 space-y-1">
+                    <div className="md:col-span-2 space-y-1">
                       <Label className="text-xs">Encontros</Label>
                       <Input 
                         type="number" 
                         value={p.meetingsCount} 
-                        onChange={e => updatePhase(index, 'meetingsCount', Math.max(0, Number(e.target.value)))} 
+                        onChange={e => updatePhase(index, 'meetingsCount', Math.max(1, parseInt(e.target.value) || 0))} 
                         className="h-8 text-xs" 
                       />
                     </div>
 
-                    <div className="md:col-span-1 space-y-1">
+                    <div className="md:col-span-2 space-y-1">
                       <Label className="text-xs">Ordem</Label>
                       <Input 
                         type="number" 
                         value={p.orderIndex} 
-                        onChange={e => updatePhase(index, 'orderIndex', Number(e.target.value))} 
+                        onChange={e => updatePhase(index, 'orderIndex', parseInt(e.target.value) || 0)} 
                         className="h-8 text-xs" 
                       />
                     </div>
 
-                    <div className="md:col-span-1 flex justify-end">
+                    <div className="md:col-span-1 flex justify-center pb-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removePhase(index)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
