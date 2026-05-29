@@ -476,7 +476,17 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
   );
 }
 
-export function ContractJourneyCard({ contrato, isEditing, onToggleEdit }: { contrato: any, isEditing: boolean, onToggleEdit: () => void }) {
+export function ContractJourneyCard({ 
+  contrato, 
+  isEditing = false, 
+  onToggleEdit = () => {},
+  expanded = false 
+}: { 
+  contrato: any, 
+  isEditing?: boolean, 
+  onToggleEdit?: () => void,
+  expanded?: boolean
+}) {
   const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
