@@ -11,81 +11,36 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { DataTable, Column } from '@/components/DataTable';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useConsultantGoals, IndicatorGoal } from '@/hooks/useConsultantGoals';
-import { Loader2, Plus, RefreshCw, Save, Trash2, Users } from 'lucide-react';
-import { toast } from 'sonner';
-
-const KPI_KEYS = [
-  { key: 'meetings_completed', label: 'Reuniões Realizadas' },
-  { key: 'csat_responses', label: 'CSAT Respostas' },
-  { key: 'csat_adherence', label: 'Adesão CSAT' },
-  { key: 'csat_score', label: 'Nota CSAT' },
-  { key: 'nps', label: 'NPS' },
-  { key: 'meetings_per_client', label: 'Encontros por Cliente' },
-  { key: 'critical_clinics', label: 'Clínicas em crítico' },
-  { key: 'attention_clinics', label: 'Clínicas em atenção' },
-  { key: 'contracts_ending_90_days', label: 'Encerrando em 90 dias' },
-  { key: 'upsell_potential', label: 'Potencial upsell' },
-  { key: 'active_tasks', label: 'Tarefas ativas' },
-  { key: 'client_portfolio', label: 'Meus clientes' },
-];
+import { Loader2, Save, Users, CheckCircle2, XCircle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 
 export default function AdminConsultantGoalsPage() {
-  const { consultores, isLoading: loadingConsultores } = useConsultores();
+  const { consultores } = useConsultores();
   const [selectedConsultantId, setSelectedConsultantId] = useState<string>('');
   
   const { 
     consultantGoals, 
-    defaultGoals, 
     isLoading: loadingGoals, 
-    upsertConsultantGoal,
-    deleteConsultantGoal,
-    restoreDefaults 
+    upsertConsultantGoal 
   } = useConsultantGoals(selectedConsultantId);
 
-  const [editingGoal, setEditingGoal] = useState<Partial<IndicatorGoal> | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<Partial<IndicatorGoal>>({});
 
-  const handleSaveGoal = async () => {
-    if (!selectedConsultantId || !editingGoal?.indicator_key) return;
-    
-    try {
-      await upsertConsultantGoal.mutateAsync({
-        ...editingGoal,
-        consultant_id: selectedConsultantId,
-        indicator_label: KPI_KEYS.find(k => k.key === editingGoal.indicator_key)?.label || editingGoal.indicator_key,
-      } as any);
-      setEditingGoal(null);
-    } catch (error) {
-      // toast handled in hook
-    }
+  const handleEdit = (goal: IndicatorGoal) => {
+    setEditingId(goal.id);
+    setEditValues(goal);
   };
 
-  const columns: Column<IndicatorGoal>[] = [
-    { key: 'indicator_label', header: 'Indicador', render: (g) => g.indicator_label },
-    { key: 'goal_value', header: 'Meta', render: (g) => g.goal_value },
-    { key: 'goal_type', header: 'Tipo', render: (g) => (
-      <span className="capitalize">{g.goal_type}</span>
-    )},
-    { key: 'comparison_operator', header: 'Comparação', render: (g) => (
-      <code className="text-xs bg-muted px-1 rounded">{g.comparison_operator}</code>
-    )},
-    { 
-      key: 'actions', 
-      header: 'Ações', 
-      render: (g) => (
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setEditingGoal(g)}>
-            Editar
-          </Button>
-          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteConsultantGoal.mutate(g.id)}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )
-    }
-  ];
+  const handleSave = async () => {
+    if (!editValues.id) return;
+    await upsertConsultantGoal.mutateAsync(editValues);
+    setEditingId(null);
+  };
 
   const selectedConsultant = useMemo(() => 
     consultores?.find(c => c.id === selectedConsultantId),
@@ -123,92 +78,7 @@ export default function AdminConsultantGoalsPage() {
             <>
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Metas de {selectedConsultant?.full_name}</h3>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => restoreDefaults.mutate(selectedConsultantId)}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Restaurar Padrão
-                  </Button>
-                  <Button size="sm" onClick={() => setEditingGoal({ indicator_key: '', goal_value: 0, goal_type: 'minimum', comparison_operator: 'greater_or_equal' })}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Meta
-                  </Button>
-                </div>
               </div>
-
-              {editingGoal && (
-                <Card className="border-primary/50">
-                  <CardContent className="p-4 space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-1">
-                        <Label>Indicador</Label>
-                        <Select 
-                          value={editingGoal.indicator_key} 
-                          onValueChange={(v) => setEditingGoal({ ...editingGoal, indicator_key: v })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {KPI_KEYS.map(k => (
-                              <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label>Valor da Meta</Label>
-                        <Input 
-                          type="number" 
-                          step="0.1"
-                          value={editingGoal.goal_value} 
-                          onChange={(e) => setEditingGoal({ ...editingGoal, goal_value: parseFloat(e.target.value) || 0 })}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label>Tipo</Label>
-                        <Select 
-                          value={editingGoal.goal_type} 
-                          onValueChange={(v: any) => setEditingGoal({ ...editingGoal, goal_type: v })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="minimum">Mínimo</SelectItem>
-                            <SelectItem value="maximum">Máximo</SelectItem>
-                            <SelectItem value="target">Alvo</SelectItem>
-                            <SelectItem value="informational">Informativo</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label>Comparação</Label>
-                        <Select 
-                          value={editingGoal.comparison_operator} 
-                          onValueChange={(v: any) => setEditingGoal({ ...editingGoal, comparison_operator: v })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="greater_or_equal">GTE ( {'>'} = )</SelectItem>
-                            <SelectItem value="less_or_equal">LTE ( {'<'} = )</SelectItem>
-                            <SelectItem value="equal">Igual ( = )</SelectItem>
-                            <SelectItem value="none">Nenhuma</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" onClick={() => setEditingGoal(null)}>Cancelar</Button>
-                      <Button onClick={handleSaveGoal}>
-                        <Save className="h-4 w-4 mr-2" />
-                        Salvar Meta
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {loadingGoals ? (
                 <div className="flex justify-center p-12">
@@ -217,11 +87,100 @@ export default function AdminConsultantGoalsPage() {
               ) : (
                 <Card>
                   <CardContent className="p-0">
-                    <DataTable 
-                      data={consultantGoals || []} 
-                      columns={columns}
-                      emptyMessage="Nenhuma meta personalizada. Este consultor está usando os padrões globais."
-                    />
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Indicador</TableHead>
+                          <TableHead>Meta Esperada</TableHead>
+                          <TableHead>Período</TableHead>
+                          <TableHead>Meta por Cliente Ativo</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {consultantGoals?.map((goal) => (
+                          <TableRow key={goal.id}>
+                            <TableCell className="font-medium">{goal.indicator_label}</TableCell>
+                            <TableCell>
+                              {editingId === goal.id ? (
+                                <Input 
+                                  type="number" 
+                                  className="w-24"
+                                  value={editValues.goal_value}
+                                  onChange={(e) => setEditValues({ ...editValues, goal_value: parseFloat(e.target.value) || 0 })}
+                                />
+                              ) : (
+                                goal.goal_value
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {editingId === goal.id ? (
+                                <Select 
+                                  value={editValues.period_type} 
+                                  onValueChange={(v: any) => setEditValues({ ...editValues, period_type: v })}
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="weekly">Semanal</SelectItem>
+                                    <SelectItem value="monthly">Mensal</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <span className="capitalize">{goal.period_type === 'weekly' ? 'Semanal' : 'Mensal'}</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {editingId === goal.id ? (
+                                <div className="flex items-center space-x-2">
+                                  <Switch 
+                                    checked={editValues.is_per_client} 
+                                    onCheckedChange={(v) => setEditValues({ ...editValues, is_per_client: v })} 
+                                  />
+                                  <Label>{editValues.is_per_client ? 'Sim' : 'Não'}</Label>
+                                </div>
+                              ) : (
+                                <Badge variant={goal.is_per_client ? "default" : "secondary"}>
+                                  {goal.is_per_client ? "Sim" : "Não"}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {goal.is_active ? (
+                                <div className="flex items-center text-green-600 gap-1">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  <span className="text-xs">Ativo</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-muted-foreground gap-1">
+                                  <XCircle className="h-4 w-4" />
+                                  <span className="text-xs">Inativo</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {editingId === goal.id ? (
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
+                                    Cancelar
+                                  </Button>
+                                  <Button size="sm" onClick={handleSave} disabled={upsertConsultantGoal.isPending}>
+                                    {upsertConsultantGoal.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                                    Salvar
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button variant="outline" size="sm" onClick={() => handleEdit(goal)}>
+                                  Editar
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </CardContent>
                 </Card>
               )}
