@@ -32,7 +32,6 @@ export function useContractProductPhases(contractProductId?: string) {
         durationMinutes: p.duration_minutes,
         executorType: p.executor_type,
         meetingsCount: p.meetings_count,
-        meetingsScheduled: p.meetings?.[0]?.count || 0,
         startDate: p.start_date,
         endDate: p.end_date,
         status: p.status,
@@ -41,7 +40,7 @@ export function useContractProductPhases(contractProductId?: string) {
         internalNotes: p.internal_notes,
         clientNotes: p.client_notes,
         clientVisible: p.client_visible,
-        meetingsScheduled: p.meetingsScheduled,
+        meetingsScheduled: p.meetings?.[0]?.count || 0,
       })) as (ContractProductPhase & { responsibleConsultantNome?: string; meetingsScheduled?: number })[];
     },
     enabled: !!contractProductId,
