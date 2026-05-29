@@ -69,13 +69,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "client_alerts_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
         ]
       }
       client_contacts: {
@@ -273,13 +266,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "client_products_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "client_products_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -432,13 +418,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "clients_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
         ]
       }
       consultant_permissions: {
@@ -495,13 +474,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "consultant_permissions_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
         ]
       }
       contract_product_phase_consultants: {
@@ -550,13 +522,6 @@ export type Database = {
             columns: ["consultant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contract_product_phase_consultants_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {
@@ -659,13 +624,6 @@ export type Database = {
             columns: ["responsible_consultant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contract_product_phases_responsible_consultant_id_fkey"
-            columns: ["responsible_consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
         ]
@@ -836,13 +794,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "contracts_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "contracts_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -978,13 +929,6 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {
@@ -1227,13 +1171,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "projects_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "projects_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -1347,13 +1284,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "meetings_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "meetings_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -1379,13 +1309,6 @@ export type Database = {
             columns: ["scheduled_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meetings_scheduled_by_fkey"
-            columns: ["scheduled_by"]
-            isOneToOne: false
-            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
         ]
@@ -1714,13 +1637,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "nps_surveys_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
         ]
       }
       products: {
@@ -1940,13 +1856,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tasks_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "tasks_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -2025,39 +1934,7 @@ export type Database = {
       }
     }
     Views: {
-      team_members: {
-        Row: {
-          avatar_url: string | null
-          city: string | null
-          full_name: string | null
-          id: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          specialty: string | null
-          state: string | null
-          status: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          city?: string | null
-          full_name?: string | null
-          id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          specialty?: string | null
-          state?: string | null
-          status?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          city?: string | null
-          full_name?: string | null
-          id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          specialty?: string | null
-          state?: string | null
-          status?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       current_user_role: {
@@ -2066,6 +1943,19 @@ export type Database = {
       }
       current_user_status: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      list_team_members: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          city: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          specialty: string
+          state: string
+          status: string
+        }[]
+      }
       seed_default_consultant_permissions: {
         Args: { p_consultant_id: string }
         Returns: undefined
