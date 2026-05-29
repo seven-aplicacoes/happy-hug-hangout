@@ -81,7 +81,7 @@ function AdminSidebar() {
           )}
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminCoreLinks.map((item) => (
+              {filteredCore.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="h-10">
                     <NavLink
@@ -97,141 +97,149 @@ function AdminSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <Briefcase className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Operacional</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {adminOperationalLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredOps.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <Briefcase className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Operacional</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredOps.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <BarChart className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Inteligência</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {adminIntelligenceLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredIntel.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <BarChart className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Inteligência</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredIntel.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <Settings className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Configuração</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {adminConfigLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredConfig.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <Settings className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Configuração</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredConfig.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
 
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="h-10">
-                      <Rocket className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
-                      {!collapsed && (
-                        <>
-                          <span className="text-[13px]">Em breve</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {comingSoonLinks.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to={item.url}
-                              className="hover:text-sidebar-foreground transition-colors"
-                              activeClassName="text-primary font-medium"
-                            >
-                              <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {filteredSoon.length > 0 && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="h-10">
+                        <Rocket className="mr-3 h-[18px] w-[18px]" strokeWidth={1.5} />
+                        {!collapsed && (
+                          <>
+                            <span className="text-[13px]">Em breve</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </>
+                        )}
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {filteredSoon.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={item.url}
+                                className="hover:text-sidebar-foreground transition-colors"
+                                activeClassName="text-primary font-medium"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
