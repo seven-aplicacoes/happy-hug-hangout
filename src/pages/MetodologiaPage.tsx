@@ -238,12 +238,6 @@ export default function MetodologiaPage() {
         titulo="Metodologia Seven"
         subtitulo="Hub central de conhecimento, materiais, templates e perguntas-chave da consultoria."
       >
-        {isAdmin && (
-          <Button onClick={() => setNoteModalOpen(true)} className="gap-2 bg-seven-warning hover:bg-seven-warning/90 text-black font-bold">
-            <Plus className="h-4 w-4" />
-            Novo Registro Metodológico
-          </Button>
-        )}
       </PageHeader>
 
       <Card className="bg-gradient-to-br from-primary/5 via-background to-background border-primary/20">
