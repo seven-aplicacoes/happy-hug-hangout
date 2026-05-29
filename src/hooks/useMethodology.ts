@@ -75,7 +75,6 @@ export function useMethodology() {
     questions, 
     plans,
     planPhases,
-    notes,
-    isLoading: isLoadingPhases || isLoadingMaterials || isLoadingTemplates || isLoadingQuestions || isLoadingPlans || isLoadingPlanPhases || isLoadingNotes
+    isLoading: isLoadingPhases || isLoadingMaterials || isLoadingTemplates || isLoadingQuestions || isLoadingPlans || isLoadingPlanPhases
   };
 }
