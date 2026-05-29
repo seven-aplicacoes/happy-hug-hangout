@@ -201,7 +201,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
             phase_key: p.name.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, "")
           };
           
-          if (p.id) {
+          if (p.id && typeof p.id === 'string' && p.id.length > 5) {
             phase.id = p.id;
           }
           return phase;
