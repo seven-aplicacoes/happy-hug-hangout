@@ -88,7 +88,7 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
           title,
           description,
           type: visibilityType === 'client' ? 'entregavel' : 'material',
-          visibility: visibilityType === 'client' ? 'client' : 'internal',
+          visibility: (visibilityType === 'client' ? 'client' : 'internal') as any,
           visibility_type: visibilityType,
           file_name: file.name,
           file_path: filePath,
@@ -98,8 +98,9 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
           uploaded_by: user.id,
           author_id: user.id,
           status: 'pendente'
-        })
+        } as any)
         .select();
+
 
       if (error) throw error;
       return data;
