@@ -479,14 +479,10 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
 
 export function ContractJourneyCard({ 
   contrato, 
-  isEditing = false, 
-  onToggleEdit = () => {},
-  expanded = false 
+  isEditing = false
 }: { 
   contrato: any, 
-  isEditing?: boolean, 
-  onToggleEdit?: () => void,
-  expanded?: boolean
+  isEditing?: boolean
 }) {
   const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
@@ -508,47 +504,91 @@ export function ContractJourneyCard({
 
   if (isLoadingProducts) {
     return (
-      <Card className="shadow-xl border-muted/40 overflow-hidden bg-white/50 backdrop-blur-sm">
-        <CardContent className="p-12 text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary mb-4 opacity-50" />
-          <p className="text-muted-foreground font-medium animate-pulse">Carregando jornada estratégica...</p>
+      <Card className="shadow-sm border-muted/40 overflow-hidden bg-white">
+        <CardContent className="p-8 text-center">
+          <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary mb-2 opacity-50" />
+          <p className="text-muted-foreground text-sm font-medium">Carregando detalhes do contrato...</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-1.5 rounded-full bg-primary" />
-          <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
-        </div>
-      </div>
+    <AccordionItem value={contrato.id} className="border-none">
+      <Card className="shadow-lg border-muted/40 overflow-hidden bg-white hover:border-primary/20 transition-all">
+        <AccordionTrigger className="p-0 hover:no-underline [&[data-state=open]>div>div>div>.chevron]:rotate-180">
+          <div className="flex flex-col md:flex-row md:items-center justify-between w-full p-6 text-left gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Briefcase className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="font-black text-lg text-foreground tracking-tight">{contrato.tipo}</h3>
+                  <StatusTag label={contrato.status} />
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                  <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {new Date(contrato.dataInicio).toLocaleDateString('pt-BR')} a {new Date(contrato.dataFim).toLocaleDateString('pt-BR')}
+                  </span>
+                  <span className="text-xs font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5">
+                    <DollarSign className="h-3.5 w-3.5" />
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor)}
+                  </span>
+                  <span className="text-xs font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" />
+                    Consultor {contrato.consultorNome}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10 font-black px-3 py-1 text-[10px] uppercase tracking-wider">
+                {products?.length || 0} Produtos
+              </Badge>
+              <div className="chevron transition-transform duration-200 text-muted-foreground">
+                <ChevronDown className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+        </AccordionTrigger>
 
-      {(products || []).map(product => (
-        <ProductItem 
-          key={product.id} 
-          product={product} 
-          contrato={contrato} 
-          isEditing={isEditing}
-          onSchedule={handleScheduleMeeting}
-        />
-      ))}
+        <AccordionContent>
+          <div className="px-6 pb-8 pt-2 space-y-6">
+            <div className="flex items-center gap-2 border-b border-muted/60 pb-4">
+              <div className="h-6 w-1 rounded-full bg-primary" />
+              <h4 className="text-sm font-black uppercase tracking-tight text-muted-foreground">Detalhamento de Produtos e Módulos</h4>
+            </div>
 
-      {(!products || products.length === 0) && (
-        <div className="p-16 text-center bg-white/50 rounded-2xl border-2 border-dashed border-muted/50">
-          <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-          <p className="text-muted-foreground font-medium">Nenhum produto vinculado a este contrato.</p>
-        </div>
-      )}
+            <div className="space-y-6">
+              {(products || []).map(product => (
+                <ProductItem 
+                  key={product.id} 
+                  product={product} 
+                  contrato={contrato} 
+                  isEditing={isEditing}
+                  onSchedule={handleScheduleMeeting}
+                />
+              ))}
+
+              {(!products || products.length === 0) && (
+                <div className="p-10 text-center bg-muted/10 rounded-xl border-2 border-dashed">
+                  <p className="text-muted-foreground text-sm">Nenhum produto vinculado a este contrato.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </AccordionContent>
+      </Card>
 
       <ModalReuniao 
         open={meetingModalOpen} 
         onClose={() => setMeetingModalOpen(false)} 
         initialData={initialMeetingData || undefined} 
       />
-    </div>
+    </AccordionItem>
   );
 }
+
 
