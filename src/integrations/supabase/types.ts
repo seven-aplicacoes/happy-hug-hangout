@@ -432,6 +432,7 @@ export type Database = {
           indicator_key: string
           indicator_label: string
           is_active: boolean | null
+          is_per_client: boolean | null
           period_type: string | null
           updated_at: string | null
         }
@@ -446,6 +447,7 @@ export type Database = {
           indicator_key: string
           indicator_label: string
           is_active?: boolean | null
+          is_per_client?: boolean | null
           period_type?: string | null
           updated_at?: string | null
         }
@@ -460,6 +462,7 @@ export type Database = {
           indicator_key?: string
           indicator_label?: string
           is_active?: boolean | null
+          is_per_client?: boolean | null
           period_type?: string | null
           updated_at?: string | null
         }
@@ -2700,6 +2703,7 @@ export type Database = {
           status: string
         }[]
       }
+      seed_consultant_goals: { Args: { c_id: string }; Returns: undefined }
       seed_default_consultant_permissions: {
         Args: { p_consultant_id: string }
         Returns: undefined
