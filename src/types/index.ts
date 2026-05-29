@@ -120,20 +120,6 @@ export interface MethodologyTemplate {
   url?: string;
 }
  
-export interface MethodologyNote {
-  id: string;
-  title: string;
-  description?: string;
-  type: 'observacao' | 'pendencia' | 'decisao_futura' | 'risco' | 'pergunta' | 'ideia';
-  status: 'aberto' | 'em_discussao' | 'aprovado' | 'descartado' | 'resolvido';
-  priority: 'baixa' | 'media' | 'alta' | 'critica';
-  related_area?: string;
-  related_phase_id?: string;
-  created_by?: string;
-  updated_by?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface MethodologyQuestion {
   id: string;
