@@ -164,11 +164,14 @@ export interface Benchmark {
 }
 
 export const BENCHMARKS = {
-  reunioesRealizadas: { esperado: 32, tolerancia: 6, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: ~32 reuniões/mês (8 por cliente ativo médio).' },
-  csatTaxaAdesao: { esperado: 70, tolerancia: 10, unidade: '%', goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: 70% dos clientes respondem o CSAT após cada encontro.' },
-  csatNotaMedia: { esperado: 4.5, tolerancia: 0.3, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: nota média ≥ 4.5/5.' },
-  npsAtual: { esperado: 60, tolerancia: 15, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: NPS ≥ 60 (zona de excelência).' },
-  encontrosPorClienteAtivo: { esperado: 4, tolerancia: 1, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: 4 encontros/mês por cliente ativo.' },
+  meetings_completed: { esperado: 32, tolerancia: 6, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: ~32 reuniões/mês (8 por cliente ativo médio).' },
+  csat_adherence: { esperado: 70, tolerancia: 10, unidade: '%', goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: 70% dos clientes respondem o CSAT após cada encontro.' },
+  csat_score: { esperado: 4.5, tolerancia: 0.3, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: nota média ≥ 4.5/5.' },
+  nps: { esperado: 60, tolerancia: 15, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: NPS ≥ 60 (zona de excelência).' },
+  meetings_per_client: { esperado: 4, tolerancia: 1, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: 4 encontros/mês por cliente ativo.' },
+  critical_clinics: { esperado: 0, tolerancia: 0, goal_type: 'maximum', comparison_operator: 'less_or_equal', descricao: 'Limite: no máximo 0 ou 1 clínica crítica.' },
+  attention_clinics: { esperado: 3, tolerancia: 0, goal_type: 'maximum', comparison_operator: 'less_or_equal', descricao: 'Limite: no máximo 3 clínicas em atenção.' },
+  upsell_potential: { esperado: 5, tolerancia: 0, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Meta: 5 oportunidades/mês.' },
 } satisfies Record<string, Benchmark>;
 
 export function avaliarBenchmark(valor: number, bench: Benchmark): BenchmarkStatus {
