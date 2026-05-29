@@ -239,67 +239,78 @@ export default function ConsultorDashboardPage() {
           <PeriodFilter value={periodo} onChange={setPeriodo} />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Reuniões realizadas</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
-              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('meetings_completed', BENCHMARKS.meetings_completed)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MessageSquareHeart className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">CSAT respostas</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.csatRespostas}</p>
-              <p className="text-[11px] text-muted-foreground">de {metricas.reunioesRealizadas} reuniões</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Gauge className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Adesão CSAT</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
-              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adherence', BENCHMARKS.csat_adherence)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Star className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Nota CSAT</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
-              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_score', BENCHMARKS.csat_score)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Sparkles className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">NPS</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
-              <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.nps)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Repeat className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Encontros / cliente</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
-              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('meetings_per_client', BENCHMARKS.meetings_per_client)} />
-
-            </CardContent>
-          </Card>
+          {targetMap['meetings_completed'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Reuniões realizadas</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
+                <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('meetings_completed', BENCHMARKS.meetings_completed)} />
+              </CardContent>
+            </Card>
+          )}
+          {targetMap['csat_responses'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MessageSquareHeart className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">CSAT respostas</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatRespostas}</p>
+                <p className="text-[11px] text-muted-foreground">de {metricas.reunioesRealizadas} reuniões</p>
+              </CardContent>
+            </Card>
+          )}
+          {targetMap['csat_adherence'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Gauge className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Adesão CSAT</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
+                <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adherence', BENCHMARKS.csat_adherence)} />
+              </CardContent>
+            </Card>
+          )}
+          {targetMap['csat_score'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Star className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Nota CSAT</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
+                <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_score', BENCHMARKS.csat_score)} />
+              </CardContent>
+            </Card>
+          )}
+          {targetMap['nps'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Sparkles className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">NPS</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
+                <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.nps)} />
+              </CardContent>
+            </Card>
+          )}
+          {targetMap['meetings_per_client'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Repeat className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Encontros / cliente</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
+                <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('meetings_per_client', BENCHMARKS.meetings_per_client)} />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
       )}

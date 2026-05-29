@@ -68,7 +68,7 @@ export function useConsultantGoals(consultantId?: string) {
 
   return {
     consultantGoals,
-    mergedGoals: consultantGoals || [], // All goals are now in consultantGoals due to seeding
+    mergedGoals: (consultantGoals || []).filter(g => g.is_active),
     isLoading,
     upsertConsultantGoal,
   };

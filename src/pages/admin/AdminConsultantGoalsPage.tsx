@@ -148,16 +148,20 @@ export default function AdminConsultantGoalsPage() {
                               )}
                             </TableCell>
                             <TableCell>
-                              {goal.is_active ? (
-                                <div className="flex items-center text-green-600 gap-1">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  <span className="text-xs">Ativo</span>
+                              {editingId === goal.id ? (
+                                <div className="flex items-center space-x-2">
+                                  <Switch 
+                                    checked={editValues.is_active} 
+                                    onCheckedChange={(v) => setEditValues({ ...editValues, is_active: v })} 
+                                  />
+                                  <Label>{editValues.is_active ? 'Ativo' : 'Inativo'}</Label>
                                 </div>
                               ) : (
-                                <div className="flex items-center text-muted-foreground gap-1">
-                                  <XCircle className="h-4 w-4" />
-                                  <span className="text-xs">Inativo</span>
-                                </div>
+                                goal.is_active ? (
+                                  <Badge variant="default" className="bg-green-600 hover:bg-green-700">Ativo</Badge>
+                                ) : (
+                                  <Badge variant="secondary">Inativo</Badge>
+                                )
                               )}
                             </TableCell>
                             <TableCell className="text-right">
