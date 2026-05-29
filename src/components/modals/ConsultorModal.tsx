@@ -93,14 +93,14 @@ export const ConsultorModal = ({
   const [kpiTargets, setKpiTargets] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (targets) {
+    if (consultantGoals) {
       const targetMap: Record<string, number> = {};
-      targets.forEach(t => {
-        targetMap[t.kpi_key] = t.target_value;
+      consultantGoals.forEach(t => {
+        targetMap[t.indicator_key] = t.goal_value;
       });
       setKpiTargets(targetMap);
     }
-  }, [targets]);
+  }, [consultantGoals]);
 
   useEffect(() => {
     const fetchStates = async () => {
