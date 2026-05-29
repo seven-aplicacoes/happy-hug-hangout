@@ -483,7 +483,9 @@ export default function ClienteDetalhePage() {
             <div className="h-8 w-1.5 rounded-full bg-seven-success" />
             <h2 className="text-xl font-black uppercase tracking-tight">Linha do Tempo</h2>
           </div>
-          <TimelineCard title="Histórico de Atividades" events={[]} />
+          <div className="space-y-4">
+             <p className="text-sm text-muted-foreground italic">Nenhum evento registrado recentemente.</p>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
