@@ -39,6 +39,9 @@ function PhaseRow({ phase }: { phase: any }) {
       <div className="md:col-span-2 capitalize text-xs font-semibold text-muted-foreground">
         {phase.executorType || '-'}
       </div>
+      <div className="md:col-span-2 text-xs text-muted-foreground truncate">
+        {phase.responsibleConsultantNome || '-'}
+      </div>
       <div className="md:col-span-2">
         <StatusTag label={labelStatus[phase.status] || phase.status} />
       </div>
