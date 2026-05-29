@@ -38,10 +38,10 @@ export function useContractProductPhases(contractProductId?: string) {
           contractProductId: p.contract_product_id,
           methodologyPhaseId: p.methodology_phase_id,
           orderIndex: p.order_index,
-          name: p.name || methodology.name,
-          durationMinutes: p.duration_minutes !== null && p.duration_minutes !== undefined ? p.duration_minutes : (methodology.duration_minutes || 0),
+          name: p.name || methodology.name || 'Módulo Removido', // Snapshot prioritized
+          durationMinutes: p.duration_minutes ?? methodology.duration_minutes ?? 0,
           executorType: p.executor_type || methodology.executor_type,
-          meetingsCount: p.meetings_count !== null && p.meetings_count !== undefined && p.meetings_count !== 0 ? p.meetings_count : (methodology.meetings_count || 0),
+          meetingsCount: p.meetings_count ?? methodology.meetings_count ?? 0,
           startDate: p.start_date,
           endDate: p.end_date,
           status: p.status,

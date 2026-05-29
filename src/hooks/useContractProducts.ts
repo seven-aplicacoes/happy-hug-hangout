@@ -47,12 +47,12 @@ export function useContractProducts(contractId?: string) {
         id: cp.id,
         contractId: cp.contract_id,
         productId: cp.product_id,
-        productNome: cp.product_name || cp.product?.name || 'N/A', // Prioritize snapshot
+        productNome: cp.product_name || cp.product?.name || 'Produto Removido', // Snapshot prioritized
         productName: cp.product_name || cp.product?.name,
         productDescription: cp.product_description || cp.product?.description,
         productCategory: cp.product_category || cp.product?.category,
-        consultantHours: cp.consultant_hours !== null ? cp.consultant_hours : cp.product?.consultant_hours,
-        silvaneHours: cp.silvane_hours !== null ? cp.silvane_hours : cp.product?.silvane_hours,
+        consultantHours: cp.consultant_hours ?? cp.product?.consultant_hours ?? 0,
+        silvaneHours: cp.silvane_hours ?? cp.product?.silvane_hours ?? 0,
         status: cp.status,
         startDate: cp.start_date,
         endDate: cp.end_date,
