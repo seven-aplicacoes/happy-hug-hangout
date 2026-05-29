@@ -1,0 +1,395 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/PageHeader';
+import { StatCard } from '@/components/StatCard';
+import { TaskCard } from '@/components/TaskCard';
+import { Card, CardContent } from '@/components/ui/card';
+import { StatusTag } from '@/components/StatusTag';
+import { Button } from '@/components/ui/button';
+import { SectionHeader } from '@/components/SectionHeader';
+import { EmptyState } from '@/components/EmptyState';
+import { PeriodFilter } from '@/components/PeriodFilter';
+import { BenchmarkBadge } from '@/components/BenchmarkBadge';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  labelEngajamento, calcularEngajamento, variantEngajamento,
+  diasDesdeUltimaReuniao, labelStatus,
+} from '@/data/mockData';
+import { getAlertasContrato, labelAlertaContrato } from '@/data/contratoExtras';
+import { getPeriodo, calcularMetricasConsultor, BENCHMARKS } from '@/data/clienteIndicadores';
+import { useClientes } from '@/hooks/useClientes';
+import { useContratos } from '@/hooks/useContratos';
+import { useReunioes } from '@/hooks/useReunioes';
+import { useTarefas } from '@/hooks/useTarefas';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useMyPermissions } from '@/hooks/useConsultantPermissions';
+import { useKPITargets } from '@/hooks/useKPITargets';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DataTable, Column } from '@/components/DataTable';
+import {
+  Users, CalendarDays, CheckSquare, AlertTriangle,
+  ArrowRight, UserCircle, Flame, Eye, Sparkles, FileClock,
+  ShieldAlert, ChevronDown, ChevronUp, MessageSquareHeart, Star, Gauge, Repeat
+} from 'lucide-react';
+
+type CarteiraFiltro = null | 'critico' | 'atencao' | 'encerrando' | 'upsell';
+
+export default function ConsultorDashboardPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { can, permissions, isLoading: loadingPermissions } = useMyPermissions();
+  
+  const consultorId = user?.consultorId || 'c1';
+  const hoje = new Date();
+  const hojeStr = hoje.toISOString().slice(0, 10);
+
+  const { clientes, isLoading: loadingClientes } = useClientes();
+  const { contratos, isLoading: loadingContratos } = useContratos();
+  const { reunioes, isLoading: loadingReunioes } = useReunioes();
+  const { tarefas, isLoading: loadingTarefas } = useTarefas();
+  const { targets } = useKPITargets();
+
+  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions;
+
+  const [periodo, setPeriodo] = useState(() => getPeriodo('30d'));
+  const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
+    isOpen: false, title: '', type: null 
+  });
+  const [alertasOpen, setAlertasOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loadingPermissions && !can('dashboard') && Array.isArray(permissions)) {
+      const firstAllowed = permissions.find(p => p.can_view);
+      if (firstAllowed) {
+        const modulePaths: Record<string, string> = {
+          dashboard: '/consultor/dashboard',
+          clientes: '/consultor/clientes',
+          reunioes: '/consultor/reunioes',
+          tarefas: '/consultor/tarefas',
+          documentos: '/consultor/documentos',
+          metodologia: '/consultor/metodologia',
+          perfil: '/consultor/meu-perfil'
+        };
+        const path = modulePaths[firstAllowed.module_key];
+        if (path) navigate(path);
+      }
+    }
+  }, [loadingPermissions, can, permissions, navigate]);
+
+  const stats = useMemo(() => {
+    if (!clientes || !contratos || !reunioes || !tarefas) return null;
+
+    const meusClientes = clientes;
+    const minhasTarefas = tarefas;
+    
+    const tarefasPrioritarias = minhasTarefas
+      .filter(t => t.status !== 'concluida')
+      .sort((a, b) => {
+        const p = { critico: 0, alto: 1, medio: 2, baixo: 3 };
+        return (p[a.prioridade] ?? 4) - (p[b.prioridade] ?? 4);
+      })
+      .slice(0, 3);
+
+    const enriquecidos = meusClientes.map(c => ({
+      ...c,
+      engajamento: calcularEngajamento(c.id),
+      diasSemReuniao: diasDesdeUltimaReuniao(c.id),
+    }));
+
+    const criticos = enriquecidos.filter(c => c.engajamento === 'critico');
+    const atencao = enriquecidos.filter(c => c.engajamento === 'atencao');
+    const contratosEncerrando = contratos.filter(c => {
+      const d = (new Date(c.dataFim).getTime() - hoje.getTime()) / 86400000;
+      return d > 0 && d <= 90 && c.status !== 'encerrado' && c.status !== 'cancelado';
+    });
+
+    const upsell = enriquecidos.filter(c => c.potencialUpsell);
+    const alertasContrato = getAlertasContrato({ consultorId });
+    const proximasReunioes = reunioes
+      .filter(r => r.meetingDate >= hojeStr && r.status === 'agendada')
+      .sort((a, b) => a.data.localeCompare(b.data) || a.startTime.localeCompare(b.startTime))
+      .slice(0, 5);
+
+    const metricas = calcularMetricasConsultor(consultorId, periodo, reunioes, clientes);
+
+    return {
+      meusClientes, minhasTarefas, tarefasPrioritarias, criticos,
+      atencao, contratosEncerrando, upsell, alertasContrato, proximasReunioes,
+      metricas
+    };
+  }, [clientes, contratos, reunioes, tarefas, periodo, consultorId, hojeStr]);
+
+  const {
+    meusClientes, minhasTarefas, tarefasPrioritarias, criticos,
+    atencao, contratosEncerrando, upsell, alertasContrato, proximasReunioes,
+    metricas
+  } = stats || {};
+
+  const targetMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    if (targets) {
+      targets.forEach(t => {
+        map[t.kpi_key] = { esperado: t.target_value, tolerancia: 0, unidade: t.target_unit || '', descricao: t.description || '' };
+      });
+    }
+    return map;
+  }, [targets]);
+
+  const getBench = (key: string, defaultBench: any) => {
+    return targetMap[key] || defaultBench;
+  };
+
+  const aplicarFiltro = (f: CarteiraFiltro) => {
+    if (!f) return;
+    const titles = {
+      critico: 'Clínicas em Crítico',
+      atencao: 'Clínicas em Atenção',
+      encerrando: 'Encerrando em 90d',
+      upsell: 'Potencial Upsell'
+    };
+    setModalList({ isOpen: true, title: titles[f], type: f });
+  };
+
+  const fmtData = (d: string) => d.split('-').reverse().join('/');
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 p-8">
+        <Skeleton className="h-12 w-[300px]" />
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <Skeleton className="h-24" /><Skeleton className="h-24" />
+          <Skeleton className="h-24" /><Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-[400px]" />
+      </div>
+    );
+  }
+
+  if (!can('dashboard')) return null;
+  if (!stats) return null;
+
+  return (
+    <div className="space-y-14">
+      <PageHeader titulo="Meu Painel" subtitulo="Resumo do dia e ações prioritárias" />
+
+      {can('indicadores') && (
+        <section className="space-y-4">
+          <div className="flex items-end justify-between flex-wrap gap-3">
+            <SectionHeader
+              overline="Período"
+              titulo="Indicadores Operacionais"
+              descricao="Reuniões, CSAT, NPS e ritmo da carteira no período selecionado"
+            />
+            <PeriodFilter value={periodo} onChange={setPeriodo} />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Reuniões realizadas</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
+                <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('reunioes_realizadas', BENCHMARKS.reunioesRealizadas)} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MessageSquareHeart className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">CSAT respostas</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatRespostas}</p>
+                <p className="text-[11px] text-muted-foreground">de {metricas.reunioesRealizadas} reuniões</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Gauge className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Adesão CSAT</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
+                <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adesao', BENCHMARKS.csatTaxaAdesao)} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Star className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Nota CSAT</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
+                <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_nota', BENCHMARKS.csatNotaMedia)} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Sparkles className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">NPS</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
+                <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.npsAtual)} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Repeat className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Encontros / cliente</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
+                <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('encontros_por_cliente', BENCHMARKS.encontrosPorClienteAtivo)} />
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
+
+      <section className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard titulo="Clínicas em Crítico" valor={criticos.length} icon={Flame} variant={criticos.length > 0 ? 'danger' : 'success'} subtitulo="Sem reunião >15 dias" onClick={() => aplicarFiltro('critico')} />
+          <StatCard titulo="Clínicas em Atenção" valor={atencao.length} icon={AlertTriangle} variant={atencao.length > 0 ? 'warning' : 'success'} subtitulo="9–15 dias sem reunião" onClick={() => aplicarFiltro('atencao')} />
+          <StatCard titulo="Encerrando em 90d" valor={contratosEncerrando.length} icon={FileClock} variant={contratosEncerrando.length > 0 ? 'warning' : 'default'} subtitulo="Contratos próximos do fim" onClick={() => aplicarFiltro('encerrando')} />
+          <StatCard titulo="Potencial Upsell" valor={upsell.length} icon={Sparkles} variant={upsell.length > 0 ? 'success' : 'default'} subtitulo="Oportunidades identificadas" onClick={() => aplicarFiltro('upsell')} />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <StatCard titulo="Tarefas ativas" valor={minhasTarefas.filter(t => t.status !== 'concluida').length} icon={CheckSquare} size="compact" onClick={() => navigate('/consultor/tarefas')} />
+          <StatCard titulo="Meus clientes" valor={meusClientes.length} icon={Users} size="compact" onClick={() => navigate('/consultor/clientes')} />
+          <StatCard titulo="Meu perfil" valor="→" icon={UserCircle} size="compact" subtitulo="Indicadores e carteira" onClick={() => navigate('/consultor/meu-perfil')} />
+        </div>
+      </section>
+
+      <section>
+        <SectionHeader overline="Contratos" titulo="Alertas de Contrato" descricao="Encerramento próximo, sem renovação ou atraso em entregável" />
+        <Card className={alertasContrato.length > 0 ? 'border-seven-warning/30' : ''}>
+          <CardContent className="p-4">
+            <button type="button" onClick={() => setAlertasOpen(o => !o)} className="w-full flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ShieldAlert className={`h-5 w-5 ${alertasContrato.length > 0 ? 'text-seven-warning' : 'text-muted-foreground'}`} strokeWidth={1.5} />
+                <div className="text-left">
+                  <p className="text-sm font-medium">{alertasContrato.length} alertas ativos</p>
+                  <p className="text-xs text-muted-foreground">{alertasContrato.length === 0 ? 'Nenhum alerta de contrato' : 'Clique para ver detalhes'}</p>
+                </div>
+              </div>
+              {alertasContrato.length > 0 && (alertasOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />)}
+            </button>
+            {alertasOpen && alertasContrato.length > 0 && (
+              <ul className="mt-3 pt-3 border-t border-border space-y-1.5">
+                {alertasContrato.map((a, i) => (
+                  <li key={`${a.contratoId}-${a.tipo}-${i}`}>
+                    <button onClick={() => navigate(`/consultor/cliente/${a.clienteId}`)} className="w-full flex items-center justify-between gap-3 px-2 py-1.5 rounded hover:bg-muted/50 text-left transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{a.clienteNome}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{a.mensagem}</p>
+                      </div>
+                      <StatusTag label={labelAlertaContrato[a.tipo]} variant={a.severidade === 'alta' ? 'danger' : 'warning'} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-4">
+          <SectionHeader overline="Agenda" titulo="Próximas Reuniões" descricao="Seus próximos compromissos agendados" />
+          <Card>
+            <CardContent className="p-0">
+              {proximasReunioes.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                  <p>Nenhuma reunião agendada.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {proximasReunioes.map(r => (
+                    <div key={r.id} className="p-4 hover:bg-muted/50 transition-colors flex items-center justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-primary uppercase tracking-wider">{fmtData(r.meetingDate)} · {r.startTime}</span>
+                          <StatusTag label={r.tipo} size="sm" />
+                        </div>
+                        <p className="text-sm font-medium truncate">{r.clienteNome}</p>
+                        <p className="text-xs text-muted-foreground truncate">{r.title}</p>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => navigate(`/consultor/reunioes?id=${r.id}`)}>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          <SectionHeader overline="Prioridades" titulo="Tarefas Críticas" descricao="Ações pendentes com maior prioridade" />
+          <div className="space-y-3">
+            {tarefasPrioritarias.length === 0 ? (
+              <EmptyState titulo="Tudo em dia!" descricao="Nenhuma tarefa crítica pendente." />
+            ) : (
+              tarefasPrioritarias.map(t => <TaskCard key={t.id} tarefa={t} />)
+            )}
+            {minhasTarefas.length > 3 && (
+              <Button variant="ghost" className="w-full text-xs" onClick={() => navigate('/consultor/tarefas')}>
+                Ver todas as tarefas <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <Dialog open={modalList.isOpen} onOpenChange={(open) => !open && setModalList(prev => ({ ...prev, isOpen: false }))}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{modalList.title}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {(() => {
+              let data: any[] = [];
+              if (modalList.type === 'critico') data = criticos;
+              else if (modalList.type === 'atencao') data = atencao;
+              else if (modalList.type === 'encerrando') data = contratosEncerrando;
+              else if (modalList.type === 'upsell') data = upsell;
+
+              const columns: Column<any>[] = [
+                { key: 'nome', header: 'Clínica', render: (row) => row.nomeFantasia || row.clienteNome || '—' },
+                { key: 'status', header: 'Status', render: (row) => <StatusTag label={labelStatus[row.status] || row.status} /> },
+                {
+                  key: 'info',
+                  header: 'Informação',
+                  render: (row) => {
+                    if (modalList.type === 'critico' || modalList.type === 'atencao') return `${row.diasSemReuniao} dias sem reunião`;
+                    if (modalList.type === 'encerrando') return `Vence em ${fmtData(row.dataFim)}`;
+                    if (modalList.type === 'upsell') return 'Potencial identificado';
+                    return '';
+                  }
+                },
+                {
+                  key: 'acao',
+                  header: '',
+                  render: (row) => (
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/consultor/cliente/${row.id || row.clienteId}`)}>
+                      Ver cliente
+                    </Button>
+                  )
+                }
+              ];
+              return <DataTable data={data} columns={columns} />;
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

@@ -44,6 +44,27 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { contratos, isLoading: loadingContratos } = useContratos();
+  
+  // Clientes are already filtered in useClientes hook for non-admins if profile is consultor
+  const meusClientes = useMemo(() => {
+    if (!clientes) return [];
+    return clientes.filter(c => c.consultorId === consultorId);
+  }, [clientes, consultorId]);
+
+  const minhasReunioes = useMemo(() => {
+    if (!reunioes) return [];
+    return reunioes.filter(r => r.consultorId === consultorId);
+  }, [reunioes, consultorId]);
+
+  const minhasTarefas = useMemo(() => {
+    if (!tarefas) return [];
+    return tarefas.filter(t => t.consultorId === consultorId);
+  }, [tarefas, consultorId]);
+
+  const meusContratos = useMemo(() => {
+    if (!contratos) return [];
+    return contratos.filter(c => c.consultorId === consultorId);
+  }, [contratos, consultorId]);
   const [consultor, setConsultor] = useState<any>(null);
   const [loadingConsultor, setLoadingConsultor] = useState(true);
 
@@ -55,10 +76,8 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
 
   const isLoading = loadingClientes || loadingReunioes || loadingTarefas || loadingContratos || loadingConsultor;
 
-  const meusClientes = useMemo(() => (clientes || []).filter(c => c.consultorId === consultorId), [clientes, consultorId]);
-  const minhasReunioes = useMemo(() => (reunioes || []).filter(r => r.consultorId === consultorId), [reunioes, consultorId]);
-  const minhasTarefas = useMemo(() => (tarefas || []).filter(t => t.consultorId === consultorId), [tarefas, consultorId]);
-  const meusContratos = useMemo(() => (contratos || []).filter(c => c.consultorId === consultorId), [contratos, consultorId]);
+  // Filtered collections already computed above
+
 
   // Carteira
   const clientesAtivos = meusClientes.filter(c => c.status === 'ativo').length;
