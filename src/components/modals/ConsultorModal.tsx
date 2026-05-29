@@ -183,15 +183,20 @@ export const ConsultorModal = ({
     // Save KPI targets
     if (consultor?.id) {
       for (const [key, value] of Object.entries(kpiTargets)) {
-        const existing = targets?.find(t => t.kpi_key === key);
-        await upsertTarget.mutateAsync({
+        const existing = consultantGoals?.find(t => t.indicator_key === key);
+        const config = KPI_CONFIG.find(c => c.key === key);
+        const defaultConfig = defaultGoals?.find(d => d.indicator_key === key);
+
+        await upsertConsultantGoal.mutateAsync({
           id: existing?.id,
           consultant_id: consultor.id,
-          kpi_key: key,
-          target_value: value,
-          comparison_operator: 'gte',
+          indicator_key: key,
+          indicator_label: config?.label || key,
+          goal_value: value,
+          goal_type: existing?.goal_type || defaultConfig?.goal_type || 'minimum',
+          comparison_operator: existing?.comparison_operator || defaultConfig?.comparison_operator || 'greater_or_equal',
           active: true
-        });
+        } as any);
       }
     }
     
