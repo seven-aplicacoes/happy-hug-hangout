@@ -172,7 +172,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const selecionarPerfil = (p: PerfilUsuario) => setPerfil(p);
 
   return (
-    <AuthContext.Provider value={{ user, perfil, clienteSession, login, loginCliente, logoutCliente, logout, selecionarPerfil, setUser }}>
+    <AuthContext.Provider value={{ user, perfil, clienteSession, login, loginCliente, logoutCliente, logout, selecionarPerfil, setUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
