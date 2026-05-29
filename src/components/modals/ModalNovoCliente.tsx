@@ -94,12 +94,11 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
 
       onClose();
       setForm({
-        razaoSocial: '', nomeFantasia: '', cnpj: '', segmento: '', regiao: 'sudeste',
+        razaoSocial: '', nomeFantasia: '', cnpj: '', clinicSpecialty: '', regiao: 'sudeste',
         porte: '' as any,
-        especialidade: 'gestao', consultorId: '',
+        consultorId: '',
         cep: '', street: '', number: '', complement: '', neighborhood: '',
         institutional_email: '',
-        temContrato: false, tipoContrato: '', valorContrato: '', dataInicio: '', dataFim: '',
         liberarPortal: false, emailPortal: '', senhaPortal: '',
       });
     } catch (error) {
