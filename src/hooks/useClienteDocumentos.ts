@@ -18,8 +18,15 @@ export function useClienteDocumentos(clientId?: string) {
         .from('documents')
         .select(`
           *,
-          clients (trade_name),
-          profiles:author_id (full_name)
+          client:clients!documents_client_id_fkey (
+            id,
+            trade_name,
+            corporate_name
+          ),
+          author:profiles!documents_author_id_fkey (
+            id,
+            full_name
+          )
         `)
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
@@ -29,7 +36,7 @@ export function useClienteDocumentos(clientId?: string) {
       return data.map((d: any) => ({
         id: d.id,
         clienteId: d.client_id,
-        clienteNome: d.clients?.trade_name || 'Desconhecido',
+        clienteNome: d.client?.trade_name || d.client?.corporate_name || 'Desconhecido',
         contractProductId: d.contract_product_id,
         contractProductPhaseId: d.contract_product_phase_id,
         titulo: d.title,
@@ -45,7 +52,7 @@ export function useClienteDocumentos(clientId?: string) {
         uploaded_at: d.uploaded_at,
         status: d.status,
         visibility: d.visibility || 'internal',
-        autor: d.profiles?.full_name || 'Sistema',
+        autor: d.author?.full_name || 'Sistema',
         feedbacks: d.feedbacks || [],
       })) as Documento[];
     },

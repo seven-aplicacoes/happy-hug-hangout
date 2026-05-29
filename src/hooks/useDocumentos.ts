@@ -14,8 +14,15 @@ export function useDocumentos() {
         .from('documents')
         .select(`
           *,
-          client:client_id (trade_name),
-          profile:uploaded_by (full_name)
+          client:clients!documents_client_id_fkey (
+            id,
+            trade_name,
+            corporate_name
+          ),
+          author:profiles!documents_author_id_fkey (
+            id,
+            full_name
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -24,7 +31,7 @@ export function useDocumentos() {
       return (data || []).map((d: any) => ({
         id: d.id,
         clienteId: d.client_id,
-        clienteNome: d.client?.trade_name || 'Desconhecido',
+        clienteNome: d.client?.trade_name || d.client?.corporate_name || 'Desconhecido',
         contractProductId: d.contract_product_id,
         contractProductPhaseId: d.contract_product_phase_id,
         titulo: d.title,
@@ -40,7 +47,7 @@ export function useDocumentos() {
         uploaded_at: d.created_at,
         status: d.status,
         visibility: d.visibility,
-        autor: d.profile?.full_name || 'Desconhecido',
+        autor: d.author?.full_name || 'Sistema',
         feedbacks: [],
       })) as Documento[];
     },
@@ -91,7 +98,13 @@ export function useDocumentos() {
         status: doc.status || 'pendente',
         visibility: doc.visibility || 'all',
         uploaded_by: user?.id,
+        author_id: doc.author_id || user?.id,
+        updated_by: user?.id,
       };
+
+      if (!doc.id) {
+        payload.created_by = user?.id;
+      }
 
       const { data, error } = await supabase
         .from('documents')
@@ -145,5 +158,5 @@ export function useDocumentos() {
     }
   };
 
-  return { documentos, isLoading, error, upsertDocumento, deleteDocumento, downloadFile };
+  return { documentos, isLoading, error, refetch: () => queryClient.invalidateQueries({ queryKey: ['documentos'] }), upsertDocumento, deleteDocumento, downloadFile };
 }
