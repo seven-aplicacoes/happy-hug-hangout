@@ -45,6 +45,7 @@ export function useDocumentos() {
         file_type: d.file_type,
         uploaded_by: d.uploaded_by,
         uploaded_at: d.created_at,
+        author_id: d.author_id,
         status: d.status,
         visibility: d.visibility,
         autor: d.author?.full_name || 'Sistema',

@@ -311,6 +311,7 @@ export interface Documento {
   file_size?: number;
   file_type?: string;
   uploaded_by?: string;
+  author_id?: string;
   uploaded_at?: string;
   status: 'aprovado' | 'pendente' | 'nao_conforme';
   visibility: 'internal' | 'client' | 'all';

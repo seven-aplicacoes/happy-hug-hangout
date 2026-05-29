@@ -50,6 +50,7 @@ export function useClienteDocumentos(clientId?: string) {
         file_type: d.file_type,
         uploaded_by: d.uploaded_by,
         uploaded_at: d.uploaded_at,
+        author_id: d.author_id,
         status: d.status,
         visibility: d.visibility || 'internal',
         autor: d.author?.full_name || 'Sistema',

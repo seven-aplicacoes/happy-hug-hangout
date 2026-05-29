@@ -99,6 +99,7 @@ export default function DocumentosPage() {
     await upsertDocumento.mutateAsync({
       doc: {
         id: selected.id,
+        author_id: selected.author_id,
         status: novoStatus,
         feedbacks: [...(selected.feedbacks || []), novoFeedback],
       }
