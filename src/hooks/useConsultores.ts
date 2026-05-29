@@ -24,15 +24,34 @@ export const useConsultores = () => {
   const { data: consultores, isLoading, error } = useQuery({
     queryKey: ['profiles', 'team'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Admin path: full profile incl. email/phone (RLS allows admins to read all).
+      const { data: adminData, error: adminError } = await supabase
         .from('profiles')
         .select('*')
         .in('role', ['consultor', 'admin'])
         .order('full_name');
 
+      if (!adminError && adminData && adminData.length > 1) {
+        return adminData as ConsultantProfile[];
+      }
 
-      if (error) throw error;
-      return data as ConsultantProfile[];
+      // Safe fallback for non-admins: roster without email/phone.
+      const { data: safeData, error: safeError } = await supabase.rpc('list_team_members');
+      if (safeError) throw safeError;
+      return (safeData || [])
+        .filter((p: any) => p.role === 'consultor' || p.role === 'admin')
+        .map((p: any) => ({
+          id: p.id,
+          full_name: p.full_name,
+          email: '',
+          role: p.role,
+          specialty: p.specialty,
+          city: p.city,
+          state: p.state,
+          status: p.status,
+          avatar_url: p.avatar_url,
+          created_at: null,
+        })) as ConsultantProfile[];
     },
   });
 
