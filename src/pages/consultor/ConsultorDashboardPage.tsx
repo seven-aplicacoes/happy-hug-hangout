@@ -133,9 +133,7 @@ export default function ConsultorDashboardPage() {
       .slice(0, 5);
 
     // Métricas do consultor
-    // This function might need update to use real data instead of mockData inside it
-    // For now we assume it takes the data or we might need to refactor it
-    const metricas = calcularMetricasConsultor(consultorId, periodo, reunioes, clientes);
+    const metricas = calcularMetricasConsultor(consultorId, periodo, reunioes, clientes, csatSurveys, npsSurveys);
 
     return {
       meusClientes, reunioesHoje, minhasTarefas, tarefasPrioritarias, criticos,
