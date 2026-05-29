@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, setMonth, setYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { PeriodoPreset, labelPreset, getPeriodo, Periodo } from '@/data/clienteIndicadores';
 
 interface PeriodFilterProps {
@@ -13,18 +18,39 @@ interface PeriodFilterProps {
   onChange: (p: Periodo) => void;
 }
 
-const PRESETS: PeriodoPreset[] = ['7d', '30d', 'mes_atual', 'mes_anterior'];
+const PRESETS: PeriodoPreset[] = ['mes_atual', 'mes_anterior'];
+
+const MONTHS = [
+  { value: 0, label: 'Janeiro' },
+  { value: 1, label: 'Fevereiro' },
+  { value: 2, label: 'Março' },
+  { value: 3, label: 'Abril' },
+  { value: 4, label: 'Maio' },
+  { value: 5, label: 'Junho' },
+  { value: 6, label: 'Julho' },
+  { value: 7, label: 'Agosto' },
+  { value: 8, label: 'Setembro' },
+  { value: 9, label: 'Outubro' },
+  { value: 10, label: 'Novembro' },
+  { value: 11, label: 'Dezembro' },
+];
+
+const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
 export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
   const [customOpen, setCustomOpen] = useState(false);
-  const [customFrom, setCustomFrom] = useState<Date | undefined>(value.preset === 'custom' ? value.from : undefined);
-  const [customTo, setCustomTo] = useState<Date | undefined>(value.preset === 'custom' ? value.to : undefined);
+  
+  const [fromMonth, setFromMonth] = useState<number>(value.from.getMonth());
+  const [fromYear, setFromYear] = useState<number>(value.from.getFullYear());
+  const [toMonth, setToMonth] = useState<number>(value.to.getMonth());
+  const [toYear, setToYear] = useState<number>(value.to.getFullYear());
 
   const aplicarCustom = () => {
-    if (customFrom && customTo) {
-      onChange(getPeriodo('custom', { from: customFrom, to: customTo }));
-      setCustomOpen(false);
-    }
+    const fromDate = startOfMonth(setYear(setMonth(new Date(), fromMonth), fromYear));
+    const toDate = endOfMonth(setYear(setMonth(new Date(), toMonth), toYear));
+    
+    onChange(getPeriodo('custom', { from: fromDate, to: toDate }));
+    setCustomOpen(false);
   };
 
   return (
@@ -49,37 +75,67 @@ export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
           >
             <CalendarIcon className="h-3 w-3 mr-1.5" strokeWidth={1.5} />
             {value.preset === 'custom'
-              ? `${format(value.from, 'dd/MM')} – ${format(value.to, 'dd/MM')}`
+              ? `${format(value.from, 'MMM/yy', { locale: ptBR })} – ${format(value.to, 'MMM/yy', { locale: ptBR })}`
               : 'Personalizado'}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-3" align="end">
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="ui-overline mb-2">De</p>
-                <Calendar
-                  mode="single"
-                  selected={customFrom}
-                  onSelect={setCustomFrom}
-                  locale={ptBR}
-                  className={cn('p-0 pointer-events-auto')}
-                />
-              </div>
-              <div>
-                <p className="ui-overline mb-2">Até</p>
-                <Calendar
-                  mode="single"
-                  selected={customTo}
-                  onSelect={setCustomTo}
-                  locale={ptBR}
-                  className={cn('p-0 pointer-events-auto')}
-                />
+        <PopoverContent className="w-[300px] p-4" align="end">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="ui-overline">De</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={fromMonth.toString()} onValueChange={(v) => setFromMonth(parseInt(v))}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map(m => (
+                      <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={fromYear.toString()} onValueChange={(v) => setFromYear(parseInt(v))}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map(y => (
+                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <p className="ui-overline">Até</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={toMonth.toString()} onValueChange={(v) => setToMonth(parseInt(v))}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map(m => (
+                      <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={toYear.toString()} onValueChange={(v) => setToYear(parseInt(v))}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map(y => (
+                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2 pt-2 border-t border-border">
               <Button variant="ghost" size="sm" onClick={() => setCustomOpen(false)}>Cancelar</Button>
-              <Button size="sm" disabled={!customFrom || !customTo} onClick={aplicarCustom}>Aplicar</Button>
+              <Button size="sm" onClick={aplicarCustom}>Aplicar</Button>
             </div>
           </div>
         </PopoverContent>
