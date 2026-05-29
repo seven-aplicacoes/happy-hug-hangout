@@ -43,6 +43,7 @@ import AdminNotificacoesPage from "@/pages/admin/AdminNotificacoesPage";
 import PortalClientePage from "@/pages/PortalClientePage";
 import IntegracoesPage from "@/pages/IntegracoesPage";
 import NotFound from "@/pages/NotFound";
+import NoAccess from "@/pages/NoAccess";
 
 
 const queryClient = new QueryClient();
