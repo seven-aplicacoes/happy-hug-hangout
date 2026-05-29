@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,14 +12,19 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function NovoClientePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { perfil, user } = useAuth();
   const { upsertCliente } = useClientes();
   const { consultores: allConsultores, isLoading: loadingConsultores } = useConsultores();
   const consultores = allConsultores?.filter(c => c.role === 'consultor');
   const { upsertContrato } = useContratos();
+
+  const isAdmin = perfil === 'admin';
+  const basePath = isAdmin ? '/admin' : '/consultor';
 
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({
@@ -31,6 +36,12 @@ export default function NovoClientePage() {
     contact_name: '', contact_phone: '',
     liberarPortal: false, emailPortal: '', senhaPortal: '',
   });
+
+  useEffect(() => {
+    if (!isAdmin && user?.id) {
+      setForm(prev => ({ ...prev, consultorId: user.id }));
+    }
+  }, [isAdmin, user]);
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
 
