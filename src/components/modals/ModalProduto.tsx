@@ -225,6 +225,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
         }
 
         queryClient.invalidateQueries({ queryKey: ['methodology-plan-phases'] });
+        queryClient.invalidateQueries({ queryKey: ['produtos'] });
       }
 
       toast({ title: 'Sucesso', description: 'Produto e etapas salvos com sucesso.' });
