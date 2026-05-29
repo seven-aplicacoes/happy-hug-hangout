@@ -1,4 +1,5 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -6,7 +7,7 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, Users, CalendarDays, CheckSquare, UserCircle, LogOut, BookOpen, FileText, Plug, RefreshCw, Loader2, ChevronRight, Briefcase, Settings } from 'lucide-react';
-import { useMyPermissions } from '@/hooks/useConsultantPermissions';
+import { useMyPermissions, CONSULTANT_MODULES_CONFIG } from '@/hooks/useConsultantPermissions';
 import { Button } from '@/components/ui/button';
 import { SevenLogo } from '@/components/SevenLogo';
 import { ProfileSwitcher } from '@/components/ProfileSwitcher';
