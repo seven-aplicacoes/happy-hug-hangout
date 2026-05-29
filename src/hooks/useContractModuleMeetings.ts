@@ -26,7 +26,7 @@ export function useContractModuleMeetings(moduleId?: string) {
         id: m.id,
         contractId: m.contract_id,
         clientId: m.client_id,
-        contractProductId: m.contract_product_id,
+        productId: m.product_id,
         moduleId: m.module_id,
         meetingNumber: m.meeting_number,
         title: m.title,
