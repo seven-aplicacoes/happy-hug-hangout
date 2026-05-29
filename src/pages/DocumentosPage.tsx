@@ -76,8 +76,11 @@ export default function DocumentosPage() {
     let d = [...documentos];
     const q = search.toLowerCase();
     if (q) d = d.filter(x => x.titulo.toLowerCase().includes(q) || (x.clienteNome || '').toLowerCase().includes(q));
+    if (filters.clienteId && filters.clienteId !== 'todos') d = d.filter(x => x.clienteId === filters.clienteId);
     if (filters.tipo && filters.tipo !== 'todos') d = d.filter(x => x.tipo === filters.tipo);
     if (filters.status && filters.status !== 'todos') d = d.filter(x => x.status === filters.status);
+    if (filters.visibility && filters.visibility !== 'todos') d = d.filter(x => x.visibility === filters.visibility);
+
     return d;
   }, [search, filters, documentos]);
 
