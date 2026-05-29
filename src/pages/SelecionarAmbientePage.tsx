@@ -21,29 +21,32 @@ export default function SelecionarAmbientePage() {
         const { data: { user } } = await import('@/integrations/supabase/client').then(m => m.supabase.auth.getUser());
         if (user) {
           const { data: permissions } = await import('@/integrations/supabase/client').then(m => 
-            m.supabase.from('consultant_permissions').select('module_key').eq('consultant_id', user.id).eq('can_view', true).order('created_at')
+            m.supabase.from('consultant_permissions').select('module_key').eq('consultant_id', user.id).eq('can_view', true)
           );
           
-          if (permissions && permissions.length > 0) {
-            // Find path for module_key
-            const modulePaths: Record<string, string> = {
-              dashboard: '/consultor/dashboard',
-              clientes: '/consultor/clientes',
-              reunioes: '/consultor/reunioes',
-              tarefas: '/consultor/tarefas',
-              documentos: '/consultor/documentos',
-              metodologia: '/consultor/metodologia',
-              perfil: '/consultor/meu-perfil'
-            };
-            
-            const firstModule = permissions[0].module_key;
-            const path = modulePaths[firstModule] || '/consultor/dashboard';
-            navigate(path);
+          const modulePaths: Record<string, string> = {
+            dashboard: '/consultor/dashboard',
+            clientes: '/consultor/clientes',
+            reunioes: '/consultor/reunioes',
+            tarefas: '/consultor/tarefas',
+            documentos: '/consultor/documentos',
+            metodologia: '/consultor/metodologia',
+            perfil: '/consultor/meu-perfil'
+          };
+
+          const priorityOrder = ['dashboard', 'clientes', 'reunioes', 'tarefas', 'documentos', 'metodologia', 'perfil'];
+          
+          const allowedModule = priorityOrder.find(key => 
+            permissions?.some(p => p.module_key === key)
+          );
+
+          if (allowedModule) {
+            navigate(modulePaths[allowedModule]);
           } else {
-            navigate('/consultor/dashboard');
+            navigate('/no-access');
           }
         } else {
-          navigate('/consultor/dashboard');
+          navigate('/login');
         }
       } catch (error) {
         console.error('Error determining first module:', error);
