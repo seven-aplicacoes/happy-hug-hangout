@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import {
   BookOpen, FileText, Video, FileSpreadsheet, Presentation, Link2, Download,
   Search, Compass, AlertTriangle, Layers, Loader2,
-  Plus, Pencil, Trash2, LayoutGrid, MessageSquare, ClipboardList, Flag, HelpCircle, Lightbulb
+  Plus, Pencil, Trash2, LayoutGrid, MessageSquare, ClipboardList, Flag, HelpCircle, Lightbulb, Eye
 } from 'lucide-react';
 import { labelTipoMaterial, labelCategoria } from '@/data/metodologia';
 import { toast } from '@/hooks/use-toast';
@@ -24,6 +24,8 @@ import { PhaseForm } from '@/components/methodology/PhaseForm';
 import { MaterialForm } from '@/components/methodology/MaterialForm';
 import { Badge } from '@/components/ui/badge';
 import { TransversalMaterialForm } from '@/components/methodology/TransversalMaterialForm';
+import { FilePreviewModal } from '@/components/methodology/FilePreviewModal';
+import { getFileUrl } from '@/utils/fileUtils';
 
 const ICONE_TIPO: Record<string, typeof FileText> = {
   pdf: FileText,
@@ -43,8 +45,45 @@ const FASE_COR: Record<number, string> = {
   4: 'border-l-slate-500',
 };
 
-function MaterialItem({ m, isAdmin, onDelete, onEdit }: { m: any, isAdmin: boolean, onDelete?: (id: string) => void, onEdit?: (m: any) => void }) {
+function MaterialItem({ 
+  m, 
+  isAdmin, 
+  onDelete, 
+  onEdit, 
+  onView 
+}: { 
+  m: any, 
+  isAdmin: boolean, 
+  onDelete?: (id: string) => void, 
+  onEdit?: (m: any) => void,
+  onView?: (m: any) => void
+}) {
   const Icon = ICONE_TIPO[m.type] || FileText;
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      let url = m.file_url || m.url;
+      if (m.file_path) {
+        url = await getFileUrl(m.file_path);
+      }
+      
+      if (!url) throw new Error("URL não encontrada");
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = m.file_name || m.title;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      console.error("Download error:", err);
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível baixar o arquivo.' });
+    }
+  };
+
   return (
     <div className="w-full flex items-center gap-3 p-3 rounded-md border bg-background hover:-translate-y-0.5 hover:shadow-md transition-all text-left group">
       <Icon className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
@@ -71,10 +110,11 @@ function MaterialItem({ m, isAdmin, onDelete, onEdit }: { m: any, isAdmin: boole
             </Button>
           </>
         )}
-        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-          <a href={m.file_url || m.url} target="_blank" rel="noopener noreferrer">
-            <Download className="h-3.5 w-3.5" />
-          </a>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onView?.(m)}>
+          <Eye className="h-3.5 w-3.5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownload}>
+          <Download className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>
@@ -102,6 +142,9 @@ export default function MetodologiaPage() {
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<MethodologyNote | null>(null);
 
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewMaterial, setPreviewMaterial] = useState<any>(null);
+
   const isAdmin = perfil === 'admin';
   const loading = loadingPermissions || loadingMethodology;
 
@@ -114,6 +157,11 @@ export default function MetodologiaPage() {
   }
 
   const activePhase = phases?.find(p => p.id === (faseAtivaId || phases[0]?.id)) || phases?.[0];
+
+  const handleViewMaterial = (m: any) => {
+    setPreviewMaterial(m);
+    setPreviewOpen(true);
+  };
 
   const handleEditPhase = (p: any) => {
     setSelectedPhase(p);
@@ -321,7 +369,7 @@ export default function MetodologiaPage() {
                   {activeMaterials.filter((m: any) => m.category === 'material' || !m.category).length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-6">Nenhum material encontrado.</p>
                   ) : activeMaterials.filter((m: any) => m.category === 'material' || !m.category).map((m: any) => (
-                    <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} onEdit={handleEditMaterial} />
+                    <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} onEdit={handleEditMaterial} onView={handleViewMaterial} />
                   ))}
                 </div>
               </TabsContent>
@@ -330,7 +378,7 @@ export default function MetodologiaPage() {
                 {activeMaterials.filter((m: any) => m.category === 'template').length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Nenhum template encontrado.</p>
                 ) : activeMaterials.filter((m: any) => m.category === 'template').map((m: any) => (
-                  <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} onEdit={handleEditMaterial} />
+                  <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} onEdit={handleEditMaterial} onView={handleViewMaterial} />
                 ))}
               </TabsContent>
             </Tabs>
@@ -384,8 +432,30 @@ export default function MetodologiaPage() {
                        </Button>
                      </>
                    )}
-                   <Button variant="ghost" size="sm" className="h-7 w-7" asChild>
-                      <a href={g.file_url} target="_blank" rel="noopener noreferrer"><Download className="h-3.5 w-3.5" /></a>
+                   <Button variant="ghost" size="sm" className="h-7 w-7" onClick={() => handleViewMaterial(g)}>
+                      <Eye className="h-3.5 w-3.5" />
+                   </Button>
+                   <Button variant="ghost" size="sm" className="h-7 w-7" onClick={async () => {
+                     try {
+                       let url = g.file_url;
+                       if (g.file_path) {
+                         url = await getFileUrl(g.file_path);
+                       }
+                       if (!url) throw new Error("URL não encontrada");
+                       
+                       const link = document.body.appendChild(document.createElement('a'));
+                       link.href = url;
+                       link.download = g.file_name || g.title;
+                       link.target = '_blank';
+                       link.rel = 'noopener noreferrer';
+                       link.click();
+                       link.remove();
+                     } catch (err) {
+                       console.error("Download error:", err);
+                       toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível baixar o arquivo.' });
+                     }
+                   }}>
+                      <Download className="h-3.5 w-3.5" />
                    </Button>
                  </div>
               </div>
@@ -423,6 +493,15 @@ export default function MetodologiaPage() {
         onClose={() => setNoteModalOpen(false)}
         note={selectedNote}
         phases={phases}
+      />
+
+      <FilePreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        fileTitle={previewMaterial?.title || ''}
+        filePath={previewMaterial?.file_path}
+        fileUrl={previewMaterial?.file_url || previewMaterial?.url}
+        fileType={previewMaterial?.file_type}
       />
     </div>
   );
