@@ -1547,44 +1547,74 @@ export type Database = {
       methodology_materials: {
         Row: {
           category: string | null
+          created_at: string | null
           description: string | null
           duration: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
           id: string
+          is_essential: boolean | null
           is_general: boolean | null
+          is_updated: boolean | null
+          order_index: number | null
           pages: number | null
           phase_id: string | null
+          status: string | null
           tag: string | null
           title: string
           type: string
           updated_at: string | null
+          uploaded_by: string | null
           url: string | null
         }
         Insert: {
           category?: string | null
+          created_at?: string | null
           description?: string | null
           duration?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           id?: string
+          is_essential?: boolean | null
           is_general?: boolean | null
+          is_updated?: boolean | null
+          order_index?: number | null
           pages?: number | null
           phase_id?: string | null
+          status?: string | null
           tag?: string | null
           title: string
           type: string
           updated_at?: string | null
+          uploaded_by?: string | null
           url?: string | null
         }
         Update: {
           category?: string | null
+          created_at?: string | null
           description?: string | null
           duration?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           id?: string
+          is_essential?: boolean | null
           is_general?: boolean | null
+          is_updated?: boolean | null
+          order_index?: number | null
           pages?: number | null
           phase_id?: string | null
+          status?: string | null
           tag?: string | null
           title?: string
           type?: string
           updated_at?: string | null
+          uploaded_by?: string | null
           url?: string | null
         }
         Relationships: [
@@ -1650,6 +1680,111 @@ export type Database = {
           },
         ]
       }
+      methodology_phase_deliverables: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          order_index: number | null
+          phase_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          phase_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          phase_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_phase_deliverables_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_phase_objectives: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          order_index: number | null
+          phase_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          phase_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number | null
+          phase_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_phase_objectives_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_phase_tools: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          order_index: number | null
+          phase_id: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          order_index?: number | null
+          phase_id: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          order_index?: number | null
+          phase_id?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_phase_tools_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       methodology_phases: {
         Row: {
           alerts: string[] | null
@@ -1662,7 +1797,10 @@ export type Database = {
           order_index: number
           phase_key: string
           purpose: string | null
+          status: string | null
+          subtitle: string | null
           tools: string[] | null
+          updated_at: string | null
         }
         Insert: {
           alerts?: string[] | null
@@ -1675,7 +1813,10 @@ export type Database = {
           order_index: number
           phase_key: string
           purpose?: string | null
+          status?: string | null
+          subtitle?: string | null
           tools?: string[] | null
+          updated_at?: string | null
         }
         Update: {
           alerts?: string[] | null
@@ -1688,7 +1829,10 @@ export type Database = {
           order_index?: number
           phase_key?: string
           purpose?: string | null
+          status?: string | null
+          subtitle?: string | null
           tools?: string[] | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2070,6 +2214,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      methodology_transversal_materials: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          is_preview: boolean | null
+          order_index: number | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_preview?: boolean | null
+          order_index?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_preview?: boolean | null
+          order_index?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
       }
       nps_surveys: {
         Row: {
