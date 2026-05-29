@@ -160,7 +160,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       return;
     }
 
-    const data = { 
+    const data: any = { 
       name, 
       description, 
       category, 
