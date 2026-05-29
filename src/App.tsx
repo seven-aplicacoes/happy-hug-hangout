@@ -24,6 +24,7 @@ import AdminProdutosPage from "@/pages/admin/AdminProdutosPage";
 import AdminRenovacaoPage from "@/pages/admin/AdminRenovacaoPage";
 import AdminAnaliseAvancadaPage from "@/pages/admin/AdminAnaliseAvancadaPage";
 import AdminConsultantPermissionsPage from "@/pages/admin/ConsultantPermissionsPage";
+import AdminConsultantGoalsPage from "@/pages/admin/AdminConsultantGoalsPage";
 import AdminTarefasPage from "@/pages/admin/AdminTarefasPage";
 import AdminReunioesPage from "@/pages/admin/AdminReunioesPage";
 import AdminContratoDetalhePage from "@/pages/admin/AdminContratoDetalhePage";
