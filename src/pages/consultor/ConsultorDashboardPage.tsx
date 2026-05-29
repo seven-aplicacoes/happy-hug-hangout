@@ -294,7 +294,7 @@ export default function ConsultorDashboardPage() {
             titulo="Clínicas em Crítico"
             valor={criticos.length}
             icon={Flame}
-            variant={criticos.length > 0 ? 'danger' : 'success'}
+            variant={avaliarBenchmark(criticos.length, getBench('critical_clinics', BENCHMARKS.critical_clinics)) === 'acima_limite' ? 'danger' : 'success'}
             subtitulo="Sem reunião >15 dias"
             onClick={() => aplicarFiltro('critico')}
           />
@@ -302,7 +302,7 @@ export default function ConsultorDashboardPage() {
             titulo="Clínicas em Atenção"
             valor={atencao.length}
             icon={AlertTriangle}
-            variant={atencao.length > 0 ? 'warning' : 'success'}
+            variant={avaliarBenchmark(atencao.length, getBench('attention_clinics', BENCHMARKS.attention_clinics)) === 'acima_limite' ? 'danger' : 'success'}
             subtitulo="9–15 dias sem reunião"
             onClick={() => aplicarFiltro('atencao')}
           />
@@ -318,7 +318,7 @@ export default function ConsultorDashboardPage() {
             titulo="Potencial Upsell"
             valor={upsell.length}
             icon={Sparkles}
-            variant={upsell.length > 0 ? 'success' : 'default'}
+            variant={avaliarBenchmark(upsell.length, getBench('upsell_potential', BENCHMARKS.upsell_potential)) === 'abaixo' ? 'warning' : 'success'}
             subtitulo="Oportunidades identificadas"
             onClick={() => aplicarFiltro('upsell')}
           />
