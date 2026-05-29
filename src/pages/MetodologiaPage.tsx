@@ -441,8 +441,17 @@ export default function MetodologiaPage() {
                        if (g.file_path) {
                          url = await getFileUrl(g.file_path);
                        }
-                       window.open(url, '_blank', 'noopener,noreferrer');
+                       if (!url) throw new Error("URL não encontrada");
+                       
+                       const link = document.body.appendChild(document.createElement('a'));
+                       link.href = url;
+                       link.download = g.file_name || g.title;
+                       link.target = '_blank';
+                       link.rel = 'noopener noreferrer';
+                       link.click();
+                       link.remove();
                      } catch (err) {
+                       console.error("Download error:", err);
                        toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível baixar o arquivo.' });
                      }
                    }}>
