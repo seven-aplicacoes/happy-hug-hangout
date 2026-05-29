@@ -16,7 +16,7 @@ import { getProdutoAtualCliente, PRODUTOS } from '@/data/contratoExtras';
 import { getPorte, labelPorte, PORTE_OPTIONS } from '@/data/clienteExtras';
 import { calcularPrioridade, labelPrioridade, variantPrioridade, ordemPrioridade, getClienteContexto } from '@/data/clienteIndicadores';
 import { MethodologyStepper } from '@/components/MethodologyStepper';
-import { ModalNovoCliente } from '@/components/modals/ModalNovoCliente';
+// Removed ModalNovoCliente import as it's no longer used here
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Target, Loader2 } from 'lucide-react';
@@ -72,7 +72,7 @@ export default function ConsultorClientesPage() {
   
   const isLoading = loadingClientes || loadingContratos || loadingPermissions;
   const meusClientes = clientes || [];
-  const [novoClienteOpen, setNovoClienteOpen] = useState(false);
+  
 
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -227,7 +227,7 @@ export default function ConsultorClientesPage() {
     <div className="space-y-12">
       <PageHeader titulo="Meus Clientes" subtitulo="Carteira de clientes sob sua gestão">
         {can('clientes', 'create') && (
-          <Button size="sm" onClick={() => setNovoClienteOpen(true)}>
+          <Button size="sm" onClick={() => navigate('/consultor/cliente/novo')}>
             <Plus className="h-4 w-4 mr-1" />Novo Cliente
           </Button>
         )}
@@ -313,7 +313,7 @@ export default function ConsultorClientesPage() {
         </div>
       </div>
       <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} />
-      {can('clientes', 'create') && <ModalNovoCliente open={novoClienteOpen} onClose={() => setNovoClienteOpen(false)} />}
+      
     </div>
   );
 }
