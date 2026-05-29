@@ -401,10 +401,17 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
               {totalMinutes > 0 && (
                 <span className="text-[10px] font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5 uppercase">
                   <Clock className="h-3 w-3" />
-                  {formatDuration(totalMinutes)}
+                  Duração: {formatDuration(totalMinutes)}
+                </span>
+              )}
+              {product.productCategory && (
+                <span className="text-[10px] font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5 uppercase">
+                  <FileText className="h-3 w-3" />
+                  {product.productCategory}
                 </span>
               )}
             </div>
+
           </div>
         </div>
         <div className="flex items-center gap-3">
