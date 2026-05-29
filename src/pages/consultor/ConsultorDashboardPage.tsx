@@ -146,7 +146,14 @@ export default function ConsultorDashboardPage() {
     const map: Record<string, any> = {};
     if (targets) {
       targets.forEach(t => {
-        map[t.kpi_key] = { esperado: t.target_value, tolerancia: 0, unidade: t.target_unit || '', descricao: t.description || '' };
+        map[t.indicator_key] = { 
+          esperado: t.goal_value, 
+          tolerancia: 0, 
+          unidade: '', 
+          descricao: t.indicator_label,
+          goal_type: t.goal_type,
+          comparison_operator: t.comparison_operator
+        };
       });
     }
     return map;
