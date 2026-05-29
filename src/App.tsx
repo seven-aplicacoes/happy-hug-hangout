@@ -101,7 +101,8 @@ const App = () => (
 
             <Route path="/consultor" element={<ConsultorLayout />}>
               <Route path="dashboard" element={<ConsultorDashboardPage />} />
-              <Route path="clientes" element={<ConsultorClientesPage />} />
+               <Route path="clientes" element={<ConsultorClientesPage />} />
+               <Route path="cliente/novo" element={<NovoClientePage />} />
               <Route path="reunioes" element={<ConsultorReunioesPage />} />
               <Route path="tarefas" element={<ConsultorTarefasPage />} />
               <Route path="renovacao" element={<ConsultorRenovacaoPage />} />
