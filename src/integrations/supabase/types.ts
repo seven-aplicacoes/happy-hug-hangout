@@ -632,6 +632,7 @@ export type Database = {
         Row: {
           client_notes: string | null
           client_visible: boolean | null
+          consultant_hours: number | null
           contract_id: string
           created_at: string | null
           created_by: string | null
@@ -639,7 +640,11 @@ export type Database = {
           end_date: string | null
           id: string
           internal_notes: string | null
+          product_category: string | null
+          product_description: string | null
           product_id: string
+          product_name: string | null
+          silvane_hours: number | null
           start_date: string | null
           status: string
           updated_at: string | null
@@ -649,6 +654,7 @@ export type Database = {
         Insert: {
           client_notes?: string | null
           client_visible?: boolean | null
+          consultant_hours?: number | null
           contract_id: string
           created_at?: string | null
           created_by?: string | null
@@ -656,7 +662,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           internal_notes?: string | null
+          product_category?: string | null
+          product_description?: string | null
           product_id: string
+          product_name?: string | null
+          silvane_hours?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string | null
@@ -666,6 +676,7 @@ export type Database = {
         Update: {
           client_notes?: string | null
           client_visible?: boolean | null
+          consultant_hours?: number | null
           contract_id?: string
           created_at?: string | null
           created_by?: string | null
@@ -673,7 +684,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           internal_notes?: string | null
+          product_category?: string | null
+          product_description?: string | null
           product_id?: string
+          product_name?: string | null
+          silvane_hours?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string | null
