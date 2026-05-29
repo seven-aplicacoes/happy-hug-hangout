@@ -367,9 +367,9 @@ export interface ContractProductPhase {
   methodologyPhaseId?: string;
   orderIndex: number;
   name: string;
-  duration_minutes?: number;
-  executor_type?: 'consultor' | 'silvane';
-  meetings_count?: number;
+  durationMinutes?: number;
+  executorType?: string;
+  meetingsCount?: number;
   startDate?: string;
   endDate?: string;
   status: 'pendente' | 'em_andamento' | 'concluida' | 'suspensa';
