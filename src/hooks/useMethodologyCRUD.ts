@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { 
   MethodologyPhase, 
   MethodologyMaterial, 
-  MethodologyNote,
+  
   MethodologyQuestion
 } from '@/types';
 import { Database } from '@/integrations/supabase/types';

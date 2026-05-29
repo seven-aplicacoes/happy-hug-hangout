@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { MethodologyPhase, MethodologyMaterial, MethodologyTemplate, MethodologyQuestion, MethodologyNote } from '@/types';
+import type { MethodologyPhase, MethodologyMaterial, MethodologyTemplate, MethodologyQuestion } from '@/types';
 
 export function useMethodology() {
   const { data: phases, isLoading: isLoadingPhases } = useQuery({
@@ -67,28 +67,6 @@ export function useMethodology() {
     }
   });
  
-  const { data: notes, isLoading: isLoadingNotes } = useQuery({
-    queryKey: ['methodology-notes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('methodology_notes')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map((n: any) => ({
-        id: n.id,
-        title: n.title,
-        description: n.description,
-        type: n.type,
-        status: n.status,
-        priority: n.priority,
-        related_area: n.related_area,
-        related_phase_id: n.related_phase_id,
-        created_at: n.created_at,
-        updated_at: n.updated_at
-      })) as MethodologyNote[];
-    }
-  });
 
   return { 
     phases, 
@@ -97,7 +75,6 @@ export function useMethodology() {
     questions, 
     plans,
     planPhases,
-    notes,
-    isLoading: isLoadingPhases || isLoadingMaterials || isLoadingTemplates || isLoadingQuestions || isLoadingPlans || isLoadingPlanPhases || isLoadingNotes
+    isLoading: isLoadingPhases || isLoadingMaterials || isLoadingTemplates || isLoadingQuestions || isLoadingPlans || isLoadingPlanPhases
   };
 }

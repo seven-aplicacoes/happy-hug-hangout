@@ -16,8 +16,6 @@ import {
 import { labelTipoMaterial, labelCategoria } from '@/data/metodologia';
 import { toast } from '@/hooks/use-toast';
 import { useMethodologyCRUD } from '@/hooks/useMethodologyCRUD';
-import { ModalMethodologyNote } from '@/components/modals/ModalMethodologyNote';
-import { MethodologyNote } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { PhaseForm } from '@/components/methodology/PhaseForm';
@@ -139,8 +137,6 @@ export default function MetodologiaPage() {
   const [transversalModalOpen, setTransversalModalOpen] = useState(false);
   const [selectedTransversal, setSelectedTransversal] = useState<any>(null);
 
-  const [noteModalOpen, setNoteModalOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<MethodologyNote | null>(null);
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<any>(null);
@@ -240,12 +236,6 @@ export default function MetodologiaPage() {
         titulo="Metodologia Seven"
         subtitulo="Hub central de conhecimento, materiais, templates e perguntas-chave da consultoria."
       >
-        {isAdmin && (
-          <Button onClick={() => setNoteModalOpen(true)} className="gap-2 bg-seven-warning hover:bg-seven-warning/90 text-black font-bold">
-            <Plus className="h-4 w-4" />
-            Novo Registro Metodológico
-          </Button>
-        )}
       </PageHeader>
 
       <Card className="bg-gradient-to-br from-primary/5 via-background to-background border-primary/20">
@@ -488,12 +478,6 @@ export default function MetodologiaPage() {
         material={selectedTransversal}
       />
       
-      <ModalMethodologyNote
-        open={noteModalOpen}
-        onClose={() => setNoteModalOpen(false)}
-        note={selectedNote}
-        phases={phases}
-      />
 
       <FilePreviewModal
         open={previewOpen}
