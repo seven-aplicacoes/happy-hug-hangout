@@ -175,7 +175,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
         await updateProduto.mutateAsync({ ...data, id: produto.id });
       } else {
         const savedProd = await createProduto.mutateAsync(data);
-        productId = (savedProd as any)?.[0]?.id;
+        productId = (savedProd as any)?.[0]?.id || (Array.isArray(savedProd) ? savedProd[0]?.id : (savedProd as any)?.id);
       }
 
       if (productId) {
