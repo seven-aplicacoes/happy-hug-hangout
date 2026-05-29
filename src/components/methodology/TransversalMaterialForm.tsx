@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -16,44 +17,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Upload } from 'lucide-react';
 
-interface MaterialFormProps {
+interface TransversalMaterialFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  phaseId?: string;
   material?: any;
 }
 
-export function MaterialForm({ open, onOpenChange, phaseId, material }: MaterialFormProps) {
+export function TransversalMaterialForm({ open, onOpenChange, material }: TransversalMaterialFormProps) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'material',
+    category: 'metodologia',
     url: '',
-    is_essential: false,
     status: 'active',
-    type: 'pdf',
+    order_index: 0,
   });
 
-  // Reset form when material changes or modal opens
   useEffect(() => {
     if (open) {
       setFormData({
         title: material?.title || '',
         description: material?.description || '',
-        category: material?.category || 'material',
-        url: material?.url || '',
-        is_essential: material?.is_essential || false,
+        category: material?.category || 'metodologia',
+        url: material?.file_url || '',
         status: material?.status || 'active',
-        type: material?.type || 'pdf',
+        order_index: material?.order_index || 0,
       });
       setFile(null);
     }
@@ -75,7 +71,7 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `phases/${phaseId}/${fileName}`;
+        const filePath = `transversal/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('methodology-materials')
@@ -97,30 +93,31 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
         };
       }
 
+      const { url: _, ...restFormData } = formData;
       const payload = {
-        ...formData,
+        ...restFormData,
         ...fileData,
-        url: fileUrl,
-        phase_id: phaseId,
+        file_url: fileUrl,
       };
 
       if (material?.id) {
         const { error } = await supabase
-          .from('methodology_materials')
+          .from('methodology_transversal_materials')
           .update(payload)
           .eq('id', material.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('methodology_materials')
+          .from('methodology_transversal_materials')
           .insert([payload]);
         if (error) throw error;
       }
 
-      queryClient.invalidateQueries({ queryKey: ['methodology-phases-crud'] });
-      toast({ title: 'Sucesso', description: 'Material salvo com sucesso.' });
+      queryClient.invalidateQueries({ queryKey: ['methodology-transversal'] });
+      toast({ title: 'Sucesso', description: 'Material transversal salvo.' });
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Error saving transversal material:', error);
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
     } finally {
       setLoading(false);
@@ -131,7 +128,7 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{material ? 'Editar Material' : 'Novo Material'}</DialogTitle>
+          <DialogTitle>{material ? 'Editar Material Transversal' : 'Novo Material Transversal'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -154,19 +151,28 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
                 <SelectValue placeholder="Selecione a categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="material">Material</SelectItem>
-                <SelectItem value="template">Template</SelectItem>
-                <SelectItem value="pergunta_chave">Pergunta-chave</SelectItem>
-                <SelectItem value="alerta">Alerta</SelectItem>
+                <SelectItem value="cultura">Cultura Seven</SelectItem>
+                <SelectItem value="comercial">Comercial</SelectItem>
+                <SelectItem value="metodologia">Metodologia</SelectItem>
+                <SelectItem value="integracao">Integrações</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="file">Arquivo</Label>
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea 
+              id="description" 
+              value={formData.description} 
+              onChange={e => setFormData({...formData, description: e.target.value})} 
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="file-transversal">Arquivo</Label>
             <div className="flex items-center gap-2">
-              <Input id="file" type="file" onChange={handleFileChange} className="hidden" />
-              <Button type="button" variant="outline" onClick={() => document.getElementById('file')?.click()}>
+              <Input id="file-transversal" type="file" onChange={handleFileChange} className="hidden" />
+              <Button type="button" variant="outline" onClick={() => document.getElementById('file-transversal')?.click()}>
                 <Upload className="mr-2 h-4 w-4" />
                 {file ? file.name : 'Selecionar arquivo'}
               </Button>
@@ -177,15 +183,6 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
               value={formData.url} 
               onChange={e => setFormData({...formData, url: e.target.value})} 
             />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="essential" 
-              checked={formData.is_essential} 
-              onCheckedChange={v => setFormData({...formData, is_essential: !!v})} 
-            />
-            <Label htmlFor="essential">Marcar como essencial</Label>
           </div>
 
           <DialogFooter>

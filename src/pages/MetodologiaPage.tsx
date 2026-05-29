@@ -23,6 +23,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PhaseForm } from '@/components/methodology/PhaseForm';
 import { MaterialForm } from '@/components/methodology/MaterialForm';
 import { Badge } from '@/components/ui/badge';
+import { TransversalMaterialForm } from '@/components/methodology/TransversalMaterialForm';
 
 const ICONE_TIPO: Record<string, typeof FileText> = {
   pdf: FileText,
@@ -42,7 +43,7 @@ const FASE_COR: Record<number, string> = {
   4: 'border-l-slate-500',
 };
 
-function MaterialItem({ m, isAdmin, onDelete }: { m: any, isAdmin: boolean, onDelete?: (id: string) => void }) {
+function MaterialItem({ m, isAdmin, onDelete, onEdit }: { m: any, isAdmin: boolean, onDelete?: (id: string) => void, onEdit?: (m: any) => void }) {
   const Icon = ICONE_TIPO[m.type] || FileText;
   return (
     <div className="w-full flex items-center gap-3 p-3 rounded-md border bg-background hover:-translate-y-0.5 hover:shadow-md transition-all text-left group">
@@ -61,9 +62,14 @@ function MaterialItem({ m, isAdmin, onDelete }: { m: any, isAdmin: boolean, onDe
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         {isAdmin && (
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete?.(m.id)}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit?.(m)}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete?.(m.id)}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </>
         )}
         <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
           <a href={m.file_url || m.url} target="_blank" rel="noopener noreferrer">
@@ -90,12 +96,11 @@ export default function MetodologiaPage() {
   const [materialModalOpen, setMaterialModalOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
 
+  const [transversalModalOpen, setTransversalModalOpen] = useState(false);
+  const [selectedTransversal, setSelectedTransversal] = useState<any>(null);
+
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<MethodologyNote | null>(null);
-
-  // Filtros para notes (manter suporte atual)
-  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
-  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
 
   const isAdmin = perfil === 'admin';
   const loading = loadingPermissions || loadingMethodology;
@@ -120,10 +125,37 @@ export default function MetodologiaPage() {
     setMaterialModalOpen(true);
   };
 
+  const handleEditMaterial = (m: any) => {
+    setSelectedMaterial(m);
+    setMaterialModalOpen(true);
+  };
+
+  const handleAddTransversal = () => {
+    setSelectedTransversal(null);
+    setTransversalModalOpen(true);
+  };
+
+  const handleEditTransversal = (m: any) => {
+    setSelectedTransversal(m);
+    setTransversalModalOpen(true);
+  };
+
   const handleDeleteMaterial = async (id: string) => {
     if (!confirm('Excluir material?')) return;
     try {
       await deleteMaterial(id);
+      toast({ title: 'Sucesso', description: 'Material removido.' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: err.message });
+    }
+  };
+
+  const handleDeleteTransversal = async (id: string) => {
+    if (!confirm('Excluir material transversal?')) return;
+    try {
+      const { error } = await supabase.from('methodology_transversal_materials').delete().eq('id', id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['methodology-transversal'] });
       toast({ title: 'Sucesso', description: 'Material removido.' });
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Erro', description: err.message });
@@ -168,7 +200,6 @@ export default function MetodologiaPage() {
         )}
       </PageHeader>
 
-      {/* Visão geral */}
       <Card className="bg-gradient-to-br from-primary/5 via-background to-background border-primary/20">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
@@ -205,7 +236,6 @@ export default function MetodologiaPage() {
         </CardContent>
       </Card>
 
-      {/* Conteúdo da fase ativa */}
       {activePhase ? (
         <Card className={`border-l-4 ${FASE_COR[activePhase.order_index % 5]}`}>
           <CardContent className="p-6 space-y-6">
@@ -233,7 +263,6 @@ export default function MetodologiaPage() {
               </div>
             </div>
 
-            {/* Objetivos + Entregáveis + Ferramentas */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <p className="ui-overline">Objetivos</p>
@@ -265,7 +294,6 @@ export default function MetodologiaPage() {
               </div>
             </div>
 
-            {/* Tabs de Materiais */}
             <Tabs defaultValue="materiais" className="pt-2">
               <div className="flex items-center justify-between mb-4">
                 <TabsList>
@@ -293,7 +321,7 @@ export default function MetodologiaPage() {
                   {activeMaterials.filter((m: any) => m.category === 'material' || !m.category).length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-6">Nenhum material encontrado.</p>
                   ) : activeMaterials.filter((m: any) => m.category === 'material' || !m.category).map((m: any) => (
-                    <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} />
+                    <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} onEdit={handleEditMaterial} />
                   ))}
                 </div>
               </TabsContent>
@@ -302,7 +330,7 @@ export default function MetodologiaPage() {
                 {activeMaterials.filter((m: any) => m.category === 'template').length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Nenhum template encontrado.</p>
                 ) : activeMaterials.filter((m: any) => m.category === 'template').map((m: any) => (
-                  <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} />
+                  <MaterialItem key={m.id} m={m} isAdmin={isAdmin} onDelete={handleDeleteMaterial} onEdit={handleEditMaterial} />
                 ))}
               </TabsContent>
             </Tabs>
@@ -315,13 +343,19 @@ export default function MetodologiaPage() {
         </div>
       )}
 
-      {/* Materiais transversais */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <SectionHeader
             overline="Biblioteca geral"
             titulo="Materiais transversais Seven"
           />
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button size="sm" variant="outline" onClick={handleAddTransversal} className="gap-2">
+                <Plus className="h-4 w-4" /> Adicionar Material Geral
+              </Button>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {transversalMaterials?.map(g => (
@@ -339,9 +373,21 @@ export default function MetodologiaPage() {
               <p className="text-xs text-muted-foreground leading-snug">{g.description}</p>
               <div className="flex items-center justify-between pt-2">
                  <p className="text-[10px] text-muted-foreground">Atualizado em {new Date(g.updated_at).toLocaleDateString()}</p>
-                 <Button variant="ghost" size="sm" className="h-7 w-7" asChild>
-                    <a href={g.file_url} target="_blank" rel="noopener noreferrer"><Download className="h-3.5 w-3.5" /></a>
-                 </Button>
+                 <div className="flex items-center gap-1">
+                   {isAdmin && (
+                     <>
+                       <Button variant="ghost" size="sm" className="h-7 w-7" onClick={() => handleEditTransversal(g)}>
+                         <Pencil className="h-3.5 w-3.5" />
+                       </Button>
+                       <Button variant="ghost" size="sm" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTransversal(g.id)}>
+                         <Trash2 className="h-3.5 w-3.5" />
+                       </Button>
+                     </>
+                   )}
+                   <Button variant="ghost" size="sm" className="h-7 w-7" asChild>
+                      <a href={g.file_url} target="_blank" rel="noopener noreferrer"><Download className="h-3.5 w-3.5" /></a>
+                   </Button>
+                 </div>
               </div>
             </div>
           ))}
@@ -364,6 +410,12 @@ export default function MetodologiaPage() {
         onOpenChange={setMaterialModalOpen} 
         phaseId={activePhase?.id} 
         material={selectedMaterial} 
+      />
+
+      <TransversalMaterialForm
+        open={transversalModalOpen}
+        onOpenChange={setTransversalModalOpen}
+        material={selectedTransversal}
       />
       
       <ModalMethodologyNote
