@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { MethodologyPhase, MethodologyMaterial, MethodologyTemplate, MethodologyQuestion, MethodologyNote } from '@/types';
+import type { MethodologyPhase, MethodologyMaterial, MethodologyTemplate, MethodologyQuestion } from '@/types';
 
 export function useMethodology() {
   const { data: phases, isLoading: isLoadingPhases } = useQuery({
