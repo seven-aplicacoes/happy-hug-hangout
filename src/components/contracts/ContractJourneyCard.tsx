@@ -59,6 +59,11 @@ function PhaseRow({ phase }: { phase: any }) {
 function ProductItem({ product }: { product: any }) {
   const { phases, isLoading } = useContractProductPhases(product.id);
   
+  // Calculate total duration from phases if available, otherwise fallback to product snapshot hours
+  const totalMinutes = phases && phases.length > 0
+    ? phases.reduce((acc, ph) => acc + (ph.durationMinutes || 0), 0)
+    : (product.consultantHours || 0) + (product.silvaneHours || 0);
+
   return (
     <div className="border rounded-md mb-4 overflow-hidden bg-white shadow-sm">
       <div className="p-4 flex flex-col md:flex-row md:items-center justify-between bg-muted/30 border-b gap-3">
@@ -69,10 +74,10 @@ function ProductItem({ product }: { product: any }) {
               <Calendar className="h-3 w-3" />
               {product.startDate ? new Date(product.startDate).toLocaleDateString() : '-'} a {product.endDate ? new Date(product.endDate).toLocaleDateString() : '-'}
             </span>
-            {(product.consultantHours > 0 || product.silvaneHours > 0) && (
+            {totalMinutes > 0 && (
               <span className="text-xs text-muted-foreground border-l pl-3 flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                Duração: {product.consultantHours + (product.silvaneHours || 0)}h
+                Duração: {formatDuration(totalMinutes)}
               </span>
             )}
             <span className="text-xs text-muted-foreground border-l pl-3">
