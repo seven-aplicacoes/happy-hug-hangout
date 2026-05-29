@@ -84,11 +84,12 @@ export function useConsultantPermissions(consultantId?: string) {
 }
 
 export function useMyPermissions() {
+  const { user: authUser } = useAuth();
   const { data: permissions, isLoading } = useQuery({
-    queryKey: ['my-permissions'],
+    queryKey: ['my-permissions', authUser?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!authUser) return [];
+      const user = authUser;
 
       // Check if user is admin
       const { data: profile } = await supabase
