@@ -5,13 +5,22 @@ import { PageHeader } from '@/components/PageHeader';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { StatusTag } from '@/components/StatusTag';
+import { StatusTag, StatusVariant } from '@/components/StatusTag';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   BookOpen, FileText, Video, FileSpreadsheet, Presentation, Link2, Download,
-  Search, Compass, AlertTriangle, ChevronRight, Layers, Library, Plug, Loader2
+  Search, Compass, AlertTriangle, ChevronRight, Layers, Library, Plug, Loader2,
+  Plus, MessageSquare, ClipboardList, Flag, Lightbulb, HelpCircle, Pencil, Trash2
 } from 'lucide-react';
+import { METODOLOGIA, MATERIAIS_GERAIS, labelTipoMaterial, labelCategoria, type TipoMaterial, type Material } from '@/data/metodologia';
+import { toast } from '@/hooks/use-toast';
+import { useMethodology } from '@/hooks/useMethodology';
+import { ModalMethodologyNote } from '@/components/modals/ModalMethodologyNote';
+import { MethodologyNote } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { Badge } from '@/components/ui/badge';
 import { METODOLOGIA, MATERIAIS_GERAIS, labelTipoMaterial, labelCategoria, type TipoMaterial, type Material } from '@/data/metodologia';
 import { toast } from '@/hooks/use-toast';
 
@@ -66,14 +75,47 @@ function MaterialItem({ m }: { m: Material }) {
 
 export default function MetodologiaPage() {
   const { perfil } = useAuth();
-  const { can, isLoading } = useMyPermissions();
+  const { can, isLoading: loadingPermissions } = useMyPermissions();
+  const { phases, notes, isLoading: loadingMethodology } = useMethodology();
+  const queryClient = useQueryClient();
+
   const [busca, setBusca] = useState('');
   const [faseAtiva, setFaseAtiva] = useState<string>(METODOLOGIA[0].id);
+  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<MethodologyNote | null>(null);
+
+  // Filtros para notes
+  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
+  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
+
   const fase = METODOLOGIA.find(f => f.id === faseAtiva)!;
 
   const buscaNorm = busca.trim().toLowerCase();
   const filtra = (m: Material) => !buscaNorm || m.titulo.toLowerCase().includes(buscaNorm) || m.descricao.toLowerCase().includes(buscaNorm);
   const materiaisFiltrados = fase.materiais.filter(filtra);
+
+  const isAdmin = perfil === 'admin';
+
+  const notesFiltradas = (notes || []).filter(n => {
+    if (filtroTipo !== 'todos' && n.type !== filtroTipo) return false;
+    if (filtroStatus !== 'todos' && n.status !== filtroStatus) return false;
+    return true;
+  });
+
+  const handleDeleteNote = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta observação?')) return;
+    try {
+      const { error } = await supabase.from('methodology_notes').delete().eq('id', id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['methodology-notes'] });
+      toast({ title: 'Excluído', description: 'Registro metodológico removido.' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Erro ao excluir', description: err.message });
+    }
+  };
+
+  const isLoading = loadingPermissions || loadingMethodology;
 
   if (isLoading) {
     return (
@@ -286,6 +328,153 @@ export default function MetodologiaPage() {
         </div>
       </div>
 
+      {/* Observações e Pendências da Metodologia */}
+      <section className="space-y-6 pt-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-1.5 rounded-full bg-seven-warning" />
+            <h2 className="text-xl font-black uppercase tracking-tight">Observações e Pendências da Metodologia</h2>
+          </div>
+          {isAdmin && (
+            <Button onClick={() => { setSelectedNote(null); setModalOpen(true); }} className="gap-2 bg-seven-warning hover:bg-seven-warning/90 text-black font-bold">
+              <Plus className="h-4 w-4" />
+              Novo Registro
+            </Button>
+          )}
+        </div>
+
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            {/* Filtros */}
+            <div className="flex flex-wrap gap-4 items-end border-b pb-6 border-muted/60">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tipo</p>
+                <div className="flex flex-wrap gap-2">
+                  {['todos', 'observacao', 'pendencia', 'decisao_futura', 'risco', 'pergunta', 'ideia'].map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setFiltroTipo(t)}
+                      className={`text-[10px] px-2 py-1 rounded-md border font-bold uppercase transition-all ${
+                        filtroTipo === t ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      {t === 'todos' ? 'Todos' : t.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</p>
+                <div className="flex flex-wrap gap-2">
+                  {['todos', 'aberto', 'em_discussao', 'aprovado', 'resolvido'].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setFiltroStatus(s)}
+                      className={`text-[10px] px-2 py-1 rounded-md border font-bold uppercase transition-all ${
+                        filtroStatus === s ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      {s === 'todos' ? 'Todos' : s.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Lista de Registros */}
+            <div className="space-y-4">
+              {notesFiltradas.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed rounded-xl bg-muted/20">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">Nenhum registro metodológico encontrado com os filtros aplicados.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {notesFiltradas.map(note => {
+                    const typeIcons: any = {
+                      observacao: MessageSquare,
+                      pendencia: ClipboardList,
+                      decisao_futura: Flag,
+                      risco: AlertTriangle,
+                      pergunta: HelpCircle,
+                      ideia: Lightbulb
+                    };
+                    const NoteIcon = typeIcons[note.type] || MessageSquare;
+                    
+                    const priorityVariants: Record<string, StatusVariant> = {
+                      baixa: 'neutral',
+                      media: 'info',
+                      alta: 'warning',
+                      critica: 'danger'
+                    };
+
+                    const statusLabels: any = {
+                      aberto: 'Aberto',
+                      em_discussao: 'Em discussão',
+                      aprovado: 'Aprovado',
+                      descartado: 'Descartado',
+                      resolvido: 'Resolvido'
+                    };
+
+                    const typeLabels: any = {
+                      observacao: 'Observação',
+                      pendencia: 'Pendência',
+                      decisao_futura: 'Decisão futura',
+                      risco: 'Risco',
+                      pergunta: 'Pergunta',
+                      ideia: 'Ideia'
+                    };
+
+                    return (
+                      <div key={note.id} className="p-4 rounded-xl border bg-white shadow-sm hover:shadow-md transition-all border-muted/60 flex items-start gap-4">
+                        <div className={`h-10 w-10 rounded-lg shrink-0 flex items-center justify-center ${
+                          note.status === 'resolvido' ? 'bg-seven-success/10 text-seven-success' : 'bg-primary/10 text-primary'
+                        }`}>
+                          <NoteIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 space-y-2 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-sm leading-snug">{note.title}</h3>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <StatusTag label={statusLabels[note.status]} variant={note.status === 'resolvido' ? 'success' : 'info'} />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                            {note.description || 'Sem descrição.'}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3 pt-1">
+                            <Badge variant="outline" className="text-[9px] uppercase tracking-tighter bg-muted/30">
+                              {typeLabels[note.type]}
+                            </Badge>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Prioridade:</span>
+                              <StatusTag label={note.priority} variant={priorityVariants[note.priority]} />
+                            </div>
+                            <span className="text-[9px] text-muted-foreground">
+                              {new Date(note.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        {isAdmin && (
+                          <div className="flex flex-col gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedNote(note); setModalOpen(true); }}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteNote(note.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
       {/* Banner de integrações */}
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="p-5 flex items-center gap-4">
@@ -297,6 +486,13 @@ export default function MetodologiaPage() {
           <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
         </CardContent>
       </Card>
+
+      <ModalMethodologyNote 
+        open={modalOpen} 
+        onClose={() => { setModalOpen(false); setSelectedNote(null); }}
+        note={selectedNote}
+        phases={METODOLOGIA.map(f => ({ id: f.id, name: f.nome }))}
+      />
     </div>
   );
 }
