@@ -310,7 +310,7 @@ export default function ConsultorDashboardPage() {
             titulo="Encerrando em 90d"
             valor={contratosEncerrando.length}
             icon={FileClock}
-            variant={contratosEncerrando.length > 0 ? 'warning' : 'default'}
+            variant={avaliarBenchmark(contratosEncerrando.length, getBench('contracts_ending_90_days', { esperado: 0, tolerancia: 0, goal_type: 'informational', comparison_operator: 'none', descricao: '' })) === 'acima_limite' ? 'warning' : 'default'}
             subtitulo="Contratos próximos do fim"
             onClick={() => aplicarFiltro('encerrando')}
           />
