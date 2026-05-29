@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,13 +25,27 @@ export function PhaseForm({ open, onOpenChange, phase }: PhaseFormProps) {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
-    name: phase?.name || '',
-    subtitle: phase?.subtitle || '',
-    purpose: phase?.purpose || '',
-    average_duration: phase?.average_duration || '',
-    order_index: phase?.order_index || 0,
-    phase_key: phase?.phase_key || '',
+    name: '',
+    subtitle: '',
+    purpose: '',
+    average_duration: '',
+    order_index: 0,
+    phase_key: '',
   });
+
+  // Reset form when phase changes or modal opens
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        name: phase?.name || '',
+        subtitle: phase?.subtitle || '',
+        purpose: phase?.purpose || '',
+        average_duration: phase?.average_duration || '',
+        order_index: phase?.order_index || 0,
+        phase_key: phase?.phase_key || '',
+      });
+    }
+  }, [open, phase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +67,7 @@ export function PhaseForm({ open, onOpenChange, phase }: PhaseFormProps) {
       toast({ title: 'Sucesso', description: 'Fase salva com sucesso.' });
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Error saving phase:', error);
       toast({ variant: 'destructive', title: 'Erro', description: error.message });
     } finally {
       setLoading(false);

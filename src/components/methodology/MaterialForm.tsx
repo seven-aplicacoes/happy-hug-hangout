@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,14 +34,30 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
   const [file, setFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
-    title: material?.title || '',
-    description: material?.description || '',
-    category: material?.category || 'material',
-    url: material?.url || '',
-    is_essential: material?.is_essential || false,
-    status: material?.status || 'active',
-    type: material?.type || 'pdf',
+    title: '',
+    description: '',
+    category: 'material',
+    url: '',
+    is_essential: false,
+    status: 'active',
+    type: 'pdf',
   });
+
+  // Reset form when material changes or modal opens
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: material?.title || '',
+        description: material?.description || '',
+        category: material?.category || 'material',
+        url: material?.url || '',
+        is_essential: material?.is_essential || false,
+        status: material?.status || 'active',
+        type: material?.type || 'pdf',
+      });
+      setFile(null);
+    }
+  }, [open, material]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
