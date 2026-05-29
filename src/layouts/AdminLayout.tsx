@@ -57,7 +57,6 @@ function AdminSidebar() {
 
   const filteredCore = adminCoreLinks.filter(l => can(l.module));
   const filteredOps = adminOperationalLinks.filter(l => can(l.module));
-  const filteredIntel = adminIntelligenceLinks.filter(l => can(l.module));
   const filteredConfig = adminConfigLinks.filter(l => can(l.module));
   const filteredSoon = comingSoonLinks.filter(l => can(l.module));
 
