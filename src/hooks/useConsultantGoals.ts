@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useMemo } from 'react';
 
 export interface IndicatorGoal {
   id: string;
@@ -25,7 +26,17 @@ export function useConsultantGoals(consultantId?: string) {
         .select('*')
         .eq('is_active', true);
       if (error) throw error;
-      return data as IndicatorGoal[];
+      
+      return data.map(dg => ({
+        id: dg.id,
+        indicator_key: dg.indicator_key,
+        indicator_label: dg.indicator_label,
+        goal_value: dg.default_goal_value || 0,
+        goal_type: dg.goal_type as any,
+        comparison_operator: dg.comparison_operator as any,
+        period_type: dg.period_type || 'monthly',
+        is_active: dg.is_active || false
+      })) as IndicatorGoal[];
     },
   });
 
@@ -39,13 +50,13 @@ export function useConsultantGoals(consultantId?: string) {
         .eq('consultant_id', consultantId)
         .eq('is_active', true);
       if (error) throw error;
-      return data as IndicatorGoal[];
+      return data as unknown as IndicatorGoal[];
     },
     enabled: !!consultantId,
   });
 
   const upsertConsultantGoal = useMutation({
-    mutationFn: async (goal: Partial<IndicatorGoal> & { consultant_id: string; indicator_key: string }) => {
+    mutationFn: async (goal: any) => {
       const { data, error } = await supabase
         .from('consultant_indicator_goals')
         .upsert(goal)
@@ -86,7 +97,7 @@ export function useConsultantGoals(consultantId?: string) {
         consultant_id: cId,
         indicator_key: dg.indicator_key,
         indicator_label: dg.indicator_label,
-        goal_value: dg.default_goal_value,
+        goal_value: dg.goal_value,
         goal_type: dg.goal_type,
         comparison_operator: dg.comparison_operator,
         period_type: dg.period_type,
@@ -127,5 +138,3 @@ export function useConsultantGoals(consultantId?: string) {
     restoreDefaults,
   };
 }
-
-import { useMemo } from 'react';
