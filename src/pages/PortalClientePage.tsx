@@ -184,10 +184,6 @@ export default function PortalClientePage() {
 
   const clientDeliverables = documentos?.filter(d => d.visibility === 'client' || d.visibility === 'all') || [];
   
-  // Get all meetings from all phases to show history and upcoming
-  // Since we don't have a direct hook for all meetings of a client that are part of the journey easily
-  // we'll rely on the phases' meetings.
-  
   return (
     <div className="min-h-screen bg-neutral-50">
       <header className="sticky top-0 z-10 w-full border-b bg-white/80 backdrop-blur-md">
@@ -209,178 +205,203 @@ export default function PortalClientePage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
-        {/* Hero Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-light text-neutral-900">
-              Bem-vindo, <span className="font-semibold text-primary">{cliente?.nomeFantasia}</span>
-            </h1>
-            <p className="text-neutral-500">Acompanhe em tempo real o progresso da sua consultoria.</p>
-          </div>
-          
-          <Card className="bg-white border-none shadow-sm flex items-center gap-4 p-4 pr-6 min-w-[300px]">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <User className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">Consultor Responsável</p>
-              <p className="font-medium text-neutral-900">{activeContract?.consultorNome || cliente?.consultorNome}</p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Journey Progress */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5 text-primary" />
-              Progresso da Consultoria
-            </h2>
-            <div className="text-sm font-medium text-neutral-500 bg-white px-3 py-1 rounded-full shadow-sm border border-neutral-100">
-              Produto: <span className="text-neutral-900 font-bold">{activeProduct?.productNome || 'Consultoria'}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-            {/* Phase Stepper */}
-            <div className="xl:col-span-8 space-y-4">
-
-              <Card className="border-none shadow-sm overflow-hidden bg-white">
-                <ScrollArea className="h-[500px] w-full p-6">
-                  <div className="relative pl-8 space-y-10">
-                    <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-neutral-100" />
-                    
-                    {phases?.map((phase, idx) => {
-                      const isCompleted = phase.status === 'concluida';
-                      const isCurrent = phase.status === 'em_andamento';
-                      
-                      return (
-                        <div key={phase.id} className="relative">
-                          <div className={cn(
-                            "absolute -left-[25px] h-4 w-4 rounded-full border-2 bg-white z-10",
-                            isCompleted ? "border-green-500 bg-green-500" : 
-                            isCurrent ? "border-primary bg-primary animate-pulse" : "border-neutral-200"
-                          )}>
-                            {isCompleted && <CheckCircle className="h-3 w-3 text-white absolute inset-0 m-auto" />}
-                          </div>
-                          
-                          <div className={cn(
-                            "space-y-4 p-5 rounded-xl border transition-all",
-                            isCurrent ? "bg-primary/[0.02] border-primary/20 ring-1 ring-primary/5" : "bg-white border-neutral-100"
-                          )}>
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                              <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Módulo {idx + 1}</span>
-                                  {isCurrent && <StatusTag label="Fase Atual" />}
-                                </div>
-                                <h3 className="font-semibold text-lg text-neutral-900">{phase.name}</h3>
-                                {phase.clientNotes && (
-                                  <p className="text-sm text-neutral-500 mt-1 max-w-lg">{phase.clientNotes}</p>
-                                )}
-                              </div>
-                              <div className="flex flex-col items-end gap-1">
-                                <div className="text-xs text-neutral-400 flex items-center gap-1.5 font-medium">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  {phase.durationMinutes ? `${phase.durationMinutes} min previstos` : 'Tempo flexível'}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Phase Meetings List (Simplified for client) */}
-                            <PhaseMeetingsList 
-                              moduleId={phase.id} 
-                              onRateMeeting={handleOpenCsat}
-                              responses={csatResponses}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </Card>
-            </div>
-
-            {/* Sidebar: Deliverables & Next Steps */}
-            <div className="xl:col-span-4 space-y-6">
-
-              {/* Deliverables */}
-              <Card className="border-none shadow-sm bg-white">
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" />
-                    Entregáveis Disponíveis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-0">
-                  <div className="space-y-1">
-                    {clientDeliverables.length === 0 ? (
-                      <div className="px-6 py-8 text-center">
-                        <p className="text-xs text-neutral-400 italic">Nenhum entregável disponível no momento.</p>
-                      </div>
-                    ) : (
-                      clientDeliverables.map(doc => (
-                        <a 
-                          key={doc.id}
-                          href={doc.file_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center justify-between px-6 py-3 hover:bg-neutral-50 transition-colors group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded bg-primary/5 flex items-center justify-center text-primary">
-                              <FileText className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate max-w-[180px]">{doc.titulo}</p>
-                              <p className="text-[10px] text-neutral-400">Disponibilizado em {format(new Date(doc.data), 'dd/MM/yy')}</p>
-                            </div>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-primary transition-colors" />
-                        </a>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Status & Alerts (Client facing) */}
-              <Card className="border-none shadow-sm bg-primary text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <SevenLogo fill="white" height={100} />
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Navigation */}
+          <aside className="lg:w-64 space-y-6 shrink-0">
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 px-2 mb-2">Navegação</p>
+              <nav className="space-y-1">
+                <Button variant="ghost" className="w-full justify-start text-primary bg-primary/5 font-semibold">
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Sua Jornada
+                </Button>
+                <div className="pt-4 space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 px-2 mb-2">Recursos em breve</p>
+                  {[
+                    'Metodologia Seven',
+                    'Inteligência',
+                    'Análise Avançada',
+                    'Mapa da Carteira',
+                    'Notificações'
+                  ].map((item) => (
+                    <div key={item} className="flex items-center justify-between px-3 py-2 text-xs text-neutral-400 cursor-not-allowed group rounded-md">
+                      <span className="group-hover:text-neutral-500 transition-colors">{item}</span>
+                      <span className="text-[8px] bg-neutral-100 text-neutral-400 px-1.5 py-0.5 rounded uppercase font-bold">Em breve</span>
+                    </div>
+                  ))}
                 </div>
-                <CardHeader className="relative z-10">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Status da Jornada
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10 space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-2xl font-semibold">Tudo em dia!</p>
-                    <p className="text-primary-foreground/80 text-sm">Sua consultoria está seguindo o cronograma planejado.</p>
-                  </div>
-                  <Separator className="bg-white/20" />
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs">
-                      <p className="text-primary-foreground/60">Data de Início</p>
-                      <p className="font-medium">{activeContract?.dataInicio ? format(new Date(activeContract.dataInicio), "dd 'de' MMM, yyyy", { locale: ptBR }) : '-'}</p>
-                    </div>
-                    <div className="text-xs text-right">
-                      <p className="text-primary-foreground/60">Status do Contrato</p>
-                      <StatusTag label={activeContract?.status || 'Ativo'} className="bg-white/20 text-white border-none" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              </nav>
             </div>
-          </div>
-        </section>
-      </div>
-    </main>
+            
+            <Card className="bg-white border-none shadow-sm flex items-center gap-3 p-4">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <User className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold">Seu Consultor</p>
+                <p className="font-medium text-neutral-900 text-sm truncate">{activeContract?.consultorNome || cliente?.consultorNome}</p>
+              </div>
+            </Card>
+          </aside>
 
+          {/* Main Content Area */}
+          <div className="flex-1 space-y-10">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-light text-neutral-900">
+                Bem-vindo, <span className="font-semibold text-primary">{cliente?.nomeFantasia}</span>
+              </h1>
+              <p className="text-neutral-500">Acompanhe em tempo real o progresso da sua consultoria.</p>
+            </div>
+
+            {/* Journey Progress */}
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <LayoutDashboard className="h-5 w-5 text-primary" />
+                  Progresso da Consultoria
+                </h2>
+                <div className="text-sm font-medium text-neutral-500 bg-white px-3 py-1 rounded-full shadow-sm border border-neutral-100">
+                  Produto: <span className="text-neutral-900 font-bold">{activeProduct?.productNome || 'Consultoria'}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                {/* Phase Stepper */}
+                <div className="xl:col-span-8 space-y-4">
+                  <Card className="border-none shadow-sm overflow-hidden bg-white">
+                    <ScrollArea className="h-[600px] w-full p-6">
+                      <div className="relative pl-8 space-y-10">
+                        <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-neutral-100" />
+                        
+                        {phases?.map((phase, idx) => {
+                          const isCompleted = phase.status === 'concluida';
+                          const isCurrent = phase.status === 'em_andamento';
+                          
+                          return (
+                            <div key={phase.id} className="relative">
+                              <div className={cn(
+                                "absolute -left-[25px] h-4 w-4 rounded-full border-2 bg-white z-10",
+                                isCompleted ? "border-green-500 bg-green-500" : 
+                                isCurrent ? "border-primary bg-primary animate-pulse" : "border-neutral-200"
+                              )}>
+                                {isCompleted && <CheckCircle className="h-3 w-3 text-white absolute inset-0 m-auto" />}
+                              </div>
+                              
+                              <div className={cn(
+                                "space-y-4 p-5 rounded-xl border transition-all",
+                                isCurrent ? "bg-primary/[0.02] border-primary/20 ring-1 ring-primary/5" : "bg-white border-neutral-100"
+                              )}>
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Módulo {idx + 1}</span>
+                                      {isCurrent && <StatusTag label="Fase Atual" />}
+                                    </div>
+                                    <h3 className="font-semibold text-lg text-neutral-900">{phase.name}</h3>
+                                    {phase.clientNotes && (
+                                      <p className="text-sm text-neutral-500 mt-1 max-w-lg">{phase.clientNotes}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <div className="text-xs text-neutral-400 flex items-center gap-1.5 font-medium">
+                                      <Clock className="h-3.5 w-3.5" />
+                                      {phase.durationMinutes ? `${phase.durationMinutes} min previstos` : 'Tempo flexível'}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <PhaseMeetingsList 
+                                  moduleId={phase.id} 
+                                  onRateMeeting={handleOpenCsat}
+                                  responses={csatResponses}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </Card>
+                </div>
+
+                {/* Sidebar: Deliverables & Next Steps */}
+                <div className="xl:col-span-4 space-y-6">
+                  {/* Deliverables */}
+                  <Card className="border-none shadow-sm bg-white">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" />
+                        Entregáveis Disponíveis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-0">
+                      <div className="space-y-1">
+                        {clientDeliverables.length === 0 ? (
+                          <div className="px-6 py-8 text-center">
+                            <p className="text-xs text-neutral-400 italic">Nenhum entregável disponível no momento.</p>
+                          </div>
+                        ) : (
+                          clientDeliverables.map(doc => (
+                            <a 
+                              key={doc.id}
+                              href={doc.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center justify-between px-6 py-3 hover:bg-neutral-50 transition-colors group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded bg-primary/5 flex items-center justify-center text-primary">
+                                  <FileText className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate max-w-[150px]">{doc.titulo}</p>
+                                  <p className="text-[10px] text-neutral-400">Disponibilizado em {format(new Date(doc.data), 'dd/MM/yy')}</p>
+                                </div>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-primary transition-colors" />
+                            </a>
+                          ))
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Status & Alerts (Client facing) */}
+                  <Card className="border-none shadow-sm bg-primary text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                      <SevenLogo fill="white" height={100} />
+                    </div>
+                    <CardHeader className="relative z-10">
+                      <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Status da Jornada
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="relative z-10 space-y-4">
+                      <div className="space-y-1">
+                        <p className="text-2xl font-semibold">Tudo em dia!</p>
+                        <p className="text-primary-foreground/80 text-sm">Sua consultoria está seguindo o cronograma planejado.</p>
+                      </div>
+                      <Separator className="bg-white/20" />
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs">
+                          <p className="text-primary-foreground/60">Data de Início</p>
+                          <p className="font-medium">{activeContract?.dataInicio ? format(new Date(activeContract.dataInicio), "dd 'de' MMM, yyyy", { locale: ptBR }) : '-'}</p>
+                        </div>
+                        <div className="text-xs text-right">
+                          <p className="text-primary-foreground/60">Status do Contrato</p>
+                          <StatusTag label={activeContract?.status || 'Ativo'} className="bg-white/20 text-white border-none" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
 
       {/* CSAT Dialog */}
       <Dialog open={isCsatOpen} onOpenChange={setIsCsatOpen}>
@@ -509,6 +530,7 @@ function StarRating({ value, onChange }: { value: number, onChange: (v: number) 
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
+          type="button"
           onClick={() => onChange(star)}
           className={cn(
             "transition-all",
@@ -528,9 +550,10 @@ function NpsScale({ value, onChange }: { value: number, onChange: (v: number) =>
       {Array.from({ length: 11 }).map((_, i) => (
         <button
           key={i}
+          type="button"
           onClick={() => onChange(i)}
           className={cn(
-            "h-10 w-10 flex items-center justify-center rounded-md text-xs font-bold border transition-all",
+            "h-10 w-10 flex items-center justify-center rounded-md text-xs font-bold border transition-all shrink-0",
             value === i ? "bg-primary border-primary text-white scale-110 z-10" : "bg-white border-neutral-200 text-neutral-500 hover:border-primary/50"
           )}
         >
