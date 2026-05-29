@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { NavLink } from '@/components/NavLink';
@@ -5,7 +6,8 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FolderKanban, TrendingUp, Users, LogOut, Menu, ShieldAlert, Map, GitBranch, BookOpen, FileText, Heart, Bell, Plug, FileSignature, Sparkles, RefreshCw, BarChart3, ShieldCheck, FileCheck, Clock, ChevronRight, Rocket, Briefcase, Activity, BarChart, Settings } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, TrendingUp, Users, LogOut, Menu, ShieldAlert, Map, GitBranch, BookOpen, FileText, Heart, Bell, Plug, FileSignature, Sparkles, RefreshCw, BarChart3, ShieldCheck, FileCheck, Clock, ChevronRight, Rocket, Briefcase, Activity, BarChart, Settings, Loader2 } from 'lucide-react';
+import { useMyPermissions, ADMIN_MODULES_CONFIG } from '@/hooks/useConsultantPermissions';
 import { Button } from '@/components/ui/button';
 import { SevenLogo } from '@/components/SevenLogo';
 import { ProfileSwitcher } from '@/components/ProfileSwitcher';
