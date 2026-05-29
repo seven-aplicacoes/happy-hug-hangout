@@ -93,8 +93,9 @@ export function TransversalMaterialForm({ open, onOpenChange, material }: Transv
         };
       }
 
+      const { url: _, ...restFormData } = formData;
       const payload = {
-        ...formData,
+        ...restFormData,
         ...fileData,
         file_url: fileUrl,
       };
