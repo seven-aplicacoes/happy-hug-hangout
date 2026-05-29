@@ -15,39 +15,39 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 
 const adminCoreLinks = [
-  { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
-  { title: 'Clientes', url: '/admin/clientes', icon: Users },
-  { title: 'Contratos', url: '/admin/contratos', icon: FileSignature },
-  { title: 'Produtos', url: '/admin/produtos', icon: Sparkles },
+  { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard, module: 'dashboard' },
+  { title: 'Clientes', url: '/admin/clientes', icon: Users, module: 'clientes' },
+  { title: 'Contratos', url: '/admin/contratos', icon: FileSignature, module: 'contratos' },
+  { title: 'Produtos', url: '/admin/produtos', icon: Sparkles, module: 'produtos' },
 ];
 
 const adminOperationalLinks = [
-  { title: 'Reuniões', url: '/admin/reunioes', icon: Clock },
-  { title: 'Tarefas', url: '/admin/tarefas', icon: FileCheck },
-  { title: 'Documentos', url: '/admin/documentos', icon: FileText },
-  { title: 'Notificações', url: '/admin/notificacoes', icon: Bell },
+  { title: 'Reuniões', url: '/admin/reunioes', icon: Clock, module: 'reunioes' },
+  { title: 'Tarefas', url: '/admin/tarefas', icon: FileCheck, module: 'tarefas' },
+  { title: 'Documentos', url: '/admin/documentos', icon: FileText, module: 'documentos' },
+  { title: 'Notificações', url: '/admin/notificacoes', icon: Bell, module: 'notificacoes' },
 ];
 
 const adminIntelligenceLinks = [
-  { title: 'Análise Avançada', url: '/admin/analise-avancada', icon: BarChart3 },
-  { title: 'Mapa da Carteira', url: '/admin/mapa-carteira', icon: Map },
+  { title: 'Análise Avançada', url: '/admin/analise-avancada', icon: BarChart3, module: 'analise-avancada' },
+  { title: 'Mapa da Carteira', url: '/admin/mapa-carteira', icon: Map, module: 'mapa-carteira' },
 ];
 
 const adminConfigLinks = [
-  { title: 'Usuários', url: '/admin/consultores', icon: Users },
-  { title: 'Permissões', url: '/admin/permissoes-consultores', icon: ShieldCheck },
-  { title: 'Metas dos Consultores', url: '/admin/metas-consultores', icon: TrendingUp },
-  { title: 'Metodologia Seven', url: '/admin/metodologia', icon: BookOpen },
-  { title: 'Integrações', url: '/admin/integracoes', icon: Plug },
+  { title: 'Usuários', url: '/admin/consultores', icon: Users, module: 'consultores' },
+  { title: 'Permissões', url: '/admin/permissoes-consultores', icon: ShieldCheck, module: 'permissoes-consultores' },
+  { title: 'Metas dos Consultores', url: '/admin/metas-consultores', icon: TrendingUp, module: 'metas-consultores' },
+  { title: 'Metodologia Seven', url: '/admin/metodologia', icon: BookOpen, module: 'metodologia' },
+  { title: 'Integrações', url: '/admin/integracoes', icon: Plug, module: 'integracoes' },
 ];
 
 const comingSoonLinks = [
-  { title: 'Pipeline de Renovação', url: '/admin/renovacao', icon: RefreshCw },
-  { title: 'Pipeline', url: '/admin/pipeline', icon: GitBranch },
-  { title: 'Alertas', url: '/admin/alertas', icon: ShieldAlert },
-  { title: 'Inteligência', url: '/admin/inteligencia', icon: TrendingUp },
-  { title: 'IA Analítica', url: '/admin/ia', icon: Sparkles },
-  { title: 'Relacionamento', url: '/admin/relacionamento', icon: Heart },
+  { title: 'Pipeline de Renovação', url: '/admin/renovacao', icon: RefreshCw, module: 'renovacao' },
+  { title: 'Pipeline', url: '/admin/pipeline', icon: GitBranch, module: 'pipeline' },
+  { title: 'Alertas', url: '/admin/alertas', icon: ShieldAlert, module: 'alertas' },
+  { title: 'Inteligência', url: '/admin/inteligencia', icon: TrendingUp, module: 'inteligencia' },
+  { title: 'IA Analítica', url: '/admin/ia', icon: Sparkles, module: 'ia' },
+  { title: 'Relacionamento', url: '/admin/relacionamento', icon: Heart, module: 'relacionamento' },
 ];
 
 
