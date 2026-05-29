@@ -1,0 +1,2119 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      client_alerts: {
+        Row: {
+          client_id: string | null
+          consultant_id: string | null
+          created_at: string | null
+          evidence: string | null
+          id: string
+          next_action: string | null
+          reason: string
+          severity: string
+          status: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id?: string | null
+          created_at?: string | null
+          evidence?: string | null
+          id?: string
+          next_action?: string | null
+          reason: string
+          severity: string
+          status?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string | null
+          created_at?: string | null
+          evidence?: string | null
+          id?: string
+          next_action?: string | null
+          reason?: string
+          severity?: string
+          status?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_alerts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_alerts_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_contacts: {
+        Row: {
+          area: string | null
+          client_id: string
+          created_at: string | null
+          email: string | null
+          id: string
+          is_decision_maker: boolean | null
+          is_financial: boolean | null
+          is_primary: boolean | null
+          name: string
+          notes: string | null
+          phone: string | null
+          portal_access: boolean | null
+          role: string | null
+          status: string | null
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          area?: string | null
+          client_id: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_decision_maker?: boolean | null
+          is_financial?: boolean | null
+          is_primary?: boolean | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          portal_access?: boolean | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          area?: string | null
+          client_id?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_decision_maker?: boolean | null
+          is_financial?: boolean | null
+          is_primary?: boolean | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          portal_access?: boolean | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_indicators: {
+        Row: {
+          category: string | null
+          client_id: string | null
+          created_at: string | null
+          date: string
+          id: string
+          is_baseline: boolean | null
+          name: string
+          unit: string | null
+          value: number
+        }
+        Insert: {
+          category?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          date: string
+          id?: string
+          is_baseline?: boolean | null
+          name: string
+          unit?: string | null
+          value: number
+        }
+        Update: {
+          category?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          is_baseline?: boolean | null
+          name?: string
+          unit?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_indicators_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_products: {
+        Row: {
+          client_id: string
+          client_notes: string | null
+          client_visible: boolean | null
+          consultant_id: string | null
+          contract_id: string | null
+          created_at: string | null
+          created_by: string | null
+          current_phase_id: string | null
+          current_week_id: string | null
+          current_week_number: number | null
+          duration_weeks: number | null
+          end_date: string | null
+          id: string
+          internal_notes: string | null
+          legacy_project_id: string | null
+          methodology_plan_id: string | null
+          product_id: string
+          start_date: string | null
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          client_id: string
+          client_notes?: string | null
+          client_visible?: boolean | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_phase_id?: string | null
+          current_week_id?: string | null
+          current_week_number?: number | null
+          duration_weeks?: number | null
+          end_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          legacy_project_id?: string | null
+          methodology_plan_id?: string | null
+          product_id: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_notes?: string | null
+          client_visible?: boolean | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_phase_id?: string | null
+          current_week_id?: string | null
+          current_week_number?: number | null
+          duration_weeks?: number | null
+          end_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          legacy_project_id?: string | null
+          methodology_plan_id?: string | null
+          product_id?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_products_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_products_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_products_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_products_current_phase_id_fkey"
+            columns: ["current_phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_products_methodology_plan_id_fkey"
+            columns: ["methodology_plan_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          auth_user_id: string | null
+          briefing: string | null
+          cep: string | null
+          cnpj: string
+          company_size: string | null
+          complement: string | null
+          consultant_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          corporate_name: string
+          created_at: string | null
+          created_by: string | null
+          current_objective: string | null
+          email: string | null
+          id: string
+          institutional_email: string | null
+          last_interaction: string | null
+          methodology_phase:
+            | Database["public"]["Enums"]["methodology_phase"]
+            | null
+          monthly_revenue: number | null
+          neighborhood: string | null
+          number: string | null
+          pains: string[] | null
+          portal_access_enabled: boolean | null
+          region: string | null
+          segment: string | null
+          seven_index: number | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["contract_status"] | null
+          street: string | null
+          success_factors: string[] | null
+          trade_name: string
+          updated_at: string | null
+          updated_by: string | null
+          upsell_potential: boolean | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          briefing?: string | null
+          cep?: string | null
+          cnpj: string
+          company_size?: string | null
+          complement?: string | null
+          consultant_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          corporate_name: string
+          created_at?: string | null
+          created_by?: string | null
+          current_objective?: string | null
+          email?: string | null
+          id?: string
+          institutional_email?: string | null
+          last_interaction?: string | null
+          methodology_phase?:
+            | Database["public"]["Enums"]["methodology_phase"]
+            | null
+          monthly_revenue?: number | null
+          neighborhood?: string | null
+          number?: string | null
+          pains?: string[] | null
+          portal_access_enabled?: boolean | null
+          region?: string | null
+          segment?: string | null
+          seven_index?: number | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["contract_status"] | null
+          street?: string | null
+          success_factors?: string[] | null
+          trade_name: string
+          updated_at?: string | null
+          updated_by?: string | null
+          upsell_potential?: boolean | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          briefing?: string | null
+          cep?: string | null
+          cnpj?: string
+          company_size?: string | null
+          complement?: string | null
+          consultant_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          corporate_name?: string
+          created_at?: string | null
+          created_by?: string | null
+          current_objective?: string | null
+          email?: string | null
+          id?: string
+          institutional_email?: string | null
+          last_interaction?: string | null
+          methodology_phase?:
+            | Database["public"]["Enums"]["methodology_phase"]
+            | null
+          monthly_revenue?: number | null
+          neighborhood?: string | null
+          number?: string | null
+          pains?: string[] | null
+          portal_access_enabled?: boolean | null
+          region?: string | null
+          segment?: string | null
+          seven_index?: number | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["contract_status"] | null
+          street?: string | null
+          success_factors?: string[] | null
+          trade_name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          upsell_potential?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultant_permissions: {
+        Row: {
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_export: boolean
+          can_view: boolean
+          consultant_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          module_key: string
+          module_name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_export?: boolean
+          can_view?: boolean
+          consultant_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_key: string
+          module_name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_export?: boolean
+          can_view?: boolean
+          consultant_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_key?: string
+          module_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_permissions_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_product_phase_consultants: {
+        Row: {
+          assigned_by: string | null
+          consultant_id: string
+          contract_product_id: string
+          created_at: string | null
+          end_date: string | null
+          id: string
+          is_primary: boolean | null
+          methodology_phase_id: string
+          role: string | null
+          start_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          consultant_id: string
+          contract_product_id: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_primary?: boolean | null
+          methodology_phase_id: string
+          role?: string | null
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          consultant_id?: string
+          contract_product_id?: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_primary?: boolean | null
+          methodology_phase_id?: string
+          role?: string | null
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_product_phase_consultants_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_product_phase_consultants_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_product_phase_consultants_methodology_phase_id_fkey"
+            columns: ["methodology_phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_product_phases: {
+        Row: {
+          client_notes: string | null
+          client_visible: boolean | null
+          contract_product_id: string
+          created_at: string | null
+          created_by: string | null
+          duration_minutes: number | null
+          end_date: string | null
+          executor_type: string | null
+          id: string
+          internal_notes: string | null
+          meetings_count: number | null
+          methodology_phase_id: string | null
+          name: string
+          order_index: number
+          responsible_consultant_id: string | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          client_notes?: string | null
+          client_visible?: boolean | null
+          contract_product_id: string
+          created_at?: string | null
+          created_by?: string | null
+          duration_minutes?: number | null
+          end_date?: string | null
+          executor_type?: string | null
+          id?: string
+          internal_notes?: string | null
+          meetings_count?: number | null
+          methodology_phase_id?: string | null
+          name: string
+          order_index: number
+          responsible_consultant_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          client_notes?: string | null
+          client_visible?: boolean | null
+          contract_product_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          duration_minutes?: number | null
+          end_date?: string | null
+          executor_type?: string | null
+          id?: string
+          internal_notes?: string | null
+          meetings_count?: number | null
+          methodology_phase_id?: string | null
+          name?: string
+          order_index?: number
+          responsible_consultant_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_product_phases_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_product_phases_methodology_phase_id_fkey"
+            columns: ["methodology_phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_product_phases_responsible_consultant_id_fkey"
+            columns: ["responsible_consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_products: {
+        Row: {
+          client_notes: string | null
+          client_visible: boolean | null
+          contract_id: string
+          created_at: string | null
+          created_by: string | null
+          current_phase_id: string | null
+          end_date: string | null
+          id: string
+          internal_notes: string | null
+          product_id: string
+          start_date: string | null
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          client_notes?: string | null
+          client_visible?: boolean | null
+          contract_id: string
+          created_at?: string | null
+          created_by?: string | null
+          current_phase_id?: string | null
+          end_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          product_id: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          client_notes?: string | null
+          client_visible?: boolean | null
+          contract_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          current_phase_id?: string | null
+          end_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          product_id?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_products_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_products_current_phase_id_fkey"
+            columns: ["current_phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          client_id: string | null
+          consultant_id: string | null
+          contract_number: string | null
+          created_at: string | null
+          created_by: string | null
+          current_phase: Database["public"]["Enums"]["methodology_phase"] | null
+          end_date: string
+          id: string
+          product_id: string | null
+          risk_level: Database["public"]["Enums"]["risk_level"] | null
+          start_date: string
+          status: Database["public"]["Enums"]["contract_status"] | null
+          type: string
+          updated_at: string | null
+          updated_by: string | null
+          value: number
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_number?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_phase?:
+            | Database["public"]["Enums"]["methodology_phase"]
+            | null
+          end_date: string
+          id?: string
+          product_id?: string | null
+          risk_level?: Database["public"]["Enums"]["risk_level"] | null
+          start_date: string
+          status?: Database["public"]["Enums"]["contract_status"] | null
+          type: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: number
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_number?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_phase?:
+            | Database["public"]["Enums"]["methodology_phase"]
+            | null
+          end_date?: string
+          id?: string
+          product_id?: string | null
+          risk_level?: Database["public"]["Enums"]["risk_level"] | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["contract_status"] | null
+          type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      csat_surveys: {
+        Row: {
+          client_id: string | null
+          comment: string | null
+          date: string | null
+          id: string
+          meeting_id: string | null
+          score: number | null
+        }
+        Insert: {
+          client_id?: string | null
+          comment?: string | null
+          date?: string | null
+          id?: string
+          meeting_id?: string | null
+          score?: number | null
+        }
+        Update: {
+          client_id?: string | null
+          comment?: string | null
+          date?: string | null
+          id?: string
+          meeting_id?: string | null
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "csat_surveys_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "csat_surveys_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          author_id: string | null
+          client_id: string | null
+          contract_id: string | null
+          contract_product_id: string | null
+          contract_product_phase_id: string | null
+          created_at: string | null
+          created_by: string | null
+          feedbacks: Json | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          methodology_phase_id: string | null
+          product_id: string | null
+          status: string | null
+          title: string
+          type: string | null
+          updated_at: string | null
+          updated_by: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+          visibility: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          client_id?: string | null
+          contract_id?: string | null
+          contract_product_id?: string | null
+          contract_product_phase_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          feedbacks?: Json | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          methodology_phase_id?: string | null
+          product_id?: string | null
+          status?: string | null
+          title: string
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          client_id?: string | null
+          contract_id?: string | null
+          contract_product_id?: string | null
+          contract_product_phase_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          feedbacks?: Json | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          methodology_phase_id?: string | null
+          product_id?: string | null
+          status?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_contract_product_phase_id_fkey"
+            columns: ["contract_product_phase_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_methodology_phase_id_fkey"
+            columns: ["methodology_phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ia_insights: {
+        Row: {
+          client_id: string | null
+          confidence: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          type: string
+          variant: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          type: string
+          variant?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          type?: string
+          variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_insights_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_events: {
+        Row: {
+          detail: string | null
+          id: string
+          integration_id: string | null
+          occurred_at: string | null
+          title: string
+        }
+        Insert: {
+          detail?: string | null
+          id?: string
+          integration_id?: string | null
+          occurred_at?: string | null
+          title: string
+        }
+        Update: {
+          detail?: string | null
+          id?: string
+          integration_id?: string | null
+          occurred_at?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_events_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          benefits: string[] | null
+          capabilities: string[] | null
+          category: string
+          connected_at: string | null
+          created_at: string | null
+          description: string | null
+          documentation_url: string | null
+          id: string
+          last_sync: string | null
+          linked_account: string | null
+          name: string
+          provider: string
+          scopes: string[] | null
+          status: string
+          synced_items_count: number | null
+        }
+        Insert: {
+          benefits?: string[] | null
+          capabilities?: string[] | null
+          category: string
+          connected_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          documentation_url?: string | null
+          id?: string
+          last_sync?: string | null
+          linked_account?: string | null
+          name: string
+          provider: string
+          scopes?: string[] | null
+          status: string
+          synced_items_count?: number | null
+        }
+        Update: {
+          benefits?: string[] | null
+          capabilities?: string[] | null
+          category?: string
+          connected_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          documentation_url?: string | null
+          id?: string
+          last_sync?: string | null
+          linked_account?: string | null
+          name?: string
+          provider?: string
+          scopes?: string[] | null
+          status?: string
+          synced_items_count?: number | null
+        }
+        Relationships: []
+      }
+      legacy_projects: {
+        Row: {
+          client_id: string | null
+          consultant_id: string | null
+          contract_id: string | null
+          created_at: string | null
+          created_by: string | null
+          current_phase: Database["public"]["Enums"]["methodology_phase"] | null
+          end_date: string | null
+          id: string
+          name: string | null
+          product_id: string | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_phase?:
+            | Database["public"]["Enums"]["methodology_phase"]
+            | null
+          end_date?: string | null
+          id?: string
+          name?: string | null
+          product_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_phase?:
+            | Database["public"]["Enums"]["methodology_phase"]
+            | null
+          end_date?: string | null
+          id?: string
+          name?: string | null
+          product_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          client_id: string | null
+          consultant_id: string | null
+          contract_id: string | null
+          contract_product_id: string | null
+          contract_product_phase_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration: number | null
+          external_id: string | null
+          id: string
+          location: string | null
+          meeting_date: string
+          meeting_minutes: string | null
+          meeting_url: string | null
+          methodology_phase_id: string | null
+          participants: Json | null
+          scheduled_by: string | null
+          source: string | null
+          start_time: string
+          status: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          contract_product_id?: string | null
+          contract_product_phase_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration?: number | null
+          external_id?: string | null
+          id?: string
+          location?: string | null
+          meeting_date: string
+          meeting_minutes?: string | null
+          meeting_url?: string | null
+          methodology_phase_id?: string | null
+          participants?: Json | null
+          scheduled_by?: string | null
+          source?: string | null
+          start_time: string
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          contract_product_id?: string | null
+          contract_product_phase_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration?: number | null
+          external_id?: string | null
+          id?: string
+          location?: string | null
+          meeting_date?: string
+          meeting_minutes?: string | null
+          meeting_url?: string | null
+          methodology_phase_id?: string | null
+          participants?: Json | null
+          scheduled_by?: string | null
+          source?: string | null
+          start_time?: string
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_contract_product_phase_id_fkey"
+            columns: ["contract_product_phase_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_scheduled_by_fkey"
+            columns: ["scheduled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_materials: {
+        Row: {
+          category: string | null
+          description: string | null
+          duration: string | null
+          id: string
+          is_general: boolean | null
+          pages: number | null
+          phase_id: string | null
+          tag: string | null
+          title: string
+          type: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          category?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_general?: boolean | null
+          pages?: number | null
+          phase_id?: string | null
+          tag?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          category?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_general?: boolean | null
+          pages?: number | null
+          phase_id?: string | null
+          tag?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_materials_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_phases: {
+        Row: {
+          alerts: string[] | null
+          average_duration: string | null
+          created_at: string | null
+          deliverables: string[] | null
+          id: string
+          name: string
+          objectives: string[] | null
+          order_index: number
+          phase_key: string
+          purpose: string | null
+          tools: string[] | null
+        }
+        Insert: {
+          alerts?: string[] | null
+          average_duration?: string | null
+          created_at?: string | null
+          deliverables?: string[] | null
+          id?: string
+          name: string
+          objectives?: string[] | null
+          order_index: number
+          phase_key: string
+          purpose?: string | null
+          tools?: string[] | null
+        }
+        Update: {
+          alerts?: string[] | null
+          average_duration?: string | null
+          created_at?: string | null
+          deliverables?: string[] | null
+          id?: string
+          name?: string
+          objectives?: string[] | null
+          order_index?: number
+          phase_key?: string
+          purpose?: string | null
+          tools?: string[] | null
+        }
+        Relationships: []
+      }
+      methodology_plan_phases: {
+        Row: {
+          alerts: string[] | null
+          average_duration: string | null
+          created_at: string | null
+          deliverables: string[] | null
+          duration_minutes: number | null
+          executor_type: string | null
+          id: string
+          meetings_count: number | null
+          name: string
+          objectives: string[] | null
+          order_index: number
+          phase_key: string
+          plan_id: string | null
+          product_id: string | null
+          purpose: string | null
+          tools: string[] | null
+        }
+        Insert: {
+          alerts?: string[] | null
+          average_duration?: string | null
+          created_at?: string | null
+          deliverables?: string[] | null
+          duration_minutes?: number | null
+          executor_type?: string | null
+          id?: string
+          meetings_count?: number | null
+          name: string
+          objectives?: string[] | null
+          order_index: number
+          phase_key: string
+          plan_id?: string | null
+          product_id?: string | null
+          purpose?: string | null
+          tools?: string[] | null
+        }
+        Update: {
+          alerts?: string[] | null
+          average_duration?: string | null
+          created_at?: string | null
+          deliverables?: string[] | null
+          duration_minutes?: number | null
+          executor_type?: string | null
+          id?: string
+          meetings_count?: number | null
+          name?: string
+          objectives?: string[] | null
+          order_index?: number
+          phase_key?: string
+          plan_id?: string | null
+          product_id?: string | null
+          purpose?: string | null
+          tools?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_plan_phases_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "methodology_plan_phases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          product_id: string | null
+          status: string | null
+          updated_at: string | null
+          version: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          product_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          version?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          product_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_plans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_questions: {
+        Row: {
+          created_at: string | null
+          id: string
+          objective: string | null
+          phase_id: string | null
+          question: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          objective?: string | null
+          phase_id?: string | null
+          question: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          objective?: string | null
+          phase_id?: string | null
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_questions_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      methodology_templates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          examples: string[] | null
+          format: string | null
+          id: string
+          phase_id: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          examples?: string[] | null
+          format?: string | null
+          id?: string
+          phase_id?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          examples?: string[] | null
+          format?: string | null
+          id?: string
+          phase_id?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "methodology_templates_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nps_surveys: {
+        Row: {
+          client_id: string | null
+          comment: string | null
+          consultant_id: string | null
+          date: string | null
+          id: string
+          score: number | null
+          status: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          comment?: string | null
+          consultant_id?: string | null
+          date?: string | null
+          id?: string
+          score?: number | null
+          status?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          comment?: string | null
+          consultant_id?: string | null
+          date?: string | null
+          id?: string
+          score?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nps_surveys_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nps_surveys_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          consultant_hours: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          silvane_hours: number | null
+          status: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          consultant_hours?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          silvane_hours?: number | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          consultant_hours?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          silvane_hours?: number | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          city: string | null
+          created_at: string | null
+          email: string
+          entry_date: string | null
+          full_name: string
+          hours_available: number | null
+          id: string
+          max_clients: number | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          specialty: string | null
+          state: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string | null
+          email: string
+          entry_date?: string | null
+          full_name: string
+          hours_available?: number | null
+          id: string
+          max_clients?: number | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          specialty?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string | null
+          email?: string
+          entry_date?: string | null
+          full_name?: string
+          hours_available?: number | null
+          id?: string
+          max_clients?: number | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          specialty?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subtasks: {
+        Row: {
+          completed: boolean | null
+          id: string
+          task_id: string | null
+          title: string
+        }
+        Insert: {
+          completed?: boolean | null
+          id?: string
+          task_id?: string | null
+          title: string
+        }
+        Update: {
+          completed?: boolean | null
+          id?: string
+          task_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          client_id: string | null
+          completed_at: string | null
+          consultant_id: string | null
+          contract_id: string | null
+          contract_product_id: string | null
+          contract_product_phase_id: string | null
+          created_at: string | null
+          created_by: string | null
+          demand_type: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          impeded_at: string | null
+          impeded_by: string | null
+          impediment_history: Json | null
+          impediment_reason: string | null
+          methodology_phase_id: string | null
+          origin: string | null
+          priority: Database["public"]["Enums"]["risk_level"] | null
+          status: Database["public"]["Enums"]["task_status"] | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          completed_at?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          contract_product_id?: string | null
+          contract_product_phase_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          demand_type?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impeded_at?: string | null
+          impeded_by?: string | null
+          impediment_history?: Json | null
+          impediment_reason?: string | null
+          methodology_phase_id?: string | null
+          origin?: string | null
+          priority?: Database["public"]["Enums"]["risk_level"] | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          completed_at?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          contract_product_id?: string | null
+          contract_product_phase_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          demand_type?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impeded_at?: string | null
+          impeded_by?: string | null
+          impediment_history?: Json | null
+          impediment_reason?: string | null
+          methodology_phase_id?: string | null
+          origin?: string | null
+          priority?: Database["public"]["Enums"]["risk_level"] | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_contract_product_phase_id_fkey"
+            columns: ["contract_product_phase_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_methodology_phase_id_fkey"
+            columns: ["methodology_phase_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timeline_events: {
+        Row: {
+          client_id: string | null
+          date: string | null
+          description: string | null
+          evidence_urls: string[] | null
+          ia_status: string | null
+          ia_summary: string | null
+          id: string
+          phase: Database["public"]["Enums"]["methodology_phase"] | null
+          title: string
+          type: string
+        }
+        Insert: {
+          client_id?: string | null
+          date?: string | null
+          description?: string | null
+          evidence_urls?: string[] | null
+          ia_status?: string | null
+          ia_summary?: string | null
+          id?: string
+          phase?: Database["public"]["Enums"]["methodology_phase"] | null
+          title: string
+          type: string
+        }
+        Update: {
+          client_id?: string | null
+          date?: string | null
+          description?: string | null
+          evidence_urls?: string[] | null
+          ia_status?: string | null
+          ia_summary?: string | null
+          id?: string
+          phase?: Database["public"]["Enums"]["methodology_phase"] | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      current_user_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      current_user_status: { Args: never; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
+      seed_default_consultant_permissions: {
+        Args: { p_consultant_id: string }
+        Returns: undefined
+      }
+    }
+    Enums: {
+      contract_status:
+        | "ativo"
+        | "em_onboarding"
+        | "em_renovacao"
+        | "renovado"
+        | "bloqueado"
+        | "suspenso"
+        | "cancelado"
+        | "churn"
+        | "encerrado"
+      methodology_phase:
+        | "diagnostico"
+        | "planejamento"
+        | "estruturacao"
+        | "monitoramento"
+        | "encerramento"
+      risk_level: "baixo" | "medio" | "alto" | "critico"
+      task_status:
+        | "a_fazer"
+        | "em_andamento"
+        | "impedida"
+        | "concluida"
+        | "atrasada"
+      user_role: "admin" | "consultor" | "cliente"
+      user_status: "active" | "inactive" | "pending"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      contract_status: [
+        "ativo",
+        "em_onboarding",
+        "em_renovacao",
+        "renovado",
+        "bloqueado",
+        "suspenso",
+        "cancelado",
+        "churn",
+        "encerrado",
+      ],
+      methodology_phase: [
+        "diagnostico",
+        "planejamento",
+        "estruturacao",
+        "monitoramento",
+        "encerramento",
+      ],
+      risk_level: ["baixo", "medio", "alto", "critico"],
+      task_status: [
+        "a_fazer",
+        "em_andamento",
+        "impedida",
+        "concluida",
+        "atrasada",
+      ],
+      user_role: ["admin", "consultor", "cliente"],
+      user_status: ["active", "inactive", "pending"],
+    },
+  },
+} as const
