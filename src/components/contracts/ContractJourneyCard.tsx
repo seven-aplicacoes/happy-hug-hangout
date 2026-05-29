@@ -50,7 +50,7 @@ function PhaseRow({ phase }: { phase: any }) {
         {formatDuration(phase.durationMinutes)}
       </div>
       <div className="md:col-span-1 flex justify-end">
-        <MeetingDots total={phase.meetingsCount || 0} scheduled={0} />
+        <MeetingDots total={phase.meetingsCount || 0} scheduled={phase.meetingsScheduled || 0} />
       </div>
     </div>
   );
