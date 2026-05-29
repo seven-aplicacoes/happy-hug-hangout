@@ -102,10 +102,6 @@ export default function MetodologiaPage() {
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<MethodologyNote | null>(null);
 
-  // Filtros para notes (manter suporte atual)
-  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
-  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
-
   const isAdmin = perfil === 'admin';
   const loading = loadingPermissions || loadingMethodology;
 
@@ -204,7 +200,6 @@ export default function MetodologiaPage() {
         )}
       </PageHeader>
 
-      {/* Visão geral */}
       <Card className="bg-gradient-to-br from-primary/5 via-background to-background border-primary/20">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
@@ -241,7 +236,6 @@ export default function MetodologiaPage() {
         </CardContent>
       </Card>
 
-      {/* Conteúdo da fase ativa */}
       {activePhase ? (
         <Card className={`border-l-4 ${FASE_COR[activePhase.order_index % 5]}`}>
           <CardContent className="p-6 space-y-6">
@@ -269,7 +263,6 @@ export default function MetodologiaPage() {
               </div>
             </div>
 
-            {/* Objetivos + Entregáveis + Ferramentas */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <p className="ui-overline">Objetivos</p>
@@ -301,7 +294,6 @@ export default function MetodologiaPage() {
               </div>
             </div>
 
-            {/* Tabs de Materiais */}
             <Tabs defaultValue="materiais" className="pt-2">
               <div className="flex items-center justify-between mb-4">
                 <TabsList>
@@ -351,7 +343,6 @@ export default function MetodologiaPage() {
         </div>
       )}
 
-      {/* Materiais transversais */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <SectionHeader
@@ -365,6 +356,7 @@ export default function MetodologiaPage() {
               </Button>
             )}
           </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {transversalMaterials?.map(g => (
             <div key={g.id} className="p-4 rounded-md border bg-background space-y-2">
@@ -419,17 +411,18 @@ export default function MetodologiaPage() {
         phaseId={activePhase?.id} 
         material={selectedMaterial} 
       />
+
+      <TransversalMaterialForm
+        open={transversalModalOpen}
+        onOpenChange={setTransversalModalOpen}
+        material={selectedTransversal}
+      />
       
       <ModalMethodologyNote
         open={noteModalOpen}
         onClose={() => setNoteModalOpen(false)}
         note={selectedNote}
         phases={phases}
-      />
-      <TransversalMaterialForm
-        open={transversalModalOpen}
-        onOpenChange={setTransversalModalOpen}
-        material={selectedTransversal}
       />
     </div>
   );
