@@ -60,7 +60,7 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
         razaoSocial: form.razaoSocial,
         nomeFantasia: form.nomeFantasia,
         cnpj: form.cnpj,
-        segmento: form.segmento,
+        clinicSpecialty: form.clinicSpecialty,
         regiao: form.regiao as any,
         porte: form.porte,
         consultorId: form.consultorId,
@@ -72,18 +72,6 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
         institutional_email: form.institutional_email,
         faseMetodologica: 'diagnostico',
       });
-
-      if (form.temContrato && result?.[0]?.id) {
-        await upsertContrato.mutateAsync({
-          clienteId: result[0].id,
-          tipo: form.tipoContrato,
-          valor: parseFloat(form.valorContrato.replace(/[^0-9.-]+/g,"")) || 0,
-          dataInicio: form.dataInicio,
-          dataFim: form.dataFim,
-          status: 'ativo',
-          consultorId: form.consultorId,
-        });
-      }
       
       if (form.liberarPortal && result?.[0]?.id) {
         const { error: portalError } = await supabase.functions.invoke("manage-client-access", {
