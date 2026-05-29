@@ -239,16 +239,18 @@ export default function ConsultorDashboardPage() {
           <PeriodFilter value={periodo} onChange={setPeriodo} />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Reuniões realizadas</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
-              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('meetings_completed', BENCHMARKS.meetings_completed)} />
-            </CardContent>
-          </Card>
+          {targetMap['meetings_completed'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Reuniões realizadas</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
+                <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('meetings_completed', BENCHMARKS.meetings_completed)} />
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="p-4 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
