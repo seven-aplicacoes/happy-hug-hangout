@@ -21,20 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConsultantGoals, IndicatorGoal } from "@/hooks/useConsultantGoals";
 import { Separator } from "@/components/ui/separator";
 
-const KPI_CONFIG = [
-  { key: 'meetings_completed', label: 'Reuniões Realizadas', unit: 'un' },
-  { key: 'csat_responses', label: 'CSAT Respostas', unit: 'un' },
-  { key: 'csat_adherence', label: 'Adesão CSAT', unit: '%' },
-  { key: 'csat_score', label: 'Nota CSAT', unit: '/5' },
-  { key: 'nps', label: 'NPS', unit: 'pts' },
-  { key: 'meetings_per_client', label: 'Encontros por Cliente', unit: 'un' },
-  { key: 'critical_clinics', label: 'Clínicas em crítico', unit: 'un' },
-  { key: 'attention_clinics', label: 'Clínicas em atenção', unit: 'un' },
-  { key: 'contracts_ending_90_days', label: 'Encerrando em 90 dias', unit: 'un' },
-  { key: 'upsell_potential', label: 'Potencial upsell', unit: 'un' },
-  { key: 'active_tasks', label: 'Tarefas ativas', unit: 'un' },
-  { key: 'client_portfolio', label: 'Meus clientes', unit: 'un' },
-];
+// KPI_CONFIG removed - managed in AdminConsultantGoalsPage
 
 interface ConsultorModalProps {
   isOpen: boolean;
