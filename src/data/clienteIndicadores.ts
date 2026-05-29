@@ -150,26 +150,41 @@ export function calcularMetricasConsultor(consultorId: string, periodo: Periodo,
   };
 }
 
-// ---------- Benchmarks ----------
+// ---------- Benchmarks e Metas ----------
 
-export type BenchmarkStatus = 'acima' | 'dentro' | 'abaixo';
+export type BenchmarkStatus = 'acima' | 'dentro' | 'abaixo' | 'acima_limite' | 'informativo';
 
 export interface Benchmark {
   esperado: number;
   tolerancia: number; // ±
   unidade?: string;
   descricao: string;
+  goal_type?: 'minimum' | 'maximum' | 'target' | 'informational';
+  comparison_operator?: 'greater_or_equal' | 'less_or_equal' | 'equal' | 'none';
 }
 
 export const BENCHMARKS = {
-  reunioesRealizadas: { esperado: 32, tolerancia: 6, descricao: 'Esperado: ~32 reuniões/mês (8 por cliente ativo médio).' },
-  csatTaxaAdesao: { esperado: 70, tolerancia: 10, unidade: '%', descricao: 'Esperado: 70% dos clientes respondem o CSAT após cada encontro.' },
-  csatNotaMedia: { esperado: 4.5, tolerancia: 0.3, descricao: 'Esperado: nota média ≥ 4.5/5.' },
-  npsAtual: { esperado: 60, tolerancia: 15, descricao: 'Esperado: NPS ≥ 60 (zona de excelência).' },
-  encontrosPorClienteAtivo: { esperado: 4, tolerancia: 1, descricao: 'Esperado: 4 encontros/mês por cliente ativo.' },
+  reunioesRealizadas: { esperado: 32, tolerancia: 6, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: ~32 reuniões/mês (8 por cliente ativo médio).' },
+  csatTaxaAdesao: { esperado: 70, tolerancia: 10, unidade: '%', goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: 70% dos clientes respondem o CSAT após cada encontro.' },
+  csatNotaMedia: { esperado: 4.5, tolerancia: 0.3, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: nota média ≥ 4.5/5.' },
+  npsAtual: { esperado: 60, tolerancia: 15, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: NPS ≥ 60 (zona de excelência).' },
+  encontrosPorClienteAtivo: { esperado: 4, tolerancia: 1, goal_type: 'minimum', comparison_operator: 'greater_or_equal', descricao: 'Esperado: 4 encontros/mês por cliente ativo.' },
 } satisfies Record<string, Benchmark>;
 
 export function avaliarBenchmark(valor: number, bench: Benchmark): BenchmarkStatus {
+  if (bench.goal_type === 'informational' || bench.comparison_operator === 'none') return 'informativo';
+  
+  if (bench.goal_type === 'maximum' || bench.comparison_operator === 'less_or_equal') {
+    if (valor > bench.esperado) return 'acima_limite';
+    return 'dentro';
+  }
+
+  if (bench.goal_type === 'minimum' || bench.comparison_operator === 'greater_or_equal') {
+    if (valor < bench.esperado) return 'abaixo';
+    return 'dentro';
+  }
+
+  // Fallback para lógica original se necessário
   if (valor >= bench.esperado + bench.tolerancia) return 'acima';
   if (valor < bench.esperado - bench.tolerancia) return 'abaixo';
   return 'dentro';
