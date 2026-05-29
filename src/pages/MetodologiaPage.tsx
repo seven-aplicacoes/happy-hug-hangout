@@ -21,8 +21,6 @@ import { MethodologyNote } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
-import { METODOLOGIA, MATERIAIS_GERAIS, labelTipoMaterial, labelCategoria, type TipoMaterial, type Material } from '@/data/metodologia';
-import { toast } from '@/hooks/use-toast';
 
 const ICONE_TIPO: Record<TipoMaterial, typeof FileText> = {
   pdf: FileText,
