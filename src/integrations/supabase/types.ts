@@ -300,6 +300,7 @@ export type Database = {
           auth_user_id: string | null
           briefing: string | null
           cep: string | null
+          clinic_specialty: string | null
           cnpj: string
           company_size: string | null
           complement: string | null
@@ -338,6 +339,7 @@ export type Database = {
           auth_user_id?: string | null
           briefing?: string | null
           cep?: string | null
+          clinic_specialty?: string | null
           cnpj: string
           company_size?: string | null
           complement?: string | null
@@ -376,6 +378,7 @@ export type Database = {
           auth_user_id?: string | null
           briefing?: string | null
           cep?: string | null
+          clinic_specialty?: string | null
           cnpj?: string
           company_size?: string | null
           complement?: string | null
