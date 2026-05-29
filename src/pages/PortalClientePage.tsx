@@ -605,7 +605,7 @@ function PhaseMeetingsList({ moduleId, onRateMeeting, responses }: { moduleId: s
     <div className="mt-4 space-y-2">
       {meetings.map((m) => {
         const isCompleted = m.status === 'realizada';
-        const isScheduled = m.status === 'agendado' || m.status === 'agendada';
+        const isScheduled = m.status === 'agendado';
         const isResponded = responses?.some(r => r.meeting_id === m.id);
         return (
           <div key={m.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-neutral-100 shadow-sm">
