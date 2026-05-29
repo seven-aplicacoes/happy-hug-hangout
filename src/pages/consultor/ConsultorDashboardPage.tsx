@@ -21,7 +21,7 @@ import { DataTable, Column } from '@/components/DataTable';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   labelEngajamento, calcularEngajamento, variantEngajamento,
-  diasDesdeUltimaReuniao, labelStatus,
+  diasDesdeUltimaReuniao, labelStatus, avaliarBenchmark
 } from '@/data/mockData';
 import { getAlertasContrato, labelAlertaContrato } from '@/data/contratoExtras';
 import { getPeriodo, calcularMetricasConsultor, BENCHMARKS } from '@/data/clienteIndicadores';
