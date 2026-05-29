@@ -251,16 +251,18 @@ export default function ConsultorDashboardPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MessageSquareHeart className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">CSAT respostas</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.csatRespostas}</p>
-              <p className="text-[11px] text-muted-foreground">de {metricas.reunioesRealizadas} reuniões</p>
-            </CardContent>
-          </Card>
+          {targetMap['csat_responses'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MessageSquareHeart className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">CSAT respostas</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatRespostas}</p>
+                <p className="text-[11px] text-muted-foreground">de {metricas.reunioesRealizadas} reuniões</p>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="p-4 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
