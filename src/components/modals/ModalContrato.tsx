@@ -85,7 +85,15 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         const productsWithPhases = await Promise.all(existingProducts.map(async (p) => {
           const { data: phasesData } = await supabase
             .from('contract_product_phases')
-            .select('*')
+            .select(`
+              *,
+              methodology_phase:methodology_plan_phases (
+                duration_minutes,
+                meetings_count,
+                executor_type,
+                name
+              )
+            `)
             .eq('contract_product_id', p.id)
             .order('order_index');
           
@@ -98,12 +106,12 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             status: p.status,
             phases: (phasesData || []).map((ph: any) => ({
               id: ph.id,
-              name: ph.name,
+              name: ph.name || ph.methodology_phase?.name,
               methodologyPhaseId: ph.methodology_phase_id,
               orderIndex: ph.order_index,
-              durationMinutes: ph.duration_minutes || 0,
-              executorType: ph.executor_type,
-              meetingsCount: ph.meetings_count || 0,
+              durationMinutes: ph.duration_minutes !== null && ph.duration_minutes !== undefined ? ph.duration_minutes : (ph.methodology_phase?.duration_minutes || 0),
+              executorType: ph.executor_type || ph.methodology_phase?.executor_type,
+              meetingsCount: ph.meetings_count !== null && ph.meetings_count !== undefined && ph.meetings_count !== 0 ? ph.meetings_count : (ph.methodology_phase?.meetings_count || 0),
               startDate: ph.start_date,
               endDate: ph.end_date,
               responsibleConsultantId: ph.responsible_consultant_id,
@@ -171,7 +179,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         methodologyPhaseId: pp.id,
         orderIndex: pp.orderIndex,
         durationMinutes: pp.durationMinutes || 0,
-        executorType: pp.executorType,
+        executorType: pp.executorType || 'consultor',
         meetingsCount: pp.meetingsCount || 0,
         status: 'pendente',
         responsibleConsultantId: consultorId

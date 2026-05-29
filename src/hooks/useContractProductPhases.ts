@@ -16,7 +16,13 @@ export function useContractProductPhases(contractProductId?: string) {
         .select(`
           *,
           responsible_consultant:profiles!contract_product_phases_responsible_consultant_id_fkey (full_name),
-          meetings:meetings(count)
+          meetings:meetings(count),
+          methodology_phase:methodology_plan_phases (
+            duration_minutes,
+            meetings_count,
+            executor_type,
+            name
+          )
         `)
         .eq('contract_product_id', contractProductId)
         .order('order_index');
