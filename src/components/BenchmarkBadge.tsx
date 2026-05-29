@@ -2,6 +2,12 @@ import { TrendingUp, TrendingDown, Minus, Info, type LucideIcon } from 'lucide-r
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Benchmark, BenchmarkStatus, avaliarBenchmark } from '@/data/clienteIndicadores';
 
+const formatarBenchmarkValue = (value: number, unidade?: string) => {
+  if (unidade === '%') return value.toFixed(1) + '%';
+  if (Number.isInteger(value)) return value.toString();
+  return value.toFixed(1);
+};
+
 interface BenchmarkBadgeProps {
   valor: number;
   bench: Benchmark;
@@ -46,7 +52,10 @@ export function BenchmarkBadge({ valor, bench, size = 'sm' }: BenchmarkBadgeProp
           </span>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-[260px] text-xs">
-          <p className="font-medium mb-1">Benchmark: {bench.esperado}{bench.unidade || ''} (±{bench.tolerancia})</p>
+          <p className="font-medium mb-1">
+            {bench.is_proportional ? "Meta proporcional: " : "Meta: "}
+            {formatarBenchmarkValue(bench.esperado, bench.unidade)}
+          </p>
           <p className="text-muted-foreground">{bench.descricao}</p>
         </TooltipContent>
       </Tooltip>

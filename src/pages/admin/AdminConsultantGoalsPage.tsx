@@ -91,8 +91,8 @@ export default function AdminConsultantGoalsPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Indicador</TableHead>
-                          <TableHead>Meta Esperada</TableHead>
-                          <TableHead>Período</TableHead>
+                          <TableHead>Meta Semanal</TableHead>
+                          <TableHead>Meta Mensal</TableHead>
                           <TableHead>Meta por Cliente Ativo</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Ações</TableHead>
@@ -107,29 +107,31 @@ export default function AdminConsultantGoalsPage() {
                                 <Input 
                                   type="number" 
                                   className="w-24"
-                                  value={editValues.goal_value}
-                                  onChange={(e) => setEditValues({ ...editValues, goal_value: parseFloat(e.target.value) || 0 })}
+                                  value={editValues.period_type === 'weekly' ? editValues.goal_value : ''}
+                                  placeholder="Semanal"
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    setEditValues({ ...editValues, goal_value: val, period_type: 'weekly' });
+                                  }}
                                 />
                               ) : (
-                                goal.goal_value
+                                goal.period_type === 'weekly' ? goal.goal_value : '-'
                               )}
                             </TableCell>
                             <TableCell>
                               {editingId === goal.id ? (
-                                <Select 
-                                  value={editValues.period_type} 
-                                  onValueChange={(v: any) => setEditValues({ ...editValues, period_type: v })}
-                                >
-                                  <SelectTrigger className="w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="weekly">Semanal</SelectItem>
-                                    <SelectItem value="monthly">Mensal</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <Input 
+                                  type="number" 
+                                  className="w-24"
+                                  value={editValues.period_type === 'monthly' ? editValues.goal_value : ''}
+                                  placeholder="Mensal"
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    setEditValues({ ...editValues, goal_value: val, period_type: 'monthly' });
+                                  }}
+                                />
                               ) : (
-                                <span className="capitalize">{goal.period_type === 'weekly' ? 'Semanal' : 'Mensal'}</span>
+                                goal.period_type === 'monthly' ? goal.goal_value : '-'
                               )}
                             </TableCell>
                             <TableCell>

@@ -88,12 +88,27 @@ export function getPeriodo(preset: PeriodoPreset, custom?: { from?: Date; to?: D
   const hoje = new Date();
   const to = new Date(hoje); to.setHours(23, 59, 59, 999);
   let from = new Date(hoje); from.setHours(0, 0, 0, 0);
-  if (preset === '7d') from.setDate(from.getDate() - 7);
-  else if (preset === '30d') from.setDate(from.getDate() - 30);
-  else if (preset === 'mes_atual') from = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  else if (preset === 'mes_anterior') {
+  
+  if (preset === '7d') {
+    // Esta semana (segunda a hoje)
+    const day = from.getDay();
+    const diff = from.getDate() - day + (day === 0 ? -6 : 1);
+    from.setDate(diff);
+  } else if (preset === '30d') {
+    // Semana passada (segunda a domingo da anterior)
+    const day = from.getDay();
+    const diff = from.getDate() - day + (day === 0 ? -6 : 1) - 7;
+    from.setDate(diff);
+    const sunday = new Date(from);
+    sunday.setDate(sunday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    return { preset, from, to: sunday };
+  } else if (preset === 'mes_atual') {
+    from = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  } else if (preset === 'mes_anterior') {
     from = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-    return { preset, from, to: new Date(hoje.getFullYear(), hoje.getMonth(), 0, 23, 59, 59) };
+    const lastDay = new Date(hoje.getFullYear(), hoje.getMonth(), 0, 23, 59, 59, 999);
+    return { preset, from, to: lastDay };
   } else if (preset === 'custom' && custom) {
     return { preset, from: custom.from || from, to: custom.to || to };
   }
@@ -101,10 +116,10 @@ export function getPeriodo(preset: PeriodoPreset, custom?: { from?: Date; to?: D
 }
 
 export const labelPreset: Record<PeriodoPreset, string> = {
-  '7d': 'Últimos 7 dias',
-  '30d': 'Últimos 30 dias',
-  'mes_atual': 'Mês atual',
-  'mes_anterior': 'Mês anterior',
+  '7d': 'Esta semana',
+  '30d': 'Semana passada',
+  'mes_atual': 'Este mês',
+  'mes_anterior': 'Mês passado',
   'custom': 'Personalizado',
 };
 
@@ -159,9 +174,9 @@ export function calcularMetricasConsultor(
     reunioesRealizadas: realizadas.length,
     csatRespostas: csats.length,
     csatTaxaAdesao: realizadas.length > 0 ? Math.round((csats.length / realizadas.length) * 100) : 0,
-    csatNotaMedia: csats.length > 0 ? Math.round((csats.reduce((a, c) => a + (c.score || c.nota), 0) / csats.length) * 10) / 10 : 0,
-    npsAtual,
-    encontrosPorClienteAtivo: clientesAtivos > 0 ? Math.round((realizadas.length / clientesAtivos) * 10) / 10 : 0,
+    csatNotaMedia: csats.length > 0 ? Number((csats.reduce((a, c) => a + (c.score || c.nota), 0) / csats.length).toFixed(1)) : 0,
+    npsAtual: total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0,
+    encontrosPorClienteAtivo: clientesAtivos > 0 ? Number((realizadas.length / clientesAtivos).toFixed(1)) : 0,
     clientesAtivos,
   };
 }
@@ -177,6 +192,7 @@ export interface Benchmark {
   descricao: string;
   goal_type?: 'minimum' | 'maximum' | 'target' | 'informational';
   comparison_operator?: 'greater_or_equal' | 'less_or_equal' | 'equal' | 'none';
+  is_proportional?: boolean;
 }
 
 export const BENCHMARKS = {

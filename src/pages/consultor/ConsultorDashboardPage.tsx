@@ -147,29 +147,58 @@ export default function ConsultorDashboardPage() {
     if (targets && periodo) {
       const diffTime = Math.abs(periodo.to.getTime() - periodo.from.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+      const isCustom = periodo.preset === 'custom';
+      const isWeekly = periodo.preset === '7d' || periodo.preset === '30d';
 
       targets.forEach(t => {
         let expected = t.goal_value;
+        let isProportional = false;
         
         // Scale count-based indicators based on the selected period
         // Percentage/Averages (CSAT Adherence, Score, NPS) remain same regardless of period
         const isCountBased = ['meetings_completed', 'csat_responses', 'meetings_per_client'].includes(t.indicator_key);
         
         if (isCountBased) {
-          if (t.period_type === 'weekly') {
-            expected = (t.goal_value / 7) * diffDays;
-          } else if (t.period_type === 'monthly') {
-            expected = (t.goal_value / 30) * diffDays;
+          if (isCustom) {
+            // Se for personalizado, proporcionalizar baseando na meta mensal (30 dias)
+            const baseValue = t.period_type === 'monthly' ? t.goal_value : t.goal_value * 4.33;
+            expected = (baseValue / 30) * diffDays;
+            isProportional = true;
+          } else if (isWeekly) {
+            // Se for filtro semanal, usar meta semanal se disponível, senão proporcionalizar mensal
+            if (t.period_type === 'monthly') {
+              expected = t.goal_value / 4; // Aproximação para semana
+            } else {
+              expected = t.goal_value;
+            }
+          } else {
+            // Se for filtro mensal, usar meta mensal se disponível, senão quadruplicar semanal
+            if (t.period_type === 'weekly') {
+              expected = t.goal_value * 4;
+            } else {
+              expected = t.goal_value;
+            }
           }
+        } else {
+            // Se não for count-based (CSAT nota, NPS, etc), a meta é a mesma
+            expected = t.goal_value;
+        }
+
+        // Arredondar valores de contagem para inteiros
+        if (['meetings_completed', 'csat_responses', 'nps'].includes(t.indicator_key)) {
+          expected = Math.round(expected);
+        } else {
+          expected = Number(expected.toFixed(1));
         }
 
         map[t.indicator_key] = { 
           esperado: expected, 
           tolerancia: 0, 
-          unidade: '', 
-          descricao: t.indicator_label,
+          unidade: t.indicator_key === 'csat_adherence' ? '%' : '', 
+          descricao: isProportional ? 'Meta proporcional para o período' : t.indicator_label,
           goal_type: t.goal_type,
-          comparison_operator: t.comparison_operator
+          comparison_operator: t.comparison_operator,
+          is_proportional: isProportional
         };
       });
     }
