@@ -31,29 +31,26 @@ function MeetingDots({ total, scheduled }: { total: number; scheduled: number })
 
 function PhaseRow({ phase }: { phase: any }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 py-3 border-b last:border-0 text-sm items-center hover:bg-muted/50 transition-colors px-2">
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 py-3 border-b last:border-0 text-sm items-center hover:bg-muted/50 transition-colors px-4">
       <div className="md:col-span-3 font-medium flex items-center gap-2">
         <div className="h-2 w-2 rounded-full bg-primary/40 shrink-0" />
-        {phase.name}
+        <span className="truncate">{phase.name}</span>
       </div>
-      <div className="md:col-span-2 capitalize text-xs font-semibold text-muted-foreground">
+      <div className="md:col-span-2 capitalize text-[11px] font-semibold text-muted-foreground truncate">
         {phase.executorType || '-'}
       </div>
       <div className="md:col-span-2 text-xs text-muted-foreground truncate">
         {phase.responsibleConsultantNome || '-'}
       </div>
-      <div className="md:col-span-2">
+      <div className="md:col-span-2 flex justify-start">
         <StatusTag label={labelStatus[phase.status] || phase.status} />
       </div>
-      <div className="md:col-span-2 flex items-center gap-1.5 text-muted-foreground text-xs">
-        <Clock className="h-3.5 w-3.5" />
+      <div className="md:col-span-2 flex items-center gap-1.5 text-muted-foreground text-xs tabular-nums">
+        <Clock className="h-3.5 w-3.5 shrink-0" />
         {formatDuration(phase.durationMinutes)}
       </div>
-      <div className="md:col-span-2">
+      <div className="md:col-span-1 flex justify-end">
         <MeetingDots total={phase.meetingsCount || 0} scheduled={0} />
-      </div>
-      <div className="md:col-span-1 flex items-center justify-end text-muted-foreground">
-        <Users className="h-3.5 w-3.5" />
       </div>
     </div>
   );
@@ -87,13 +84,13 @@ function ProductItem({ product }: { product: any }) {
           <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" /> <span className="text-sm text-muted-foreground">Carregando jornada...</span></div>
         ) : phases && phases.length > 0 ? (
           <div className="bg-white">
-            <div className="hidden md:grid grid-cols-12 gap-4 text-[10px] font-bold text-muted-foreground uppercase py-2 px-4 bg-muted/10 border-b tracking-wider">
+            <div className="hidden md:grid grid-cols-12 gap-4 text-[10px] font-bold text-muted-foreground uppercase py-2.5 px-4 bg-muted/20 border-b tracking-wider">
               <div className="md:col-span-3">Módulo da Jornada</div>
               <div className="md:col-span-2">Tipo</div>
               <div className="md:col-span-2">Responsável</div>
               <div className="md:col-span-2">Status</div>
               <div className="md:col-span-2">Duração</div>
-              <div className="md:col-span-1 text-right pr-1">Enc.</div>
+              <div className="md:col-span-1 text-right">Enc.</div>
             </div>
             <div className="divide-y">
               {phases.map(phase => <PhaseRow key={phase.id} phase={phase} />)}
