@@ -188,7 +188,42 @@ function ConsultorSidebar() {
 }
 
 export default function ConsultorLayout() {
-  const { user } = useAuth();
+  const { user, isLoading: loadingAuth } = useAuth();
+  const { can, getFirstAllowedRoute, isLoading: loadingPermissions } = useMyPermissions();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loadingAuth && !loadingPermissions) {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      const firstRoute = getFirstAllowedRoute();
+      if (firstRoute === '/no-access') {
+        navigate('/no-access');
+        return;
+      }
+
+      // Check current route permission
+      const currentPath = location.pathname;
+      const matchedModule = CONSULTANT_MODULES_CONFIG.find(m => currentPath.startsWith(m.path));
+      
+      if (matchedModule && !can(matchedModule.key)) {
+        if (firstRoute) navigate(firstRoute);
+      }
+    }
+  }, [loadingAuth, loadingPermissions, user, location.pathname, can, getFirstAllowedRoute, navigate]);
+
+  if (loadingAuth || loadingPermissions) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
