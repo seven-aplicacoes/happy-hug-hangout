@@ -26,6 +26,7 @@ interface AuthContextType {
   logout: () => void;
   selecionarPerfil: (p: PerfilUsuario) => void;
   setUser: (user: AuthUser | null) => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
