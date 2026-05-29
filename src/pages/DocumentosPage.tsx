@@ -200,6 +200,7 @@ export default function DocumentosPage() {
     );
   }
 
+  // Verifica permissão APENAS se não estiver carregando e se for consultor
   if (perfil === 'consultor' && !can('documentos')) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
