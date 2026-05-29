@@ -15,6 +15,7 @@ import { StatusTag } from '@/components/StatusTag';
 import { useMemo, useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion } from '@/components/ui/accordion';
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useToast } from '@/hooks/use-toast';
@@ -283,8 +284,11 @@ export default function AdminContratoDetalhePage() {
           <h2 className="text-lg font-black uppercase tracking-tight">Produtos e Jornada de Execução</h2>
         </div>
         
-        <ContractJourneyCard contrato={contrato} expanded={true} isEditing={isEditing} />
+        <Accordion type="single" collapsible defaultValue={contrato.id} className="w-full">
+          <ContractJourneyCard contrato={contrato} expanded={true} isEditing={isEditing} />
+        </Accordion>
       </section>
+
     </div>
   );
 }
