@@ -17,6 +17,34 @@ export interface ConsultantPermission {
   updated_at: string;
 }
 
+export const CONSULTANT_MODULES_CONFIG = [
+  { key: 'dashboard', path: '/consultor/dashboard' },
+  { key: 'clientes', path: '/consultor/clientes' },
+  { key: 'reunioes', path: '/consultor/reunioes' },
+  { key: 'tarefas', path: '/consultor/tarefas' },
+  { key: 'documentos', path: '/consultor/documentos' },
+  { key: 'metodologia', path: '/consultor/metodologia' },
+  { key: 'perfil', path: '/consultor/meu-perfil' },
+];
+
+export const ADMIN_MODULES_CONFIG = [
+  { key: 'dashboard', path: '/admin/dashboard' },
+  { key: 'clientes', path: '/admin/clientes' },
+  { key: 'contratos', path: '/admin/contratos' },
+  { key: 'produtos', path: '/admin/produtos' },
+  { key: 'reunioes', path: '/admin/reunioes' },
+  { key: 'tarefas', path: '/admin/tarefas' },
+  { key: 'documentos', path: '/admin/documentos' },
+  { key: 'notificacoes', path: '/admin/notificacoes' },
+  { key: 'analise-avancada', path: '/admin/analise-avancada' },
+  { key: 'mapa-carteira', path: '/admin/mapa-carteira' },
+  { key: 'consultores', path: '/admin/consultores' },
+  { key: 'permissoes-consultores', path: '/admin/permissoes-consultores' },
+  { key: 'metas-consultores', path: '/admin/metas-consultores' },
+  { key: 'metodologia', path: '/admin/metodologia' },
+  { key: 'integracoes', path: '/admin/integracoes' },
+];
+
 export function useConsultantPermissions(consultantId?: string) {
   const queryClient = useQueryClient();
 
@@ -84,7 +112,7 @@ export function useConsultantPermissions(consultantId?: string) {
 }
 
 export function useMyPermissions() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, perfil } = useAuth();
   const { data: permissions, isLoading } = useQuery({
     queryKey: ['my-permissions', authUser?.id],
     queryFn: async () => {
@@ -111,6 +139,7 @@ export function useMyPermissions() {
       if (error) throw error;
       return data as ConsultantPermission[];
     },
+    enabled: !!authUser,
   });
 
   const can = (moduleKey: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' = 'view') => {
@@ -131,9 +160,21 @@ export function useMyPermissions() {
     }
   };
 
+  const getFirstAllowedRoute = () => {
+    if (isLoading) return null;
+    if (permissions === 'admin') return ADMIN_MODULES_CONFIG[0].path;
+    if (!permissions || !Array.isArray(permissions)) return '/no-access';
+
+    const allowedModules = CONSULTANT_MODULES_CONFIG.filter(m => can(m.key));
+    if (allowedModules.length > 0) return allowedModules[0].path;
+    
+    return '/no-access';
+  };
+
   return {
     permissions,
     isLoading,
     can,
+    getFirstAllowedRoute,
   };
 }
