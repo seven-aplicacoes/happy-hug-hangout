@@ -122,7 +122,7 @@ export default function NovoClientePage() {
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/clientes')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(`${basePath}/clientes`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -131,7 +131,7 @@ export default function NovoClientePage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => navigate('/admin/clientes')} disabled={isLoading}>
+          <Button variant="outline" onClick={() => navigate(`${basePath}/clientes`)} disabled={isLoading}>
             Cancelar
           </Button>
           <Button onClick={handleSalvar} disabled={isLoading} className="gap-2">
