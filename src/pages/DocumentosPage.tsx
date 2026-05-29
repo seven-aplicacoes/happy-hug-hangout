@@ -60,17 +60,27 @@ export default function DocumentosPage() {
   const isLoading = authLoading || loadingClientes || isLoadingDocs || loadingPermissions;
 
   const filterConfigs: FilterConfig[] = [
+    { key: 'clienteId', label: 'Cliente', options: (clientes || []).map(c => ({ value: c.id, label: c.nomeFantasia || c.razaoSocial })) },
     { key: 'tipo', label: 'Tipo', options: Object.entries(labelTipoDoc).map(([v, l]) => ({ value: v, label: l })) },
     { key: 'status', label: 'Status', options: Object.entries(labelStatusDoc).map(([v, l]) => ({ value: v, label: l })) },
+    { key: 'visibility', label: 'Visibilidade', options: [
+      { value: 'internal', label: 'Interno' },
+      { value: 'client', label: 'Cliente' },
+      { value: 'all', label: 'Todos' },
+    ]},
   ];
+
 
   const data = useMemo(() => {
     if (!documentos) return [];
     let d = [...documentos];
     const q = search.toLowerCase();
     if (q) d = d.filter(x => x.titulo.toLowerCase().includes(q) || (x.clienteNome || '').toLowerCase().includes(q));
+    if (filters.clienteId && filters.clienteId !== 'todos') d = d.filter(x => x.clienteId === filters.clienteId);
     if (filters.tipo && filters.tipo !== 'todos') d = d.filter(x => x.tipo === filters.tipo);
     if (filters.status && filters.status !== 'todos') d = d.filter(x => x.status === filters.status);
+    if (filters.visibility && filters.visibility !== 'todos') d = d.filter(x => x.visibility === filters.visibility);
+
     return d;
   }, [search, filters, documentos]);
 

@@ -87,8 +87,11 @@ export function useDocumentos() {
       const payload: any = {
         id: doc.id,
         client_id: doc.clienteId,
+        contract_id: doc.contractId,
+        product_id: doc.productId,
         contract_product_id: doc.contractProductId,
         contract_product_phase_id: doc.contractProductPhaseId,
+        module_id: doc.contractProductPhaseId,
         title: doc.titulo,
         type: doc.tipo,
         file_name: fileName,
@@ -98,10 +101,12 @@ export function useDocumentos() {
         file_type: fileType,
         status: doc.status || 'pendente',
         visibility: doc.visibility || 'all',
+        visibility_type: doc.visibility === 'all' ? 'internal' : doc.visibility,
         uploaded_by: user?.id,
         author_id: doc.author_id || user?.id,
         updated_by: user?.id,
       };
+
 
       if (!doc.id) {
         payload.created_by = user?.id;
