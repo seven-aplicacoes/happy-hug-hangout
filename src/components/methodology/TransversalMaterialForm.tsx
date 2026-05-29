@@ -21,6 +21,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Upload } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { sanitizeFileName } from '@/utils/fileUtils';
 
 interface TransversalMaterialFormProps {
   open: boolean;
@@ -31,6 +33,7 @@ interface TransversalMaterialFormProps {
 export function TransversalMaterialForm({ open, onOpenChange, material }: TransversalMaterialFormProps) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     title: '',
@@ -69,14 +72,15 @@ export function TransversalMaterialForm({ open, onOpenChange, material }: Transv
       let fileData = {};
 
       if (file) {
-        const fileExt = file.name.split('.').pop();
-        const cleanFileName = file.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        const fileName = `${Date.now()}_${cleanFileName}.${fileExt}`;
+        const fileName = sanitizeFileName(file.name);
         const filePath = `transversal/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('methodology-materials')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            contentType: file.type,
+            upsert: true
+          });
 
         if (uploadError) throw uploadError;
 
@@ -91,6 +95,7 @@ export function TransversalMaterialForm({ open, onOpenChange, material }: Transv
           file_type: file.type,
           file_size: file.size,
           file_url: publicUrl,
+          uploaded_by: user?.id
         };
       }
 
