@@ -78,7 +78,7 @@ export interface Cliente {
 
 export interface MethodologyPhase {
   id: string;
-  phase_key: FaseMetodologica;
+  phase_key?: string;
   name: string;
   order_index: number;
   average_duration?: string;
@@ -86,10 +86,13 @@ export interface MethodologyPhase {
   executor_type?: 'consultor' | 'silvane';
   meetings_count?: number;
   purpose?: string;
-  objectives?: string[];
-  deliverables?: string[];
-  tools?: string[];
+  objectives?: any[];
+  deliverables?: any[];
+  tools?: any[];
   alerts?: string[];
+  status?: string;
+  subtitle?: string;
+  updated_at?: string;
 }
 
 export interface MethodologyMaterial {
