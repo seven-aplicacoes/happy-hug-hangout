@@ -1721,6 +1721,80 @@ export type Database = {
           },
         ]
       }
+      meeting_csat_responses: {
+        Row: {
+          client_id: string
+          comment: string | null
+          consultant_id: string | null
+          contract_id: string | null
+          created_at: string | null
+          id: string
+          meeting_id: string
+          nps_score: number | null
+          rating_clarity: number | null
+          rating_consultant: number | null
+          rating_meeting: number | null
+          submitted_at: string | null
+        }
+        Insert: {
+          client_id: string
+          comment?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string
+          meeting_id: string
+          nps_score?: number | null
+          rating_clarity?: number | null
+          rating_consultant?: number | null
+          rating_meeting?: number | null
+          submitted_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          comment?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string
+          meeting_id?: string
+          nps_score?: number | null
+          rating_clarity?: number | null
+          rating_consultant?: number | null
+          rating_meeting?: number | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_csat_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_csat_responses_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_csat_responses_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_csat_responses_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meetings: {
         Row: {
           client_id: string | null
@@ -1731,6 +1805,9 @@ export type Database = {
           contract_product_phase_id: string | null
           created_at: string | null
           created_by: string | null
+          csat_enabled: boolean | null
+          csat_submitted: boolean | null
+          csat_submitted_at: string | null
           description: string | null
           duration: number | null
           external_id: string | null
@@ -1759,6 +1836,9 @@ export type Database = {
           contract_product_phase_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          csat_enabled?: boolean | null
+          csat_submitted?: boolean | null
+          csat_submitted_at?: string | null
           description?: string | null
           duration?: number | null
           external_id?: string | null
@@ -1787,6 +1867,9 @@ export type Database = {
           contract_product_phase_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          csat_enabled?: boolean | null
+          csat_submitted?: boolean | null
+          csat_submitted_at?: string | null
           description?: string | null
           duration?: number | null
           external_id?: string | null
