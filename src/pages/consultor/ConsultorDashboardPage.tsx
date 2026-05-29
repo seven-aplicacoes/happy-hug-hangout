@@ -275,7 +275,7 @@ export default function ConsultorDashboardPage() {
                   <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
                   <span className="ui-overline">Reuniões realizadas</span>
                 </div>
-                <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
+                <p className="text-3xl font-thin tabular-nums">{Math.round(metricas.reunioesRealizadas)}</p>
                 <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('meetings_completed', BENCHMARKS.meetings_completed)} />
               </CardContent>
             </Card>
@@ -287,7 +287,7 @@ export default function ConsultorDashboardPage() {
                   <MessageSquareHeart className="h-4 w-4" strokeWidth={1.5} />
                   <span className="ui-overline">CSAT respostas</span>
                 </div>
-                <p className="text-3xl font-thin tabular-nums">{metricas.csatRespostas}</p>
+                <p className="text-3xl font-thin tabular-nums">{Math.round(metricas.csatRespostas)}</p>
                 <p className="text-[11px] text-muted-foreground">de {metricas.reunioesRealizadas} reuniões</p>
               </CardContent>
             </Card>
@@ -299,7 +299,7 @@ export default function ConsultorDashboardPage() {
                   <Gauge className="h-4 w-4" strokeWidth={1.5} />
                   <span className="ui-overline">Adesão CSAT</span>
                 </div>
-                <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
+                <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao.toFixed(1)}<span className="text-base text-muted-foreground">%</span></p>
                 <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adherence', BENCHMARKS.csat_adherence)} />
               </CardContent>
             </Card>
@@ -323,7 +323,7 @@ export default function ConsultorDashboardPage() {
                   <Sparkles className="h-4 w-4" strokeWidth={1.5} />
                   <span className="ui-overline">NPS</span>
                 </div>
-                <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
+                <p className="text-3xl font-thin tabular-nums">{Math.round(metricas.npsAtual)}</p>
                 <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.nps)} />
               </CardContent>
             </Card>

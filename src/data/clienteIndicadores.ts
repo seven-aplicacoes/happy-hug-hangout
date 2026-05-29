@@ -173,7 +173,7 @@ export function calcularMetricasConsultor(
   return {
     reunioesRealizadas: realizadas.length,
     csatRespostas: csats.length,
-    csatTaxaAdesao: realizadas.length > 0 ? Math.round((csats.length / realizadas.length) * 100) : 0,
+    csatTaxaAdesao: realizadas.length > 0 ? Number(((csats.length / realizadas.length) * 100).toFixed(1)) : 0,
     csatNotaMedia: csats.length > 0 ? Number((csats.reduce((a, c) => a + (c.score || c.nota), 0) / csats.length).toFixed(1)) : 0,
     npsAtual: total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0,
     encontrosPorClienteAtivo: clientesAtivos > 0 ? Number((realizadas.length / clientesAtivos).toFixed(1)) : 0,
