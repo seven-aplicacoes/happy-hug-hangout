@@ -53,6 +53,7 @@ export function useReunioes() {
         meetingUrl: r.meeting_url,
         location: r.location,
         scheduledBy: r.scheduled_by,
+        contractModuleMeetingId: r.contract_module_meeting_id,
       })) as Reuniao[];
     },
   });
@@ -80,6 +81,7 @@ export function useReunioes() {
         meeting_url: reuniao.meetingUrl,
         location: reuniao.location,
         scheduled_by: reuniao.scheduledBy || user?.id,
+        contract_module_meeting_id: reuniao.contractModuleMeetingId,
       };
 
       // Filter out undefined values to avoid overwriting with null if not intended
