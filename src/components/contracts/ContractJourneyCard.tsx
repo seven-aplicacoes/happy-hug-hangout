@@ -1,11 +1,18 @@
-import { Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle } from 'lucide-react';
+import { Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, Pencil, Save, X, Trash2, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { StatusTag } from '@/components/StatusTag';
-import { formatDuration } from '@/lib/duration';
+import { formatDuration, hhmmToMinutes, minutesToHHMM } from '@/lib/duration';
 import { labelStatus } from '@/data/mockData';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { useContractProductPhases } from '@/hooks/useContractProductPhases';
+import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useConsultores } from '@/hooks/useConsultores';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 function MeetingDots({ total, scheduled }: { total: number; scheduled: number }) {
   return (
@@ -29,7 +36,81 @@ function MeetingDots({ total, scheduled }: { total: number; scheduled: number })
   );
 }
 
-function PhaseRow({ phase }: { phase: any }) {
+function PhaseRow({ phase, isEditing, onUpdate, onDelete }: { phase: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void }) {
+  const { consultores } = useConsultores();
+  
+  if (isEditing) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 py-3 border-b last:border-0 text-sm items-center px-4 bg-primary/5">
+        <div className="md:col-span-3">
+          <Input 
+            value={phase.name} 
+            onChange={e => onUpdate?.({ ...phase, name: e.target.value })}
+            className="h-8 text-xs font-medium"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <Select value={phase.executorType} onValueChange={v => onUpdate?.({ ...phase, executorType: v })}>
+            <SelectTrigger className="h-8 text-[10px] font-semibold uppercase">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="consultor">CONSULTOR</SelectItem>
+              <SelectItem value="silvane">SILVANE</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="md:col-span-2">
+          <Select value={phase.responsibleConsultantId} onValueChange={v => onUpdate?.({ ...phase, responsibleConsultantId: v })}>
+            <SelectTrigger className="h-8 text-[11px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {consultores?.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="md:col-span-2">
+          <Select value={phase.status} onValueChange={v => onUpdate?.({ ...phase, status: v })}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(labelStatus).map(([val, label]) => (
+                <SelectItem key={val} value={val}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="md:col-span-2">
+          <div className="flex items-center gap-1">
+            <Clock className="h-3 w-3 text-muted-foreground" />
+            <Input 
+              value={minutesToHHMM(phase.durationMinutes)} 
+              onChange={e => onUpdate?.({ ...phase, durationMinutes: hhmmToMinutes(e.target.value) })}
+              className="h-8 text-xs w-16"
+              placeholder="HH:MM"
+            />
+            <Input 
+              type="number"
+              value={phase.meetingsCount} 
+              onChange={e => onUpdate?.({ ...phase, meetingsCount: Number(e.target.value) })}
+              className="h-8 text-xs w-12"
+              placeholder="Enc."
+            />
+          </div>
+        </div>
+        <div className="md:col-span-1 flex justify-end">
+          <Button variant="ghost" size="icon" onClick={onDelete} className="h-7 w-7 text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 py-3 border-b last:border-0 text-sm items-center hover:bg-muted/50 transition-colors px-4">
       <div className="md:col-span-3 font-medium flex items-center gap-2">
@@ -56,12 +137,59 @@ function PhaseRow({ phase }: { phase: any }) {
   );
 }
 
-function ProductItem({ product }: { product: any }) {
-  const { phases, isLoading } = useContractProductPhases(product.id);
-  
+function ProductItem({ product, isEditing: isParentEditing }: { product: any, isEditing?: boolean }) {
+  const { toast } = useToast();
+  const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
+  const [localPhases, setLocalPhases] = useState<any[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (remotePhases) {
+      setLocalPhases(remotePhases);
+    }
+  }, [remotePhases]);
+
+  const handleSave = async () => {
+    try {
+      await upsertPhases.mutateAsync(localPhases);
+      setIsEditing(false);
+      toast({ title: "Sucesso", description: "Jornada do produto atualizada." });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const addPhase = () => {
+    const nextOrder = localPhases.length > 0 
+      ? Math.max(...localPhases.map(p => p.orderIndex || 0)) + 1 
+      : 1;
+    setLocalPhases([...localPhases, { 
+      contractProductId: product.id,
+      name: 'Novo Módulo', 
+      orderIndex: nextOrder, 
+      durationMinutes: 60, 
+      executorType: 'consultor',
+      meetingsCount: 1,
+      status: 'pendente'
+    }]);
+  };
+
+  const removeLocalPhase = async (index: number) => {
+    const phase = localPhases[index];
+    if (phase.id) {
+      try {
+        await deletePhase.mutateAsync(phase.id);
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+    }
+    setLocalPhases(localPhases.filter((_, i) => i !== index));
+  };
+
   // Calculate total duration from phases if available, otherwise fallback to product snapshot hours
-  const totalMinutes = phases && phases.length > 0
-    ? phases.reduce((acc, ph) => acc + (ph.durationMinutes || 0), 0)
+  const totalMinutes = localPhases && localPhases.length > 0
+    ? localPhases.reduce((acc, ph) => acc + (ph.durationMinutes || 0), 0)
     : (product.consultantHours || 0) + (product.silvaneHours || 0);
 
   return (
@@ -85,30 +213,73 @@ function ProductItem({ product }: { product: any }) {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <StatusTag label={labelStatus[product.status] || product.status} />
+          {isParentEditing && (
+            isEditing ? (
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="ghost" onClick={() => { setLocalPhases(remotePhases || []); setIsEditing(false); }} className="h-8 w-8 p-0">
+                  <X className="h-4 w-4" />
+                </Button>
+                <Button size="sm" onClick={handleSave} className="h-8 gap-1.5 px-3">
+                  <Save className="h-3.5 w-3.5" />
+                  Salvar
+                </Button>
+              </div>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} className="h-8 gap-1.5 px-3">
+                <Pencil className="h-3.5 w-3.5" />
+                Editar Jornada
+              </Button>
+            )
+          )}
         </div>
       </div>
       
       <div className="p-0">
-        {isLoading ? (
+        {isLoadingPhases ? (
           <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" /> <span className="text-sm text-muted-foreground">Carregando jornada...</span></div>
-        ) : phases && phases.length > 0 ? (
+        ) : localPhases && localPhases.length > 0 ? (
           <div className="bg-white">
             <div className="hidden md:grid grid-cols-12 gap-4 text-[10px] font-bold text-muted-foreground uppercase py-2.5 px-4 bg-muted/20 border-b tracking-wider">
               <div className="md:col-span-3">Módulo da Jornada</div>
               <div className="md:col-span-2">Tipo</div>
               <div className="md:col-span-2">Responsável</div>
               <div className="md:col-span-2">Status</div>
-              <div className="md:col-span-2">Duração</div>
-              <div className="md:col-span-1 text-right">Enc.</div>
+              <div className="md:col-span-2">Duração / Enc.</div>
+              <div className="md:col-span-1 text-right">{isEditing ? 'Ações' : 'Prog.'}</div>
             </div>
             <div className="divide-y">
-              {phases.map(phase => <PhaseRow key={phase.id} phase={phase} />)}
+              {localPhases.map((phase, idx) => (
+                <PhaseRow 
+                  key={phase.id || idx} 
+                  phase={phase} 
+                  isEditing={isEditing} 
+                  onUpdate={(data) => {
+                    const updated = [...localPhases];
+                    updated[idx] = data;
+                    setLocalPhases(updated);
+                  }}
+                  onDelete={() => removeLocalPhase(idx)}
+                />
+              ))}
+              {isEditing && (
+                <div className="p-2 flex justify-center bg-primary/5">
+                  <Button variant="ghost" size="sm" onClick={addPhase} className="gap-2 text-primary font-bold">
+                    <Plus className="h-4 w-4" /> Adicionar Módulo
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="p-6 text-center text-sm text-muted-foreground">Nenhuma etapa da jornada configurada para este produto.</div>
+          <div className="p-6 text-center text-sm text-muted-foreground">
+            {isEditing ? (
+              <Button variant="outline" onClick={addPhase} className="gap-2">
+                <Plus className="h-4 w-4" /> Adicionar Primeiro Módulo
+              </Button>
+            ) : "Nenhuma etapa da jornada configurada para este produto."}
+          </div>
         )}
       </div>
     </div>
@@ -118,10 +289,11 @@ function ProductItem({ product }: { product: any }) {
 interface ContractJourneyCardProps {
   contrato: any;
   expanded?: boolean;
+  isEditing?: boolean;
 }
 
-export const ContractJourneyCard = ({ contrato, expanded = false }: ContractJourneyCardProps) => {
-  const { products, isLoading } = useContractProducts(contrato.id);
+export const ContractJourneyCard = ({ contrato, expanded = false, isEditing = false }: ContractJourneyCardProps) => {
+  const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
   
   const content = (
     <div className="pt-6 border-t mt-1">
@@ -129,14 +301,14 @@ export const ContractJourneyCard = ({ contrato, expanded = false }: ContractJour
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.1em]">Detalhamento de Produtos e Módulos</h4>
       </div>
       
-      {isLoading ? (
+      {isLoadingProducts ? (
         <div className="py-12 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-primary/60" />
           <p className="text-sm text-muted-foreground">Carregando estrutura do contrato...</p>
         </div>
       ) : products && products.length > 0 ? (
         <div className="space-y-4">
-          {products.map(product => <ProductItem key={product.id} product={product} />)}
+          {products.map(product => <ProductItem key={product.id} product={product} isEditing={isEditing} />)}
         </div>
       ) : (
         <div className="py-12 text-center bg-muted/20 rounded-lg border border-dashed">
