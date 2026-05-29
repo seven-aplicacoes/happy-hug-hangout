@@ -54,7 +54,7 @@ export default function DocumentosPage() {
   const [feedbackTexto, setFeedbackTexto] = useState('');
   
   const { clientes, isLoading: loadingClientes } = useClientes();
-  const { documentos, isLoading: isLoadingDocs, upsertDocumento, deleteDocumento, downloadFile } = useDocumentos();
+  const { documentos, isLoading: isLoadingDocs, error: docsError, upsertDocumento, deleteDocumento, downloadFile } = useDocumentos();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
 
   const isLoading = authLoading || loadingClientes || isLoadingDocs || loadingPermissions;
@@ -65,9 +65,10 @@ export default function DocumentosPage() {
   ];
 
   const data = useMemo(() => {
-    let d = [...(documentos || [])];
+    if (!documentos) return [];
+    let d = [...documentos];
     const q = search.toLowerCase();
-    if (q) d = d.filter(x => x.titulo.toLowerCase().includes(q) || x.clienteNome.toLowerCase().includes(q));
+    if (q) d = d.filter(x => x.titulo.toLowerCase().includes(q) || (x.clienteNome || '').toLowerCase().includes(q));
     if (filters.tipo && filters.tipo !== 'todos') d = d.filter(x => x.tipo === filters.tipo);
     if (filters.status && filters.status !== 'todos') d = d.filter(x => x.status === filters.status);
     return d;
@@ -186,6 +187,20 @@ export default function DocumentosPage() {
       className: 'w-[50px]'
     }
   ];
+
+  if (docsError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <AlertTriangle className="h-12 w-12 text-destructive" />
+        <div>
+          <h2 className="text-xl font-bold">Erro ao carregar documentos</h2>
+          <p className="text-muted-foreground">Ocorreu um problema ao buscar os dados do servidor.</p>
+          <p className="text-xs text-muted-foreground mt-2">{(docsError as any)?.message || 'Erro desconhecido'}</p>
+        </div>
+        <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
