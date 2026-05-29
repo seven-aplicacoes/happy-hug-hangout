@@ -93,6 +93,7 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
           file_path: filePath,
           file_type: file.type,
           file_size: file.size,
+          file_url: publicUrl,
         };
       }
 
