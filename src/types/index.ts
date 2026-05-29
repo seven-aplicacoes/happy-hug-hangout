@@ -323,12 +323,15 @@ export interface DocumentFeedback {
 export interface Product {
   id: string;
   name: string;
+  slug?: string;
   description: string;
   category: string;
+  service_track_position?: number;
   status: 'ativo' | 'inativo';
   consultant_hours?: number; // Total em minutos
   silvane_hours?: number;    // Total em minutos
 }
+
 
 export interface Project {
   id: string;
