@@ -56,6 +56,7 @@ function ConsultorSidebar() {
   const filteredCore = consultorCoreLinks.filter(link => can(link.module));
   const filteredOps = consultorOperationalLinks.filter(link => can(link.module));
   const filteredConfig = consultorConfigLinks.filter(link => can(link.module));
+  const filteredSoon = comingSoonLinks.filter(link => can(link.module));
 
   return (
     <Sidebar collapsible="icon">
