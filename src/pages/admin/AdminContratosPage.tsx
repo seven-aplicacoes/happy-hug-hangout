@@ -117,8 +117,8 @@ export default function AdminContratosPage() {
                 </thead>
                 <tbody>
                   {contratos?.map(c => (
-                    <tr key={c.id} className="border-b border-border/30 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/admin/cliente/${c.clienteId}`)}>
-                      <td className="p-4 font-medium">{c.clienteNome}</td>
+                    <tr key={c.id} className="border-b border-border/30 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/admin/contratos/${c.id}`)}>
+                      <td className="p-4 font-medium hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); navigate(`/admin/cliente/${c.clienteId}`); }}>{c.clienteNome}</td>
                       <td className="p-4 text-xs">{c.tipo}</td>
                       <td className="p-4 text-right tabular-nums">R$ {c.valor.toLocaleString('pt-BR')}</td>
                       <td className="p-4 text-xs text-muted-foreground">{c.consultorNome}</td>
