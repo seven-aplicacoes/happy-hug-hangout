@@ -420,53 +420,60 @@ export type Database = {
           },
         ]
       }
-      consultant_kpi_targets: {
+      consultant_indicator_goals: {
         Row: {
-          active: boolean | null
           comparison_operator: string
           consultant_id: string
           created_at: string | null
           created_by: string | null
-          description: string | null
+          goal_type: string
+          goal_value: number | null
           id: string
-          kpi_key: string
-          target_unit: string | null
-          target_value: number
+          indicator_key: string
+          indicator_label: string
+          is_active: boolean | null
+          period_type: string | null
           updated_at: string | null
-          updated_by: string | null
         }
         Insert: {
-          active?: boolean | null
-          comparison_operator?: string
+          comparison_operator: string
           consultant_id: string
           created_at?: string | null
           created_by?: string | null
-          description?: string | null
+          goal_type: string
+          goal_value?: number | null
           id?: string
-          kpi_key: string
-          target_unit?: string | null
-          target_value: number
+          indicator_key: string
+          indicator_label: string
+          is_active?: boolean | null
+          period_type?: string | null
           updated_at?: string | null
-          updated_by?: string | null
         }
         Update: {
-          active?: boolean | null
           comparison_operator?: string
           consultant_id?: string
           created_at?: string | null
           created_by?: string | null
-          description?: string | null
+          goal_type?: string
+          goal_value?: number | null
           id?: string
-          kpi_key?: string
-          target_unit?: string | null
-          target_value?: number
+          indicator_key?: string
+          indicator_label?: string
+          is_active?: boolean | null
+          period_type?: string | null
           updated_at?: string | null
-          updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "consultant_kpi_targets_consultant_id_fkey"
+            foreignKeyName: "consultant_indicator_goals_consultant_id_fkey"
             columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_indicator_goals_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1091,6 +1098,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      default_indicator_goals: {
+        Row: {
+          comparison_operator: string
+          created_at: string | null
+          default_goal_value: number | null
+          goal_type: string
+          id: string
+          indicator_key: string
+          indicator_label: string
+          is_active: boolean | null
+          period_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          comparison_operator: string
+          created_at?: string | null
+          default_goal_value?: number | null
+          goal_type: string
+          id?: string
+          indicator_key: string
+          indicator_label: string
+          is_active?: boolean | null
+          period_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          comparison_operator?: string
+          created_at?: string | null
+          default_goal_value?: number | null
+          goal_type?: string
+          id?: string
+          indicator_key?: string
+          indicator_label?: string
+          is_active?: boolean | null
+          period_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       document_links: {
         Row: {

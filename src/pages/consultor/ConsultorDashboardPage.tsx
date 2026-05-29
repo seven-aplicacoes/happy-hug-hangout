@@ -10,7 +10,7 @@ import { ListRow } from '@/components/ListRow';
 import { EmptyState } from '@/components/EmptyState';
 import { PeriodFilter } from '@/components/PeriodFilter';
 import { BenchmarkBadge } from '@/components/BenchmarkBadge';
-import { useKPITargets } from '@/hooks/useKPITargets';
+import { useConsultantGoals } from '@/hooks/useConsultantGoals';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import {
   diasDesdeUltimaReuniao, labelStatus,
 } from '@/data/mockData';
 import { getAlertasContrato, labelAlertaContrato } from '@/data/contratoExtras';
-import { getPeriodo, calcularMetricasConsultor, BENCHMARKS } from '@/data/clienteIndicadores';
+import { getPeriodo, calcularMetricasConsultor, BENCHMARKS, avaliarBenchmark } from '@/data/clienteIndicadores';
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { useClientes } from '@/hooks/useClientes';
@@ -61,7 +61,7 @@ export default function ConsultorDashboardPage() {
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
   const [periodo, setPeriodo] = useState(() => getPeriodo('30d'));
-  const { targets, isLoading: loadingTargets } = useKPITargets();
+  const { mergedGoals: targets, isLoading: loadingTargets } = useConsultantGoals(consultorId);
   const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
     isOpen: false, title: '', type: null 
   });
@@ -146,7 +146,14 @@ export default function ConsultorDashboardPage() {
     const map: Record<string, any> = {};
     if (targets) {
       targets.forEach(t => {
-        map[t.kpi_key] = { esperado: t.target_value, tolerancia: 0, unidade: t.target_unit || '', descricao: t.description || '' };
+        map[t.indicator_key] = { 
+          esperado: t.goal_value, 
+          tolerancia: 0, 
+          unidade: '', 
+          descricao: t.indicator_label,
+          goal_type: t.goal_type,
+          comparison_operator: t.comparison_operator
+        };
       });
     }
     return map;
@@ -222,7 +229,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Reuniões realizadas</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
-              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('reunioes_realizadas', BENCHMARKS.reunioesRealizadas)} />
+              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('meetings_completed', BENCHMARKS.meetings_completed)} />
             </CardContent>
           </Card>
           <Card>
@@ -242,7 +249,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Adesão CSAT</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
-              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adesao', BENCHMARKS.csatTaxaAdesao)} />
+              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adherence', BENCHMARKS.csat_adherence)} />
             </CardContent>
           </Card>
           <Card>
@@ -252,7 +259,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Nota CSAT</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
-              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_nota', BENCHMARKS.csatNotaMedia)} />
+              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_score', BENCHMARKS.csat_score)} />
             </CardContent>
           </Card>
           <Card>
@@ -262,7 +269,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">NPS</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
-              <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.npsAtual)} />
+              <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.nps)} />
             </CardContent>
           </Card>
           <Card>
@@ -272,7 +279,8 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Encontros / cliente</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
-              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('encontros_por_cliente', BENCHMARKS.encontrosPorClienteAtivo)} />
+              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('meetings_per_client', BENCHMARKS.meetings_per_client)} />
+
             </CardContent>
           </Card>
         </div>
@@ -286,7 +294,7 @@ export default function ConsultorDashboardPage() {
             titulo="Clínicas em Crítico"
             valor={criticos.length}
             icon={Flame}
-            variant={criticos.length > 0 ? 'danger' : 'success'}
+            variant={avaliarBenchmark(criticos.length, getBench('critical_clinics', BENCHMARKS.critical_clinics)) === 'acima_limite' ? 'danger' : 'success'}
             subtitulo="Sem reunião >15 dias"
             onClick={() => aplicarFiltro('critico')}
           />
@@ -294,7 +302,7 @@ export default function ConsultorDashboardPage() {
             titulo="Clínicas em Atenção"
             valor={atencao.length}
             icon={AlertTriangle}
-            variant={atencao.length > 0 ? 'warning' : 'success'}
+            variant={avaliarBenchmark(atencao.length, getBench('attention_clinics', BENCHMARKS.attention_clinics)) === 'acima_limite' ? 'danger' : 'success'}
             subtitulo="9–15 dias sem reunião"
             onClick={() => aplicarFiltro('atencao')}
           />
@@ -302,7 +310,7 @@ export default function ConsultorDashboardPage() {
             titulo="Encerrando em 90d"
             valor={contratosEncerrando.length}
             icon={FileClock}
-            variant={contratosEncerrando.length > 0 ? 'warning' : 'default'}
+            variant={avaliarBenchmark(contratosEncerrando.length, getBench('contracts_ending_90_days', { esperado: 0, tolerancia: 0, goal_type: 'informational', comparison_operator: 'none', descricao: '' })) === 'acima_limite' ? 'warning' : 'default'}
             subtitulo="Contratos próximos do fim"
             onClick={() => aplicarFiltro('encerrando')}
           />
@@ -310,7 +318,7 @@ export default function ConsultorDashboardPage() {
             titulo="Potencial Upsell"
             valor={upsell.length}
             icon={Sparkles}
-            variant={upsell.length > 0 ? 'success' : 'default'}
+            variant={avaliarBenchmark(upsell.length, getBench('upsell_potential', BENCHMARKS.upsell_potential)) === 'abaixo' ? 'warning' : 'success'}
             subtitulo="Oportunidades identificadas"
             onClick={() => aplicarFiltro('upsell')}
           />

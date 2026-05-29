@@ -18,16 +18,22 @@ import {
 } from "@/components/ui/select";
 import { ConsultantProfile } from "@/hooks/useConsultores";
 import { useToast } from "@/hooks/use-toast";
-import { useKPITargets, KPITarget } from "@/hooks/useKPITargets";
+import { useConsultantGoals, IndicatorGoal } from "@/hooks/useConsultantGoals";
 import { Separator } from "@/components/ui/separator";
 
 const KPI_CONFIG = [
-  { key: 'reunioes_realizadas', label: 'Reuniões Realizadas', unit: 'un' },
-  { key: 'csat_respostas', label: 'CSAT Respostas', unit: 'un' },
-  { key: 'csat_adesao', label: 'Adesão CSAT', unit: '%' },
-  { key: 'csat_nota', label: 'Nota CSAT', unit: '/5' },
+  { key: 'meetings_completed', label: 'Reuniões Realizadas', unit: 'un' },
+  { key: 'csat_responses', label: 'CSAT Respostas', unit: 'un' },
+  { key: 'csat_adherence', label: 'Adesão CSAT', unit: '%' },
+  { key: 'csat_score', label: 'Nota CSAT', unit: '/5' },
   { key: 'nps', label: 'NPS', unit: 'pts' },
-  { key: 'encontros_por_cliente', label: 'Encontros por Cliente', unit: 'un' },
+  { key: 'meetings_per_client', label: 'Encontros por Cliente', unit: 'un' },
+  { key: 'critical_clinics', label: 'Clínicas em crítico', unit: 'un' },
+  { key: 'attention_clinics', label: 'Clínicas em atenção', unit: 'un' },
+  { key: 'contracts_ending_90_days', label: 'Encerrando em 90 dias', unit: 'un' },
+  { key: 'upsell_potential', label: 'Potencial upsell', unit: 'un' },
+  { key: 'active_tasks', label: 'Tarefas ativas', unit: 'un' },
+  { key: 'client_portfolio', label: 'Meus clientes', unit: 'un' },
 ];
 
 interface ConsultorModalProps {
@@ -83,18 +89,18 @@ export const ConsultorModal = ({
     hours_available: 160,
   });
 
-  const { targets, upsertTarget } = useKPITargets(consultor?.id);
+  const { consultantGoals, upsertConsultantGoal, defaultGoals } = useConsultantGoals(consultor?.id);
   const [kpiTargets, setKpiTargets] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (targets) {
+    if (consultantGoals) {
       const targetMap: Record<string, number> = {};
-      targets.forEach(t => {
-        targetMap[t.kpi_key] = t.target_value;
+      consultantGoals.forEach(t => {
+        targetMap[t.indicator_key] = t.goal_value;
       });
       setKpiTargets(targetMap);
     }
-  }, [targets]);
+  }, [consultantGoals]);
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -177,15 +183,20 @@ export const ConsultorModal = ({
     // Save KPI targets
     if (consultor?.id) {
       for (const [key, value] of Object.entries(kpiTargets)) {
-        const existing = targets?.find(t => t.kpi_key === key);
-        await upsertTarget.mutateAsync({
+        const existing = consultantGoals?.find(t => t.indicator_key === key);
+        const config = KPI_CONFIG.find(c => c.key === key);
+        const defaultConfig = defaultGoals?.find(d => d.indicator_key === key);
+
+        await upsertConsultantGoal.mutateAsync({
           id: existing?.id,
           consultant_id: consultor.id,
-          kpi_key: key,
-          target_value: value,
-          comparison_operator: 'gte',
+          indicator_key: key,
+          indicator_label: config?.label || key,
+          goal_value: value,
+          goal_type: existing?.goal_type || defaultConfig?.goal_type || 'minimum',
+          comparison_operator: existing?.comparison_operator || defaultConfig?.comparison_operator || 'greater_or_equal',
           active: true
-        });
+        } as any);
       }
     }
     

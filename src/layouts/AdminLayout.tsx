@@ -34,6 +34,7 @@ const adminIntelligenceLinks = [
 const adminConfigLinks = [
   { title: 'Usuários', url: '/admin/consultores', icon: Users },
   { title: 'Permissões', url: '/admin/permissoes-consultores', icon: ShieldCheck },
+  { title: 'Metas dos Consultores', url: '/admin/metas-consultores', icon: TrendingUp },
   { title: 'Metodologia Seven', url: '/admin/metodologia', icon: BookOpen },
   { title: 'Integrações', url: '/admin/integracoes', icon: Plug },
 ];

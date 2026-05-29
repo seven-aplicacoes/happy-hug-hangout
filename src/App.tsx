@@ -24,6 +24,7 @@ import AdminProdutosPage from "@/pages/admin/AdminProdutosPage";
 import AdminRenovacaoPage from "@/pages/admin/AdminRenovacaoPage";
 import AdminAnaliseAvancadaPage from "@/pages/admin/AdminAnaliseAvancadaPage";
 import AdminConsultantPermissionsPage from "@/pages/admin/ConsultantPermissionsPage";
+import AdminConsultantGoalsPage from "@/pages/admin/AdminConsultantGoalsPage";
 import AdminTarefasPage from "@/pages/admin/AdminTarefasPage";
 import AdminReunioesPage from "@/pages/admin/AdminReunioesPage";
 import AdminContratoDetalhePage from "@/pages/admin/AdminContratoDetalhePage";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="consultores" element={<AdminConsultoresPage />} />
                <Route path="consultores/:id" element={<AdminConsultorDetalhePage />} />
                <Route path="permissoes-consultores" element={<AdminConsultantPermissionsPage />} />
+               <Route path="metas-consultores" element={<AdminConsultantGoalsPage />} />
               <Route path="contratos/:id" element={<AdminContratoDetalhePage />} />
               <Route path="cliente/:id" element={<ClienteDetalhePage />} />
               <Route path="metodologia" element={<MetodologiaPage />} />
