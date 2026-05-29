@@ -56,8 +56,9 @@ export default function ConsultorDashboardPage() {
   const { contratos, isLoading: loadingContratos } = useContratos();
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
+  const { csatSurveys, npsSurveys, isLoading: loadingSurveys } = useSurveys(consultorId);
 
-  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions;
+  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions || loadingSurveys;
 
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
