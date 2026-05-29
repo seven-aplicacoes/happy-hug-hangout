@@ -229,7 +229,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Reuniões realizadas</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.reunioesRealizadas}</p>
-              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('reunioes_realizadas', BENCHMARKS.reunioesRealizadas)} />
+              <BenchmarkBadge valor={metricas.reunioesRealizadas} bench={getBench('meetings_completed', BENCHMARKS.meetings_completed)} />
             </CardContent>
           </Card>
           <Card>
@@ -249,7 +249,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Adesão CSAT</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.csatTaxaAdesao}<span className="text-base text-muted-foreground">%</span></p>
-              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adesao', BENCHMARKS.csatTaxaAdesao)} />
+              <BenchmarkBadge valor={metricas.csatTaxaAdesao} bench={getBench('csat_adherence', BENCHMARKS.csat_adherence)} />
             </CardContent>
           </Card>
           <Card>
@@ -259,7 +259,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Nota CSAT</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.csatNotaMedia.toFixed(1)}<span className="text-base text-muted-foreground">/5</span></p>
-              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_nota', BENCHMARKS.csatNotaMedia)} />
+              <BenchmarkBadge valor={metricas.csatNotaMedia} bench={getBench('csat_score', BENCHMARKS.csat_score)} />
             </CardContent>
           </Card>
           <Card>
@@ -269,7 +269,7 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">NPS</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
-              <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.npsAtual)} />
+              <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.nps)} />
             </CardContent>
           </Card>
           <Card>
@@ -279,7 +279,8 @@ export default function ConsultorDashboardPage() {
                 <span className="ui-overline">Encontros / cliente</span>
               </div>
               <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
-              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('encontros_por_cliente', BENCHMARKS.encontrosPorClienteAtivo)} />
+              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('meetings_per_client', BENCHMARKS.meetings_per_client)} />
+
             </CardContent>
           </Card>
         </div>
