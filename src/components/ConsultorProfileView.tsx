@@ -68,10 +68,14 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const [consultor, setConsultor] = useState<any>(null);
   const [loadingConsultor, setLoadingConsultor] = useState(true);
 
-  useMemo(async () => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', consultorId).single();
-    if (data) setConsultor(data);
-    setLoadingConsultor(false);
+  useEffect(() => {
+    const fetchConsultor = async () => {
+      setLoadingConsultor(true);
+      const { data } = await supabase.from('profiles').select('*').eq('id', consultorId).single();
+      if (data) setConsultor(data);
+      setLoadingConsultor(false);
+    };
+    fetchConsultor();
   }, [consultorId]);
 
   const isLoading = loadingClientes || loadingReunioes || loadingTarefas || loadingContratos || loadingConsultor;
