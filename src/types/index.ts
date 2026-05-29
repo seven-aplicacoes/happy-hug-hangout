@@ -235,7 +235,7 @@ export interface ContractModuleMeeting {
   moduleId: string;
   meetingNumber: number;
   title: string;
-  status: 'pendente' | 'agendado' | 'realizado' | 'cancelado' | 'reagendado';
+  status: 'pendente' | 'agendado' | 'realizada' | 'cancelada' | 'reagendado';
   scheduledMeetingId?: string;
   consultantId?: string;
   scheduledAt?: string;
