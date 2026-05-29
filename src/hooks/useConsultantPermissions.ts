@@ -155,7 +155,7 @@ export function useMyPermissions() {
 
   const can = (moduleKey: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' = 'view') => {
     if (isLoading) return true; // Default to true while loading to avoid flickering
-    if (permissions === 'admin') return true;
+    if (permissions === 'admin' || perfil === 'admin') return true;
     if (!permissions || !Array.isArray(permissions)) return false;
     
     const permission = permissions.find(p => p.module_key === moduleKey);
