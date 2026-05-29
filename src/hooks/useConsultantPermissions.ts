@@ -43,6 +43,12 @@ export const ADMIN_MODULES_CONFIG = [
   { key: 'metas-consultores', path: '/admin/metas-consultores' },
   { key: 'metodologia', path: '/admin/metodologia' },
   { key: 'integracoes', path: '/admin/integracoes' },
+  { key: 'ia', path: '/admin/ia' },
+  { key: 'inteligencia', path: '/admin/inteligencia' },
+  { key: 'relacionamento', path: '/admin/relacionamento' },
+  { key: 'pipeline', path: '/admin/pipeline' },
+  { key: 'renovacao', path: '/admin/renovacao' },
+  { key: 'alertas', path: '/admin/alertas' },
 ];
 
 export function useConsultantPermissions(consultantId?: string) {
