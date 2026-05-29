@@ -18,16 +18,22 @@ import {
 } from "@/components/ui/select";
 import { ConsultantProfile } from "@/hooks/useConsultores";
 import { useToast } from "@/hooks/use-toast";
-import { useKPITargets, KPITarget } from "@/hooks/useKPITargets";
+import { useConsultantGoals, IndicatorGoal } from "@/hooks/useConsultantGoals";
 import { Separator } from "@/components/ui/separator";
 
 const KPI_CONFIG = [
-  { key: 'reunioes_realizadas', label: 'Reuniões Realizadas', unit: 'un' },
-  { key: 'csat_respostas', label: 'CSAT Respostas', unit: 'un' },
-  { key: 'csat_adesao', label: 'Adesão CSAT', unit: '%' },
-  { key: 'csat_nota', label: 'Nota CSAT', unit: '/5' },
+  { key: 'meetings_completed', label: 'Reuniões Realizadas', unit: 'un' },
+  { key: 'csat_responses', label: 'CSAT Respostas', unit: 'un' },
+  { key: 'csat_adherence', label: 'Adesão CSAT', unit: '%' },
+  { key: 'csat_score', label: 'Nota CSAT', unit: '/5' },
   { key: 'nps', label: 'NPS', unit: 'pts' },
-  { key: 'encontros_por_cliente', label: 'Encontros por Cliente', unit: 'un' },
+  { key: 'meetings_per_client', label: 'Encontros por Cliente', unit: 'un' },
+  { key: 'critical_clinics', label: 'Clínicas em crítico', unit: 'un' },
+  { key: 'attention_clinics', label: 'Clínicas em atenção', unit: 'un' },
+  { key: 'contracts_ending_90_days', label: 'Encerrando em 90 dias', unit: 'un' },
+  { key: 'upsell_potential', label: 'Potencial upsell', unit: 'un' },
+  { key: 'active_tasks', label: 'Tarefas ativas', unit: 'un' },
+  { key: 'client_portfolio', label: 'Meus clientes', unit: 'un' },
 ];
 
 interface ConsultorModalProps {
