@@ -32,8 +32,8 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState<'ativo' | 'inativo'>('ativo');
-  const [consultantHours, setConsultantHours] = useState<string>('');
-  const [silvaneHours, setSilvaneHours] = useState<string>('');
+  const [consultantHours, setConsultantHours] = useState<string>('00:00');
+  const [silvaneHours, setSilvaneHours] = useState<string>('00:00');
   
   const [phases, setPhases] = useState<any[]>([]);
   const [phasesToDelete, setPhasesToDelete] = useState<string[]>([]);
@@ -44,8 +44,8 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       setDescription(produto.description || '');
       setCategory(produto.category || '');
       setStatus(produto.status);
-      setConsultantHours(minutesToHHMM(produto.consultant_hours));
-      setSilvaneHours(minutesToHHMM(produto.silvane_hours));
+      setConsultantHours(minutesToHHMM(produto.consultant_hours) || '00:00');
+      setSilvaneHours(minutesToHHMM(produto.silvane_hours) || '00:00');
       
       const productPhases = allPlanPhases?.filter((p: any) => p.productId === produto.id) || [];
       setPhases(productPhases.map(p => ({
@@ -62,8 +62,8 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       setDescription('');
       setCategory('');
       setStatus('ativo');
-      setConsultantHours('');
-      setSilvaneHours('');
+      setConsultantHours('00:00');
+      setSilvaneHours('00:00');
       setPhases([]);
       setPhasesToDelete([]);
     }
@@ -88,13 +88,36 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
     if (phaseToRemove.id) {
       setPhasesToDelete([...phasesToDelete, phaseToRemove.id]);
     }
-    setPhases(phases.filter((_, i) => i !== index));
+    const updatedPhases = phases.filter((_, i) => i !== index);
+    setPhases(updatedPhases);
+    calculateTotalHours(updatedPhases);
+  };
+
+  const calculateTotalHours = (currentPhases: any[]) => {
+    let totalConsultantMinutes = 0;
+    let totalSilvaneMinutes = 0;
+
+    currentPhases.forEach(p => {
+      const minutes = hhmmToMinutes(p.durationMinutes) || 0;
+      if (p.executorType === 'consultor') {
+        totalConsultantMinutes += minutes;
+      } else if (p.executorType === 'silvane') {
+        totalSilvaneMinutes += minutes;
+      }
+    });
+
+    setConsultantHours(minutesToHHMM(totalConsultantMinutes));
+    setSilvaneHours(minutesToHHMM(totalSilvaneMinutes));
   };
 
   const updatePhase = (index: number, field: string, value: any) => {
     const updated = [...phases];
     updated[index][field] = value;
     setPhases(updated);
+    
+    if (field === 'durationMinutes' || field === 'executorType') {
+      calculateTotalHours(updated);
+    }
   };
 
   const handleSave = async () => {
@@ -135,7 +158,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       }
       
       if (p.executorType === 'consultor') totalConsultantMinutes += pMinutes;
-      else totalSilvaneMinutes += pMinutes;
+      else if (p.executorType === 'silvane') totalSilvaneMinutes += pMinutes;
 
       if (!p.orderIndex || p.orderIndex < 1) {
         toast({ variant: "destructive", title: "Módulo inválido", description: `A ordem do módulo "${p.name || 'sem nome'}" deve ser pelo menos 1.` });
@@ -148,25 +171,16 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       orderIndices.add(p.orderIndex);
     }
 
-    const cHoursTotal = hhmmToMinutes(consultantHours) || 0;
-    const sHoursTotal = hhmmToMinutes(silvaneHours) || 0;
-
-    if (totalConsultantMinutes > cHoursTotal) {
-      toast({ variant: "destructive", title: "Limite de horas excedido", description: `Soma dos módulos de Consultor (${minutesToHHMM(totalConsultantMinutes)}) excede a duração total (${consultantHours}).` });
-      return;
-    }
-    if (totalSilvaneMinutes > sHoursTotal) {
-      toast({ variant: "destructive", title: "Limite de horas excedido", description: `Soma dos módulos de Silvane (${minutesToHHMM(totalSilvaneMinutes)}) excede a duração total (${silvaneHours}).` });
-      return;
-    }
+    const cHoursTotal = totalConsultantMinutes;
+    const sHoursTotal = totalSilvaneMinutes;
 
     const data: any = { 
       name, 
       description, 
       category, 
       status: status === 'ativo' ? 'active' : 'inactive',
-      consultant_hours: cHoursTotal || undefined,
-      silvane_hours: sHoursTotal || undefined
+      consultant_hours: cHoursTotal,
+      silvane_hours: sHoursTotal
     };
 
     try {
@@ -262,13 +276,13 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
             <Label>Duração Consultor</Label>
-            <DurationInput value={consultantHours} onChange={setConsultantHours} />
-            <p className="text-[10px] text-muted-foreground">Formato: horas:minutos</p>
+            <Input value={consultantHours} readOnly className="bg-muted" />
+            <p className="text-[10px] text-muted-foreground">Calculado automaticamente</p>
           </div>
           <div className="space-y-1">
             <Label>Duração Silvane</Label>
-            <DurationInput value={silvaneHours} onChange={setSilvaneHours} />
-            <p className="text-[10px] text-muted-foreground">Formato: horas:minutos</p>
+            <Input value={silvaneHours} readOnly className="bg-muted" />
+            <p className="text-[10px] text-muted-foreground">Calculado automaticamente</p>
           </div>
           <div className="space-y-1">
             <Label>Status</Label>
