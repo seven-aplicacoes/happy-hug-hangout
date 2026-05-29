@@ -739,30 +739,54 @@ export type Database = {
           client_id: string
           contract_id: string
           created_at: string
-          document_id: string
+          description: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
           id: string
           module_id: string
+          product_id: string | null
+          title: string | null
           updated_at: string
+          uploaded_by: string | null
           visibility_type: string
         }
         Insert: {
           client_id: string
           contract_id: string
           created_at?: string
-          document_id: string
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           module_id: string
+          product_id?: string | null
+          title?: string | null
           updated_at?: string
+          uploaded_by?: string | null
           visibility_type?: string
         }
         Update: {
           client_id?: string
           contract_id?: string
           created_at?: string
-          document_id?: string
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           module_id?: string
+          product_id?: string | null
+          title?: string | null
           updated_at?: string
+          uploaded_by?: string | null
           visibility_type?: string
         }
         Relationships: [
@@ -781,17 +805,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "contract_module_documents_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "contract_module_documents_module_id_fkey"
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_documents_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
             referencedColumns: ["id"]
           },
         ]
@@ -802,12 +826,12 @@ export type Database = {
           completed_at: string | null
           consultant_id: string | null
           contract_id: string
-          contract_product_id: string
           created_at: string
           id: string
           meeting_number: number
           module_id: string
           order_index: number
+          product_id: string
           scheduled_at: string | null
           scheduled_meeting_id: string | null
           status: string
@@ -819,12 +843,12 @@ export type Database = {
           completed_at?: string | null
           consultant_id?: string | null
           contract_id: string
-          contract_product_id: string
           created_at?: string
           id?: string
           meeting_number: number
           module_id: string
           order_index?: number
+          product_id: string
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string
@@ -836,12 +860,12 @@ export type Database = {
           completed_at?: string | null
           consultant_id?: string | null
           contract_id?: string
-          contract_product_id?: string
           created_at?: string
           id?: string
           meeting_number?: number
           module_id?: string
           order_index?: number
+          product_id?: string
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string
@@ -872,7 +896,7 @@ export type Database = {
           },
           {
             foreignKeyName: "contract_module_meetings_contract_product_id_fkey"
-            columns: ["contract_product_id"]
+            columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "contract_products"
             referencedColumns: ["id"]
@@ -2906,6 +2930,10 @@ export type Database = {
       seed_consultant_goals: { Args: { c_id: string }; Returns: undefined }
       seed_default_consultant_permissions: {
         Args: { p_consultant_id: string }
+        Returns: undefined
+      }
+      sync_contract_module_meetings_manual: {
+        Args: { phase_id: string }
         Returns: undefined
       }
     }

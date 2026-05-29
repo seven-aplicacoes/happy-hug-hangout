@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Documento } from '@/types';
+import type { ContractModuleDocument } from '@/types';
 
 export function useContractModuleDocuments(moduleId?: string, contractId?: string) {
   const { toast } = useToast();
@@ -12,38 +12,87 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
     queryFn: async () => {
       if (!moduleId) return [];
       
-      // Fetch both generic module documents and client-specific documents
-      const { data: contractDocs, error: contractDocsError } = await supabase
+      const { data, error } = await supabase
         .from('contract_module_documents')
-        .select('*, document:documents(*)')
+        .select('*')
         .eq('module_id', moduleId);
 
-      if (contractDocsError) throw contractDocsError;
+      if (error) throw error;
 
-      // Also could fetch generic documents linked to the base methodology module
-      // But for now let's focus on contract-specific ones as per user request
-      
-      return (contractDocs || []).map((cd: any) => ({
-        ...cd.document,
-        visibility: cd.visibility_type,
-        // map other fields if needed
-      })) as Documento[];
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        clientId: d.client_id,
+        contractId: d.contract_id,
+        productId: d.product_id,
+        moduleId: d.module_id,
+        title: d.title,
+        description: d.description,
+        visibilityType: d.visibility_type,
+        fileName: d.file_name,
+        filePath: d.file_path,
+        fileUrl: d.file_url,
+        fileType: d.file_type,
+        fileSize: d.file_size,
+        uploadedBy: d.uploaded_by,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at,
+      })) as ContractModuleDocument[];
     },
     enabled: !!moduleId,
   });
 
-  const linkDocument = useMutation({
-    mutationFn: async ({ documentId, visibilityType }: { documentId: string, visibilityType: 'internal' | 'client' }) => {
-      if (!moduleId || !contractId) return;
-      
+  const uploadDocument = useMutation({
+    mutationFn: async ({ 
+      file, 
+      title, 
+      description, 
+      visibilityType,
+      clientId,
+      contractId,
+      productId,
+      moduleId 
+    }: { 
+      file: File, 
+      title: string, 
+      description?: string, 
+      visibilityType: 'internal' | 'client',
+      clientId: string,
+      contractId: string,
+      productId: string,
+      moduleId: string
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${clientId}/modules/${moduleId}/${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
       const { data, error } = await supabase
         .from('contract_module_documents')
-        .upsert({
+        .insert({
+          client_id: clientId,
           contract_id: contractId,
-          client_id: (await supabase.from('contracts').select('client_id').eq('id', contractId).single()).data?.client_id,
+          product_id: productId,
           module_id: moduleId,
-          document_id: documentId,
-          visibility_type: visibilityType
+          title,
+          description,
+          visibility_type: visibilityType,
+          file_name: file.name,
+          file_path: filePath,
+          file_url: publicUrl,
+          file_type: file.type,
+          file_size: file.size,
+          uploaded_by: user.id
         })
         .select();
 
@@ -52,23 +101,56 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-documents', moduleId, contractId] });
+      toast({ title: 'Sucesso', description: 'Documento enviado com sucesso.' });
     },
   });
 
-  const unlinkDocument = useMutation({
-    mutationFn: async (documentId: string) => {
+  const deleteDocument = useMutation({
+    mutationFn: async (doc: ContractModuleDocument) => {
+      // First delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([doc.filePath]);
+
+      if (storageError) console.error('Error removing from storage:', storageError);
+
       const { error } = await supabase
         .from('contract_module_documents')
         .delete()
-        .eq('module_id', moduleId)
-        .eq('document_id', documentId);
+        .eq('id', doc.id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-documents', moduleId, contractId] });
+      toast({ title: 'Sucesso', description: 'Documento removido.' });
     },
   });
 
-  return { documents, isLoading, error, linkDocument, unlinkDocument };
+  const downloadDocument = async (doc: ContractModuleDocument) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(doc.filePath);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao baixar arquivo',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return { documents, isLoading, error, uploadDocument, deleteDocument, downloadDocument };
 }

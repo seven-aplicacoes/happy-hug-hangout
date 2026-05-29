@@ -231,7 +231,7 @@ export interface ContractModuleMeeting {
   id: string;
   contractId: string;
   clientId: string;
-  contractProductId: string;
+  productId: string;
   moduleId: string;
   meetingNumber: number;
   title: string;
@@ -242,6 +242,25 @@ export interface ContractModuleMeeting {
   completedAt?: string;
   orderIndex: number;
   consultantName?: string;
+}
+
+export interface ContractModuleDocument {
+  id: string;
+  clientId: string;
+  contractId: string;
+  productId: string;
+  moduleId: string;
+  title: string;
+  description?: string;
+  visibilityType: 'internal' | 'client';
+  fileName: string;
+  filePath: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Tarefa {
