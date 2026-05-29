@@ -15,10 +15,8 @@ export function useProdutos() {
       return data.map((p: any) => ({
         id: p.id,
         name: p.name,
-        slug: p.slug,
         description: p.description,
         category: p.category,
-        service_track_position: p.service_track_position,
         status: (p.status === 'active' ? 'ativo' : p.status === 'inactive' ? 'inativo' : p.status) as 'ativo' | 'inativo',
         consultant_hours: p.consultant_hours ? Number(p.consultant_hours) : undefined,
         silvane_hours: p.silvane_hours ? Number(p.silvane_hours) : undefined,
