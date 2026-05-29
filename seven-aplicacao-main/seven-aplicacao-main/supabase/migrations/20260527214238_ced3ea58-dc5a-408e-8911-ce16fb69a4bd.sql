@@ -1,1 +1,0 @@
-DROP POLICY IF EXISTS "Public Access" ON storage.objects;
