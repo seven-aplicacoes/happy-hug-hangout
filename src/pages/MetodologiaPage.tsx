@@ -361,8 +361,9 @@ export default function MetodologiaPage() {
       
       <ModalMethodologyNote
         open={noteModalOpen}
-        onOpenChange={setNoteModalOpen}
+        onClose={() => setNoteModalOpen(false)}
         note={selectedNote}
+        phases={phases}
       />
     </div>
   );
