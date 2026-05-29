@@ -20,7 +20,6 @@ import { useConsultores } from '@/hooks/useConsultores';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
-import { ModalDocumento } from '@/components/modals/ModalDocumento';
 import { cn } from '@/lib/utils';
 import type { ContractModuleMeeting, Documento } from '@/types';
 
@@ -84,75 +83,38 @@ function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: an
 }
 
 function DocumentList({ phase, contrato, type }: { phase: any, contrato: any, type: 'internal' | 'client' }) {
-  const { documents, isLoading, unlinkDocument } = useContractModuleDocuments(phase.id, contrato.id);
-  const [modalOpen, setModalOpen] = useState(false);
+  const { documents, isLoading } = useContractModuleDocuments(phase.id, contrato.id);
   
   const filteredDocs = documents?.filter(d => d.visibility === type || d.visibility === 'all');
 
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>;
+  if (!filteredDocs || filteredDocs.length === 0) return (
+    <div className="p-8 text-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed my-2">
+      <FileText className="h-8 w-8 mx-auto mb-2 opacity-20" />
+      <p>Nenhum documento {type === 'internal' ? 'interno' : 'para o cliente'} vinculado.</p>
+    </div>
+  );
 
   return (
-    <div className="space-y-3 mt-4 animate-in fade-in duration-300">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {filteredDocs && filteredDocs.length > 0 ? (
-          filteredDocs.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between p-3 rounded-xl border bg-white hover:border-primary/40 transition-all group shadow-sm">
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                <div className="overflow-hidden">
-                  <p className="text-xs font-bold text-foreground truncate">{doc.titulo}</p>
-                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{doc.tipo || 'Documento'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:bg-primary/10" title="Baixar">
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  className="h-8 w-8 text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity" 
-                  title="Remover vínculo"
-                  onClick={() => unlinkDocument.mutate(doc.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 animate-in fade-in duration-300">
+      {filteredDocs.map((doc) => (
+        <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 transition-all group">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="h-8 w-8 rounded bg-primary/5 flex items-center justify-center shrink-0">
+              <FileText className="h-4 w-4 text-primary" />
             </div>
-          ))
-        ) : (
-          <div className="md:col-span-2 p-10 text-center text-sm text-muted-foreground bg-muted/20 rounded-2xl border border-dashed border-muted/40 my-2">
-            <FileText className="h-10 w-10 mx-auto mb-3 opacity-20" />
-            <p className="font-medium">Nenhum documento {type === 'internal' ? 'interno' : 'para o cliente'} vinculado.</p>
-            <p className="text-xs mt-1">Clique no botão abaixo para anexar um novo material.</p>
+            <div className="overflow-hidden">
+              <p className="text-[11px] font-bold text-foreground truncate">{doc.titulo}</p>
+              <p className="text-[10px] text-muted-foreground">{doc.tipo || 'Documento'}</p>
+            </div>
           </div>
-        )}
-      </div>
-
-      <div className="flex justify-center pt-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-2 font-bold text-[10px] uppercase tracking-widest h-9 border-primary/20 text-primary hover:bg-primary/5"
-          onClick={() => setModalOpen(true)}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Anexar Documento
-        </Button>
-      </div>
-
-      <ModalDocumento 
-        open={modalOpen} 
-        onClose={() => setModalOpen(false)}
-        initialData={{
-          clienteId: contrato.clienteId,
-          contractProductId: phase.contractProductId,
-          contractProductPhaseId: phase.id,
-          visibility: type === 'internal' ? 'internal' : 'client'
-        }}
-      />
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button size="icon" variant="ghost" className="h-7 w-7 text-primary">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

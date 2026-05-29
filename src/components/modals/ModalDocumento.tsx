@@ -16,7 +16,6 @@ interface Props {
   open: boolean;
   onClose: () => void;
   documento?: Documento | null;
-  initialData?: Partial<Documento>;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -31,7 +30,7 @@ const ALLOWED_TYPES = [
   'image/jpg'
 ];
 
-export const ModalDocumento = ({ open, onClose, documento, initialData }: Props) => {
+export const ModalDocumento = ({ open, onClose, documento }: Props) => {
   const { upsertDocumento } = useDocumentos();
   const { clientes } = useClientes();
   const { clientProducts } = useClientProducts();
@@ -57,15 +56,6 @@ export const ModalDocumento = ({ open, onClose, documento, initialData }: Props)
       setContractProductPhaseId(documento.contractProductPhaseId || '');
       setVisibility(documento.visibility || 'internal');
       setExistingFileName(documento.file_name || documento.arquivo || '');
-      setSelectedFile(null);
-    } else if (initialData) {
-      setTitulo(initialData.titulo || '');
-      setTipo(initialData.tipo || 'ata');
-      setClienteId(initialData.clienteId || '');
-      setContractProductId(initialData.contractProductId || '');
-      setContractProductPhaseId(initialData.contractProductPhaseId || '');
-      setVisibility(initialData.visibility || 'internal');
-      setExistingFileName('');
       setSelectedFile(null);
     } else {
       setTitulo('');
