@@ -7,6 +7,11 @@ export interface ContractProduct {
   contractId: string;
   productId: string;
   productNome?: string;
+  productName?: string;
+  productDescription?: string;
+  productCategory?: string;
+  consultantHours?: number;
+  silvaneHours?: number;
   status: string;
   startDate?: string;
   endDate?: string;
@@ -32,7 +37,7 @@ export function useContractProducts(contractId?: string) {
         .from('contract_products')
         .select(`
           *,
-          product:products (name)
+          product:products (name, description, category, consultant_hours, silvane_hours)
         `)
         .eq('contract_id', contractId);
 
@@ -42,7 +47,12 @@ export function useContractProducts(contractId?: string) {
         id: cp.id,
         contractId: cp.contract_id,
         productId: cp.product_id,
-        productNome: cp.product?.name || 'N/A',
+        productNome: cp.product_name || cp.product?.name || 'N/A', // Prioritize snapshot
+        productName: cp.product_name || cp.product?.name,
+        productDescription: cp.product_description || cp.product?.description,
+        productCategory: cp.product_category || cp.product?.category,
+        consultantHours: cp.consultant_hours !== null ? cp.consultant_hours : cp.product?.consultant_hours,
+        silvaneHours: cp.silvane_hours !== null ? cp.silvane_hours : cp.product?.silvane_hours,
         status: cp.status,
         startDate: cp.start_date,
         endDate: cp.end_date,
@@ -52,8 +62,8 @@ export function useContractProducts(contractId?: string) {
         currentWeekId: cp.current_week_id,
         currentWeekNumber: cp.current_week_number,
         clientVisible: cp.client_visible,
-        internalNotes: cp.internal_notes,
-        clientNotes: cp.client_notes,
+        internal_notes: cp.internal_notes,
+        client_notes: cp.client_notes,
       })) as ContractProduct[];
     },
     enabled: !!contractId,

@@ -39,7 +39,7 @@ export function useClientProducts(clientId?: string) {
             client:clients (trade_name),
             consultant:profiles (full_name)
           ),
-          product:products (name)
+          product:products (name, description, category, consultant_hours, silvane_hours)
         `);
 
       if (clientId) {
@@ -55,7 +55,7 @@ export function useClientProducts(clientId?: string) {
         clientId: cp.contract?.client_id,
         clientNome: cp.contract?.client?.trade_name || 'Desconhecido',
         productId: cp.product_id,
-        productNome: cp.product?.name || 'N/A',
+        productNome: cp.product_name || cp.product?.name || 'N/A', // Snapshot fallback
         contractId: cp.contract_id,
         contractTipo: cp.contract?.type,
         consultantId: cp.contract?.consultant_id,

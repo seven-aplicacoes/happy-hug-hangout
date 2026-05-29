@@ -100,6 +100,11 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           return {
             id: p.id,
             productId: p.productId,
+            productName: p.productName || p.productNome,
+            productDescription: p.productDescription,
+            productCategory: p.productCategory,
+            consultantHours: p.consultantHours,
+            silvaneHours: p.silvaneHours,
             startDate: p.startDate,
             endDate: p.endDate,
             value: p.value || 0,
@@ -173,6 +178,15 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     updated[index][field] = value;
 
     if (field === 'productId') {
+      const selectedProduct = produtos?.find(p => p.id === value);
+      if (selectedProduct) {
+        updated[index].productName = selectedProduct.name;
+        updated[index].productDescription = selectedProduct.description;
+        updated[index].productCategory = selectedProduct.category;
+        updated[index].consultantHours = selectedProduct.consultant_hours;
+        updated[index].silvaneHours = selectedProduct.silvane_hours;
+      }
+
       const productPhases = planPhases?.filter((pp: any) => pp.productId === value) || [];
       const defaultPhases = productPhases.map((pp: any) => ({
         name: pp.name,
@@ -359,6 +373,11 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           const payload: any = {
             contract_id: contractId,
             product_id: p.productId,
+            product_name: p.productName,
+            product_description: p.productDescription,
+            product_category: p.productCategory,
+            consultant_hours: p.consultantHours,
+            silvane_hours: p.silvaneHours,
             start_date: p.startDate,
             end_date: p.endDate,
             value: Number(p.value) || 0,

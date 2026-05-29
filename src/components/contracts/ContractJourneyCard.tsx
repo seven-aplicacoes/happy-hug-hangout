@@ -64,11 +64,17 @@ function ProductItem({ product }: { product: any }) {
       <div className="p-4 flex flex-col md:flex-row md:items-center justify-between bg-muted/30 border-b gap-3">
         <div>
           <h4 className="font-bold text-base text-foreground">{product.productNome}</h4>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {product.startDate ? new Date(product.startDate).toLocaleDateString() : '-'} a {product.endDate ? new Date(product.endDate).toLocaleDateString() : '-'}
             </span>
+            {(product.consultantHours > 0 || product.silvaneHours > 0) && (
+              <span className="text-xs text-muted-foreground border-l pl-3 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Duração: {product.consultantHours + (product.silvaneHours || 0)}h
+              </span>
+            )}
             <span className="text-xs text-muted-foreground border-l pl-3">
               Jornada de Execução
             </span>
