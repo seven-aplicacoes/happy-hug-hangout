@@ -34,6 +34,7 @@ export function useClientes() {
         nomeFantasia: c.trade_name,
         cnpj: c.cnpj,
         segmento: c.segment,
+        clinicSpecialty: c.clinic_specialty,
         regiao: c.region,
         consultorId: c.consultant_id,
         porte: c.company_size as any,
