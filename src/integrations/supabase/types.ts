@@ -734,6 +734,165 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_module_documents: {
+        Row: {
+          client_id: string
+          contract_id: string
+          created_at: string
+          document_id: string
+          id: string
+          module_id: string
+          updated_at: string
+          visibility_type: string
+        }
+        Insert: {
+          client_id: string
+          contract_id: string
+          created_at?: string
+          document_id: string
+          id?: string
+          module_id: string
+          updated_at?: string
+          visibility_type?: string
+        }
+        Update: {
+          client_id?: string
+          contract_id?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          module_id?: string
+          updated_at?: string
+          visibility_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_module_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_documents_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_documents_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_module_meetings: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          consultant_id: string | null
+          contract_id: string
+          contract_product_id: string
+          created_at: string
+          id: string
+          meeting_number: number
+          module_id: string
+          order_index: number
+          scheduled_at: string | null
+          scheduled_meeting_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          consultant_id?: string | null
+          contract_id: string
+          contract_product_id: string
+          created_at?: string
+          id?: string
+          meeting_number: number
+          module_id: string
+          order_index?: number
+          scheduled_at?: string | null
+          scheduled_meeting_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          consultant_id?: string | null
+          contract_id?: string
+          contract_product_id?: string
+          created_at?: string
+          id?: string
+          meeting_number?: number
+          module_id?: string
+          order_index?: number
+          scheduled_at?: string | null
+          scheduled_meeting_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_module_meetings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_meetings_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_meetings_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_meetings_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_meetings_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_module_meetings_scheduled_meeting_id_fkey"
+            columns: ["scheduled_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_product_phase_consultants: {
         Row: {
           assigned_by: string | null
@@ -1538,6 +1697,7 @@ export type Database = {
           client_id: string | null
           consultant_id: string | null
           contract_id: string | null
+          contract_module_meeting_id: string | null
           contract_product_id: string | null
           contract_product_phase_id: string | null
           created_at: string | null
@@ -1565,6 +1725,7 @@ export type Database = {
           client_id?: string | null
           consultant_id?: string | null
           contract_id?: string | null
+          contract_module_meeting_id?: string | null
           contract_product_id?: string | null
           contract_product_phase_id?: string | null
           created_at?: string | null
@@ -1592,6 +1753,7 @@ export type Database = {
           client_id?: string | null
           consultant_id?: string | null
           contract_id?: string | null
+          contract_module_meeting_id?: string | null
           contract_product_id?: string | null
           contract_product_phase_id?: string | null
           created_at?: string | null
@@ -1635,6 +1797,13 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_contract_module_meeting_id_fkey"
+            columns: ["contract_module_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
             referencedColumns: ["id"]
           },
           {
@@ -2334,6 +2503,51 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: []
+      }
+      module_documents: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          module_id: string
+          order_index: number
+          updated_at: string
+          visibility_type: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          module_id: string
+          order_index?: number
+          updated_at?: string
+          visibility_type?: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          module_id?: string
+          order_index?: number
+          updated_at?: string
+          visibility_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_documents_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "methodology_plan_modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nps_surveys: {
         Row: {
