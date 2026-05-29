@@ -122,8 +122,12 @@ export default function ConsultorDashboardPage() {
     const alertasContrato = getAlertasContrato({ consultorId });
 
     const proximasReunioes = reunioes
-      .filter(r => r.meetingDate >= hojeStr && r.status === 'agendada')
-      .sort((a, b) => a.data.localeCompare(b.data) || a.startTime.localeCompare(b.startTime))
+      .filter(r => {
+        const isFuture = r.meetingDate > hojeStr;
+        const isTodayPending = r.meetingDate === hojeStr && r.startTime >= new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        return (isFuture || isTodayPending) && r.status === 'agendada';
+      })
+      .sort((a, b) => a.meetingDate.localeCompare(b.meetingDate) || a.startTime.localeCompare(b.startTime))
       .slice(0, 5);
 
     // Métricas do consultor
