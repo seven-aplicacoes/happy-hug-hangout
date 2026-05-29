@@ -1,7 +1,7 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert
+  Download, Eye, ExternalLink, ShieldAlert, FileUp
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -12,7 +12,7 @@ import { useContractProducts } from '@/hooks/useContractProducts';
 import { useContractProductPhases } from '@/hooks/useContractProductPhases';
 import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useContractModuleDocuments } from '@/hooks/useContractModuleDocuments';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,7 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { cn } from '@/lib/utils';
-import type { ContractModuleMeeting, Documento } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
 function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: any, onSchedule: (meeting: ContractModuleMeeting) => void }) {
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
@@ -31,6 +32,9 @@ function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: an
 
   return (
     <div className="space-y-2 mt-4 animate-in slide-in-from-top-2 duration-300">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-black uppercase text-muted-foreground">Progresso: {meetings.filter(m => m.status === 'realizada').length}/{meetings.length} encontros</span>
+      </div>
       {meetings.map((meeting) => (
         <div key={meeting.id} className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4">
           <div className="flex items-center gap-4">
@@ -63,9 +67,6 @@ function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: an
               </Button>
             ) : meeting.status === 'agendado' ? (
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-muted-foreground">
-                  <Eye className="h-3.5 w-3.5" /> Ver reunião
-                </Button>
                 <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
                   Reagendar
                 </Button>
@@ -83,38 +84,90 @@ function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: an
 }
 
 function DocumentList({ phase, contrato, type }: { phase: any, contrato: any, type: 'internal' | 'client' }) {
-  const { documents, isLoading } = useContractModuleDocuments(phase.id, contrato.id);
+  const { perfil, user } = useAuth();
+  const { documents, isLoading, deleteDocument, downloadDocument, uploadDocument } = useContractModuleDocuments(phase.id, contrato.id);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const filteredDocs = documents?.filter(d => d.visibility === type || d.visibility === 'all');
+  const filteredDocs = documents?.filter(d => d.visibilityType === type);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await uploadDocument.mutateAsync({
+        file,
+        title: file.name,
+        visibilityType: type,
+        clientId: contrato.clienteId,
+        contractId: contrato.id,
+        productId: phase.contractProductId,
+        moduleId: phase.id
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const canDelete = (doc: ContractModuleDocument) => {
+    return perfil === 'admin' || doc.uploadedBy === user?.id;
+  };
 
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>;
-  if (!filteredDocs || filteredDocs.length === 0) return (
-    <div className="p-8 text-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed my-2">
-      <FileText className="h-8 w-8 mx-auto mb-2 opacity-20" />
-      <p>Nenhum documento {type === 'internal' ? 'interno' : 'para o cliente'} vinculado.</p>
-    </div>
-  );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 animate-in fade-in duration-300">
-      {filteredDocs.map((doc) => (
-        <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 transition-all group">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="h-8 w-8 rounded bg-primary/5 flex items-center justify-center shrink-0">
-              <FileText className="h-4 w-4 text-primary" />
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-[11px] font-bold text-foreground truncate">{doc.titulo}</p>
-              <p className="text-[10px] text-muted-foreground">{doc.tipo || 'Documento'}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button size="icon" variant="ghost" className="h-7 w-7 text-primary">
-              <Download className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+    <div className="space-y-4 mt-4 animate-in fade-in duration-300">
+      <div className="flex justify-end">
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileUpload} 
+          className="hidden" 
+        />
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="h-8 gap-1.5 text-xs font-bold border-dashed hover:border-primary hover:bg-primary/5"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadDocument.isPending}
+        >
+          {uploadDocument.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+          Upload de {type === 'internal' ? 'Material' : 'Entregável'}
+        </Button>
+      </div>
+
+      {!filteredDocs || filteredDocs.length === 0 ? (
+        <div className="p-8 text-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed my-2">
+          <FileText className="h-8 w-8 mx-auto mb-2 opacity-20" />
+          <p>Nenhum documento {type === 'internal' ? 'interno' : 'para o cliente'} vinculado.</p>
         </div>
-      ))}
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {filteredDocs.map((doc) => (
+            <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 transition-all group">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="h-8 w-8 rounded bg-primary/5 flex items-center justify-center shrink-0">
+                  <FileText className="h-4 w-4 text-primary" />
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-[11px] font-bold text-foreground truncate">{doc.title}</p>
+                  <p className="text-[10px] text-muted-foreground">{doc.fileType || 'Documento'}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={() => downloadDocument(doc)}>
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+                {canDelete(doc) && (
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:bg-destructive/5" onClick={() => deleteDocument.mutate(doc)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -367,66 +420,55 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
                 </Button>
               </div>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary font-bold text-[11px] uppercase tracking-wider">
-                <Pencil className="h-3 w-3" />
-                Editar Jornada
+              <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)} className="h-8 w-8 p-0 text-muted-foreground hover:text-primary">
+                <Pencil className="h-3.5 w-3.5" />
               </Button>
             )
           )}
         </div>
       </div>
-      
-      <div className="p-0">
+
+      <div className="overflow-x-auto">
         {isLoadingPhases ? (
-          <div className="p-12 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-primary/60" /> 
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Carregando módulos...</span>
-          </div>
-        ) : localPhases && localPhases.length > 0 ? (
-          <div className="bg-white">
-            <div className="hidden md:grid grid-cols-12 gap-4 text-[10px] font-black text-muted-foreground uppercase py-3 px-4 bg-muted/10 border-b tracking-[0.15em]">
-              <div className="md:col-span-3">Módulo da Jornada</div>
-              <div className="md:col-span-2">Executor</div>
-              <div className="md:col-span-2">Responsável</div>
-              <div className="md:col-span-2">Status</div>
-              <div className="md:col-span-2">Tempo / Enc.</div>
-              <div className="md:col-span-1 text-right">{isEditing ? 'Ações' : ''}</div>
-            </div>
-            <div className="divide-y divide-muted/10">
-              {localPhases.map((phase, idx) => (
-                <PhaseRow 
-                  key={phase.id || idx} 
-                  phase={phase} 
-                  contrato={contrato}
-                  isEditing={isEditing} 
-                  onSchedule={onSchedule}
-                  onUpdate={(data) => {
-                    const updated = [...localPhases];
-                    updated[idx] = data;
-                    setLocalPhases(updated);
-                  }}
-                  onDelete={() => removeLocalPhase(idx)}
-                />
-              ))}
-              {isEditing && (
-                <div className="p-4 flex justify-center bg-primary/5">
-                  <Button variant="ghost" size="sm" onClick={addPhase} className="gap-2 text-primary font-black uppercase tracking-widest text-[10px]">
-                    <Plus className="h-4 w-4" /> Adicionar Módulo
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
+          <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>
         ) : (
-          <div className="p-12 text-center bg-muted/5">
-            <ShieldAlert className="h-10 w-10 mx-auto mb-3 opacity-20 text-muted-foreground" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-              {isEditing ? (
-                <Button variant="outline" onClick={addPhase} className="gap-2 border-primary/20 text-primary">
-                  <Plus className="h-4 w-4" /> Configurar Primeiro Módulo
+          <div className="min-w-[800px]">
+            <div className="grid grid-cols-12 gap-4 py-2 px-4 bg-muted/30 border-b text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+              <div className="col-span-3">Módulo</div>
+              <div className="col-span-2">Executor</div>
+              <div className="col-span-2">Responsável</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-2">Duração / Enc.</div>
+              <div className="col-span-1"></div>
+            </div>
+            {localPhases.map((phase, idx) => (
+              <PhaseRow 
+                key={phase.id || idx} 
+                phase={phase} 
+                contrato={contrato}
+                isEditing={isEditing} 
+                onUpdate={(data) => {
+                  const newPhases = [...localPhases];
+                  newPhases[idx] = data;
+                  setLocalPhases(newPhases);
+                }}
+                onDelete={() => removeLocalPhase(idx)}
+                onSchedule={onSchedule}
+              />
+            ))}
+            {isEditing && (
+              <div className="p-3 border-t bg-muted/5 flex justify-center">
+                <Button variant="outline" size="sm" onClick={addPhase} className="h-8 gap-1.5 text-xs border-dashed">
+                  <Plus className="h-3.5 w-3.5" />
+                  Adicionar Módulo
                 </Button>
-              ) : "Nenhuma etapa da jornada configurada."}
-            </p>
+              </div>
+            )}
+            {(!localPhases || localPhases.length === 0) && !isEditing && (
+              <div className="p-10 text-center text-sm text-muted-foreground">
+                Nenhum módulo definido para este produto.
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -434,134 +476,79 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
   );
 }
 
-interface ContractJourneyCardProps {
-  contrato: any;
-  expanded?: boolean;
-  isEditing?: boolean;
-}
-
-export const ContractJourneyCard = ({ contrato, expanded = false, isEditing = false }: ContractJourneyCardProps) => {
+export function ContractJourneyCard({ 
+  contrato, 
+  isEditing = false, 
+  onToggleEdit = () => {},
+  expanded = false 
+}: { 
+  contrato: any, 
+  isEditing?: boolean, 
+  onToggleEdit?: () => void,
+  expanded?: boolean
+}) {
   const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [meetingToSchedule, setMeetingToSchedule] = useState<ContractModuleMeeting | null>(null);
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
+  const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
   const handleScheduleMeeting = (meeting: ContractModuleMeeting) => {
-    setMeetingToSchedule(meeting);
-    setModalOpen(true);
+    setInitialMeetingData({
+      clienteId: meeting.clientId,
+      contractId: meeting.contractId,
+      contractProductId: meeting.productId,
+      contractProductPhaseId: meeting.moduleId,
+      contractModuleMeetingId: meeting.id,
+      title: meeting.title,
+      consultorId: meeting.consultantId || '',
+      status: 'agendada'
+    });
+    setMeetingModalOpen(true);
   };
-  
-  const content = (
-    <div className="pt-8 border-t border-muted/20 mt-2">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-           <div className="h-2 w-2 rounded-full bg-primary" />
-           <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Estrutura da Jornada de Valor</h4>
-        </div>
-      </div>
-      
-      {isLoadingProducts ? (
-        <div className="py-20 text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary/40" />
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Reconstruindo jornada...</p>
-        </div>
-      ) : products && products.length > 0 ? (
-        <div className="space-y-2">
-          {products.map(product => (
-            <ProductItem 
-              key={product.id} 
-              product={product} 
-              contrato={contrato} 
-              isEditing={isEditing} 
-              onSchedule={handleScheduleMeeting}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="py-16 text-center bg-muted/10 rounded-2xl border-2 border-dashed border-muted/20">
-          <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-10" />
-          <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.15em]">Este contrato ainda não possui produtos vinculados.</p>
-        </div>
-      )}
 
-      {modalOpen && (
-        <ModalReuniao 
-          open={modalOpen} 
-          onClose={() => {
-            setModalOpen(false);
-            setMeetingToSchedule(null);
-          }} 
-          initialData={meetingToSchedule ? {
-            title: meetingToSchedule.title,
-            clienteId: contrato.clienteId,
-            contractId: contrato.id,
-            contractProductId: meetingToSchedule.contractProductId,
-            contractProductPhaseId: meetingToSchedule.moduleId,
-            contractModuleMeetingId: meetingToSchedule.id,
-            consultorId: contrato.consultorId,
-            tipo: 'Check-in Semanal',
-            status: 'agendada'
-          } : undefined}
-        />
-      )}
-    </div>
-  );
-
-  if (expanded) {
+  if (isLoadingProducts) {
     return (
-      <div className="border rounded-2xl bg-white shadow-xl overflow-hidden border-muted/30 p-8 animate-in fade-in zoom-in-95 duration-500">
-        <div className="flex flex-col md:flex-row md:items-center gap-6 text-left w-full mb-8">
-          <div className="h-14 w-14 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center shrink-0">
-            <Briefcase className="h-7 w-7 text-white" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center flex-wrap gap-3">
-              <h3 className="font-black text-2xl text-foreground tracking-tight">{contrato.tipo}</h3>
-              <StatusTag label={labelStatus[contrato.status] || contrato.status} />
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs font-medium text-muted-foreground mt-2">
-              <span className="flex items-center gap-2"><Calendar className="h-4 w-4 opacity-40" /> {new Date(contrato.dataInicio).toLocaleDateString('pt-BR')} a {new Date(contrato.dataFim).toLocaleDateString('pt-BR')}</span>
-              <span className="flex items-center gap-2"><DollarSign className="h-4 w-4 opacity-40" /> R$ {contrato.valor?.toLocaleString('pt-BR')}</span>
-              <span className="flex items-center gap-2"><Users className="h-4 w-4 opacity-40" /> {contrato.consultorNome}</span>
-            </div>
-          </div>
-          <div className="md:text-right shrink-0">
-             <Badge className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.1em] shadow-sm">
-               {products?.length || 0} Produtos em Execução
-             </Badge>
-          </div>
-        </div>
-        {content}
-      </div>
+      <Card className="shadow-xl border-muted/40 overflow-hidden bg-white/50 backdrop-blur-sm">
+        <CardContent className="p-12 text-center">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary mb-4 opacity-50" />
+          <p className="text-muted-foreground font-medium animate-pulse">Carregando jornada estratégica...</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <AccordionItem value={contrato.id} className="border rounded-2xl mb-6 bg-white shadow-lg overflow-hidden border-muted/30 group transition-all duration-300 hover:shadow-xl hover:border-primary/20">
-      <AccordionTrigger className="px-6 py-6 hover:no-underline hover:bg-primary/[0.02] transition-colors">
-        <div className="flex flex-col md:flex-row md:items-center gap-6 text-left w-full pr-4">
-          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-all duration-500">
-            <Briefcase className="h-7 w-7 text-primary group-hover:text-white" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center flex-wrap gap-3">
-              <h3 className="font-black text-xl text-foreground tracking-tight group-hover:text-primary transition-colors">{contrato.tipo}</h3>
-              <StatusTag label={labelStatus[contrato.status] || contrato.status} />
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs font-medium text-muted-foreground mt-2">
-              <span className="flex items-center gap-2 uppercase tracking-wider text-[10px] font-bold"><Calendar className="h-3.5 w-3.5 opacity-40" /> {new Date(contrato.dataInicio).toLocaleDateString('pt-BR')}</span>
-              <span className="flex items-center gap-2 uppercase tracking-wider text-[10px] font-bold"><Users className="h-3.5 w-3.5 opacity-40" /> {contrato.consultorNome}</span>
-            </div>
-          </div>
-          <div className="md:text-right shrink-0">
-             <Badge variant="secondary" className="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-muted/30">
-               {products?.length || 0} Produtos
-             </Badge>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-1.5 rounded-full bg-primary" />
+          <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
         </div>
-      </AccordionTrigger>
-      <AccordionContent className="px-6 pb-8">
-        {content}
-      </AccordionContent>
-    </AccordionItem>
+      </div>
+
+      {(products || []).map(product => (
+        <ProductItem 
+          key={product.id} 
+          product={product} 
+          contrato={contrato} 
+          isEditing={isEditing}
+          onSchedule={handleScheduleMeeting}
+        />
+      ))}
+
+      {(!products || products.length === 0) && (
+        <div className="p-16 text-center bg-white/50 rounded-2xl border-2 border-dashed border-muted/50">
+          <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+          <p className="text-muted-foreground font-medium">Nenhum produto vinculado a este contrato.</p>
+        </div>
+      )}
+
+      <ModalReuniao 
+        open={meetingModalOpen} 
+        onClose={() => setMeetingModalOpen(false)} 
+        initialData={initialMeetingData || undefined} 
+      />
+    </div>
   );
-};
+}
+
+import { Card, CardContent } from '@/components/ui/card';
