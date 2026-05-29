@@ -5,123 +5,138 @@ import { PageHeader } from '@/components/PageHeader';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { StatusTag, StatusVariant } from '@/components/StatusTag';
+import { StatusTag } from '@/components/StatusTag';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   BookOpen, FileText, Video, FileSpreadsheet, Presentation, Link2, Download,
-  Search, Compass, AlertTriangle, ChevronRight, Layers, Library, Plug, Loader2,
-  Plus, MessageSquare, ClipboardList, Flag, Lightbulb, HelpCircle, Pencil, Trash2
+  Search, Compass, AlertTriangle, Layers, Loader2,
+  Plus, Pencil, Trash2, LayoutGrid
 } from 'lucide-react';
-import { METODOLOGIA, MATERIAIS_GERAIS, labelTipoMaterial, labelCategoria, type TipoMaterial, type Material } from '@/data/metodologia';
+import { labelTipoMaterial, labelCategoria, type TipoMaterial } from '@/data/metodologia';
 import { toast } from '@/hooks/use-toast';
-import { useMethodology } from '@/hooks/useMethodology';
+import { useMethodologyCRUD } from '@/hooks/useMethodologyCRUD';
 import { ModalMethodologyNote } from '@/components/modals/ModalMethodologyNote';
 import { MethodologyNote } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
-import { Badge } from '@/components/ui/badge';
+import { PhaseForm } from '@/components/methodology/PhaseForm';
+import { MaterialForm } from '@/components/methodology/MaterialForm';
 
-const ICONE_TIPO: Record<TipoMaterial, typeof FileText> = {
+const ICONE_TIPO: Record<string, typeof FileText> = {
   pdf: FileText,
   video: Video,
   planilha: FileSpreadsheet,
   apresentacao: Presentation,
   link: Link2,
   template: Layers,
+  material: FileText,
 };
 
-const FASE_COR: Record<string, string> = {
-  diagnostico: 'border-l-blue-500',
-  planejamento: 'border-l-violet-500',
-  estruturacao: 'border-l-amber-500',
-  monitoramento: 'border-l-emerald-500',
-  encerramento: 'border-l-slate-500',
+const FASE_COR: Record<number, string> = {
+  0: 'border-l-blue-500',
+  1: 'border-l-violet-500',
+  2: 'border-l-amber-500',
+  3: 'border-l-emerald-500',
+  4: 'border-l-slate-500',
 };
 
-function MaterialItem({ m }: { m: Material }) {
-  const Icon = ICONE_TIPO[m.tipo];
+function MaterialItem({ m, isAdmin, onDelete }: { m: any, isAdmin: boolean, onDelete?: (id: string) => void }) {
+  const Icon = ICONE_TIPO[m.type] || FileText;
   return (
-    <button
-      type="button"
-      onClick={() => toast({ title: m.titulo, description: 'Material disponível para download (mock).' })}
-      className="w-full flex items-center gap-3 p-3 rounded-md border bg-background hover:-translate-y-0.5 hover:shadow-md transition-all text-left"
-    >
+    <div className="w-full flex items-center gap-3 p-3 rounded-md border bg-background hover:-translate-y-0.5 hover:shadow-md transition-all text-left group">
       <Icon className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium truncate">{m.titulo}</p>
-          {m.tag && (
-            <StatusTag
-              label={m.tag === 'novo' ? 'Novo' : m.tag === 'atualizado' ? 'Atualizado' : 'Essencial'}
-              variant={m.tag === 'essencial' ? 'info' : m.tag === 'novo' ? 'success' : 'warning'}
-            />
+          <p className="text-sm font-medium truncate">{m.title}</p>
+          {m.is_essential && (
+            <StatusTag label="Essencial" variant="info" />
+          )}
+          {m.is_updated && (
+            <StatusTag label="Atualizado" variant="warning" />
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground truncate">{m.descricao}</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
-          {labelTipoMaterial[m.tipo]}
-          {m.duracao && ` · ${m.duracao}`}
-          {m.paginas && ` · ${m.paginas} páginas`}
-          {' · atualizado em '}{m.atualizadoEm}
-        </p>
+        <p className="text-[11px] text-muted-foreground truncate">{m.description}</p>
       </div>
-      <Download className="h-4 w-4 text-muted-foreground/60 shrink-0" strokeWidth={1.5} />
-    </button>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {isAdmin && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete?.(m.id)}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+          <a href={m.file_url || m.url} target="_blank" rel="noopener noreferrer">
+            <Download className="h-3.5 w-3.5" />
+          </a>
+        </Button>
+      </div>
+    </div>
   );
 }
 
 export default function MetodologiaPage() {
   const { perfil } = useAuth();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
-  const { phases, notes, isLoading: loadingMethodology } = useMethodology();
+  const { phases, transversalMaterials, isLoading: loadingMethodology, deleteMaterial } = useMethodologyCRUD();
   const queryClient = useQueryClient();
 
   const [busca, setBusca] = useState('');
-  const [faseAtiva, setFaseAtiva] = useState<string>(METODOLOGIA[0].id);
+  const [faseAtivaId, setFaseAtivaId] = useState<string | null>(null);
   
-  const [modalOpen, setModalOpen] = useState(false);
+  const [phaseModalOpen, setPhaseModalOpen] = useState(false);
+  const [selectedPhase, setSelectedPhase] = useState<any>(null);
+
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
+
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<MethodologyNote | null>(null);
 
-  // Filtros para notes
-  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
-  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
-
-  const fase = METODOLOGIA.find(f => f.id === faseAtiva)!;
-
-  const buscaNorm = busca.trim().toLowerCase();
-  const filtra = (m: Material) => !buscaNorm || m.titulo.toLowerCase().includes(buscaNorm) || m.descricao.toLowerCase().includes(buscaNorm);
-  const materiaisFiltrados = fase.materiais.filter(filtra);
-
   const isAdmin = perfil === 'admin';
+  const loading = loadingPermissions || loadingMethodology;
 
-  const notesFiltradas = (notes || []).filter(n => {
-    if (filtroTipo !== 'todos' && n.type !== filtroTipo) return false;
-    if (filtroStatus !== 'todos' && n.status !== filtroStatus) return false;
-    return true;
-  });
-
-  const handleDeleteNote = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta observação?')) return;
-    try {
-      const { error } = await supabase.from('methodology_notes').delete().eq('id', id);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['methodology-notes'] });
-      toast({ title: 'Excluído', description: 'Registro metodológico removido.' });
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Erro ao excluir', description: err.message });
-    }
-  };
-
-  const isLoading = loadingPermissions || loadingMethodology;
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
+
+  const activePhase = phases?.find(p => p.id === (faseAtivaId || phases[0]?.id)) || phases?.[0];
+
+  const handleEditPhase = (p: any) => {
+    setSelectedPhase(p);
+    setPhaseModalOpen(true);
+  };
+
+  const handleAddMaterial = () => {
+    setSelectedMaterial(null);
+    setMaterialModalOpen(true);
+  };
+
+  const handleDeleteMaterial = async (id: string) => {
+    if (!confirm('Excluir material?')) return;
+    try {
+      await deleteMaterial(id);
+      toast({ title: 'Sucesso', description: 'Material removido.' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: err.message });
+    }
+  };
+
+  const handleDeletePhase = async (id: string) => {
+    if (!confirm('Excluir fase e todos os seus itens?')) return;
+    try {
+      const { error } = await supabase.from('methodology_phases').delete().eq('id', id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['methodology-phases-crud'] });
+      toast({ title: 'Sucesso', description: 'Fase removida.' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: err.message });
+    }
+  };
+
 
   if (perfil === 'consultor' && !can('metodologia')) {
     return (
