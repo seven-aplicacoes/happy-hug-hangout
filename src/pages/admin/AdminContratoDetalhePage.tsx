@@ -283,7 +283,7 @@ export default function AdminContratoDetalhePage() {
           <h2 className="text-lg font-black uppercase tracking-tight">Produtos e Jornada de Execução</h2>
         </div>
         
-        <ContractJourneyCard contrato={contrato} expanded={true} />
+        <ContractJourneyCard contrato={contrato} expanded={true} isEditing={isEditing} />
       </section>
     </div>
   );
