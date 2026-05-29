@@ -373,6 +373,11 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           const payload: any = {
             contract_id: contractId,
             product_id: p.productId,
+            product_name: p.productName,
+            product_description: p.productDescription,
+            product_category: p.productCategory,
+            consultant_hours: p.consultantHours,
+            silvane_hours: p.silvaneHours,
             start_date: p.startDate,
             end_date: p.endDate,
             value: Number(p.value) || 0,
