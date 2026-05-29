@@ -40,7 +40,7 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
         .from('contract_module_documents')
         .upsert({
           contract_id: contractId,
-          client_id: (await supabase.from('contracts').select('cliente_id').eq('id', contractId).single()).data?.cliente_id,
+          client_id: (await supabase.from('contracts').select('client_id').eq('id', contractId).single()).data?.client_id,
           module_id: moduleId,
           document_id: documentId,
           visibility_type: visibilityType
