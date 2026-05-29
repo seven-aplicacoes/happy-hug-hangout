@@ -351,6 +351,11 @@ export interface ContractProduct {
   contractId: string;
   productId: string;
   productNome?: string;
+  productName?: string;
+  productDescription?: string;
+  productCategory?: string;
+  consultantHours?: number;
+  silvaneHours?: number;
   status: string;
   startDate?: string;
   endDate?: string;
