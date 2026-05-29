@@ -1382,6 +1382,7 @@ export type Database = {
           status: string | null
           title: string
           type: string | null
+          type_label: string | null
           updated_at: string | null
           updated_by: string | null
           uploaded_at: string | null
@@ -1410,6 +1411,7 @@ export type Database = {
           status?: string | null
           title: string
           type?: string | null
+          type_label?: string | null
           updated_at?: string | null
           updated_by?: string | null
           uploaded_at?: string | null
@@ -1438,6 +1440,7 @@ export type Database = {
           status?: string | null
           title?: string
           type?: string | null
+          type_label?: string | null
           updated_at?: string | null
           updated_by?: string | null
           uploaded_at?: string | null

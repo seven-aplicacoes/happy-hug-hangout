@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Documento } from '@/types';
+import { labelTipoDoc } from '@/data/documentos';
 
 export function useDocumentos() {
   const { toast } = useToast();
@@ -94,6 +95,7 @@ export function useDocumentos() {
         module_id: doc.contractProductPhaseId,
         title: doc.titulo,
         type: doc.tipo,
+        type_label: (labelTipoDoc as any)[doc.tipo || ''] || doc.tipo,
         file_name: fileName,
         file_url: fileUrl,
         file_path: filePath,
