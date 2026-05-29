@@ -235,16 +235,17 @@ export default function PortalClientePage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <LayoutDashboard className="h-5 w-5 text-primary" />
-              Sua Jornada
+              Progresso da Consultoria
             </h2>
-            <div className="text-sm font-medium text-neutral-500">
-              Contrato: <span className="text-neutral-900">{activeContract?.tipo || 'Consultoria'}</span>
+            <div className="text-sm font-medium text-neutral-500 bg-white px-3 py-1 rounded-full shadow-sm border border-neutral-100">
+              Produto: <span className="text-neutral-900 font-bold">{activeProduct?.productNome || 'Consultoria'}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
             {/* Phase Stepper */}
-            <div className="lg:col-span-8 space-y-4">
+            <div className="xl:col-span-8 space-y-4">
+
               <Card className="border-none shadow-sm overflow-hidden bg-white">
                 <ScrollArea className="h-[500px] w-full p-6">
                   <div className="relative pl-8 space-y-10">
@@ -303,7 +304,8 @@ export default function PortalClientePage() {
             </div>
 
             {/* Sidebar: Deliverables & Next Steps */}
-            <div className="lg:col-span-4 space-y-6">
+            <div className="xl:col-span-4 space-y-6">
+
               {/* Deliverables */}
               <Card className="border-none shadow-sm bg-white">
                 <CardHeader>
@@ -376,7 +378,9 @@ export default function PortalClientePage() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
+    </main>
+
 
       {/* CSAT Dialog */}
       <Dialog open={isCsatOpen} onOpenChange={setIsCsatOpen}>
