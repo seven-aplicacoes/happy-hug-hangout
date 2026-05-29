@@ -120,7 +120,14 @@ export interface MetricasConsultor {
   clientesAtivos: number;
 }
 
-export function calcularMetricasConsultor(consultorId: string, periodo: Periodo, reunioes: Reuniao[] = [], clientes: Cliente[] = []): MetricasConsultor {
+export function calcularMetricasConsultor(
+  consultorId: string, 
+  periodo: Periodo, 
+  reunioes: Reuniao[] = [], 
+  clientes: Cliente[] = [],
+  csatRespostas: any[] = [],
+  npsRespostas: any[] = []
+): MetricasConsultor {
   const dentro = (data: string) => {
     const d = new Date(data);
     return d >= periodo.from && d <= periodo.to;
@@ -128,22 +135,30 @@ export function calcularMetricasConsultor(consultorId: string, periodo: Periodo,
 
   const reunsCons = reunioes.filter(r => r.consultorId === consultorId);
   const realizadas = reunsCons.filter(r => r.status === 'realizada' && dentro(r.meetingDate));
-  const csats = getCsatRespostas(realizadas);
-  const npsCons = getNpsRespostas(clientes).filter(n => n.consultorId === consultorId && dentro(n.data));
-  const npsConcluidos = npsCons.filter(n => n.status === 'concluida' && n.nota !== undefined);
+  
+  // Usar dados reais se fornecidos, caso contrário mock (para compatibilidade temporária)
+  const csats = csatRespostas.length > 0 
+    ? csatRespostas.filter(c => dentro(c.date))
+    : getCsatRespostas(realizadas);
 
-  const promotores = npsConcluidos.filter(n => n.nota >= 9).length;
-  const detratores = npsConcluidos.filter(n => n.nota <= 6).length;
+  const npsCons = npsRespostas.length > 0
+    ? npsRespostas.filter(n => n.consultant_id === consultorId && dentro(n.date))
+    : getNpsRespostas(clientes).filter(n => n.consultantId === consultorId && dentro(n.data));
+
+  const npsConcluidos = npsCons.filter(n => n.status === 'concluida' && n.score !== undefined);
+
+  const promotores = npsConcluidos.filter(n => (n.score || n.nota) >= 9).length;
+  const detratores = npsConcluidos.filter(n => (n.score || n.nota) <= 6).length;
   const total = npsConcluidos.length;
   const npsAtual = total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0;
 
-  const clientesAtivos = clientes.filter(c => c.consultorId === consultorId && c.status === 'ativo').length;
+  const clientesAtivos = clientes.filter(c => c.consultorId === consultorId && ['ativo', 'em_onboarding', 'em_renovacao'].includes(c.status)).length;
 
   return {
     reunioesRealizadas: realizadas.length,
     csatRespostas: csats.length,
     csatTaxaAdesao: realizadas.length > 0 ? Math.round((csats.length / realizadas.length) * 100) : 0,
-    csatNotaMedia: csats.length > 0 ? Math.round((csats.reduce((a, c) => a + c.nota, 0) / csats.length) * 10) / 10 : 0,
+    csatNotaMedia: csats.length > 0 ? Math.round((csats.reduce((a, c) => a + (c.score || c.nota), 0) / csats.length) * 10) / 10 : 0,
     npsAtual,
     encontrosPorClienteAtivo: clientesAtivos > 0 ? Math.round((realizadas.length / clientesAtivos) * 10) / 10 : 0,
     clientesAtivos,
