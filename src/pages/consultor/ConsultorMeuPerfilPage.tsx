@@ -2,7 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
 import { ConsultorProfileView } from '@/components/ConsultorProfileView';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function ConsultorMeuPerfilPage() {
    const { user } = useAuth();
