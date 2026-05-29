@@ -139,8 +139,6 @@ export default function MetodologiaPage() {
   const [transversalModalOpen, setTransversalModalOpen] = useState(false);
   const [selectedTransversal, setSelectedTransversal] = useState<any>(null);
 
-  const [noteModalOpen, setNoteModalOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<MethodologyNote | null>(null);
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<any>(null);
