@@ -33,6 +33,7 @@ export function useClienteFicha(clientId?: string) {
         nomeFantasia: data.trade_name,
         cnpj: data.cnpj,
         segmento: data.segment,
+        clinicSpecialty: data.clinic_specialty,
         regiao: data.region,
         consultorId: data.consultant_id,
         porte: data.company_size as any,
