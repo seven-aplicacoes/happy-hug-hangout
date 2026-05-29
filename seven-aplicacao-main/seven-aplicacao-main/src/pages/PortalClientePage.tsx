@@ -113,7 +113,12 @@ export default function PortalClientePage() {
                 onKeyDown={(e) => e.key === 'Enter' && fazerLogin()} placeholder="••••••••" />
             </div>
             {erro && <p className="text-xs text-seven-danger">{erro}</p>}
-            <Button className="w-full" onClick={fazerLogin}>Entrar</Button>
+            <Button 
+              className="w-full h-11 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2" 
+              onClick={fazerLogin}
+            >
+              Entrar
+            </Button>
           </CardContent>
         </Card>
       </div>
