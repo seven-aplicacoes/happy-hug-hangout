@@ -26,6 +26,7 @@ interface AuthContextType {
   logout: () => void;
   selecionarPerfil: (p: PerfilUsuario) => void;
   setUser: (user: AuthUser | null) => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -39,6 +40,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [perfil, setPerfil] = useState<PerfilUsuario | null>(null);
   const [clienteSession, setClienteSession] = useState<ClienteSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              nome: profile.full_name,
+              role: profile.role,
+              consultorId: profile.id,
+            });
+            setPerfil(profile.role === 'admin' ? 'admin' : (profile.role === 'consultor' ? 'consultor' : null));
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setPerfil(null);
+        setClienteSession(null);
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        // Handled by login function for specific redirects, but good to have here too
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const login = async (email: string, _senha: string): Promise<boolean> => {
     return true;
@@ -125,7 +172,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const selecionarPerfil = (p: PerfilUsuario) => setPerfil(p);
 
   return (
-    <AuthContext.Provider value={{ user, perfil, clienteSession, login, loginCliente, logoutCliente, logout, selecionarPerfil, setUser }}>
+    <AuthContext.Provider value={{ user, perfil, clienteSession, login, loginCliente, logoutCliente, logout, selecionarPerfil, setUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

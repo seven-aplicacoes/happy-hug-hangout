@@ -43,7 +43,7 @@ import type { Documento } from '@/types';
 
 export default function DocumentosPage() {
   const navigate = useNavigate();
-  const { perfil } = useAuth();
+  const { perfil, isLoading: authLoading } = useAuth();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<Documento | null>(null);
@@ -57,7 +57,7 @@ export default function DocumentosPage() {
   const { documentos, isLoading: isLoadingDocs, upsertDocumento, deleteDocumento, downloadFile } = useDocumentos();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
 
-  const isLoading = loadingClientes || isLoadingDocs || loadingPermissions;
+  const isLoading = authLoading || loadingClientes || isLoadingDocs || loadingPermissions;
 
   const filterConfigs: FilterConfig[] = [
     { key: 'tipo', label: 'Tipo', options: Object.entries(labelTipoDoc).map(([v, l]) => ({ value: v, label: l })) },
