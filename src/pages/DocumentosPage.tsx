@@ -54,7 +54,7 @@ export default function DocumentosPage() {
   const [feedbackTexto, setFeedbackTexto] = useState('');
   
   const { clientes, isLoading: loadingClientes } = useClientes();
-  const { documentos, isLoading: isLoadingDocs, error: docsError, upsertDocumento, deleteDocumento, downloadFile } = useDocumentos();
+  const { documentos, isLoading: isLoadingDocs, error: docsError, refetch, upsertDocumento, deleteDocumento, downloadFile } = useDocumentos();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
 
   const isLoading = authLoading || loadingClientes || isLoadingDocs || loadingPermissions;
@@ -99,6 +99,7 @@ export default function DocumentosPage() {
     await upsertDocumento.mutateAsync({
       doc: {
         id: selected.id,
+        author_id: selected.author_id,
         status: novoStatus,
         feedbacks: [...(selected.feedbacks || []), novoFeedback],
       }
@@ -197,7 +198,7 @@ export default function DocumentosPage() {
           <p className="text-muted-foreground">Ocorreu um problema ao buscar os dados do servidor.</p>
           <p className="text-xs text-muted-foreground mt-2">{(docsError as any)?.message || 'Erro desconhecido'}</p>
         </div>
-        <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
+        <Button onClick={() => refetch()}>Tentar Novamente</Button>
       </div>
     );
   }
