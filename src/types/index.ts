@@ -377,4 +377,5 @@ export interface ContractProductPhase {
   internalNotes?: string;
   clientNotes?: string;
   clientVisible: boolean;
+  meetingsScheduled?: number;
 }

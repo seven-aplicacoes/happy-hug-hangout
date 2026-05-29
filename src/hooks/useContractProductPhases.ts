@@ -15,7 +15,8 @@ export function useContractProductPhases(contractProductId?: string) {
         .from('contract_product_phases')
         .select(`
           *,
-          responsible_consultant:profiles!contract_product_phases_responsible_consultant_id_fkey (full_name)
+          responsible_consultant:profiles!contract_product_phases_responsible_consultant_id_fkey (full_name),
+          meetings:meetings(count)
         `)
         .eq('contract_product_id', contractProductId)
         .order('order_index');
@@ -39,7 +40,8 @@ export function useContractProductPhases(contractProductId?: string) {
         internalNotes: p.internal_notes,
         clientNotes: p.client_notes,
         clientVisible: p.client_visible,
-      })) as (ContractProductPhase & { responsibleConsultantNome?: string })[];
+        meetingsScheduled: p.meetings?.[0]?.count || 0,
+      })) as (ContractProductPhase & { responsibleConsultantNome?: string; meetingsScheduled?: number })[];
     },
     enabled: !!contractProductId,
   });
