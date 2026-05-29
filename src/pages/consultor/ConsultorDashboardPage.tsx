@@ -287,27 +287,30 @@ export default function ConsultorDashboardPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Sparkles className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">NPS</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
-              <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.nps)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Repeat className="h-4 w-4" strokeWidth={1.5} />
-                <span className="ui-overline">Encontros / cliente</span>
-              </div>
-              <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
-              <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('meetings_per_client', BENCHMARKS.meetings_per_client)} />
-
-            </CardContent>
-          </Card>
+          {targetMap['nps'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Sparkles className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">NPS</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.npsAtual}</p>
+                <BenchmarkBadge valor={metricas.npsAtual} bench={getBench('nps', BENCHMARKS.nps)} />
+              </CardContent>
+            </Card>
+          )}
+          {targetMap['meetings_per_client'] && (
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Repeat className="h-4 w-4" strokeWidth={1.5} />
+                  <span className="ui-overline">Encontros / cliente</span>
+                </div>
+                <p className="text-3xl font-thin tabular-nums">{metricas.encontrosPorClienteAtivo.toFixed(1)}</p>
+                <BenchmarkBadge valor={metricas.encontrosPorClienteAtivo} bench={getBench('meetings_per_client', BENCHMARKS.meetings_per_client)} />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
       )}
