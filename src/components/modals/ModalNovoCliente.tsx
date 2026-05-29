@@ -205,8 +205,8 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
         <p className="text-xs font-semibold text-muted-foreground  pt-2">Dados Operacionais</p>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <Label>Segmento</Label>
-            <Input value={form.segmento} onChange={e => set('segmento', e.target.value)} placeholder="Ex: Tecnologia" />
+            <Label>Especialidade da clínica</Label>
+            <Input value={form.clinicSpecialty} onChange={e => set('clinicSpecialty', e.target.value)} placeholder="Ex: Dermatologia, Odontologia, Oftalmologia" />
           </div>
           <div className="space-y-0.5">
             <Label>Responsável *</Label>
@@ -218,35 +218,6 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
             </Select>
           </div>
         </div>
-
-        <div className="flex items-center gap-2 pt-2">
-          <input type="checkbox" id="temContrato" checked={form.temContrato} onChange={e => set('temContrato', e.target.checked)} className="rounded" />
-          <Label htmlFor="temContrato" className="cursor-pointer">Incluir contrato inicial</Label>
-        </div>
-        {form.temContrato && (
-          <div className="space-y-3 p-3 rounded-md border bg-muted/30">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-0.5">
-                <Label>Tipo *</Label>
-                <Input value={form.tipoContrato} onChange={e => set('tipoContrato', e.target.value)} placeholder="Ex: Consultoria Estratégica" />
-              </div>
-              <div className="space-y-0.5">
-                <Label>Valor *</Label>
-                <Input value={form.valorContrato} onChange={e => set('valorContrato', e.target.value)} placeholder="R$ 0,00" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-0.5">
-                <Label>Data Início *</Label>
-                <Input type="date" value={form.dataInicio} onChange={e => set('dataInicio', e.target.value)} />
-              </div>
-              <div className="space-y-0.5">
-                <Label>Data Fim *</Label>
-                <Input type="date" value={form.dataFim} onChange={e => set('dataFim', e.target.value)} />
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="pt-4 border-t space-y-4">
           <div className="flex items-center justify-between">
