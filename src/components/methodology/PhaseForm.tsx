@@ -30,6 +30,7 @@ export function PhaseForm({ open, onOpenChange, phase }: PhaseFormProps) {
     purpose: phase?.purpose || '',
     average_duration: phase?.average_duration || '',
     order_index: phase?.order_index || 0,
+    phase_key: phase?.phase_key || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
