@@ -45,7 +45,7 @@ export function useContractProductPhases(contractProductId?: string) {
           startDate: p.start_date,
           endDate: p.end_date,
           status: p.status,
-          responsible_consultant_id: p.responsible_consultant_id,
+          responsibleConsultantId: p.responsible_consultant_id,
           responsibleConsultantNome: p.responsible_consultant?.full_name,
           internalNotes: p.internal_notes,
           clientNotes: p.client_notes,
