@@ -6,6 +6,9 @@ import type {
   MethodologyNote,
   MethodologyQuestion
 } from '@/types';
+import { Database } from '@/integrations/supabase/types';
+
+type PhaseUpdate = Database['public']['Tables']['methodology_phases']['Update'];
 
 export interface TransversalMaterial {
   id: string;
