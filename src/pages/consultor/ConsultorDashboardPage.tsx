@@ -142,6 +142,15 @@ export default function ConsultorDashboardPage() {
     };
   }, [clientes, contratos, reunioes, tarefas, periodo, consultorId, hojeStr]);
 
+  const targetMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    if (targets) {
+      targets.forEach(t => {
+        map[t.kpi_key] = { esperado: t.target_value, tolerancia: 0, unidade: t.target_unit || '', descricao: t.description || '' };
+      });
+    }
+    return map;
+  }, [targets]);
 
   if (isLoading) {
     return (
@@ -172,15 +181,6 @@ export default function ConsultorDashboardPage() {
     metricas
   } = stats;
 
-  const targetMap = useMemo(() => {
-    const map: Record<string, any> = {};
-    if (targets) {
-      targets.forEach(t => {
-        map[t.kpi_key] = { esperado: t.target_value, tolerancia: 0, unidade: t.target_unit || '', descricao: t.description || '' };
-      });
-    }
-    return map;
-  }, [targets]);
 
   const getBench = (key: string, defaultBench: any) => {
     return targetMap[key] || defaultBench;
