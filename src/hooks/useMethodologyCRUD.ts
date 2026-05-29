@@ -59,11 +59,12 @@ export function useMethodologyCRUD() {
   });
 
   const updatePhaseMutation = useMutation({
-    mutationFn: async (phase: Partial<MethodologyPhase> & { id: string }) => {
+    mutationFn: async (phase: PhaseUpdate & { id: string }) => {
+      const { id, ...updateData } = phase;
       const { error } = await supabase
         .from('methodology_phases')
-        .update(phase)
-        .eq('id', phase.id);
+        .update(updateData)
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
