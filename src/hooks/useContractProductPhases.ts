@@ -29,25 +29,30 @@ export function useContractProductPhases(contractProductId?: string) {
 
       if (error) throw error;
 
-      return (data || []).map((p: any) => ({
-        id: p.id,
-        contractProductId: p.contract_product_id,
-        methodologyPhaseId: p.methodology_phase_id,
-        orderIndex: p.order_index,
-        name: p.name,
-        durationMinutes: p.duration_minutes,
-        executorType: p.executor_type,
-        meetingsCount: p.meetings_count,
-        startDate: p.start_date,
-        endDate: p.end_date,
-        status: p.status,
-        responsibleConsultantId: p.responsible_consultant_id,
-        responsibleConsultantNome: p.responsible_consultant?.full_name,
-        internalNotes: p.internal_notes,
-        clientNotes: p.client_notes,
-        clientVisible: p.client_visible,
-        meetingsScheduled: p.meetings?.[0]?.count || 0,
-      })) as (ContractProductPhase & { responsibleConsultantNome?: string; meetingsScheduled?: number })[];
+      return (data || []).map((p: any) => {
+        const meetingsScheduled = p.meetings?.[0]?.count || 0;
+        const methodology = p.methodology_phase || {};
+
+        return {
+          id: p.id,
+          contractProductId: p.contract_product_id,
+          methodologyPhaseId: p.methodology_phase_id,
+          orderIndex: p.order_index,
+          name: p.name || methodology.name,
+          durationMinutes: p.duration_minutes !== null && p.duration_minutes !== undefined ? p.duration_minutes : (methodology.duration_minutes || 0),
+          executorType: p.executor_type || methodology.executor_type,
+          meetingsCount: p.meetings_count !== null && p.meetings_count !== undefined && p.meetings_count !== 0 ? p.meetings_count : (methodology.meetings_count || 0),
+          startDate: p.start_date,
+          endDate: p.end_date,
+          status: p.status,
+          responsible_consultant_id: p.responsible_consultant_id,
+          responsibleConsultantNome: p.responsible_consultant?.full_name,
+          internalNotes: p.internal_notes,
+          clientNotes: p.client_notes,
+          clientVisible: p.client_visible,
+          meetingsScheduled,
+        };
+      }) as (ContractProductPhase & { responsibleConsultantNome?: string; meetingsScheduled?: number })[];
     },
     enabled: !!contractProductId,
   });
