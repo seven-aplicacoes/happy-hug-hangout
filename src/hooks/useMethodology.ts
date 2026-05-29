@@ -56,7 +56,14 @@ export function useMethodology() {
       return (data || []).map((p: any) => ({
         id: p.id,
         productId: p.product_id,
+        methodologyPlanId: p.methodology_plan_id,
         name: p.name,
+        subtitle: p.subtitle,
+        description: p.description,
+        objective: p.objective,
+        strategicName: p.strategic_name,
+        resultSummary: p.result_summary,
+        status: p.status,
         orderIndex: p.order_index,
         durationMinutes: p.duration_minutes,
         executorType: p.executor_type,
@@ -64,6 +71,7 @@ export function useMethodology() {
         purpose: p.purpose,
         phase_key: p.phase_key
       }));
+
     }
   });
  
