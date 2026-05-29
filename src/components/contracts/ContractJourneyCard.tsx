@@ -139,7 +139,7 @@ function PhaseRow({ phase, isEditing, onUpdate, onDelete }: { phase: any, isEdit
 
 function ProductItem({ product, isEditing: isParentEditing }: { product: any, isEditing?: boolean }) {
   const { toast } = useToast();
-  const { phases: remotePhases, isLoading, upsertPhases, deletePhase } = useContractProductPhases(product.id);
+  const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -187,8 +187,6 @@ function ProductItem({ product, isEditing: isParentEditing }: { product: any, is
     setLocalPhases(localPhases.filter((_, i) => i !== index));
   };
 
-  const { phases, isLoading } = useContractProductPhases(product.id);
-  
   // Calculate total duration from phases if available, otherwise fallback to product snapshot hours
   const totalMinutes = localPhases && localPhases.length > 0
     ? localPhases.reduce((acc, ph) => acc + (ph.durationMinutes || 0), 0)
@@ -239,7 +237,7 @@ function ProductItem({ product, isEditing: isParentEditing }: { product: any, is
       </div>
       
       <div className="p-0">
-      {isLoadingProducts ? (
+        {isLoadingPhases ? (
           <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" /> <span className="text-sm text-muted-foreground">Carregando jornada...</span></div>
         ) : localPhases && localPhases.length > 0 ? (
           <div className="bg-white">
@@ -303,7 +301,7 @@ export const ContractJourneyCard = ({ contrato, expanded = false, isEditing = fa
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.1em]">Detalhamento de Produtos e Módulos</h4>
       </div>
       
-      {isLoading ? (
+      {isLoadingProducts ? (
         <div className="py-12 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-primary/60" />
           <p className="text-sm text-muted-foreground">Carregando estrutura do contrato...</p>
