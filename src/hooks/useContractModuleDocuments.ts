@@ -87,7 +87,7 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
           module_id: moduleId,
           title,
           description,
-          type: visibilityType === 'client' ? 'entregavel' : 'material',
+          type: visibilityType === 'client' ? 'entregavel_metodologico' : 'materiais_apoio',
           visibility: (visibilityType === 'client' ? 'client' : 'internal') as any,
           visibility_type: visibilityType,
           file_name: file.name,

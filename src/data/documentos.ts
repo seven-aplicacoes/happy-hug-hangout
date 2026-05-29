@@ -2,7 +2,7 @@
 import { clientes, reunioes } from './mockData';
 
 export type StatusDocumento = 'aprovado' | 'pendente' | 'nao_conforme';
-export type TipoDocumento = 'ata' | 'entregavel' | 'relatorio' | 'contrato';
+export type TipoDocumento = 'ata' | 'entregavel' | 'relatorio' | 'contrato' | 'materiais_apoio' | 'entregavel_metodologico';
 
 export interface FeedbackGestor {
   id: string;
@@ -43,6 +43,8 @@ export const labelTipoDoc: Record<TipoDocumento, string> = {
   entregavel: 'Entregável metodológico',
   relatorio: 'Relatório',
   contrato: 'Documento contratual',
+  materiais_apoio: 'Materiais de Apoio',
+  entregavel_metodologico: 'Entregável Cliente',
 };
 
 const seeded = (s: number) => { let x = s; return () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; };
