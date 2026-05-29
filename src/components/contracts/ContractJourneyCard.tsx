@@ -4,6 +4,7 @@ import {
   Download, Eye, ExternalLink, ShieldAlert, FileUp
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { StatusTag } from '@/components/StatusTag';
 import { formatDuration, hhmmToMinutes, minutesToHHMM } from '@/lib/duration';
@@ -551,4 +552,3 @@ export function ContractJourneyCard({
   );
 }
 
-import { Card, CardContent } from '@/components/ui/card';
