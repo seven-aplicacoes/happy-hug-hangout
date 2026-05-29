@@ -133,8 +133,6 @@ export interface MethodologyNote {
 }
 
 export interface MethodologyQuestion {
-
-export interface MethodologyQuestion {
   id: string;
   phase_id?: string;
   question: string;
