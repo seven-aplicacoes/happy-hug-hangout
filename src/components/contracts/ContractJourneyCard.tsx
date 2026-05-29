@@ -540,7 +540,7 @@ export function ContractJourneyCard({
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                   <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" />
-                    {new Date(contrato.dataInicio).toLocaleDateString('pt-BR')} a {new Date(contrato.dataFim).toLocaleDateString('pt-BR')}
+                    {contrato.dataInicio ? new Date(contrato.dataInicio).toLocaleDateString('pt-BR') : '-'} a {contrato.dataFim ? new Date(contrato.dataFim).toLocaleDateString('pt-BR') : '-'}
                   </span>
                   <span className="text-xs font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5">
                     <DollarSign className="h-3.5 w-3.5" />
