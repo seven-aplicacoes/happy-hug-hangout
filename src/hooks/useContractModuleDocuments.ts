@@ -13,9 +13,9 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
       if (!moduleId) return [];
       
       const { data, error } = await supabase
-        .from('contract_module_documents')
+        .from('documents')
         .select('*')
-        .eq('module_id', moduleId);
+        .eq('contract_product_phase_id', moduleId);
 
       if (error) throw error;
 
@@ -23,16 +23,16 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
         id: d.id,
         clientId: d.client_id,
         contractId: d.contract_id,
-        productId: d.product_id,
-        moduleId: d.module_id,
+        productId: d.contract_product_id,
+        moduleId: d.contract_product_phase_id,
         title: d.title,
         description: d.description,
-        visibilityType: d.visibility_type,
+        visibilityType: (d.visibility_type || d.visibility || 'internal') as 'internal' | 'client',
         fileName: d.file_name,
         filePath: d.file_path,
         fileUrl: d.file_url,
         fileType: d.file_type,
-        fileSize: d.file_size,
+        fileSize: Number(d.file_size) || 0,
         uploadedBy: d.uploaded_by,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
@@ -78,21 +78,26 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
         .getPublicUrl(filePath);
 
       const { data, error } = await supabase
-        .from('contract_module_documents')
+        .from('documents')
         .insert({
           client_id: clientId,
           contract_id: contractId,
-          product_id: productId,
+          contract_product_id: productId,
+          contract_product_phase_id: moduleId,
           module_id: moduleId,
           title,
           description,
+          type: visibilityType === 'client' ? 'entregavel' : 'material',
+          visibility: visibilityType === 'client' ? 'client' : 'internal',
           visibility_type: visibilityType,
           file_name: file.name,
           file_path: filePath,
           file_url: publicUrl,
           file_type: file.type,
           file_size: file.size,
-          uploaded_by: user.id
+          uploaded_by: user.id,
+          author_id: user.id,
+          status: 'pendente'
         })
         .select();
 
@@ -101,6 +106,7 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-documents', moduleId, contractId] });
+      queryClient.invalidateQueries({ queryKey: ['documentos'] });
       toast({ title: 'Sucesso', description: 'Documento enviado com sucesso.' });
     },
   });
@@ -115,7 +121,7 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
       if (storageError) console.error('Error removing from storage:', storageError);
 
       const { error } = await supabase
-        .from('contract_module_documents')
+        .from('documents')
         .delete()
         .eq('id', doc.id);
 
@@ -123,6 +129,7 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-documents', moduleId, contractId] });
+      queryClient.invalidateQueries({ queryKey: ['documentos'] });
       toast({ title: 'Sucesso', description: 'Documento removido.' });
     },
   });
@@ -148,9 +155,11 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
         title: 'Erro ao baixar arquivo',
         description: error.message,
         variant: 'destructive',
+        duration: 3000
       });
     }
   };
 
   return { documents, isLoading, error, uploadDocument, deleteDocument, downloadDocument };
 }
+

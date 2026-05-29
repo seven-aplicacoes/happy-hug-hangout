@@ -1377,6 +1377,7 @@ export type Database = {
           file_url: string | null
           id: string
           methodology_phase_id: string | null
+          module_id: string | null
           product_id: string | null
           status: string | null
           title: string
@@ -1386,6 +1387,7 @@ export type Database = {
           uploaded_at: string | null
           uploaded_by: string | null
           visibility: string | null
+          visibility_type: string | null
         }
         Insert: {
           author_id?: string | null
@@ -1403,6 +1405,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           methodology_phase_id?: string | null
+          module_id?: string | null
           product_id?: string | null
           status?: string | null
           title: string
@@ -1412,6 +1415,7 @@ export type Database = {
           uploaded_at?: string | null
           uploaded_by?: string | null
           visibility?: string | null
+          visibility_type?: string | null
         }
         Update: {
           author_id?: string | null
@@ -1429,6 +1433,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           methodology_phase_id?: string | null
+          module_id?: string | null
           product_id?: string | null
           status?: string | null
           title?: string
@@ -1438,6 +1443,7 @@ export type Database = {
           uploaded_at?: string | null
           uploaded_by?: string | null
           visibility?: string | null
+          visibility_type?: string | null
         }
         Relationships: [
           {
@@ -1480,6 +1486,13 @@ export type Database = {
             columns: ["methodology_phase_id"]
             isOneToOne: false
             referencedRelation: "methodology_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
             referencedColumns: ["id"]
           },
           {
