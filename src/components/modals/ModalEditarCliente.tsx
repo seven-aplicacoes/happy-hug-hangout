@@ -27,7 +27,7 @@ export const ModalEditarCliente = ({ open, onClose, cliente }: Props) => {
     razaoSocial: '',
     nomeFantasia: '',
     cnpj: '',
-    segmento: '',
+    clinicSpecialty: '',
     regiao: '' as Regiao,
     porte: '' as PorteEmpresa,
     consultorId: '',
