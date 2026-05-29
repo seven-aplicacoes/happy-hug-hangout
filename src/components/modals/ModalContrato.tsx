@@ -100,6 +100,11 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           return {
             id: p.id,
             productId: p.productId,
+            productName: p.productName || p.productNome,
+            productDescription: p.productDescription,
+            productCategory: p.productCategory,
+            consultantHours: p.consultantHours,
+            silvaneHours: p.silvaneHours,
             startDate: p.startDate,
             endDate: p.endDate,
             value: p.value || 0,
