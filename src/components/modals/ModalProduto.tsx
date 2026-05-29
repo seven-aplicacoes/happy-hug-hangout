@@ -181,12 +181,21 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       if (productId) {
         // Prepare phases for saving
         const phasesToSave = phases.map(p => {
+          const executorTypeMapping: Record<string, string> = {
+            'consultor': 'consultor',
+            'silvane': 'silvane',
+            'Consultor': 'consultor',
+            'Silvane': 'silvane',
+            'cliente': 'consultor', // Fallback for invalid values until UI is fixed
+            'admin': 'consultor'    // Fallback for invalid values until UI is fixed
+          };
+
           const phase: any = {
             product_id: productId,
             name: p.name.trim(),
             order_index: Math.floor(p.orderIndex),
             duration_minutes: hhmmToMinutes(p.durationMinutes),
-            executor_type: p.executorType,
+            executor_type: executorTypeMapping[p.executorType] || 'consultor',
             meetings_count: Math.max(1, Math.floor(p.meetingsCount || 1)),
             purpose: (p.purpose || '').trim(),
             phase_key: p.name.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, "")
