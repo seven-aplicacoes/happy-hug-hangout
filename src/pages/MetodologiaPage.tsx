@@ -480,12 +480,6 @@ export default function MetodologiaPage() {
         material={selectedTransversal}
       />
       
-      <ModalMethodologyNote
-        open={noteModalOpen}
-        onClose={() => setNoteModalOpen(false)}
-        note={selectedNote}
-        phases={phases}
-      />
 
       <FilePreviewModal
         open={previewOpen}
