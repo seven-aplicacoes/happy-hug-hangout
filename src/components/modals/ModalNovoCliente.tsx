@@ -21,7 +21,6 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
   const { upsertCliente } = useClientes();
   const { consultores: allConsultores, isLoading: loadingConsultores } = useConsultores();
   const consultores = allConsultores?.filter(c => c.role === 'consultor');
-  const { upsertContrato } = useContratos();
 
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({
