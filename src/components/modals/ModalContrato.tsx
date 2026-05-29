@@ -370,14 +370,23 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
       if (contractProducts.length > 0) {
         const productsPayload = contractProducts.map(p => {
+          // Calculate totals from phases for snapshotting correctly
+          const consultantHours = (p.phases || []).filter((ph: any) => 
+            ph.executorType?.toLowerCase() === 'consultor'
+          ).reduce((acc: number, ph: any) => acc + (Number(ph.durationMinutes) || 0), 0);
+          
+          const silvaneHours = (p.phases || []).filter((ph: any) => 
+            ph.executorType?.toLowerCase() === 'silvane'
+          ).reduce((acc: number, ph: any) => acc + (Number(ph.durationMinutes) || 0), 0);
+
           const payload: any = {
             contract_id: contractId,
             product_id: p.productId,
             product_name: p.productName,
             product_description: p.productDescription,
             product_category: p.productCategory,
-            consultant_hours: p.consultantHours,
-            silvane_hours: p.silvaneHours,
+            consultant_hours: consultantHours,
+            silvane_hours: silvaneHours,
             start_date: p.startDate,
             end_date: p.endDate,
             value: Number(p.value) || 0,
