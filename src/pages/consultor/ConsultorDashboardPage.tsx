@@ -61,7 +61,7 @@ export default function ConsultorDashboardPage() {
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
   const [periodo, setPeriodo] = useState(() => getPeriodo('30d'));
-  const { targets, isLoading: loadingTargets } = useKPITargets();
+  const { mergedGoals: targets, isLoading: loadingTargets } = useConsultantGoals(consultorId);
   const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
     isOpen: false, title: '', type: null 
   });
