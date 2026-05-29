@@ -36,6 +36,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
   const [silvaneHours, setSilvaneHours] = useState<string>('');
   
   const [phases, setPhases] = useState<any[]>([]);
+  const [phasesToDelete, setPhasesToDelete] = useState<string[]>([]);
 
   useEffect(() => {
     if (produto) {
@@ -64,6 +65,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       setConsultantHours('');
       setSilvaneHours('');
       setPhases([]);
+      setPhasesToDelete([]);
     }
   }, [produto, allPlanPhases]);
 
@@ -79,6 +81,10 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
   };
 
   const removePhase = (index: number) => {
+    const phaseToRemove = phases[index];
+    if (phaseToRemove.id) {
+      setPhasesToDelete([...phasesToDelete, phaseToRemove.id]);
+    }
     setPhases(phases.filter((_, i) => i !== index));
   };
 
@@ -169,7 +175,7 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
       }
 
       if (productId) {
-        // Separation of concerns: existing vs new phases
+        // Prepare phases for saving
         const phasesToSave = phases.map(p => {
           const phase: any = {
             product_id: productId,
@@ -182,21 +188,13 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
             phase_key: p.name.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, "")
           };
           
-          // CRITICAL: Only include id if it's a valid existing UUID string
-          const isValidUuid = (id: any) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-          
-          if (isValidUuid(p.id)) {
+          if (p.id) {
             phase.id = p.id;
-          } else {
-            // New phase: generate id explicitly or let DB handle it. 
-            // We use crypto.randomUUID() to be safe and have the ID ready.
-            phase.id = crypto.randomUUID();
           }
           return phase;
         });
 
         if (phasesToSave.length > 0) {
-          // Using upsert with explicit IDs we just verified/generated
           const { error } = await supabase
             .from('methodology_plan_phases')
             .upsert(phasesToSave);
@@ -204,18 +202,12 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
           if (error) throw error;
         }
 
-        // Handle deletions
-        const currentPhaseIds = phasesToSave.map(p => p.id);
-        const originalPhases = allPlanPhases?.filter((p: any) => p.product_id === productId) || [];
-        const idsToDelete = originalPhases
-          .filter((p: any) => !currentPhaseIds.includes(p.id))
-          .map((p: any) => p.id);
-
-        if (idsToDelete.length > 0) {
+        // Handle explicit deletions
+        if (phasesToDelete.length > 0) {
           const { error: delError } = await supabase
             .from('methodology_plan_phases')
             .delete()
-            .in('id', idsToDelete);
+            .in('id', phasesToDelete);
           if (delError) throw delError;
         }
 
@@ -306,11 +298,13 @@ export const ModalProduto = ({ open, onClose, produto }: Props) => {
                         onValueChange={v => updatePhase(index, 'executorType', v)}
                       >
                         <SelectTrigger className="h-8 text-xs">
-                          <SelectValue />
+                          <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="consultor">Consultor</SelectItem>
                           <SelectItem value="silvane">Silvane</SelectItem>
+                          <SelectItem value="cliente">Cliente</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
