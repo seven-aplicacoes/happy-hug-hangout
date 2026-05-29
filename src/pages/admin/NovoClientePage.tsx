@@ -108,7 +108,7 @@ export default function NovoClientePage() {
         }
 
         toast({ title: "Sucesso", description: "Cliente cadastrado com sucesso!" });
-        navigate(`/admin/cliente/${clientId}`);
+        navigate(`${basePath}/cliente/${clientId}`);
       }
     } catch (error: any) {
       console.error(error);
