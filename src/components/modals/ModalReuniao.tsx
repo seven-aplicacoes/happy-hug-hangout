@@ -317,6 +317,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               setContractProductPhaseId(v);
               setContractModuleMeetingId('');
             }}>
+
               <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o módulo..." /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
