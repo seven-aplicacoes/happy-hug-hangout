@@ -685,9 +685,22 @@ export function ContractJourneyCard({
 
         <AccordionContent>
           <div className="px-6 pb-8 pt-2 space-y-6">
-            <div className="flex items-center gap-2 border-b border-muted/60 pb-4">
-              <div className="h-6 w-1 rounded-full bg-primary" />
-              <h4 className="text-sm font-black uppercase tracking-tight text-muted-foreground">Detalhamento de Produtos e Módulos</h4>
+            <div className="flex items-center justify-between border-b border-muted/60 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-1 rounded-full bg-primary" />
+                <h4 className="text-sm font-black uppercase tracking-tight text-muted-foreground">Detalhamento de Produtos e Módulos</h4>
+              </div>
+              
+              {mode === 'admin' && onAddProduct && (
+                <Button 
+                  onClick={onAddProduct} 
+                  size="sm" 
+                  className="gap-2 shadow-sm font-bold bg-primary hover:bg-primary/90"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar Produto
+                </Button>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -701,6 +714,11 @@ export function ContractJourneyCard({
                   mode={mode}
                   onUpdateProduct={async (data) => {
                     await upsertContractProducts.mutateAsync([data]);
+                  }}
+                  onDeleteProduct={async () => {
+                    if (confirm(`Tem certeza que deseja remover o produto "${product.productNome}" deste contrato?\n\nIsso removerá também os módulos e encontros vinculados.`)) {
+                      await deleteContractProduct.mutateAsync(product.id);
+                    }
                   }}
                 />
               ))}
