@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
           pontuacao
         };
       })
-      .filter((c): c is ClientePriorizado => c !== null)
+      .filter((c: any): c is ClientePriorizado => c !== null)
       .sort((a, b) => b.pontuacao - a.pontuacao);
 
     const ativos = clients.filter(c => c.status === 'ativo').length;
