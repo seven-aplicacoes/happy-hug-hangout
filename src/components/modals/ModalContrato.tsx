@@ -711,7 +711,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     readOnly 
                                   />
                                 </div>
-                                <div className="md:col-span-3 space-y-1">
+                                <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Responsável *</Label>
                                   <Select value={ph.responsibleConsultantId} onValueChange={v => updatePhase(pIndex, phIndex, 'responsibleConsultantId', v)}>
                                     <SelectTrigger className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] && "border-destructive")}>
