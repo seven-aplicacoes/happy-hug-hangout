@@ -20,6 +20,10 @@ export function useTarefas() {
           *,
           clients (trade_name),
           contracts (type),
+          contract_products (
+            product_name,
+            product:products (name)
+          ),
           profiles:consultant_id (full_name),
           delegated_profile:delegated_by (full_name)
         `);
