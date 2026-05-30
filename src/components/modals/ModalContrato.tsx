@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { useMethodology } from '@/hooks/useMethodology';
 import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Contrato, StatusContrato, NivelRisco } from '@/types';
@@ -28,6 +29,7 @@ interface Props {
 
 export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   const { upsertContrato } = useContratos();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { clientes } = useClientes();
   const { consultores } = useConsultores();
@@ -384,6 +386,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     if (!validate()) return;
 
     setIsLoading(true);
+    // Removemos queryClient global pois usamos useQueryClient hook
     try {
       console.log('1. Iniciando salvamento do contrato:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
       
@@ -436,6 +439,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           const p = contractProducts[i];
           const consultantHours = (p.phases || []).filter((ph: any) => 
             ph.executorType?.toLowerCase() === 'consultor'
+
           ).reduce((acc: number, ph: any) => acc + (Number(ph.durationMinutes) || 0), 0);
           
           const productPayload: any = {
@@ -528,7 +532,14 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         }
       }
 
-      toast({ title: 'Sucesso', description: 'Contrato e produtos salvos com sucesso.' });
+      toast({ title: 'Sucesso', description: 'Produto adicionado ao contrato com sucesso.' });
+      
+      // Invalidar queries para atualizar a interface automaticamente
+      queryClient.invalidateQueries({ queryKey: ['contratos'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-products', contractId] });
+      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
+      
       onClose();
     } catch (error: any) {
       console.error('Erro detalhado ao salvar:', error);
