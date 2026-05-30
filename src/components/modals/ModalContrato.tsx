@@ -263,6 +263,34 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
     setContractProducts(updatedProducts);
   };
+  const addPhaseToProduct = (productIndex: number) => {
+    const updatedProducts = [...contractProducts];
+    const product = updatedProducts[productIndex];
+    
+    const nextOrder = product.phases.length > 0 
+      ? Math.max(...product.phases.map((ph: any) => ph.orderIndex || 0)) + 1 
+      : 1;
+
+    product.phases.push({
+      id: `temp-${Date.now()}`,
+      name: 'Novo Módulo',
+      orderIndex: nextOrder,
+      durationMinutes: 60,
+      executorType: 'consultor',
+      meetingsCount: 1,
+      status: 'pendente',
+      responsibleConsultantId: consultorId
+    });
+
+    const recalculatedPhases = recalculateProductStages(product.startDate || dataInicio, product.phases);
+    product.phases = recalculatedPhases;
+    
+    if (recalculatedPhases.length > 0) {
+      product.endDate = recalculatedPhases[recalculatedPhases.length - 1].endDate;
+    }
+
+    setContractProducts(updatedProducts);
+  };
 
 
   const validate = () => {
