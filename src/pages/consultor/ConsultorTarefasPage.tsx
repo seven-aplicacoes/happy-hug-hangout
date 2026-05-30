@@ -50,7 +50,7 @@ export default function ConsultorTarefasPage() {
     return true;
   });
 
-  const chamadosAbertos = chamados.filter(c => c.status !== 'resolvido').length;
+  const chamadosAbertosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.status !== 'concluida').length;
 
   const handleDragStart = (tarefaId: string) => setDragging(tarefaId);
 
