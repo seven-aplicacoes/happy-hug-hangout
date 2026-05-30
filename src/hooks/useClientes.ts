@@ -62,7 +62,10 @@ export function useClientes() {
         success_factors: c.success_factors || [],
         current_objective: c.current_objective,
         briefing: c.briefing,
+        avatar_url: c.avatar_url,
+        avatar_path: c.avatar_path,
       })) as Cliente[];
+
     },
   });
 
