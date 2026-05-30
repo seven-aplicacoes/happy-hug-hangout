@@ -99,6 +99,39 @@ export type Database = {
           },
         ]
       }
+      calendly_central_auth: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          organization_uri: string | null
+          provider_user_uri: string | null
+          refresh_token: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          organization_uri?: string | null
+          provider_user_uri?: string | null
+          refresh_token: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          organization_uri?: string | null
+          provider_user_uri?: string | null
+          refresh_token?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       client_alerts: {
         Row: {
           client_id: string | null
@@ -820,6 +853,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      consultant_calendly_settings: {
+        Row: {
+          calendly_event_type_uri: string | null
+          calendly_scheduling_url: string
+          consultant_id: string
+          created_at: string | null
+          duration_minutes: number | null
+          event_type_name: string | null
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendly_event_type_uri?: string | null
+          calendly_scheduling_url: string
+          consultant_id: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          event_type_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendly_event_type_uri?: string | null
+          calendly_scheduling_url?: string
+          consultant_id?: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          event_type_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       consultant_indicator_goals: {
         Row: {
