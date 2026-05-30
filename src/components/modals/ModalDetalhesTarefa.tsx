@@ -8,15 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTarefas } from '@/hooks/useTarefas';
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
-import { useProdutos } from '@/hooks/useProdutos';
-import { useMethodology } from '@/hooks/useMethodology';
+import { useContractProducts } from '@/hooks/useContractProducts';
+import { useContractProductPhases } from '@/hooks/useContractProductPhases';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Plus, Calendar, User, Building2, Tag, Flag, Clock, X, Loader2, UserCheck } from 'lucide-react';
+import { Trash2, Plus, Calendar, User, Building2, Tag, Flag, Clock, X, Loader2, UserCheck, FileText, Briefcase, Zap, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { TASK_STATUS_OPTIONS } from '@/constants/taskStatus';
+import { ptBR } from 'date-fns/locale';
+import { TASK_STATUS_OPTIONS, getTaskStatusLabel, getTaskStatusVariant } from '@/constants/taskStatus';
 import { ModalRegistrarImpedimento } from './ModalRegistrarImpedimento';
+import { StatusTag } from '@/components/StatusTag';
+import { Badge } from '@/components/ui/badge';
 import type { Tarefa, StatusTarefa, TipoDemanda, NivelRisco } from '@/types';
 
 interface Props {
@@ -29,8 +32,6 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
   const { upsertTarefa, deleteTarefa } = useTarefas();
   const { clientes } = useClientes();
   const { consultores } = useConsultores();
-  const { produtos } = useProdutos();
-  const { phases } = useMethodology();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,29 +40,36 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [clienteId, setClienteId] = useState('');
+  const [contractId, setContractId] = useState('');
   const [consultorId, setConsultorId] = useState('');
   const [status, setStatus] = useState<StatusTarefa>('a_fazer');
   const [prioridade, setPrioridade] = useState<NivelRisco>('medio');
   const [dataVencimento, setDataVencimento] = useState('');
   const [tipo, setTipo] = useState<TipoDemanda>('consultoria');
-  const [clientProductId, setClientProductId] = useState('');
+  const [contractProductId, setContractProductId] = useState('');
+  const [contractProductPhaseId, setContractProductPhaseId] = useState('');
   
   const [impedimentModalOpen, setImpedimentModalOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<StatusTarefa | null>(null);
   const [motivoImpedimento, setMotivoImpedimento] = useState('');
-  const [newSubtask, setNewSubtask] = useState('');
+
+  // Fetch contract specific options if editing
+  const { products: contractProducts } = useContractProducts(contractId);
+  const { phases: productPhases } = useContractProductPhases(contractProductId);
 
   useEffect(() => {
     if (tarefa) {
       setTitulo(tarefa.titulo);
       setDescricao(tarefa.descricao || '');
       setClienteId(tarefa.clienteId);
+      setContractId(tarefa.contratoId || tarefa.contractId || '');
       setConsultorId(tarefa.consultorId);
       setStatus(tarefa.status);
       setPrioridade(tarefa.prioridade);
       setDataVencimento(tarefa.dataVencimento || '');
       setTipo(tarefa.tipo);
-      setClientProductId(tarefa.clientProductId || '');
+      setContractProductId(tarefa.contractProductId || '');
+      setContractProductPhaseId(tarefa.contractProductPhaseId || '');
       
       setMotivoImpedimento(tarefa.motivoImpedimento || '');
       setIsEditing(false);
@@ -84,7 +92,7 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
 
     const isNewImpediment = !!motive;
     const effectiveStatus = overrideStatus || status;
-    // Se mudou para impedida e ainda não temos motivo novo, abre modal
+    
     if (effectiveStatus === 'impedida' && tarefa?.status !== 'impedida' && !isNewImpediment) {
       setImpedimentModalOpen(true);
       return;
@@ -97,14 +105,15 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
         titulo,
         descricao,
         clienteId,
+        contratoId: contractId,
         consultorId,
         status: effectiveStatus,
         prioridade,
         dataVencimento,
         tipo,
         impedimentHistory: tarefa?.impedimentHistory,
-        clientProductId: clientProductId === 'sem_vinculo' ? undefined : clientProductId || undefined,
-        
+        contractProductId: contractProductId === 'sem_vinculo' ? null : contractProductId || null,
+        contractProductPhaseId: contractProductPhaseId === 'sem_vinculo' ? null : contractProductPhaseId || null,
       };
       if (isNewImpediment) {
         data.novoImpedimento = { reason: motive };
@@ -120,7 +129,6 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
     }
   };
 
-
   const handleDelete = async () => {
     if (!tarefa) return;
     if (window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
@@ -131,251 +139,298 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
 
   if (!tarefa) return null;
 
+  const footer = (
+    <div className="flex items-center justify-between w-full">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="text-destructive hover:bg-destructive/10 font-bold" 
+        onClick={handleDelete}
+      >
+        <Trash2 className="h-4 w-4 mr-2" /> Excluir Tarefa
+      </Button>
+
+      <div className="flex gap-3">
+        {isEditing ? (
+          <>
+            <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isSubmitting}>
+              Cancelar edição
+            </Button>
+            <Button onClick={() => handleSave()} disabled={isSubmitting} className="min-w-[140px] shadow-lg shadow-primary/20">
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Salvar Alterações
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="outline" onClick={onClose}>
+              Fechar
+            </Button>
+            <Button onClick={() => setIsEditing(true)}>
+              Editar Tarefa
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <BaseModal 
       open={open} 
       onClose={onClose} 
-      titulo={isEditing ? "Editar Tarefa" : "Detalhes da Tarefa"} 
-      size="xl"
+      titulo="Detalhes da Tarefa" 
+      size="2xl"
+      footer={footer}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-h-[75vh] overflow-y-auto pr-2 py-1">
-        {/* Coluna Principal: Título, Descrição, Subtarefas */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="space-y-1.5">
-            <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.titulo ? "text-destructive" : "text-muted-foreground")}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-4">
+        {/* Coluna Principal (Esquerda) */}
+        <div className="md:col-span-2 space-y-8">
+          {/* Título */}
+          <div className="space-y-2">
+            <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.titulo && "text-destructive")}>
               Título da Tarefa {isEditing && "*"}
             </Label>
             {isEditing ? (
               <Input 
                 value={titulo} 
                 onChange={e => { setTitulo(e.target.value); setErrors(prev => ({ ...prev, titulo: '' })); }} 
-                className={cn(errors.titulo && "border-destructive")}
+                className={cn("text-lg font-bold h-12", errors.titulo && "border-destructive")}
+                placeholder="Ex: Elaborar relatório de custos"
               />
             ) : (
-              <h2 className="text-xl font-bold text-foreground leading-tight">{tarefa.titulo}</h2>
+              <h2 className="text-2xl font-black text-foreground tracking-tight leading-tight">{tarefa.titulo}</h2>
             )}
-            {errors.titulo && <p className="text-[10px] text-destructive font-medium">{errors.titulo}</p>}
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição</Label>
+          {/* Descrição */}
+          <div className="space-y-2">
+            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <FileText className="h-3.5 w-3.5" /> Descrição
+            </Label>
             {isEditing ? (
               <Textarea 
                 value={descricao} 
                 onChange={e => setDescricao(e.target.value)} 
-                rows={5}
-                className="resize-none"
+                rows={6}
+                className="resize-none text-sm p-4 leading-relaxed"
+                placeholder="Descreva detalhadamente o que deve ser feito..."
               />
             ) : (
-              <div className="bg-muted/30 p-4 rounded-lg border border-dashed text-sm text-muted-foreground whitespace-pre-wrap min-h-[120px]">
+              <div className="bg-muted/20 p-6 rounded-xl border border-dashed text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed min-h-[150px]">
                 {tarefa.descricao || "Nenhuma descrição informada."}
               </div>
             )}
           </div>
 
-          {Array.isArray(tarefa.impedimentHistory) && tarefa.impedimentHistory.length > 0 && (
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Histórico de Impedimentos
+          {/* Grid de Detalhes Adicionais (Somente Leitura na esquerda, inputs na direita para edição se preferir, ou aqui mesmo) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-muted">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Building2 className="h-3 w-3" /> Cliente
               </Label>
-              <div className="space-y-2">
+              <p className="text-sm font-bold">{tarefa.clienteNome}</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Briefcase className="h-3 w-3" /> Contrato
+              </Label>
+              <p className="text-sm font-medium text-muted-foreground">{tarefa.contratoNome || 'Sem contrato'}</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Zap className="h-3 w-3" /> Produto
+              </Label>
+              <p className="text-sm font-medium text-muted-foreground">{tarefa.produtoNome || 'Nenhum produto vinculado'}</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Tag className="h-3 w-3" /> Tipo
+              </Label>
+              <Badge variant="outline" className="font-bold text-[10px] uppercase">{tarefa.tipo}</Badge>
+            </div>
+          </div>
+
+          {/* Histórico de Impedimentos (se houver) */}
+          {Array.isArray(tarefa.impedimentHistory) && tarefa.impedimentHistory.length > 0 && (
+            <div className="space-y-3 pt-4">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-destructive flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5" /> Histórico de Impedimentos
+              </Label>
+              <div className="space-y-3">
                 {tarefa.impedimentHistory.map((h, idx) => (
-                  <div key={idx} className="border border-destructive/20 bg-destructive/5 rounded-lg p-3 text-xs space-y-1">
-                    <div className="flex justify-between text-[11px] text-muted-foreground">
-                      <span><strong className="text-foreground">{h.created_by_name || 'Usuário'}</strong></span>
+                  <div key={idx} className="border border-destructive/20 bg-destructive/5 rounded-xl p-4 text-xs space-y-2">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-destructive/70">
+                      <span>{h.created_by_name || 'Usuário'}</span>
                       <span>{h.created_at ? format(new Date(h.created_at), "dd/MM/yyyy 'às' HH:mm") : ''}</span>
                     </div>
-                    <p className="text-foreground whitespace-pre-wrap">{h.reason}</p>
+                    <p className="text-foreground leading-relaxed">{h.reason}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
         </div>
 
-        {/* Coluna Lateral: Metadados */}
-        <div className="bg-muted/20 p-4 rounded-xl space-y-5 h-fit border border-muted">
-          <div className="space-y-1.5 pb-2 border-b border-muted-foreground/10">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <User className="h-3 w-3" /> Criada por
-            </Label>
-            <div className="text-xs font-semibold">
-              {tarefa.createdByName || 'Não informado'} 
-              {tarefa.createdByRole && <span className="font-normal opacity-70"> ({tarefa.createdByRole})</span>}
+        {/* Sidebar (Direita) */}
+        <div className="space-y-6">
+          <div className="bg-muted/30 p-6 rounded-2xl border border-muted/60 space-y-6">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-primary border-b border-primary/10 pb-2">Informações Operacionais</h4>
+
+            {/* Criado Por */}
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <User className="h-3 w-3" /> Criada por
+              </Label>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold">{tarefa.createdByName || 'Não informado'}</span>
+                {tarefa.createdByRole && <span className="text-[9px] font-black uppercase text-muted-foreground opacity-70">{tarefa.createdByRole}</span>}
+                {tarefa.dataCriacao && (
+                  <span className="text-[10px] text-muted-foreground mt-1">{format(new Date(tarefa.dataCriacao), "dd/MM/yyyy 'às' HH:mm")}</span>
+                )}
+              </div>
             </div>
-            {tarefa.dataCriacao && (
-              <div className="text-[10px] text-muted-foreground">{format(new Date(tarefa.dataCriacao), "dd/MM/yyyy 'às' HH:mm")}</div>
+
+            {/* Delegada Por */}
+            {tarefa.delegatedByName && (
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <UserCheck className="h-3 w-3" /> Delegada por
+                </Label>
+                <span className="text-xs font-bold">{tarefa.delegatedByName}</span>
+              </div>
+            )}
+
+            {/* Responsável */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <UserCheck className="h-3 w-3" /> Responsável pela tarefa
+              </Label>
+              {isEditing ? (
+                <Select value={consultorId} onValueChange={setConsultorId}>
+                  <SelectTrigger className="bg-white h-10 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(consultores || []).map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <span className="text-xs font-bold">{tarefa.consultorNome || 'Não informado'}</span>
+              )}
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Clock className="h-3 w-3" /> Status
+              </Label>
+              {isEditing ? (
+                <Select 
+                  value={status} 
+                  onValueChange={(v: any) => {
+                    if (v === 'impedida' && status !== 'impedida') {
+                      setPendingStatus(v);
+                      setImpedimentModalOpen(true);
+                    } else {
+                      setStatus(v);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="bg-white h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TASK_STATUS_OPTIONS.map(s => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <StatusTag label={getTaskStatusLabel(tarefa.status)} variant={getTaskStatusVariant(tarefa.status)} />
+              )}
+            </div>
+
+            {/* Prioridade */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Flag className="h-3 w-3" /> Prioridade
+              </Label>
+              {isEditing ? (
+                <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}>
+                  <SelectTrigger className="bg-white h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="baixo">Baixa</SelectItem>
+                    <SelectItem value="medio">Média</SelectItem>
+                    <SelectItem value="alto">Alta</SelectItem>
+                    <SelectItem value="critico">Crítica</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge variant="secondary" className="font-bold text-[10px] uppercase">
+                  {prioridade === 'critico' ? 'Crítica' : prioridade === 'alto' ? 'Alta' : prioridade === 'medio' ? 'Média' : 'Baixa'}
+                </Badge>
+              )}
+            </div>
+
+            {/* Vencimento */}
+            <div className="space-y-2">
+              <Label className={cn("text-[10px] font-black uppercase tracking-widest flex items-center gap-2", errors.vencimento ? "text-destructive" : "text-muted-foreground")}>
+                <Calendar className="h-3 w-3" /> Vencimento {isEditing && "*"}
+              </Label>
+              {isEditing ? (
+                <Input 
+                  type="date" 
+                  value={dataVencimento} 
+                  onChange={e => { setDataVencimento(e.target.value); setErrors(prev => ({ ...prev, vencimento: '' })); }}
+                  className={cn("bg-white h-10", errors.vencimento && "border-destructive")}
+                />
+              ) : (
+                <span className="text-xs font-bold">{tarefa.dataVencimento ? format(new Date(tarefa.dataVencimento), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Sem data'}</span>
+              )}
+            </div>
+
+            {/* Cliente (Edição) */}
+            {isEditing && (
+              <div className="space-y-2 pt-4 border-t border-muted/60">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vincular Outro Cliente</Label>
+                <Select value={clienteId} onValueChange={setClienteId}>
+                  <SelectTrigger className="bg-white h-10 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
 
-          <div className="space-y-1.5 pb-2 border-b border-muted-foreground/10">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <UserCheck className="h-3 w-3 text-primary" /> Responsável
-            </Label>
-            <div className="text-xs font-semibold">{tarefa.consultorNome || 'Não informado'}</div>
-          </div>
-
-          {tarefa.delegatedByName && (
-            <div className="space-y-1.5 pb-2 border-b border-muted-foreground/10">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                <UserCheck className="h-3 w-3" /> Delegada por
-              </Label>
-              <div className="text-xs font-semibold">{tarefa.delegatedByName}</div>
-            </div>
-          )}
-
-          <div className="space-y-1.5">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Clock className="h-3 w-3" /> Status
-            </Label>
-            <Select 
-              value={status} 
-              onValueChange={(v: any) => {
-                if (v === 'impedida' && status !== 'impedida') {
-                  setPendingStatus(v);
-                  setImpedimentModalOpen(true);
-                } else {
-                  setStatus(v);
-                }
-              }}
-            >
-              <SelectTrigger className="bg-background">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TASK_STATUS_OPTIONS.map(s => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
+          {/* Se estiver no status impedida, mostra o motivo atual em destaque */}
           {status === 'impedida' && (
-            <div className="space-y-1.5 pt-2 border-t border-muted-foreground/10">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-destructive flex items-center gap-1.5">
-                Motivo do Impedimento
+            <div className="bg-destructive/10 p-5 rounded-2xl border border-destructive/20 space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-destructive flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5" /> Motivo Atual
               </Label>
-              <div className="bg-destructive/5 p-2 rounded border border-destructive/20 text-[11px] text-destructive">
+              <p className="text-[11px] text-destructive leading-relaxed font-medium">
                 {motivoImpedimento || "Motivo não informado"}
-              </div>
+              </p>
               {isEditing && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 text-[10px] p-0 h-auto"
+                  className="h-8 text-[10px] font-black uppercase tracking-wider text-destructive hover:bg-destructive/20 w-full"
                   onClick={() => setImpedimentModalOpen(true)}
                 >
                   Alterar Motivo
                 </Button>
               )}
             </div>
-          )}
-
-          <div className="space-y-1.5">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Flag className="h-3 w-3" /> Prioridade
-            </Label>
-            <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}>
-              <SelectTrigger className="bg-background">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="baixo">Baixa</SelectItem>
-                <SelectItem value="medio">Média</SelectItem>
-                <SelectItem value="alto">Alta</SelectItem>
-                <SelectItem value="critico">Crítica</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className={cn("text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5", errors.vencimento ? "text-destructive" : "text-muted-foreground")}>
-              <Calendar className="h-3 w-3" /> Vencimento {isEditing && "*"}
-            </Label>
-            <Input 
-              type="date" 
-              value={dataVencimento} 
-              onChange={e => { setDataVencimento(e.target.value); setErrors(prev => ({ ...prev, vencimento: '' })); }}
-              className={cn("bg-background", errors.vencimento && "border-destructive")}
-            />
-          </div>
-
-          <div className="space-y-1.5 pt-2 border-t border-muted-foreground/10">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <User className="h-3 w-3" /> Responsável {isEditing && "*"}
-            </Label>
-            <Select value={consultorId} onValueChange={setConsultorId}>
-              <SelectTrigger className="bg-background h-9 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(consultores || []).map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Building2 className="h-3 w-3" /> Cliente {isEditing && "*"}
-            </Label>
-            <Select value={clienteId} onValueChange={setClienteId}>
-              <SelectTrigger className="bg-background h-9 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Tag className="h-3 w-3" /> Tipo
-            </Label>
-            <Select value={tipo} onValueChange={(v: any) => setTipo(v)}>
-              <SelectTrigger className="bg-background h-9 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="consultoria">Consultoria</SelectItem>
-                <SelectItem value="chamado">Chamado</SelectItem>
-                <SelectItem value="interna">Interna</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between pt-6 border-t mt-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-destructive hover:bg-destructive/10" 
-          onClick={handleDelete}
-        >
-          <Trash2 className="h-4 w-4 mr-2" /> Excluir Tarefa
-        </Button>
-
-        <div className="flex gap-3">
-          {isEditing ? (
-            <>
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isSubmitting}>
-                Descartar
-              </Button>
-              <Button size="sm" onClick={() => handleSave()} disabled={isSubmitting} className="min-w-[100px]">
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Fechar
-              </Button>
-              <Button size="sm" onClick={() => setIsEditing(true)}>
-                Editar Tarefa
-              </Button>
-            </>
           )}
         </div>
       </div>
