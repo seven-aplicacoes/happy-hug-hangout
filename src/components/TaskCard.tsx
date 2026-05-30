@@ -102,10 +102,20 @@ export const TaskCard = ({ tarefa, onClick, draggable, onDragStart, onDelete }: 
           <span className="flex items-center gap-1" title="Tipo"><Tag className="h-3 w-3" />{tipoLabel[tarefa.tipo] || tarefa.tipo}</span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1" title="Responsável"><UserCheck className="h-3 w-3" />{tarefa.consultorNome}</span>
-          {tarefa.createdByName && (
-            <span className="flex items-center gap-1" title={`Criada por ${tarefa.createdByName}`}><User className="h-3 w-3" />{tarefa.createdByName}</span>
+        <div className="space-y-1 pt-1 border-t border-muted-foreground/10">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground" title="Responsável">
+            <UserCheck className="h-3 w-3 text-primary/70" />
+            <span className="font-semibold text-foreground/80">Resp.:</span> {tarefa.consultorNome || 'Não informado'}
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground" title="Criador">
+            <User className="h-3 w-3 opacity-60" />
+            <span className="font-semibold">Criador:</span> {tarefa.createdByName || 'Não informado'}
+          </div>
+          {tarefa.delegatedByName && (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground" title="Delegada por">
+              <UserCheck className="h-3 w-3 opacity-60" />
+              <span className="font-semibold">Delegado por:</span> {tarefa.delegatedByName}
+            </div>
           )}
         </div>
 
