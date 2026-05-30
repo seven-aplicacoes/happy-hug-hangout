@@ -728,6 +728,7 @@ export type Database = {
           created_at: string | null
           expires_at: string | null
           id: string
+          last_sync_at: string | null
           provider: string
           provider_user_uri: string | null
           refresh_token_encrypted: string | null
@@ -741,6 +742,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          last_sync_at?: string | null
           provider?: string
           provider_user_uri?: string | null
           refresh_token_encrypted?: string | null
@@ -754,6 +756,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          last_sync_at?: string | null
           provider?: string
           provider_user_uri?: string | null
           refresh_token_encrypted?: string | null
@@ -764,6 +767,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "consultant_calendar_integrations_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultant_calendly_event_types: {
+        Row: {
+          active: boolean | null
+          calendly_event_type_uri: string
+          calendly_scheduling_url: string
+          consultant_id: string | null
+          created_at: string
+          duration: number | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          calendly_event_type_uri: string
+          calendly_scheduling_url: string
+          consultant_id?: string | null
+          created_at?: string
+          duration?: number | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          calendly_event_type_uri?: string
+          calendly_scheduling_url?: string
+          consultant_id?: string | null
+          created_at?: string
+          duration?: number | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_calendly_event_types_consultant_id_fkey"
             columns: ["consultant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
