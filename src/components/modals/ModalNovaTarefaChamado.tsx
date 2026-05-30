@@ -46,6 +46,7 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
   const [prazo, setPrazo] = useState('');
   const [responsavel, setResponsavel] = useState(user?.consultorId || '');
   const [subtarefas, setSubtarefas] = useState<string[]>([]);
+  const [contractId, setContractId] = useState('');
   const [contractProductId, setContractProductId] = useState('');
   const [contractProductPhaseId, setContractProductPhaseId] = useState('');
   // Chamado-specific
