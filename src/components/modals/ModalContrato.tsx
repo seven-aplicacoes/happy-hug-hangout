@@ -393,7 +393,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
     setIsLoading(true);
     try {
-      console.log('Saving contract payload:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
+      console.log('1. Iniciando salvamento do contrato:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
       
       const contractData: any = {
         id: contrato?.id || undefined,
@@ -410,25 +410,29 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       };
       
       const savedContractResult = await upsertContrato.mutateAsync(contractData);
-      
-      // Since upsert might return multiple or just one, let's be careful
       const savedContract = Array.isArray(savedContractResult) ? savedContractResult[0] : savedContractResult;
       const contractId = contrato?.id || savedContract?.id;
 
-      if (!contractId) throw new Error('Falha ao obter ID do contrato salvo.');
+      if (!contractId) {
+        console.error('Falha crítica: ID do contrato não retornado pelo Supabase.');
+        throw new Error('Não foi possível obter o ID do contrato salvo. Verifique a conexão com o banco.');
+      }
 
-      console.log('Contract saved with ID:', contractId);
+      console.log('2. Contrato persistido. ID:', contractId);
 
       // Handle deletions
-      const currentProductIds = contractProducts.filter(p => p.id).map(p => p.id);
+      const currentProductIds = contractProducts.filter(p => p.id && !String(p.id).startsWith('temp-')).map(p => p.id);
       const productsToDelete = existingProducts?.filter(p => !currentProductIds.includes(p.id)) || [];
-      for (const p of productsToDelete) {
-        await supabase.from('contract_products').delete().eq('id', p.id);
+      if (productsToDelete.length > 0) {
+        console.log('3. Removendo produtos excluídos:', productsToDelete.map(p => p.id));
+        for (const p of productsToDelete) {
+          await supabase.from('contract_products').delete().eq('id', p.id);
+        }
       }
 
       if (contractProducts.length > 0) {
+        console.log('4. Preparando payload dos produtos (snapshot)...');
         const productsPayload = contractProducts.map(p => {
-          // Calculate totals from phases for snapshotting correctly
           const consultantHours = (p.phases || []).filter((ph: any) => 
             ph.executorType?.toLowerCase() === 'consultor'
           ).reduce((acc: number, ph: any) => acc + (Number(ph.durationMinutes) || 0), 0);
