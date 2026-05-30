@@ -62,7 +62,7 @@ const RootRedirect = ({ children }: { children?: React.ReactNode }) => {
     return <Navigate to={target} replace />;
   }
 
-  return children ? <>{children}</> : <Navigate to=\"/login\" replace />;
+  return children ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 // Redireciona /cliente/:id para a versão do layout adequado ao perfil ativo
