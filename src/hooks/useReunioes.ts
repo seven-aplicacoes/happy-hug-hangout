@@ -98,11 +98,17 @@ export function useReunioes() {
 
       if (error) throw error;
 
-      // Se estiver vinculada a um encontro da jornada, atualiza o status desse encontro
-      if (reuniao.contractModuleMeetingId) {
+        // Se estiver vinculada a um encontro da jornada, atualiza o status desse encontro
         const meetingId = data[0].id;
-        // Se a reunião estiver cancelada, o encontro volta para pendente
-        const status = reuniao.status === 'realizada' ? 'realizada' : (reuniao.status === 'cancelada' ? 'pendente' : 'agendado');
+        
+        // Define o status do encontro baseado no status da reunião
+        // 'realizada' -> 'realizada'
+        // 'cancelada' -> 'pendente' (libera para novo agendamento)
+        // 'agendada'/'confirmada' -> 'agendado'
+        let status = 'agendado';
+        if (reuniao.status === 'realizada') status = 'realizada';
+        if (reuniao.status === 'cancelada') status = 'pendente';
+        
         const scheduledAt = (reuniao.meetingDate && reuniao.startTime && reuniao.status !== 'cancelada')
           ? `${reuniao.meetingDate}T${reuniao.startTime}` 
           : null;
@@ -111,12 +117,27 @@ export function useReunioes() {
           .from('contract_module_meetings')
           .update({
             status,
-            scheduled_meeting_id: reuniao.status === 'cancelada' ? null : meetingId,
+            scheduled_meeting_id: (reuniao.status === 'cancelada') ? null : meetingId,
             scheduled_at: scheduledAt,
             consultant_id: reuniao.consultorId,
-            completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null
+            completed_at: (reuniao.status === 'realizada') ? new Date().toISOString() : null
           })
           .eq('id', reuniao.contractModuleMeetingId);
+
+        // Se a reunião foi marcada como realizada, libera CSAT automático
+        if (reuniao.status === 'realizada') {
+          await supabase
+            .from('meeting_csat')
+            .upsert({
+              meeting_id: meetingId,
+              client_id: reuniao.clienteId,
+              contract_id: reuniao.contractId,
+              contract_product_id: reuniao.contractProductId,
+              contract_module_meeting_id: reuniao.contractModuleMeetingId,
+              consultant_id: reuniao.consultorId,
+              status: 'pending'
+            });
+        }
       }
 
 
