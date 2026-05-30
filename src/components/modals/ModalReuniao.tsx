@@ -14,7 +14,6 @@ import { useContractProductPhases } from '@/hooks/useContractProductPhases';
 import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon } from 'lucide-react';
-
 import { cn } from '@/lib/utils';
 import type { Reuniao, StatusReuniao } from '@/types';
 
@@ -22,7 +21,6 @@ interface Props {
   open: boolean;
   onClose: () => void;
   reuniao?: Reuniao | null;
-  // Pre-fill data
   initialData?: Partial<Reuniao>;
 }
 
@@ -40,8 +38,6 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [contractProductId, setContractProductId] = useState('');
   const [contractProductPhaseId, setContractProductPhaseId] = useState('');
   const [contractModuleMeetingId, setContractModuleMeetingId] = useState('');
-  const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
-
   const [consultorId, setConsultorId] = useState('');
   const [status, setStatus] = useState<StatusReuniao>('agendada');
   const [meetingDate, setMeetingDate] = useState('');
@@ -52,13 +48,14 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [description, setDescription] = useState('');
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
 
   const { products: contractProducts } = useContractProducts(contractId);
   const { phases: productPhases } = useContractProductPhases(contractProductId);
   const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
 
   const contratosFiltrados = (contratos || []).filter(c => !clienteId || c.clienteId === clienteId);
-
+  const isLocked = !!initialData || !!reuniao;
 
   useEffect(() => {
     if (reuniao) {
@@ -86,7 +83,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setContractProductPhaseId(initialData.contractProductPhaseId || '');
       setContractModuleMeetingId(initialData.contractModuleMeetingId || '');
       setConsultorId(initialData.consultorId || '');
-      setStatus(initialData.status || 'agendada');
+      setStatus('agendada');
       setMeetingDate(initialData.meetingDate || '');
       setStartTime(initialData.startTime || '');
       setDuracao(initialData.duracao || 60);
@@ -113,21 +110,11 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     setErrors({});
   }, [reuniao, initialData, open]);
 
-  // Se houver dados iniciais (agendamento a partir de encontro), define status como agendada por padrão
-  useEffect(() => {
-    if (initialData && !reuniao) {
-      setStatus('agendada');
-    }
-  }, [initialData, reuniao, open]);
-
-
-  // Atualiza o consultor responsável automaticamente quando o módulo/fase muda
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
       const selectedPhase = productPhases?.find(p => p.id === contractProductPhaseId);
       if (selectedPhase?.responsibleConsultantId) {
         setPhaseResponsibleId(selectedPhase.responsibleConsultantId);
-        // Se for uma nova reunião ou se o consultor não estiver definido, pré-seleciona o responsável do módulo
         if (!reuniao && (!consultorId || consultorId === '')) {
           setConsultorId(selectedPhase.responsibleConsultantId);
         }
@@ -139,10 +126,6 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     }
   }, [contractProductPhaseId, productPhases, reuniao, consultorId]);
 
-  const isLocked = !!initialData || !!reuniao;
-
-
-
   const validate = () => {
     const newErrors: Record<string, boolean> = {};
     if (!title.trim()) newErrors.title = true;
@@ -150,40 +133,26 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!consultorId) newErrors.consultorId = true;
     if (!meetingDate) newErrors.meetingDate = true;
     if (!startTime) newErrors.startTime = true;
-    
+    if (isLocked && !phaseResponsibleId && contractProductPhaseId && contractProductPhaseId !== 'none') {
+      toast({ title: "Responsável ausente", description: "Defina um responsável no módulo antes de salvar.", variant: "destructive" });
+      return false;
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
-    if (!validate()) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos marcados com *",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    if (!validate()) return;
     setIsSubmitting(true);
     try {
       const payload: Partial<Reuniao> = {
         id: reuniao?.id,
-        title,
-        tipo,
-        clienteId,
+        title, tipo, clienteId,
         contractId: (contractId === 'none' || !contractId) ? null : contractId,
         contractProductId: (contractProductId === 'none' || !contractProductId) ? null : contractProductId,
         contractProductPhaseId: (contractProductPhaseId === 'none' || !contractProductPhaseId) ? null : contractProductPhaseId,
         contractModuleMeetingId: (contractModuleMeetingId === 'none' || !contractModuleMeetingId) ? null : contractModuleMeetingId,
-        consultorId,
-        status,
-        meetingDate,
-        startTime,
-        duracao,
-        meetingUrl,
-        location,
-        description,
+        consultorId, status, meetingDate, startTime, duracao, meetingUrl, location, description,
         source: reuniao?.source || 'manual'
       };
       await upsertReuniao.mutateAsync(payload);
@@ -197,9 +166,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
   const footer = (
     <div className="flex justify-end gap-3 w-full">
-      <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="h-11 px-6 font-bold">
-        Cancelar
-      </Button>
+      <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="h-11 px-6 font-bold">Cancelar</Button>
       <Button onClick={handleSave} disabled={isSubmitting} className="h-11 px-8 font-bold shadow-lg shadow-primary/20">
         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Salvar Reunião'}
       </Button>
@@ -207,173 +174,19 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   );
 
   return (
-    <BaseModal 
-      open={open} 
-      onClose={onClose} 
-      titulo={reuniao ? "Reagendar Reunião" : "Nova Reunião"}
-      size="lg"
-      footer={footer}
-    >
-
+    <BaseModal open={open} onClose={onClose} titulo={reuniao ? "Reagendar Reunião" : "Nova Reunião"} size="lg" footer={footer}>
       <div className="space-y-6 py-2">
-        <div className="space-y-2">
-          <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.title && "text-destructive")}>
-            Título da Reunião *
-          </Label>
-          <Input 
-            value={title} 
-            disabled={isLocked}
-            onChange={e => {
-              setTitle(e.target.value);
-              if (errors.title) setErrors(prev => ({ ...prev, title: false }));
-            }} 
-            className={cn("h-11 font-medium", errors.title && "border-destructive focus-visible:ring-destructive")}
-            placeholder="Ex: Reunião de Alinhamento Mensal"
-          />
-
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tipo de Reunião</Label>
-            <Select value={tipo} onValueChange={setTipo} disabled={isLocked}>
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="Check-in Semanal">Check-in Semanal</SelectItem>
-                <SelectItem value="Alinhamento Estratégico">Alinhamento Estratégico</SelectItem>
-                <SelectItem value="Apresentação de Resultados">Apresentação de Resultados</SelectItem>
-                <SelectItem value="Workshop / Treinamento">Workshop / Treinamento</SelectItem>
-                <SelectItem value="Outro">Outro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
-            <Select value={status} onValueChange={(v: any) => setStatus(v)} disabled={isLocked}>
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="agendada">Agendada</SelectItem>
-                <SelectItem value="realizada">Realizada</SelectItem>
-                <SelectItem value="cancelada">Cancelada</SelectItem>
-                <SelectItem value="remarcada">Remarcada</SelectItem>
-                <SelectItem value="reagendada">Reagendada</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.clienteId && "text-destructive")}>
-              Cliente *
-            </Label>
-            <Select 
-              value={clienteId} 
-              disabled={isLocked}
-              onValueChange={v => {
-
-                setClienteId(v);
-                setContractId('');
-                setContractProductId('');
-                setContractProductPhaseId('');
-                setContractModuleMeetingId('');
-                if (errors.clienteId) setErrors(prev => ({ ...prev, clienteId: false }));
-              }}
-            >
-              <SelectTrigger className={cn("h-11", errors.clienteId && "border-destructive focus:ring-destructive")} disabled={isLocked}>
-                <SelectValue placeholder="Selecione o cliente..." />
-              </SelectTrigger>
-              <SelectContent>
-                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.consultorId && "text-destructive")}>
-              Responsável *
-            </Label>
-            <Select 
-              value={consultorId} 
-              disabled={isLocked || !!phaseResponsibleId}
-              onValueChange={v => {
-
-                setConsultorId(v);
-                if (errors.consultorId) setErrors(prev => ({ ...prev, consultorId: false }));
-              }}
-            >
-              <SelectTrigger className={cn("h-11", errors.consultorId && "border-destructive focus:ring-destructive")} disabled={isLocked || !!phaseResponsibleId}>
-                <SelectValue placeholder="Selecione o consultor..." />
-              </SelectTrigger>
-              <SelectContent>
-                {(consultores || []).map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Contrato</Label>
-            <Select value={contractId || 'none'} disabled={isLocked} onValueChange={v => {
-              setContractId(v);
-              setContractProductId('');
-              setContractProductPhaseId('');
-              setContractModuleMeetingId('');
-            }}>
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue placeholder="Selecione um contrato..." /></SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                {contratosFiltrados.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.tipo} ({new Date(c.dataInicio).toLocaleDateString('pt-BR')})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Produto</Label>
-            <Select value={contractProductId || 'none'} disabled={isLocked} onValueChange={v => {
-              setContractProductId(v);
-              setContractProductPhaseId('');
-              setContractModuleMeetingId('');
-            }}>
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue placeholder="Selecione um produto..." /></SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                {(contractProducts || []).map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.productNome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
         {isLocked && !phaseResponsibleId && contractProductPhaseId && contractProductPhaseId !== 'none' && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-xs flex items-center gap-2 mb-4">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-xs flex items-center gap-2">
             <UsersIcon className="h-4 w-4" />
             Este módulo ainda não possui consultor responsável definido. Defina um responsável antes de salvar o encontro.
           </div>
         )}
 
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Título da Reunião</Label>
-            <Input 
-              value={title} 
-              disabled={isLocked}
-              onChange={e => {
-                setTitle(e.target.value);
-                if (errors.title) setErrors(prev => ({ ...prev, title: false }));
-              }} 
-              className={cn("h-11 font-medium", errors.title && "border-destructive focus-visible:ring-destructive")}
-              placeholder="Ex: Reunião de Alinhamento Mensal"
-            />
+            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.title && "text-destructive")}>Título da Reunião *</Label>
+            <Input value={title} disabled={isLocked} onChange={e => setTitle(e.target.value)} className={cn("h-11 font-medium", errors.title && "border-destructive")} />
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tipo de Reunião</Label>
@@ -405,144 +218,96 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Local / Link</Label>
-            <div className="relative">
-              <Input 
-                value={meetingUrl || location} 
-                onChange={e => {
-                  setMeetingUrl(e.target.value);
-                  setLocation(e.target.value);
-                }} 
-                className="h-11 pl-10"
-                placeholder="Meet, Zoom ou Endereço" 
-              />
-              {meetingUrl?.startsWith('http') ? (
-                <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              ) : (
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              )}
-            </div>
+            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.clienteId && "text-destructive")}>Cliente *</Label>
+            <Select value={clienteId} disabled={isLocked} onValueChange={v => setClienteId(v)}>
+              <SelectTrigger className={cn("h-11", errors.clienteId && "border-destructive")} disabled={isLocked}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Módulo</Label>
-            <Select value={contractProductPhaseId || 'none'} disabled={isLocked} onValueChange={v => {
-              setContractProductPhaseId(v);
-              setContractModuleMeetingId('');
-              // Ao mudar o módulo, busca o responsável dele
-              const phase = productPhases?.find(p => p.id === v);
-              if (phase?.responsibleConsultantId) {
-                setConsultorId(phase.responsibleConsultantId);
-              }
-            }}>
-
-
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue placeholder="Selecione o módulo..." /></SelectTrigger>
-
+            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.consultorId && "text-destructive")}>Responsável *</Label>
+            <Select value={consultorId} disabled={isLocked || !!phaseResponsibleId} onValueChange={v => setConsultorId(v)}>
+              <SelectTrigger className={cn("h-11", errors.consultorId && "border-destructive")} disabled={isLocked || !!phaseResponsibleId}><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                {(productPhases || []).map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
+                {(consultores || []).map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Encontro / Slot</Label>
-            <Select value={contractModuleMeetingId || 'none'} disabled={isLocked} onValueChange={setContractModuleMeetingId}>
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue placeholder="Selecione o encontro..." /></SelectTrigger>
-
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Contrato</Label>
+            <Select value={contractId || 'none'} disabled={isLocked} onValueChange={v => setContractId(v)}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
-                {(moduleMeetings || []).map(m => (
-                  <SelectItem key={m.id} value={m.id}>{m.title || `Encontro ${m.meetingNumber}`}</SelectItem>
-                ))}
+                {contratosFiltrados.map(c => <SelectItem key={c.id} value={c.id}>{c.tipo} ({new Date(c.dataInicio).toLocaleDateString('pt-BR')})</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Produto</Label>
+            <Select value={contractProductId || 'none'} disabled={isLocked} onValueChange={v => setContractProductId(v)}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {(contractProducts || []).map(p => <SelectItem key={p.id} value={p.id}>{p.productNome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Módulo</Label>
+            <Select value={contractProductPhaseId || 'none'} disabled={isLocked} onValueChange={v => setContractProductPhaseId(v)}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {(productPhases || []).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Encontro / Slot</Label>
+            <Select value={contractModuleMeetingId || 'none'} disabled={isLocked} onValueChange={setContractModuleMeetingId}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {(moduleMeetings || []).map(m => <SelectItem key={m.id} value={m.id}>{m.title || `Encontro ${m.meetingNumber}`}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Local / Link</Label>
-            <div className="relative">
-              <Input 
-                value={meetingUrl || location} 
-                onChange={e => {
-                  setMeetingUrl(e.target.value);
-                  setLocation(e.target.value);
-                }} 
-                className="h-11 pl-10"
-                placeholder="Meet, Zoom ou Endereço" 
-              />
-              {meetingUrl?.startsWith('http') ? (
-                <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              ) : (
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              )}
-            </div>
+            <Input value={meetingUrl || location} onChange={e => { setMeetingUrl(e.target.value); setLocation(e.target.value); }} className="h-11" placeholder="Meet, Zoom ou Endereço" />
           </div>
         </div>
 
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
-            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.meetingDate && "text-destructive")}>
-              Data *
-            </Label>
-            <div className="relative">
-              <Input 
-                type="date" 
-                value={meetingDate} 
-                onChange={e => {
-                  setMeetingDate(e.target.value);
-                  if (errors.meetingDate) setErrors(prev => ({ ...prev, meetingDate: false }));
-                }} 
-                className={cn("h-11 pl-10", errors.meetingDate && "border-destructive")}
-              />
-              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            </div>
+            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.meetingDate && "text-destructive")}>Data *</Label>
+            <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className={cn("h-11", errors.meetingDate && "border-destructive")} />
           </div>
           <div className="space-y-2">
-            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.startTime && "text-destructive")}>
-              Horário *
-            </Label>
-            <div className="relative">
-              <Input 
-                type="time" 
-                value={startTime} 
-                onChange={e => {
-                  setStartTime(e.target.value);
-                  if (errors.startTime) setErrors(prev => ({ ...prev, startTime: false }));
-                }} 
-                className={cn("h-11 pl-10", errors.startTime && "border-destructive")}
-              />
-              <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            </div>
+            <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.startTime && "text-destructive")}>Horário *</Label>
+            <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={cn("h-11", errors.startTime && "border-destructive")} />
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Duração (min)</Label>
-            <Input 
-              type="number" 
-              value={duracao} 
-              onChange={e => setDuracao(Number(e.target.value))} 
-              className="h-11 font-medium"
-            />
+            <Input type="number" value={duracao} onChange={e => setDuracao(Number(e.target.value))} className="h-11 font-medium" />
           </div>
         </div>
 
         <div className="space-y-2">
           <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Descrição / Pauta</Label>
-          <div className="relative">
-            <Textarea 
-              value={description} 
-              onChange={e => setDescription(e.target.value)} 
-              placeholder="Descreva os tópicos que serão abordados..." 
-              className="min-h-[100px] pl-10 py-3"
-            />
-            <AlignLeft className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
-          </div>
+          <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva os tópicos..." className="min-h-[100px]" />
         </div>
       </div>
     </BaseModal>
