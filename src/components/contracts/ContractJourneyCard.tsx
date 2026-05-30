@@ -322,7 +322,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
           {phase.executorType || '-'}
         </div>
         <div className="md:col-span-2 text-[11px] font-medium text-muted-foreground truncate">
-          {phase.responsibleConsultantNome || '-'}
+          {phase.responsibleConsultantNome || contrato.consultorNome || 'Responsável não definido'}
         </div>
         <div className="md:col-span-2 flex justify-start">
           <StatusTag label={labelStatus[phase.status] || phase.status} />
