@@ -288,9 +288,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             </Label>
             <Select 
               value={consultorId} 
-              disabled={!!phaseResponsibleId}
-
+              disabled={isLocked || !!phaseResponsibleId}
               onValueChange={v => {
+
                 setConsultorId(v);
                 if (errors.consultorId) setErrors(prev => ({ ...prev, consultorId: false }));
               }}
