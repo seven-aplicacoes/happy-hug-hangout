@@ -244,7 +244,7 @@ export default function PortalClientePage() {
         </div>
       </header>
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-8 space-y-8">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-8 space-y-12">
         {/* Summary Indicators */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <IndicatorCard 
@@ -269,8 +269,105 @@ export default function PortalClientePage() {
           />
         </div>
 
-        </div>
+        {/* 1. Journey Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-8 bg-primary rounded-full" />
+            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Sua Jornada</h2>
+          </div>
+          
+          {contratos?.map(contrato => (
+            <ContractSection 
+              key={contrato.id} 
+              contrato={contrato} 
+              products={products}
+              currentProductId={currentProductId}
+              setSelectedProduct={setSelectedProduct}
+              phases={phases}
+              onRateMeeting={handleOpenCsat}
+              csatStatus={csatStatus}
+            />
+          ))}
+
+          {contratos?.length === 0 && (
+            <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+              <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+              <p className="text-neutral-400 text-sm">Nenhum contrato encontrado para este cliente.</p>
+            </div>
+          )}
+        </section>
+
+        <Separator />
+
+        {/* 2. Deliverables Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <FileCheck className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Entregáveis</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {deliverables?.map(doc => (
+              <Card key={doc.id} className="p-4 border-none shadow-sm bg-white hover:ring-1 hover:ring-primary/20 transition-all">
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-neutral-900 truncate">{doc.title}</h4>
+                    <p className="text-xs text-neutral-500 mt-1">Status: <span className="capitalize">{doc.status}</span></p>
+                    <p className="text-[10px] text-neutral-400 mt-0.5">{format(new Date(doc.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-3 w-full h-8 text-[10px] font-bold uppercase"
+                      onClick={() => window.open(doc.fileUrl, '_blank')}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-2" /> Visualizar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+            {deliverables?.length === 0 && (
+              <div className="col-span-full py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                <FileText className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+                <p className="text-neutral-400 text-sm">Nenhum entregável disponível ainda.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* 3. History Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <History className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico</h2>
+          </div>
+          <div className="space-y-4">
+            {historico?.map(event => (
+              <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex gap-6">
+                <div className="md:w-32 shrink-0 border-r border-neutral-100 pr-6">
+                  <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">{event.tipo}</p>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                  <p className="text-sm text-neutral-500 leading-relaxed">{event.descricao}</p>
+                </div>
+              </Card>
+            ))}
+            {historico?.length === 0 && (
+              <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                <History className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+                <p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
+
 
           </main>
         </div>
