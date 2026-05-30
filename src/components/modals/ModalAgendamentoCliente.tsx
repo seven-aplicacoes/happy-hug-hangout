@@ -37,7 +37,8 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
         consultantId: moduleMeeting.consultantId!,
         date: selectedSlot.available_date,
         startTime: selectedSlot.start_time,
-        endTime: endTime
+        endTime: endTime,
+        ignoreMeetingId: moduleMeeting.scheduledMeetingId // Ignore self when rescheduling
       });
 
       if (hasConflict) {
@@ -51,6 +52,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
       }
 
       await upsertReuniao.mutateAsync({
+        id: moduleMeeting.scheduledMeetingId, // If exists, it will update
         clienteId: moduleMeeting.clientId,
         contractId: moduleMeeting.contractId,
         contractProductId: moduleMeeting.productId,
