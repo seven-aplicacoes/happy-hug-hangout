@@ -304,6 +304,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       p.phases.forEach((ph: any, phIndex: number) => {
         if (!ph.name.trim()) newErrors[`phase_${pIndex}_${phIndex}_name`] = 'Informe o nome do módulo.';
         if (!ph.durationMinutes || ph.durationMinutes <= 0) newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
+        if (ph.meetingsCount === undefined || ph.meetingsCount < 0) newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe a quantidade de encontros.';
         if (!ph.responsibleConsultantId) newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
         
         if (ph.startDate && p.startDate && isBefore(parseISO(ph.startDate), parseISO(p.startDate))) {
