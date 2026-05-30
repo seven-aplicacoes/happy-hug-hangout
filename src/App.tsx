@@ -78,13 +78,13 @@ const App = () => (
               <Route path="produtos" element={<AdminProdutosPage />} />
               <Route path="produtos-contratados" element={<Navigate to="/admin/clientes" replace />} />
               <Route path="contratos" element={<AdminContratosPage />} />
-              <Route path="renovacao" element={<AdminRenovacaoPage />} />
-              <Route path="ia" element={<AdminIAPage />} />
-              <Route path="inteligencia" element={<AdminInteligenciaPage />} />
-              <Route path="analise-avancada" element={<AdminAnaliseAvancadaPage />} />
-              <Route path="alertas" element={<AdminAlertasPage />} />
-              <Route path="mapa-carteira" element={<AdminMapaCarteiraPage />} />
-              <Route path="pipeline" element={<AdminPipelinePage />} />
+              <Route path="renovacao" element={<ComingSoonPageWrapper><AdminRenovacaoPage /></ComingSoonPageWrapper>} />
+              <Route path="ia" element={<ComingSoonPageWrapper><AdminIAPage /></ComingSoonPageWrapper>} />
+              <Route path="inteligencia" element={<ComingSoonPageWrapper><AdminInteligenciaPage /></ComingSoonPageWrapper>} />
+              <Route path="analise-avancada" element={<ComingSoonPageWrapper><AdminAnaliseAvancadaPage /></ComingSoonPageWrapper>} />
+              <Route path="alertas" element={<ComingSoonPageWrapper><AdminAlertasPage /></ComingSoonPageWrapper>} />
+              <Route path="mapa-carteira" element={<ComingSoonPageWrapper><AdminMapaCarteiraPage /></ComingSoonPageWrapper>} />
+              <Route path="pipeline" element={<ComingSoonPageWrapper><AdminPipelinePage /></ComingSoonPageWrapper>} />
               <Route path="consultores" element={<AdminConsultoresPage />} />
                <Route path="consultores/:id" element={<AdminConsultorDetalhePage />} />
                <Route path="permissoes-consultores" element={<AdminConsultantPermissionsPage />} />
