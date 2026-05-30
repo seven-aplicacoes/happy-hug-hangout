@@ -117,20 +117,8 @@ export default function PortalClientePage() {
   };
 
   const handleContactConsultant = () => {
-    // Regra de fallback: Responsável do contrato > Responsável do módulo/encontro não é trivial aqui pois o botão é global no header
-    // Vamos usar o responsável do contrato ativo.
-    const consultantPhone = activeContract?.consultorTelefone;
-    
-    if (!consultantPhone) {
-      alert("O consultor responsável ainda não possui telefone cadastrado.");
-      return;
-    }
-
-    // Limpar telefone: manter apenas números
-    const cleanPhone = consultantPhone.replace(/\D/g, '');
-    const finalPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
-
-    window.open(`https://wa.me/${finalPhone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
+    const phone = "5511999999999"; 
+    window.open(`https://wa.me/${phone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
   };
 
   if (!clienteSession) {

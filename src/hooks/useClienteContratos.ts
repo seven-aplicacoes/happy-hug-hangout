@@ -19,7 +19,7 @@ export function useClienteContratos(clientId?: string) {
         .select(`
           *,
           clients (trade_name),
-          profiles:consultant_id (full_name, phone, email, avatar_url),
+          profiles (full_name),
           products (name)
         `)
         .eq('client_id', clientId);
@@ -38,10 +38,7 @@ export function useClienteContratos(clientId?: string) {
         risco: c.risk_level as NivelRisco,
         faseMetodologica: c.current_phase as FaseMetodologica,
         consultorId: c.consultant_id,
-        consultorNome: c.profiles?.full_name || 'Não definido',
-        consultorTelefone: c.profiles?.phone,
-        consultorEmail: c.profiles?.email,
-        consultorAvatar: c.profiles?.avatar_url,
+        consultorNome: c.profiles?.full_name || 'Desconhecido',
         productId: c.product_id,
       })) as Contrato[];
     },
