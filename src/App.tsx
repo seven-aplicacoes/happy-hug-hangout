@@ -58,11 +58,27 @@ const RootRedirect = ({ children }: { children?: React.ReactNode }) => {
   }
 
   if (user) {
-    const target = perfil === 'admin' ? '/admin/dashboard' : (perfil === 'consultor' ? '/consultor/dashboard' : '/portal');
-    return <Navigate to={target} replace />;
+    const isPortalRoute = window.location.pathname.startsWith('/portal');
+    
+    if (perfil === 'cliente' && !isPortalRoute) {
+      return <Navigate to="/portal" replace />;
+    }
+    
+    if (perfil !== 'cliente' && isPortalRoute) {
+      const target = perfil === 'admin' ? '/admin/dashboard' : '/consultor/dashboard';
+      return <Navigate to={target} replace />;
+    }
+
+    if (!isPortalRoute || (perfil === 'cliente' && isPortalRoute)) {
+      const target = perfil === 'admin' ? '/admin/dashboard' : (perfil === 'consultor' ? '/consultor/dashboard' : '/portal');
+      // Só redireciona se estiver na raiz ou no login
+      if (window.location.pathname === '/' || window.location.pathname === '/login') {
+        return <Navigate to={target} replace />;
+      }
+    }
   }
 
-  return children ? <>{children}</> : <Navigate to="/login" replace />;
+  return children ? <>{children}</> : (window.location.pathname === '/login' ? <LoginPage /> : <Navigate to="/login" replace />);
 };
 
 // Redireciona /cliente/:id para a versão do layout adequado ao perfil ativo
@@ -85,7 +101,7 @@ const App = () => (
              <Route path="/login" element={<RootRedirect><LoginPage /></RootRedirect>} />
              <Route path="/selecionar-ambiente" element={<Navigate to="/admin/dashboard" replace />} />
              <Route path="/no-access" element={<NoAccess />} />
-            <Route path="/portal" element={<PortalClientePage />} />
+            <Route path="/portal" element={<RootRedirect><PortalClientePage /></RootRedirect>} />
 
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboardPage />} />
