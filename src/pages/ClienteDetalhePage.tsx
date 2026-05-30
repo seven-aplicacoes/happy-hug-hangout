@@ -1,17 +1,19 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { 
   Save, X, Pencil, ArrowLeft, Briefcase, FileText, 
   MapPin, Users, Calendar, DollarSign, Loader2, PlusCircle, MinusCircle,
-  Clock, CheckCircle2, Circle
+  Clock, CheckCircle2, Circle, Camera, Trash2, Upload
 } from 'lucide-react';
 import { formatDuration } from '@/lib/duration';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
 import { useClienteContratos } from '@/hooks/useClienteContratos';
 import { useConsultores } from '@/hooks/useConsultores';
+import { supabase } from '@/integrations/supabase/client';
 import { labelStatus, labelRegiao } from '@/data/mockData';
+
 import { StatusTag } from '@/components/StatusTag';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
