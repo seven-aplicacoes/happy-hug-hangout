@@ -160,12 +160,7 @@ export default function ConsultorReunioesPage() {
 
   return (
     <div className="space-y-10">
-      <PageHeader titulo="Minhas Reuniões" subtitulo="Agenda e histórico de reuniões">
-        <Button onClick={() => { setSelectedReuniao(null); setModalAgendamentoOpen(true); }} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Agendar Reunião
-        </Button>
-      </PageHeader>
+      <PageHeader titulo="Minhas Reuniões" subtitulo="Agenda e histórico de reuniões" />
 
       {/* Faixa compacta de aderência — devolve a primeira dobra à agenda */}
       <div className="rounded-md border border-border/70 bg-card p-4 shadow-xs">
