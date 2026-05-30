@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export function usePortalDeliverables(clientId?: string) {
-  const { data: deliverables, isLoading } = useQuery({
+  const { data: deliverables, isLoading: queryLoading } = useQuery({
+
     queryKey: ['portal-deliverables', clientId],
     queryFn: async () => {
       if (!clientId) return [];
@@ -35,6 +36,9 @@ export function usePortalDeliverables(clientId?: string) {
     enabled: !!clientId,
   });
 
+  const isLoading = queryLoading && !!clientId;
+
   return { deliverables, isLoading };
 }
+
 
