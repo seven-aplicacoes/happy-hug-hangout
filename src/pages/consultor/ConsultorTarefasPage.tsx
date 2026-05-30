@@ -5,7 +5,7 @@ import { TaskCard } from '@/components/TaskCard';
 import { StatusTag } from '@/components/StatusTag';
 import { BaseModal } from '@/components/BaseModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { labelStatus, chamados } from '@/data/mockData';
+import { labelStatus } from '@/data/mockData';
 import { useTarefas } from '@/hooks/useTarefas';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,13 +44,13 @@ export default function ConsultorTarefasPage() {
 
   const tarefasFiltradas = tarefasState.filter(t => {
     if (filtroTipo === 'minhas') return t.consultorId === consultorId && t.tipo !== 'chamado';
-    if (filtroTipo === 'delegadas') return t.consultorId !== consultorId && t.origem === 'gestor';
-    if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.consultorId === consultorId;
-    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado';
+    if (filtroTipo === 'delegadas') return t.consultorId === consultorId && (t.delegatedBy || ((t.createdByRole === 'admin' || t.createdByRole === 'gestor') && t.createdBy !== consultorId));
+    if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.status !== 'concluida';
+    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado' && t.consultorId === consultorId;
     return true;
   });
 
-  const chamadosAbertos = chamados.filter(c => c.status !== 'resolvido').length;
+  const chamadosAbertosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.status !== 'concluida').length;
 
   const handleDragStart = (tarefaId: string) => setDragging(tarefaId);
 
@@ -133,7 +133,7 @@ export default function ConsultorTarefasPage() {
         {([
           { k: 'minhas' as const, l: 'Minhas tarefas' },
           { k: 'delegadas' as const, l: 'Delegadas pelo gestor' },
-          { k: 'chamados_abertos' as const, l: `Chamados abertos · ${chamadosAbertos}` },
+          { k: 'chamados_abertos' as const, l: `Chamados abertos${chamadosAbertosCount > 0 ? ` · ${chamadosAbertosCount}` : ''}` },
           { k: 'chamados_recebidos' as const, l: 'Chamados recebidos' },
         ]).map(opt => (
           <Button key={opt.k} size="sm"

@@ -20,7 +20,12 @@ export function useTarefas() {
           *,
           clients (trade_name),
           contracts (type),
-          profiles:consultant_id (full_name)
+          contract_products (
+            product_name,
+            product:products (name)
+          ),
+          profiles:consultant_id (full_name),
+          delegated_profile:delegated_by (full_name)
         `);
 
       if (perfil === 'consultor' && user?.consultorId) {
@@ -47,7 +52,8 @@ export function useTarefas() {
           clienteId: t.client_id,
           clienteNome: t.clients?.trade_name || 'Desconhecido',
           contratoId: t.contract_id,
-          contratoNome: t.contracts?.type || 'Sem contrato',
+          contratoNome: t.contracts?.type || 'Sem contrato vinculado',
+          produtoNome: t.contract_products?.product_name || t.contract_products?.product?.name || null,
           consultorId: t.consultant_id,
           consultorNome: t.profiles?.full_name || 'Desconhecido',
           tipo: t.demand_type || t.origin || 'consultoria', 
@@ -60,7 +66,12 @@ export function useTarefas() {
           impedimentHistory: Array.isArray(t.impediment_history) ? t.impediment_history : [],
           contractProductId: t.contract_product_id,
           contractProductPhaseId: t.contract_product_phase_id,
-          completedAt: t.completed_at
+          completedAt: t.completed_at,
+          createdBy: t.created_by,
+          createdByName: t.created_by_name,
+          createdByRole: t.created_by_role,
+          delegatedBy: t.delegated_by,
+          delegatedByName: t.delegated_profile?.full_name
         };
       }) as (Tarefa & { isAtrasada?: boolean })[];
     },
@@ -81,7 +92,14 @@ export function useTarefas() {
         demand_type: tarefa.tipo || 'consultoria',
         contract_product_id: (tarefa as any).contractProductId && typeof (tarefa as any).contractProductId === 'string' && (tarefa as any).contractProductId.trim() !== '' ? (tarefa as any).contractProductId : null,
         contract_product_phase_id: (tarefa as any).contractProductPhaseId && typeof (tarefa as any).contractProductPhaseId === 'string' && (tarefa as any).contractProductPhaseId.trim() !== '' ? (tarefa as any).contractProductPhaseId : null,
+        delegated_by: tarefa.delegatedBy || null,
       };
+
+      if (!tarefa.id) {
+        payload.created_by = user?.id;
+        payload.created_by_name = user?.nome;
+        payload.created_by_role = user?.role;
+      }
 
       if (tarefa.id) payload.id = tarefa.id;
       if (tarefa.status === 'concluida' && !tarefa.completedAt) {

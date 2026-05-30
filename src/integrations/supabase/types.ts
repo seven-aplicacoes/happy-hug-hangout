@@ -3060,6 +3060,9 @@ export type Database = {
           contract_product_phase_id: string | null
           created_at: string | null
           created_by: string | null
+          created_by_name: string | null
+          created_by_role: string | null
+          delegated_by: string | null
           demand_type: string | null
           description: string | null
           due_date: string | null
@@ -3085,6 +3088,9 @@ export type Database = {
           contract_product_phase_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          created_by_name?: string | null
+          created_by_role?: string | null
+          delegated_by?: string | null
           demand_type?: string | null
           description?: string | null
           due_date?: string | null
@@ -3110,6 +3116,9 @@ export type Database = {
           contract_product_phase_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          created_by_name?: string | null
+          created_by_role?: string | null
+          delegated_by?: string | null
           demand_type?: string | null
           description?: string | null
           due_date?: string | null
@@ -3160,6 +3169,13 @@ export type Database = {
             columns: ["contract_product_phase_id"]
             isOneToOne: false
             referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_delegated_by_fkey"
+            columns: ["delegated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {

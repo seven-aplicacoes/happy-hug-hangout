@@ -289,8 +289,14 @@ export interface Tarefa {
   contratoNome?: string;
   clientProductId?: string;
   contractProductId?: string;
+  produtoNome?: string;
   contractProductPhaseId?: string;
   completedAt?: string;
+  createdBy?: string;
+  createdByName?: string;
+  createdByRole?: string;
+  delegatedBy?: string;
+  delegatedByName?: string;
 }
 
 
