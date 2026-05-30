@@ -36,6 +36,7 @@ export default function ClienteDetalhePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { perfil, user } = useAuth();
+  const isAdmin = perfil === 'admin';
   const { can, isLoading: loadingPermissions } = useMyPermissions();
   const { toast } = useToast();
   
