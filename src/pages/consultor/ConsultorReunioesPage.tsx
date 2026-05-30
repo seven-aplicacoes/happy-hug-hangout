@@ -59,8 +59,6 @@ export default function ConsultorReunioesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAgendamentoOpen, setModalAgendamentoOpen] = useState(false);
 
-  const now = new Date();
-  const [mesAtual, setMesAtual] = useState({ year: now.getFullYear(), month: now.getMonth() });
   const [paginaDia, setPaginaDia] = useState(0);
 
   const clienteOptions = useMemo(() => {
