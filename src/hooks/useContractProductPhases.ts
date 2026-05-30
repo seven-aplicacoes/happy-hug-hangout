@@ -99,16 +99,28 @@ export function useContractProductPhases(contractProductId?: string) {
           contract_product_id,
           meetings_count,
           responsible_consultant_id,
-          name,
-          contract_products (
-            contract_id,
-            contracts (
-              cliente_id
-            )
-          )
+          name
         `);
 
       if (error) throw error;
+
+      // Get contract and client info from the product
+      const productId = items[0]?.contractProductId;
+      let contractId = null;
+      let clientId = null;
+
+      if (productId) {
+        const { data: cpData } = await supabase
+          .from('contract_products')
+          .select('contract_id, contracts(client_id)')
+          .eq('id', productId)
+          .single();
+        
+        if (cpData) {
+          contractId = cpData.contract_id;
+          clientId = (cpData as any).contracts?.client_id;
+        }
+      }
 
       // Sincroniza o responsável e cria encontros se necessário
       for (const phase of savedPhases as any[]) {
@@ -131,8 +143,8 @@ export function useContractProductPhases(contractProductId?: string) {
               newMeetings.push({
                 module_id: phase.id,
                 product_id: phase.contract_product_id,
-                contract_id: phase.contract_products?.contract_id,
-                client_id: phase.contract_products?.contracts?.cliente_id,
+                contract_id: contractId,
+                client_id: clientId,
                 meeting_number: meetingNumber,
                 title: `${phase.name} - Encontro ${meetingNumber}`,
                 status: 'pendente',
