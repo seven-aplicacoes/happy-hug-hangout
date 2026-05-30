@@ -3400,8 +3400,6 @@ export type Database = {
       }
       current_user_status: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
-      is_client: { Args: never; Returns: boolean }
-      is_consultant: { Args: never; Returns: boolean }
       list_team_members: {
         Args: never
         Returns: {
