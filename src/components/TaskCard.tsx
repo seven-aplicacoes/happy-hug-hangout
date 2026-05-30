@@ -91,7 +91,10 @@ export const TaskCard = ({ tarefa, onClick, draggable, onDragStart, onDelete }: 
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1" title="Cliente"><Building2 className="h-3 w-3" />{tarefa.clienteNome}</span>
-          <span className="flex items-center gap-1" title="Contrato"><FileText className="h-3 w-3" />{tarefa.contratoNome || 'Sem contrato'}</span>
+          <span className="flex items-center gap-1" title="Contrato"><FileText className="h-3 w-3" />{tarefa.contratoNome}</span>
+          {tarefa.produtoNome && (
+            <span className="flex items-center gap-1" title="Produto"><Zap className="h-3 w-3" />{tarefa.produtoNome}</span>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
