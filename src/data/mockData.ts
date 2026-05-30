@@ -304,7 +304,7 @@ export const variantEngajamento: Record<NivelEngajamento, 'success' | 'warning' 
 
 /** Dias desde a última reunião realizada do cliente. Se nunca houve, retorna null (indicando 'Sem reuniões'). */
 export function diasDesdeUltimaReuniao(clienteId: string): number | null {
-  const reunioesCl = reunioes
+  const reunioesCl = (reunioes || [])
     .filter(r => r.clienteId === clienteId && r.status === 'realizada')
     .map(r => ({ ...r, _d: r.meetingDate || r.data || '' }))
     .filter(r => !!r._d)

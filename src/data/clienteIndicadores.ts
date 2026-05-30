@@ -289,8 +289,8 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
 
   const eng = calcularEngajamento(cliente.id);
   const dias = diasDesdeUltimaReuniao(cliente.id);
-  if (eng === 'critico') { score += 40; fatores.push(`${dias}d sem reunião`); }
-  else if (eng === 'atencao') { score += 20; fatores.push(`${dias}d sem reunião`); }
+  if (eng === 'critico') { score += 40; fatores.push(`${dias ?? 0}d sem reunião`); }
+  else if (eng === 'atencao') { score += 20; fatores.push(`${dias ?? 0}d sem reunião`); }
   else if (eng === 'nao_avaliado') { score = 0; } // Cliente novo ou sem reuniões não deve ter score de prioridade alto por padrão
 
   const ct = contratos.find(c => c.clienteId === cliente.id && (c.status === 'ativo' || c.status === 'em_renovacao'));
