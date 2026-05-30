@@ -249,6 +249,22 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     }
   };
 
+  const removePhase = (productIndex: number, phaseIndex: number) => {
+    const updatedProducts = [...contractProducts];
+    updatedProducts[productIndex].phases = updatedProducts[productIndex].phases.filter((_: any, i: number) => i !== phaseIndex);
+    
+    // Recalcular datas
+    const productStartDate = updatedProducts[productIndex].startDate || dataInicio;
+    updatedProducts[productIndex].phases = recalculateProductStages(productStartDate, updatedProducts[productIndex].phases);
+    
+    if (updatedProducts[productIndex].phases.length > 0) {
+      updatedProducts[productIndex].endDate = updatedProducts[productIndex].phases[updatedProducts[productIndex].phases.length - 1].endDate;
+    }
+
+    setContractProducts(updatedProducts);
+  };
+
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
