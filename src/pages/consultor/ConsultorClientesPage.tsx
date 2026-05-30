@@ -180,7 +180,8 @@ export default function ConsultorClientesPage() {
       );
     }},
     { key: 'prioridade', header: 'Prioridade', render: (c) => {
-      const p = calcularPrioridade(c);
+      const p = calcularPrioridade(c, contratos || [], tarefas || []);
+
       return (
         <TooltipProvider delayDuration={150}>
           <Tooltip>
