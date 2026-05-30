@@ -87,7 +87,14 @@ export function useTarefas() {
         demand_type: tarefa.tipo || 'consultoria',
         contract_product_id: (tarefa as any).contractProductId && typeof (tarefa as any).contractProductId === 'string' && (tarefa as any).contractProductId.trim() !== '' ? (tarefa as any).contractProductId : null,
         contract_product_phase_id: (tarefa as any).contractProductPhaseId && typeof (tarefa as any).contractProductPhaseId === 'string' && (tarefa as any).contractProductPhaseId.trim() !== '' ? (tarefa as any).contractProductPhaseId : null,
+        delegated_by: tarefa.delegatedBy || null,
       };
+
+      if (!tarefa.id) {
+        payload.created_by = user?.id;
+        payload.created_by_name = user?.nome;
+        payload.created_by_role = user?.role;
+      }
 
       if (tarefa.id) payload.id = tarefa.id;
       if (tarefa.status === 'concluida' && !tarefa.completedAt) {
