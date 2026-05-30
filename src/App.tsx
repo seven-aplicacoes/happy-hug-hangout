@@ -91,10 +91,10 @@ const App = () => (
                <Route path="metas-consultores" element={<AdminConsultantGoalsPage />} />
               <Route path="contratos/:id" element={<AdminContratoDetalhePage />} />
               <Route path="cliente/:id" element={<ClienteDetalhePage />} />
-              <Route path="metodologia" element={<MetodologiaPage />} />
+              <Route path="metodologia" element={<ComingSoonPageWrapper><MetodologiaPage /></ComingSoonPageWrapper>} />
               <Route path="documentos" element={<DocumentosPage />} />
-              <Route path="relacionamento" element={<AdminRelacionamentoPage />} />
-              <Route path="notificacoes" element={<AdminNotificacoesPage />} />
+              <Route path="relacionamento" element={<ComingSoonPageWrapper><AdminRelacionamentoPage /></ComingSoonPageWrapper>} />
+              <Route path="notificacoes" element={<ComingSoonPageWrapper><AdminNotificacoesPage /></ComingSoonPageWrapper>} />
               <Route path="tarefas" element={<AdminTarefasPage />} />
               <Route path="reunioes" element={<AdminReunioesPage />} />
               <Route path="integracoes" element={<IntegracoesPage />} />
