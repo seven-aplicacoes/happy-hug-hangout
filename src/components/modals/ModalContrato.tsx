@@ -665,7 +665,17 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Módulos da Jornada</Label>
                           <div className="border rounded-md divide-y overflow-hidden">
                             {p.phases.map((ph: any, phIndex: number) => (
-                              <div key={phIndex} className="p-3 bg-muted/5 grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                              <div key={phIndex} className="p-3 bg-muted/5 grid grid-cols-1 md:grid-cols-12 gap-3 items-end group">
+                                <div className="md:col-span-12 flex justify-end -mb-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
+                                    onClick={() => removePhase(pIndex, phIndex)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
                                 <div className="md:col-span-3 space-y-1">
                                   <Label className="text-[10px]">Nome do Módulo *</Label>
                                   <Input 
