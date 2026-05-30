@@ -676,7 +676,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </div>
-                                <div className="md:col-span-3 space-y-1">
+                                <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Nome do Módulo *</Label>
                                   <Input 
                                     className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_name`] && "border-destructive")}
