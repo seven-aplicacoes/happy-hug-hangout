@@ -349,6 +349,37 @@ export default function ConsultorClientesPage() {
       </div>
       <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} />
       
+      <AlertDialog open={!!clienteToDelete} onOpenChange={(open) => !open && setClienteToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Cliente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o cliente <strong>"{clienteToDelete?.nomeFantasia || clienteToDelete?.razaoSocial}"</strong>?
+              <br /><br />
+              Essa ação removerá o cliente da sua carteira e poderá afetar contratos, reuniões, documentos e registros vinculados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                if (clienteToDelete) {
+                  try {
+                    await deleteCliente.mutateAsync(clienteToDelete.id);
+                    setClienteToDelete(null);
+                  } catch (error) {
+                    console.error("Erro ao excluir:", error);
+                  }
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirmar exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
