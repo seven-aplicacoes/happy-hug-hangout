@@ -122,6 +122,8 @@ export function useContractProductPhases(contractProductId?: string) {
         if (cpData) {
           contractId = cpData.contract_id;
           clientId = (cpData as any).contracts?.client_id;
+        } else {
+          console.warn("Could not find contract/client for product:", productId);
         }
       }
 
