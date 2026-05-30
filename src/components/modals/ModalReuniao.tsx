@@ -179,8 +179,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         }
       }
 
-      // 1. Availability validation (only if module/meeting is linked)
-      if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
+      // 1. Availability validation (only if module/meeting is linked AND not manual source)
+      const isCalendlyMeeting = reuniao?.source === 'calendly' || (reuniao as any)?.external_provider === 'calendly';
+      
+      if (!isCalendlyMeeting && contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
         const [year, month, day] = meetingDate.split('-').map(Number);
         const selectedDate = new Date(year, month - 1, day);
         const dayOfWeek = selectedDate.getDay(); 
@@ -188,10 +190,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         const matchingAvailability = availabilities.find(av => {
           const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
           const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
-          const startDate = new Date(sYear, sMonth - 1, sDay);
-          const endDate = new Date(eYear, eMonth - 1, eDay);
+          const start = new Date(sYear, sMonth - 1, sDay);
+          const end = new Date(eYear, eMonth - 1, eDay);
           
-          const dateMatch = selectedDate >= startDate && selectedDate <= endDate;
+          const dateMatch = selectedDate >= start && selectedDate <= end;
           const weekdayMatch = av.weekday === dayOfWeek;
           
           if (dateMatch && weekdayMatch) {
@@ -210,34 +212,28 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           setIsSubmitting(false);
           return;
         }
-      } else if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability) {
-        toast({ 
-          title: "Nenhuma Disponibilidade", 
-          description: "Nenhuma disponibilidade configurada para este encontro. Configure a disponibilidade antes de agendar.", 
-          variant: "destructive" 
-        });
-        setIsSubmitting(false);
-        return;
       }
 
-      // 2. Conflict validation
-      const endTime = calculateEndTime(startTime, duracao);
-      const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
-        consultantId: consultorId,
-        date: meetingDate,
-        startTime,
-        endTime,
-        ignoreMeetingId: reuniao?.id
-      });
-
-      if (hasConflict) {
-        toast({ 
-          title: "Conflito de Agenda", 
-          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}). Escolha outro horário disponível.`, 
-          variant: "destructive" 
+      // 2. Conflict validation (only for manual meetings)
+      if (!isCalendlyMeeting) {
+        const endTime = calculateEndTime(startTime, duracao);
+        const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
+          consultantId: consultorId,
+          date: meetingDate,
+          startTime,
+          endTime,
+          ignoreMeetingId: reuniao?.id
         });
-        setIsSubmitting(false);
-        return;
+
+        if (hasConflict) {
+          toast({ 
+            title: "Conflito de Agenda", 
+            description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}). Escolha outro horário disponível.`, 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       const payload: Partial<Reuniao> = {
