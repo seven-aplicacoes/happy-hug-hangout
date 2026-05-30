@@ -647,7 +647,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                           <div className="border rounded-md divide-y overflow-hidden">
                             {p.phases.map((ph: any, phIndex: number) => (
                               <div key={phIndex} className="p-3 bg-muted/5 grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                                <div className="md:col-span-4 space-y-1">
+                                <div className="md:col-span-3 space-y-1">
                                   <Label className="text-[10px]">Nome do Módulo *</Label>
                                   <Input 
                                     className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_name`] && "border-destructive")}
@@ -657,14 +657,16 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                   <ErrorMsg name={`phase_${pIndex}_${phIndex}_name`} />
                                 </div>
                                 <div className="md:col-span-1 space-y-1">
-                                  <Label className="text-[10px]">Duração (Horas)</Label>
-                                  <div className="flex items-center gap-1">
-                                    <Input 
-                                      className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_durationMinutes`] && "border-destructive")}
-                                      value={minutesToHHMM(ph.durationMinutes)} 
-                                      readOnly
-                                    />
-                                  </div>
+                                  <Label className="text-[10px]">Duração</Label>
+                                  <Input 
+                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_durationMinutes`] && "border-destructive")}
+                                    value={minutesToHHMM(ph.durationMinutes)} 
+                                    onChange={e => {
+                                      if (validateHHMM(e.target.value)) {
+                                        updatePhase(pIndex, phIndex, 'durationMinutes', hhmmToMinutes(e.target.value));
+                                      }
+                                    }}
+                                  />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Início</Label>
@@ -672,7 +674,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     type="date" 
                                     className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_startDate`] && "border-destructive")}
                                     value={ph.startDate} 
-                                    readOnly 
+                                    onChange={e => updatePhase(pIndex, phIndex, 'startDate', e.target.value)}
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
@@ -681,10 +683,10 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     type="date" 
                                     className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_endDate`] && "border-destructive")}
                                     value={ph.endDate} 
-                                    readOnly 
+                                    onChange={e => updatePhase(pIndex, phIndex, 'endDate', e.target.value)}
                                   />
                                 </div>
-                                <div className="md:col-span-3 space-y-1">
+                                <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Responsável *</Label>
                                   <Select value={ph.responsibleConsultantId} onValueChange={v => updatePhase(pIndex, phIndex, 'responsibleConsultantId', v)}>
                                     <SelectTrigger className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] && "border-destructive")}>
@@ -695,6 +697,16 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     </SelectContent>
                                   </Select>
                                   <ErrorMsg name={`phase_${pIndex}_${phIndex}_responsibleConsultantId`} />
+                                </div>
+                                <div className="md:col-span-2 space-y-1">
+                                  <Label className="text-[10px]">Encontros</Label>
+                                  <Input 
+                                    type="number"
+                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_meetingsCount`] && "border-destructive")}
+                                    value={ph.meetingsCount || 0} 
+                                    onChange={e => updatePhase(pIndex, phIndex, 'meetingsCount', Number(e.target.value))} 
+                                  />
+                                  <ErrorMsg name={`phase_${pIndex}_${phIndex}_meetingsCount`} />
                                 </div>
                               </div>
                             ))}
