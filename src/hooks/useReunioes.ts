@@ -84,10 +84,12 @@ export function useReunioes() {
         contract_module_meeting_id: reuniao.contractModuleMeetingId,
       };
 
+
       // Filter out undefined values to avoid overwriting with null if not intended
       const cleanPayload = Object.fromEntries(
         Object.entries(payload).filter(([_, v]) => v !== undefined)
       );
+
 
       const { data, error } = await supabase
         .from('meetings')
@@ -99,8 +101,9 @@ export function useReunioes() {
       // Se estiver vinculada a um encontro da jornada, atualiza o status desse encontro
       if (reuniao.contractModuleMeetingId) {
         const meetingId = data[0].id;
-        const status = reuniao.status === 'realizada' ? 'realizada' : 'agendado';
-        const scheduledAt = reuniao.meetingDate && reuniao.startTime 
+        // Se a reunião estiver cancelada, o encontro volta para pendente
+        const status = reuniao.status === 'realizada' ? 'realizada' : (reuniao.status === 'cancelada' ? 'pendente' : 'agendado');
+        const scheduledAt = (reuniao.meetingDate && reuniao.startTime && reuniao.status !== 'cancelada')
           ? `${reuniao.meetingDate}T${reuniao.startTime}` 
           : null;
 
@@ -108,13 +111,14 @@ export function useReunioes() {
           .from('contract_module_meetings')
           .update({
             status,
-            scheduled_meeting_id: meetingId,
+            scheduled_meeting_id: reuniao.status === 'cancelada' ? null : meetingId,
             scheduled_at: scheduledAt,
             consultant_id: reuniao.consultorId,
             completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null
           })
           .eq('id', reuniao.contractModuleMeetingId);
       }
+
 
       return data;
 
