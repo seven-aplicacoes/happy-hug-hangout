@@ -18,6 +18,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await logout(); // Clear any existing session first
     if (!email || !senha) {
       toast({ title: 'Campos obrigatórios', description: 'Preencha e-mail e senha.', variant: 'destructive' });
       return;
