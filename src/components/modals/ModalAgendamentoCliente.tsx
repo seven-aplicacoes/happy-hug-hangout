@@ -43,8 +43,8 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
 
       if (hasConflict) {
         toast({
-          title: "Horário Indisponível",
-          description: "Infelizmente este horário acabou de ser ocupado. Por favor, escolha outro.",
+          title: "Este horário já está ocupado na agenda do consultor.",
+          description: "Escolha outro horário disponível.",
           variant: "destructive"
         });
         setIsSubmitting(false);
@@ -105,7 +105,8 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
              <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary opacity-50" /></div>
           ) : availableSlots.length === 0 ? (
              <div className="py-10 text-center bg-muted/20 rounded-lg border border-dashed">
-               <p className="text-sm text-muted-foreground">O consultor ainda não disponibilizou horários para este módulo.</p>
+               <p className="text-sm text-muted-foreground font-bold">Nenhuma disponibilidade configurada para este encontro.</p>
+               <p className="text-[11px] text-muted-foreground mt-2">Entre em contato com o consultor responsável.</p>
              </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">

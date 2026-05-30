@@ -12,8 +12,9 @@ import { useContratos } from '@/hooks/useContratos';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { useContractProductPhases } from '@/hooks/useContractProductPhases';
 import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
+import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { checkConsultantConflict } from '@/lib/conflicts';
 import { minutesToHHMM, hhmmToMinutes } from '@/lib/duration';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,11 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const { products: contractProducts } = useContractProducts(contractId);
   const { phases: productPhases } = useContractProductPhases(contractProductId);
   const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
+  const { slots, availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
+    contractModuleMeetingId: contractModuleMeetingId !== 'none' ? contractModuleMeetingId : undefined,
+    contractPhaseId: contractProductPhaseId !== 'none' ? contractProductPhaseId : undefined,
+    consultantId: consultorId || undefined
+  });
 
   const contratosFiltrados = (contratos || []).filter(c => !clienteId || c.clienteId === clienteId);
   const isLocked = !!initialData || !!reuniao;
@@ -147,7 +153,33 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!validate()) return;
     setIsSubmitting(true);
     try {
-      // Conflict validation
+      // 1. Availability validation (only if module/meeting is linked)
+      if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
+        const selectedDate = new Date(meetingDate);
+        const dayOfWeek = selectedDate.getDay(); // 0 is Sunday, same as our availabilities
+        
+        const isWithinPeriod = availabilities.some(av => {
+          const startDate = new Date(av.start_date);
+          const endDate = new Date(av.end_date);
+          const dateMatch = selectedDate >= startDate && selectedDate <= endDate;
+          const weekdayMatch = av.weekday === dayOfWeek;
+          const timeMatch = startTime >= av.start_time && startTime <= av.end_time;
+          
+          return dateMatch && weekdayMatch && timeMatch;
+        });
+
+        if (!isWithinPeriod) {
+          toast({ 
+            title: "Fora da Disponibilidade", 
+            description: "Este horário não está disponível para agendamento. Escolha um dos horários liberados pelo consultor.", 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 2. Conflict validation
       const endTime = calculateEndTime(startTime, duracao);
       const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
         consultantId: consultorId,
@@ -160,7 +192,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       if (hasConflict) {
         toast({ 
           title: "Conflito de Agenda", 
-          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}).`, 
+          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}). Escolha outro horário disponível.`, 
           variant: "destructive" 
         });
         setIsSubmitting(false);
@@ -315,11 +347,49 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.meetingDate && "text-destructive")}>Data *</Label>
-            <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className={cn("h-11", errors.meetingDate && "border-destructive")} />
+            {slots && slots.length > 0 ? (
+              <Select value={meetingDate} onValueChange={setMeetingDate}>
+                <SelectTrigger className={cn("h-11", errors.meetingDate && "border-destructive")}>
+                  <SelectValue placeholder="Selecione uma data" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from(new Set(slots.map(s => s.available_date))).map(date => (
+                    <SelectItem key={date} value={date}>
+                      {new Date(date).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className={cn("h-11", errors.meetingDate && "border-destructive")} />
+            )}
+            {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!slots || slots.length === 0) && !loadingAvailability && (
+              <p className="text-[10px] text-amber-600 font-bold flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> Nenhuma disponibilidade configurada.
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.startTime && "text-destructive")}>Horário *</Label>
-            <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={cn("h-11", errors.startTime && "border-destructive")} />
+            {slots && slots.length > 0 && meetingDate ? (
+              <Select value={startTime} onValueChange={setStartTime}>
+                <SelectTrigger className={cn("h-11", errors.startTime && "border-destructive")}>
+                  <SelectValue placeholder="Selecione o horário" />
+                </SelectTrigger>
+                <SelectContent>
+                  {slots
+                    .filter(s => s.available_date === meetingDate && !s.is_booked)
+                    .map(slot => (
+                      <SelectItem key={slot.id} value={slot.start_time}>
+                        {slot.start_time.substring(0, 5)} ({slot.duration_minutes} min)
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={cn("h-11", errors.startTime && "border-destructive")} />
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Duração (min)</Label>
