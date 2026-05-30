@@ -242,8 +242,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
-            <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+            <Select value={status} onValueChange={(v: any) => setStatus(v)} disabled={isLocked}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+
               <SelectContent>
                 <SelectItem value="agendada">Agendada</SelectItem>
                 <SelectItem value="realizada">Realizada</SelectItem>
