@@ -135,8 +135,9 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
     if (code && modo === 'consultor') {
       const exchangeCode = async () => {
         try {
+          const redirect_uri = window.location.origin + window.location.pathname;
           const { data, error } = await supabase.functions.invoke('calendly-oauth', {
-            body: { action: 'exchange_code', code }
+            body: { action: 'exchange_code', code, redirect_uri }
           });
           if (error) throw error;
           toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
