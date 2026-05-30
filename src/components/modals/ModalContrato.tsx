@@ -663,7 +663,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
           <div className="space-y-4">
             {contractProducts.map((p, pIndex) => (
-              <Card key={pIndex} className={cn("border-2", (errors[`product_${pIndex}_productId`] || errors[`product_${pIndex}_startDate`] || errors[`product_${pIndex}_endDate`]) && "border-destructive")}>
+              <Card id={`product-card-${pIndex}`} key={pIndex} className={cn("border-2", (errors[`product_${pIndex}_productId`] || errors[`product_${pIndex}_startDate`] || errors[`product_${pIndex}_endDate`]) && "border-destructive")}>
                 <CardContent className="p-0">
                   <div className="p-5 flex items-center justify-between bg-muted/30 border-b">
                     <div className="flex items-center gap-4 flex-1">
