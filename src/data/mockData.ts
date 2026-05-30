@@ -294,10 +294,11 @@ export const labelEngajamento: Record<NivelEngajamento, string> = {
   critico: 'Crítico',
 };
 
-export const variantEngajamento: Record<NivelEngajamento, 'success' | 'warning' | 'danger'> = {
+export const variantEngajamento: Record<NivelEngajamento, 'success' | 'warning' | 'danger' | 'neutral'> = {
   em_dia: 'success',
   atencao: 'warning',
   critico: 'danger',
+  nao_avaliado: 'neutral',
 };
 
 /** Dias desde a última reunião realizada do cliente. Se nunca houve, retorna null (indicando 'Sem reuniões'). */
