@@ -410,6 +410,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         throw new Error('Não foi possível obter o ID do contrato salvo. Verifique a conexão com o banco.');
       }
 
+
       console.log('2. Contrato persistido. ID:', contractId);
 
       // Handle deletions
