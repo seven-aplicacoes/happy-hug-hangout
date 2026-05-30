@@ -162,12 +162,15 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   const recalculateProductStages = (productStartDate: string, phases: any[]) => {
     let currentStart = productStartDate;
     return phases.map(phase => {
+      // Se a fase já tem datas definidas manualmente e não estamos recalculando tudo, 
+      // poderíamos manter. Mas para o snapshot inicial, vamos gerar as sequências.
       if (!currentStart) return { ...phase };
-      const start = currentStart;
-      // Aproximação: assume 8h/dia, 5 dias/semana se não tiver durationMinutes
+      
+      const start = phase.startDate || currentStart;
       const totalMinutes = phase.durationMinutes || 0;
       const daysToAdd = Math.ceil(totalMinutes / (8 * 60)) || 7; 
-      const end = format(addWeeks(parseISO(start), Math.ceil(daysToAdd / 7)), 'yyyy-MM-dd');
+      const end = phase.endDate || format(addWeeks(parseISO(start), Math.ceil(daysToAdd / 7)), 'yyyy-MM-dd');
+      
       currentStart = end;
       return { ...phase, startDate: start, endDate: end };
     });
