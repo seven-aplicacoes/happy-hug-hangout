@@ -27,7 +27,7 @@ export const INTEGRACOES: Integracao[] = [
     nome: 'Calendly',
     fornecedor: 'Calendly',
     categoria: 'agenda',
-    status: 'em_breve',
+    status: 'disponivel',
     descricao: 'Permite que clientes agendem reuniões diretamente na agenda do consultor.',
     beneficios: [
       'Autoatendimento de agendamento',
