@@ -10,42 +10,33 @@ import {
   CheckCircle2, 
   Building2, 
   LogOut, 
-  User, 
   Clock, 
   FileText, 
   Star,
   LayoutDashboard,
-  CheckCircle,
   History,
   FileCheck,
   ExternalLink,
   MessageCircle,
-  TrendingUp,
-  AlertTriangle,
-  CreditCard,
-  FileBadge,
-  ShieldCheck,
   Briefcase,
-  ChevronDown,
-  ChevronUp,
   DollarSign,
   Users,
-  Target,
-  ArrowRight
+  Loader2,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
 import { useClienteContratos } from '@/hooks/useClienteContratos';
-import { useContractProducts } from '@/hooks/useContractProducts';
-import { useContractProductPhases } from '@/hooks/useContractProductPhases';
-import { useContractModuleMeetings, useContractModuleMeetings as useModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useClientCSAT } from '@/hooks/useClientCSAT';
 import { useClienteHistorico } from '@/hooks/useClienteHistorico';
-import { useClienteTarefas } from '@/hooks/useClienteTarefas';
 import { usePortalDeliverables } from '@/hooks/usePortalDeliverables';
 import { usePortalSummary } from '@/hooks/usePortalSummary';
 import { usePortalCSAT } from '@/hooks/usePortalCSAT';
+import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
+import { cn } from '@/lib/utils';
+
 import { 
   Dialog, 
   DialogContent, 
@@ -55,12 +46,14 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { StatusTag } from '@/components/StatusTag';
+import { labelStatus } from '@/data/mockData';
+import { Accordion } from '@/components/ui/accordion';
+
 
 export default function PortalClientePage() {
   const { clienteSession, loginCliente, logoutCliente } = useAuth();
@@ -87,21 +80,13 @@ export default function PortalClientePage() {
     [contratos]
   );
 
-  const { products, isLoading: loadingProducts } = useContractProducts(activeContract?.id);
-  const currentProductId = products?.[0]?.id;
-  const activeProduct = useMemo(() => 
-    products?.find(p => p.id === currentProductId),
-    [products, currentProductId]
-  );
-
-  const { phases, isLoading: loadingPhases } = useContractProductPhases(currentProductId);
   const { submitCSAT } = useClientCSAT(clientId);
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
-  const { deliverables, isLoading: loadingDocs } = usePortalDeliverables(clientId);
   const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
   const { csatStatus } = usePortalCSAT(clientId);
 
-  const isLoading = loadingFicha || loadingContratos || loadingProducts || loadingPhases || loadingDocs || loadingHist || loadingSummary;
+  const isLoading = loadingFicha || loadingContratos || loadingHist || loadingSummary;
+
 
   const handleLogin = async () => {
     setErro('');
@@ -215,58 +200,37 @@ export default function PortalClientePage() {
 
         {/* 1. Journey Section */}
         <section className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-8 bg-primary rounded-full" />
-            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Sua Jornada</h2>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-1 rounded-full bg-primary" />
+            <h2 className="text-lg font-black uppercase tracking-tight">Produtos e Jornada de Execução</h2>
           </div>
-          {contratos?.map(contrato => (
-            <ContractSection key={contrato.id} contrato={contrato} products={products} currentProductId={currentProductId} phases={phases} onRateMeeting={handleOpenCsat} csatStatus={csatStatus} />
-          ))}
+
+          <Accordion type="single" collapsible className="w-full" defaultValue={activeContract?.id}>
+            {contratos?.map(contrato => (
+              <ContractJourneyCard 
+                key={contrato.id} 
+                contrato={contrato} 
+                expanded={contrato.id === activeContract?.id} 
+                mode="client" 
+              />
+            ))}
+          </Accordion>
+
           {contratos?.length === 0 && (
             <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
               <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
-              <p className="text-neutral-400 text-sm">Nenhum contrato encontrado.</p>
+              <p className="text-neutral-400 text-sm">Nenhum contrato ativo encontrado.</p>
             </div>
           )}
         </section>
 
         <Separator />
 
-        {/* 2. Deliverables Section */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-3">
-            <FileCheck className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Entregáveis</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {deliverables?.map(doc => (
-              <Card key={doc.id} className="p-4 border-none shadow-sm bg-white hover:ring-1 hover:ring-primary/20 transition-all">
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/5 flex items-center justify-center text-primary"><FileText className="h-6 w-6" /></div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-neutral-900 truncate">{doc.title}</h4>
-                    <p className="text-xs text-neutral-500 mt-1 capitalize">{doc.status}</p>
-                    <p className="text-[10px] text-neutral-400 mt-0.5">{format(new Date(doc.date), "dd 'de' MMMM", { locale: ptBR })}</p>
-                    <Button variant="outline" size="sm" className="mt-3 w-full h-8 text-[10px] font-bold uppercase" onClick={() => window.open(doc.fileUrl, '_blank')}>
-                      <ExternalLink className="h-3 w-3 mr-2" /> Visualizar
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-            {deliverables?.length === 0 && (
-              <div className="col-span-full py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100"><p className="text-neutral-400 text-sm">Nenhum entregável disponível.</p></div>
-            )}
-          </div>
-        </section>
-
-        <Separator />
-
-        {/* 3. History Section */}
+        {/* 2. History Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
             <History className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico</h2>
+            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico de Reuniões</h2>
           </div>
           <div className="space-y-4">
             {historico?.map(event => (
@@ -282,10 +246,13 @@ export default function PortalClientePage() {
               </Card>
             ))}
             {historico?.length === 0 && (
-              <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100"><p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p></div>
+              <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                <p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p>
+              </div>
             )}
           </div>
         </section>
+
       </div>
 
       <Dialog open={isCsatOpen} onOpenChange={setIsCsatOpen}>
@@ -320,113 +287,28 @@ function IndicatorCard({ title, value, icon }: { title: string, value: string, i
   );
 }
 
-function ContractSection({ contrato, products, currentProductId, phases, onRateMeeting, csatStatus }: any) {
-  const [isExpanded, setIsExpanded] = useState(true);
-  return (
-    <div className="space-y-6">
-      <Card className="border-none shadow-md bg-white overflow-hidden">
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-xl bg-neutral-50 flex items-center justify-center text-neutral-400 border border-neutral-100"><Briefcase className="h-7 w-7" /></div>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h3 className="text-xl font-bold text-neutral-900">{contrato.tipo}</h3>
-                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-100 uppercase text-[9px]">{contrato.status}</Badge>
-                </div>
-                <p className="text-xs text-neutral-500 mt-1">Consultor: {contrato.consultorNome}</p>
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>{isExpanded ? <ChevronUp /> : <ChevronDown />}</Button>
-          </div>
-        </div>
-      </Card>
 
-      {isExpanded && products?.map((product: any) => (
-        <Card key={product.id} className="border border-neutral-100 shadow-sm bg-white overflow-hidden">
-          <div className="p-6 border-b border-neutral-100 bg-neutral-50/30">
-            <h4 className="text-lg font-bold text-neutral-900">{product.productNome}</h4>
-          </div>
-          <div className="p-0 overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-white border-b border-neutral-100">
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase">Módulo</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase">Duração</th>
-                </tr>
-              </thead>
-              <tbody>
-                {phases?.map((phase: any) => (
-                  <ModuleRow key={phase.id} phase={phase} onRateMeeting={onRateMeeting} csatStatus={csatStatus} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+
+
+function StarRating({ value, onChange }: { value: number, onChange: (v: number) => void }) {
+  return (
+    <div className="flex gap-2">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <button key={i} onClick={() => onChange(i)} className={cn("transition-all", value >= i ? "text-yellow-500 fill-yellow-500" : "text-neutral-200")}>
+          <Star className="h-8 w-8" />
+        </button>
       ))}
     </div>
   );
 }
 
-function ModuleRow({ phase, onRateMeeting, csatStatus }: any) {
-  const [isOpen, setIsOpen] = useState(false);
+function NpsScale({ value, onChange }: { value: number, onChange: (v: number) => void }) {
   return (
-    <>
-      <tr className="group cursor-pointer hover:bg-neutral-50/50" onClick={() => setIsOpen(!isOpen)}>
-        <td className="px-6 py-4 font-bold text-sm">{phase.name}</td>
-        <td className="px-6 py-4 uppercase text-[9px] font-bold">{phase.status}</td>
-        <td className="px-6 py-4 text-xs">{(phase.durationMinutes || 0) / 60}h</td>
-      </tr>
-      {isOpen && (
-        <tr>
-          <td colSpan={3} className="px-6 pb-6">
-            <PhaseMeetingsList moduleId={phase.id} onRateMeeting={onRateMeeting} csatStatus={csatStatus} />
-          </td>
-        </tr>
-      )}
-    </>
-  );
-}
-
-function PhaseMeetingsList({ moduleId, onRateMeeting, csatStatus }: any) {
-  const { meetings, isLoading } = useModuleMeetings(moduleId);
-  if (isLoading) return <Skeleton className="h-20 w-full" />;
-  return (
-    <div className="space-y-2">
-      {meetings?.map((m: any) => {
-        const isCompleted = m.status === 'realizada';
-        const isResponded = csatStatus?.find((s: any) => s.id === m.id)?.isResponded;
-        return (
-          <div key={m.id} className="p-3 bg-neutral-50 rounded-lg flex justify-between items-center border border-neutral-100">
-            <span className="text-xs font-medium">{m.title}</span>
-            {isCompleted && !isResponded && (
-              <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => onRateMeeting(m)}>AVALIAR</Button>
-            )}
-            {isResponded && <Badge variant="secondary" className="text-[8px]">AVALIADO</Badge>}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function StarRating({ value, onChange }: any) {
-  return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <button key={s} type="button" onClick={() => onChange(s)}><Star className={cn("h-6 w-6", value >= s ? "fill-yellow-400 text-yellow-400" : "text-neutral-200")} /></button>
+    <div className="flex justify-between gap-1">
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+        <button key={i} onClick={() => onChange(i)} className={cn("flex-1 h-10 text-xs font-bold transition-all flex items-center justify-center rounded border", value === i ? "bg-primary text-white" : "bg-white")}>{i}</button>
       ))}
     </div>
   );
 }
 
-function NpsScale({ value, onChange }: any) {
-  return (
-    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
-      {Array.from({ length: 11 }).map((_, i) => (
-        <button key={i} type="button" onClick={() => onChange(i)} className={cn("h-8 w-8 flex items-center justify-center rounded border", value === i ? "bg-primary text-white" : "bg-white")}>{i}</button>
-      ))}
-    </div>
-  );
-}
