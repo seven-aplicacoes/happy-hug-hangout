@@ -313,6 +313,7 @@ export const ConsultorModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, hours_available: parseInt(e.target.value) || 0 })
                 }
+                disabled={modo === 'consultor'}
                 required
               />
             </div>
