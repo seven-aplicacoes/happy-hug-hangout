@@ -3394,6 +3394,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_client_access_to_profile: {
+        Args: { p_profile_id: string }
+        Returns: boolean
+      }
       check_consultant_client_access: {
         Args: { p_client_id: string }
         Returns: boolean
