@@ -53,7 +53,7 @@ export function useConsultantAvailability(filters: {
     mutationFn: async (availability: Partial<ConsultantAvailability>) => {
       const { data, error } = await supabase
         .from('consultant_availability')
-        .upsert(availability)
+        .upsert(availability as any)
         .select();
       if (error) throw error;
       return data;
@@ -79,7 +79,7 @@ export function useConsultantAvailability(filters: {
     mutationFn: async (slot: Partial<ConsultantAvailableSlot>) => {
       const { data, error } = await supabase
         .from('consultant_available_slots')
-        .upsert(slot)
+        .upsert(slot as any)
         .select();
       if (error) throw error;
       return data;
