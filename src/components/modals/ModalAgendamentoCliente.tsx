@@ -33,24 +33,31 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
   const [consultantCalendly, setConsultantCalendly] = useState<{
     connected: boolean;
     schedulingUrl: string | null;
-  } | null>(null);
+    loaded: boolean;
+  }>({ connected: false, schedulingUrl: null, loaded: false });
 
   // Check if consultant has Calendly connected
   useEffect(() => {
     async function checkCalendly() {
-      if (!moduleMeeting.consultantId) return;
+      if (!moduleMeeting.consultantId) {
+        setConsultantCalendly(prev => ({ ...prev, loaded: true }));
+        return;
+      }
       
       const { data, error } = await supabase
         .from('profiles')
         .select('calendly_connected, calendly_scheduling_url')
         .eq('id', moduleMeeting.consultantId)
-        .single();
+        .maybeSingle();
         
       if (!error && data) {
         setConsultantCalendly({
           connected: !!data.calendly_connected,
-          schedulingUrl: data.calendly_scheduling_url
+          schedulingUrl: data.calendly_scheduling_url,
+          loaded: true
         });
+      } else {
+        setConsultantCalendly(prev => ({ ...prev, loaded: true }));
       }
     }
     checkCalendly();
