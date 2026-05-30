@@ -133,11 +133,12 @@ export default function AdminDashboardPage() {
     const upsell = clientes.filter(c => c.potencialUpsell);
 
     // Engajamento por dias sem reunião
-    const engajamentoCounts = { em_dia: 0, atencao: 0, critico: 0 };
+    const engajamentoCounts = { em_dia: 0, atencao: 0, critico: 0, sem_dados: 0 };
     clientes.forEach(c => { 
-      const e = calcularEngajamento(c.id);
+      const e = calcularEngajamento(c.id, reunioes);
       if (e in engajamentoCounts) engajamentoCounts[e as keyof typeof engajamentoCounts]++; 
     });
+
 
     // Alertas operacionais
     const alertasCounts = { critico: 0, atencao: 0, oportunidade: 0 };
