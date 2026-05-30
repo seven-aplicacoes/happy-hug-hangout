@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, selecionarPerfil, setUser } = useAuth();
+  const { login, selecionarPerfil, setUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
