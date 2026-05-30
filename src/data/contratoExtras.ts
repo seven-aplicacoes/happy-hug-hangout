@@ -23,19 +23,24 @@ const hashStr = (s: string): number => {
   return Math.abs(h);
 };
 
-/** Produto vinculado a um contrato (determinístico pelo id). */
-export function getProdutoContrato(contratoId: string): Produto {
-  return PRODUTOS[hashStr(contratoId) % PRODUTOS.length];
+/** Produto vinculado a um contrato. Tenta usar o tipo do contrato, senão faz hash. */
+export function getProdutoContrato(contrato: Contrato | string): string {
+  if (typeof contrato === 'object') {
+    return contrato.tipo;
+  }
+  // Fallback para quando só temos o ID (mock)
+  return PRODUTOS[hashStr(contrato) % PRODUTOS.length];
 }
 
 /** Produto atual do cliente — primeiro contrato vigente. */
-export function getProdutoAtualCliente(clienteId: string, customContratos?: Contrato[]): Produto | null {
+export function getProdutoAtualCliente(clienteId: string, customContratos?: Contrato[]): string | null {
   const source = customContratos || contratos;
   const ct = source.find(
     c => c.clienteId === clienteId && !['encerrado', 'churn', 'cancelado'].includes(c.status),
   );
-  return ct ? getProdutoContrato(ct.id) : null;
+  return ct ? getProdutoContrato(ct) : null;
 }
+
 
 
 /** Histórico de produtos consumidos pelo cliente (todos os contratos). */
