@@ -182,7 +182,19 @@ export default function AdminDashboardPage() {
 
 
   const columns: Column<ClientePriorizado>[] = [
-    { key: 'nome', header: 'Cliente', render: (c) => <span className="font-medium">{c.nomeFantasia}</span> },
+    { key: 'nome', header: 'Cliente', render: (c) => (
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
+          {c.avatar_url ? (
+            <img src={c.avatar_url} alt={c.nomeFantasia} className="h-full w-full object-cover" />
+          ) : (
+            (c.nomeFantasia || 'C').charAt(0).toUpperCase()
+          )}
+        </div>
+        <span className="font-medium">{c.nomeFantasia}</span>
+      </div>
+    )},
+
     { key: 'consultor', header: 'Usuário', render: (c) => <span className="text-xs">{c.consultorNome}</span> },
     { key: 'situacao', header: 'Situação', render: (c) => <StatusTag label={c.situacaoContrato} /> },
     { key: 'risco', header: 'Risco', render: (c) => { const e = calcularEngajamento(c.id, reunioes); return <StatusTag label={labelEngajamento[e]} variant={e === 'critico' ? 'danger' : e === 'atencao' ? 'warning' : e === 'sem_dados' ? 'info' : 'success'} />; } },
