@@ -18,7 +18,7 @@ interface Props {
 export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props) => {
   const { toast } = useToast();
   const { slots, isLoading: loadingSlots } = useConsultantAvailability({
-    contractPhaseId: moduleMeeting.moduleId,
+    contractModuleMeetingId: moduleMeeting.id,
     consultantId: moduleMeeting.consultantId
   });
   const { upsertReuniao } = useReunioes();
