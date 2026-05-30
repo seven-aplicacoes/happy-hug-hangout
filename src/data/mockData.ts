@@ -292,6 +292,7 @@ export const labelEngajamento: Record<NivelEngajamento, string> = {
   em_dia: 'Em dia',
   atencao: 'Atenção',
   critico: 'Crítico',
+  nao_avaliado: 'Não avaliado',
 };
 
 export const variantEngajamento: Record<NivelEngajamento, 'success' | 'warning' | 'danger' | 'neutral'> = {
