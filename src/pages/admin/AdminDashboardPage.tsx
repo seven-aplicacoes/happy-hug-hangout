@@ -197,7 +197,7 @@ export default function AdminDashboardPage() {
     { key: 'acao', header: 'Ação recomendada', className: 'max-w-[180px]', render: (c) => <span className="text-xs font-medium">{c.acaoRecomendada}</span> },
     {
       key: 'acoes', header: '', className: 'w-[60px]', render: (c) => (
-        (calcularEngajamento(c.id) === 'critico') ? (
+        (calcularEngajamento(c.id, reunioes) === 'critico') ? (
           <Button variant="ghost" size="sm" className="text-seven-danger" onClick={(e) => { e.stopPropagation(); setStatusModal({ open: true, clienteNome: c.nomeFantasia, statusAtual: c.status }); }}>
             <Shield className="h-3.5 w-3.5" />
           </Button>
