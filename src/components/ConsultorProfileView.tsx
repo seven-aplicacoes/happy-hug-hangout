@@ -53,6 +53,57 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { contratos, isLoading: loadingContratos } = useContratos();
+  const queryClient = useQueryClient();
+
+  // Calendly Integration State
+  const { data: calendlyIntegration, isLoading: loadingIntegration } = useQuery({
+    queryKey: ['calendly-integration', consultorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('consultant_calendar_integrations')
+        .select('*')
+        .eq('consultant_id', consultorId)
+        .eq('provider', 'calendly')
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!consultorId
+  });
+
+  const handleConnectCalendly = () => {
+    toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
+    const client_id = 'CALENDLY_CLIENT_ID'; 
+    // We use a specific redirect URI that matches what's configured in Calendly dashboard
+    const redirect_uri = encodeURIComponent(window.location.origin + window.location.pathname);
+    const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
+    window.location.href = url;
+  };
+
+  useEffect(() => {
+    // Handle OAuth Callback if code is in URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code && modo === 'consultor') {
+      const exchangeCode = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('calendly-oauth', {
+            body: { action: 'exchange_code', code }
+          });
+          if (error) throw error;
+          toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
+          queryClient.invalidateQueries({ queryKey: ['calendly-integration', consultorId] });
+          queryClient.invalidateQueries({ queryKey: ['profiles', consultorId] });
+          // Clear URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error: any) {
+          console.error('Error exchanging code:', error);
+          toast({ title: 'Erro ao conectar', description: error.message, variant: 'destructive' });
+        }
+      };
+      exchangeCode();
+    }
+  }, [consultorId, modo, queryClient]);
   
   // Clientes are already filtered in useClientes hook for non-admins if profile is consultor
   const meusClientes = useMemo(() => {
