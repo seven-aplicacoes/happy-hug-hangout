@@ -482,13 +482,15 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         for (let i = 0; i < contractProducts.length; i++) {
           const product = contractProducts[i];
           const dbProduct = (savedProducts || []).find((sp: any) => sp.product_id === product.productId);
-          const cpId = product.id || dbProduct?.id;
+          const cpId = (product.id && !String(product.id).startsWith('temp-')) ? product.id : dbProduct?.id;
 
           if (cpId) {
-            const currentPhaseIds = product.phases.filter((ph: any) => ph.id).map((ph: any) => ph.id);
+            console.log(`7. Sincronizando módulos para o produto "${product.productName}" (ID: ${cpId})`);
+            const currentPhaseIds = product.phases.filter((ph: any) => ph.id && !String(ph.id).startsWith('temp-')).map((ph: any) => ph.id);
             const { data: existingPhases } = await supabase.from('contract_product_phases').select('id').eq('contract_product_id', cpId);
             const phasesToDelete = (existingPhases || []).filter((ph: any) => !currentPhaseIds.includes(ph.id)).map((ph: any) => ph.id);
             if (phasesToDelete.length > 0) {
+              console.log(`8. Removendo módulos excluídos do produto:`, phasesToDelete);
               await supabase.from('contract_product_phases').delete().in('id', phasesToDelete);
             }
 
