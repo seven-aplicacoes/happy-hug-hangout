@@ -90,6 +90,7 @@ export function useReunioes() {
         Object.entries(payload).filter(([_, v]) => v !== undefined)
       );
 
+
       const { data, error } = await supabase
         .from('meetings')
         .upsert(cleanPayload as any)
