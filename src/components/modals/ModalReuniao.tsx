@@ -11,8 +11,10 @@ import { useConsultores } from '@/hooks/useConsultores';
 import { useContratos } from '@/hooks/useContratos';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { useContractProductPhases } from '@/hooks/useContractProductPhases';
+import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import type { Reuniao, StatusReuniao } from '@/types';
 
