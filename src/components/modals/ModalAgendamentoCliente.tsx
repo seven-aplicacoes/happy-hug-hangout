@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Loader2, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, Loader2, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { useReunioes } from '@/hooks/useReunioes';
 import { ContractModuleMeeting } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { checkConsultantConflict } from '@/lib/conflicts';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isAfter, startOfToday } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Props {
   open: boolean;
@@ -23,14 +25,64 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
   });
   const { upsertReuniao } = useReunioes();
   
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filter slots by selected date
+  const slotsForSelectedDate = useMemo(() => {
+    if (!selectedDate || !slots) return [];
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    return slots.filter(s => s.available_date === dateStr && !s.is_booked);
+  }, [selectedDate, slots]);
+
+  // Generate days for the calendar view
+  const calendarDays = useMemo(() => {
+    const start = startOfMonth(currentMonth);
+    const end = endOfMonth(currentMonth);
+    const days = eachDayOfInterval({ start, end });
+    
+    // We only care about days that have at least one slot available
+    return days.map(day => {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const hasSlots = slots?.some(s => s.available_date === dateStr && !s.is_booked);
+      const isPast = !isAfter(day, subMonths(startOfToday(), 0)) && !isSameDay(day, startOfToday());
+      
+      return {
+        date: day,
+        hasSlots,
+        isPast,
+        isToday: isSameDay(day, startOfToday())
+      };
+    });
+  }, [currentMonth, slots]);
+
+  const handleNextMonth = () => setCurrentMonth(prev => addMonths(prev, 1));
+  const handlePrevMonth = () => setCurrentMonth(prev => subMonths(prev, 1));
 
   const handleConfirm = async () => {
     if (!selectedSlot) return;
     setIsSubmitting(true);
     
     try {
+      // Regra de reagendamento: 2 horas antes
+      if (moduleMeeting.scheduledAt) {
+        const now = new Date();
+        const scheduledDate = new Date(moduleMeeting.scheduledAt);
+        const diffInHours = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        
+        if (diffInHours < 2 && diffInHours > 0) {
+          toast({
+            title: "Reagendamento bloqueado",
+            description: "Este encontro só pode ser reagendado até 2 horas antes do horário marcado.",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const endTime = calculateEndTime(selectedSlot.start_time, selectedSlot.duration_minutes);
       
       const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
@@ -89,57 +141,127 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
   );
 
   return (
-    <BaseModal open={open} onClose={onClose} titulo="Agendar Encontro" footer={footer}>
-      <div className="space-y-6 py-2">
-        <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
-          <p className="text-sm font-bold text-primary">{moduleMeeting.title}</p>
-          <p className="text-xs text-muted-foreground mt-1">Consultor Responsável: <span className="font-semibold text-foreground">{moduleMeeting.consultantName}</span></p>
+    <BaseModal open={open} onClose={onClose} titulo="Agendar Encontro" footer={footer} size="xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-2">
+        <div className="space-y-6">
+          <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+            <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-1">Resumo do Encontro</h3>
+            <p className="text-sm font-bold text-foreground">{moduleMeeting.title}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                {moduleMeeting.consultantName?.charAt(0)}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Consultor: <span className="font-semibold text-foreground">{moduleMeeting.consultantName}</span></p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5" /> 1. Selecione a Data
+              </h4>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrevMonth}><ChevronLeft className="h-4 w-4" /></Button>
+                <span className="text-[11px] font-bold uppercase min-w-[100px] text-center">{format(currentMonth, 'MMMM yyyy', { locale: ptBR })}</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNextMonth}><ChevronRight className="h-4 w-4" /></Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 border rounded-xl p-2 bg-white">
+              {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
+                <div key={i} className="text-center py-2 text-[10px] font-black text-muted-foreground/50">{d}</div>
+              ))}
+              {calendarDays.map((day, i) => {
+                const isSelected = selectedDate && isSameDay(day.date, selectedDate);
+                const canSelect = day.hasSlots && !day.isPast;
+
+                return (
+                  <button
+                    key={i}
+                    disabled={!canSelect}
+                    onClick={() => {
+                      setSelectedDate(day.date);
+                      setSelectedSlot(null);
+                    }}
+                    className={cn(
+                      "aspect-square flex flex-col items-center justify-center rounded-lg text-xs font-bold transition-all relative group",
+                      isSelected ? "bg-primary text-white shadow-md scale-105" : 
+                      canSelect ? "hover:bg-primary/10 text-foreground" : "text-muted-foreground/30 cursor-not-allowed"
+                    )}
+                  >
+                    {format(day.date, 'd')}
+                    {day.hasSlots && !day.isPast && !isSelected && (
+                      <div className="absolute bottom-1.5 h-1 w-1 rounded-full bg-primary" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-3 w-3" /> Escolha uma data e horário
+        <div className="space-y-4">
+          <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5" /> 2. Horários Disponíveis
           </h4>
           
           {loadingSlots ? (
-             <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary opacity-50" /></div>
-          ) : availableSlots.length === 0 ? (
-             <div className="py-10 text-center bg-muted/20 rounded-lg border border-dashed">
-               <p className="text-sm text-muted-foreground font-bold">Nenhuma disponibilidade configurada para este encontro.</p>
-               <p className="text-[11px] text-muted-foreground mt-2">Entre em contato com o consultor responsável.</p>
-             </div>
+             <div className="py-20 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary opacity-50" /></div>
+          ) : !selectedDate ? (
+            <div className="py-20 text-center bg-muted/20 rounded-xl border border-dashed flex flex-col items-center gap-3">
+              <Calendar className="h-8 w-8 text-muted-foreground/30" />
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-tight">Selecione uma data no calendário</p>
+            </div>
+          ) : slotsForSelectedDate.length === 0 ? (
+            <div className="py-20 text-center bg-muted/20 rounded-xl border border-dashed flex flex-col items-center gap-3">
+              <Clock className="h-8 w-8 text-muted-foreground/30" />
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-tight text-center px-4">Nenhum horário disponível para esta data.</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[350px] overflow-y-auto pr-2">
-              {availableSlots.map(slot => (
+            <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {slotsForSelectedDate.map(slot => (
                 <button
                   key={slot.id}
                   onClick={() => setSelectedSlot(slot)}
                   className={cn(
-                    "flex flex-col items-start p-4 rounded-xl border text-left transition-all hover:border-primary hover:shadow-md group",
-                    selectedSlot?.id === slot.id ? "bg-primary text-white border-primary shadow-lg scale-[1.02]" : "bg-white border-muted shadow-sm"
+                    "flex flex-col items-center justify-center p-4 rounded-xl border transition-all hover:border-primary group",
+                    selectedSlot?.id === slot.id ? "bg-primary text-white border-primary shadow-lg" : "bg-white border-muted"
                   )}
                 >
+                  <span className="text-base font-black tabular-nums">{slot.start_time.substring(0, 5)}</span>
                   <span className={cn(
-                    "text-xs font-black uppercase tracking-tight",
-                    selectedSlot?.id === slot.id ? "text-white" : "text-foreground"
+                    "text-[10px] font-bold uppercase tracking-widest mt-1 opacity-60",
+                    selectedSlot?.id === slot.id ? "text-white" : "text-muted-foreground"
                   )}>
-                    {new Date(slot.available_date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                    {slot.duration_minutes} min
                   </span>
-                  <div className="flex items-center gap-3 mt-2 w-full border-t border-current/10 pt-2">
-                    <span className="text-[11px] font-bold flex items-center gap-1.5 opacity-90">
-                      <Clock className="h-3.5 w-3.5" /> {slot.start_time.substring(0, 5)}
-                    </span>
-                    <span className="text-[11px] font-medium opacity-60 ml-auto">
-                      {slot.duration_minutes} min
-                    </span>
-                  </div>
                 </button>
               ))}
+            </div>
+          )}
+
+          {selectedSlot && (
+            <div className="mt-6 p-4 rounded-xl bg-seven-success/5 border border-seven-success/10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-full bg-seven-success/20 flex items-center justify-center text-seven-success shrink-0">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h5 className="text-[11px] font-black uppercase tracking-widest text-seven-success mb-1">Confirmação de Horário</h5>
+                  <p className="text-sm font-bold text-foreground">
+                    {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Início: <span className="text-foreground font-bold">{selectedSlot.start_time.substring(0, 5)}</span> · Duração: <span className="text-foreground font-bold">{selectedSlot.duration_minutes} min</span>
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
     </BaseModal>
+  );
   );
 };
 
