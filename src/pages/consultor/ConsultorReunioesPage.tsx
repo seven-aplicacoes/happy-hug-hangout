@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { useAuth } from '@/contexts/AuthContext';
 import { labelStatus } from '@/data/mockData';
 import { useReunioes } from '@/hooks/useReunioes';
+import { useConsultantMeetingIndicators } from '@/hooks/useConsultantMeetingIndicators';
 import { useClientes } from '@/hooks/useClientes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -31,14 +32,25 @@ const MESES_LABEL: Record<number, string> = {
 
 export default function ConsultorReunioesPage() {
   const { user } = useAuth();
-  const consultorId = user?.consultorId || 'c1';
+  const consultorId = user?.consultorId;
   const { reunioes: allReunioes, isLoading: loadingReunioes } = useReunioes();
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
   
-  const isLoading = loadingReunioes || loadingClientes;
+  const now = new Date();
+  const [mesAtual, setMesAtual] = useState({ year: now.getFullYear(), month: now.getMonth() });
+
+  const { 
+    realizadas: statsRealizadas, 
+    previstas: statsPrevistas, 
+    saldo: statsSaldo, 
+    aderencia: statsAderencia, 
+    hasGoal, 
+    isLoading: loadingStats 
+  } = useConsultantMeetingIndicators(consultorId, mesAtual.month, mesAtual.year);
+  
+  const isLoading = loadingReunioes || loadingClientes || loadingStats;
   const reunioes = allReunioes || [];
-  const clientesAtivos = (clientes || []).filter(c => c.status === 'ativo');
 
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -47,8 +59,6 @@ export default function ConsultorReunioesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAgendamentoOpen, setModalAgendamentoOpen] = useState(false);
 
-  const now = new Date();
-  const [mesAtual, setMesAtual] = useState({ year: now.getFullYear(), month: now.getMonth() });
   const [paginaDia, setPaginaDia] = useState(0);
 
   const clienteOptions = useMemo(() => {
@@ -74,14 +84,13 @@ export default function ConsultorReunioesPage() {
     });
   }, [reunioes, mesAtual]);
 
-  const aderenciaStats = useMemo(() => {
-    const realizadas = reunioesMes.filter(r => r.status === 'realizada').length;
-    const agendadas = reunioesMes.filter(r => r.status === 'agendada').length;
-    const previstas = clientesAtivos.length * 4;
-    const aderencia = previstas > 0 ? Math.round((realizadas / previstas) * 100) : 0;
-    const saldo = previstas - realizadas - agendadas;
-    return { realizadas, agendadas, previstas, aderencia, saldo };
-  }, [reunioesMes, clientesAtivos]);
+  const aderenciaStats = useMemo(() => ({ 
+    realizadas: statsRealizadas, 
+    previstas: statsPrevistas, 
+    aderencia: statsAderencia, 
+    saldo: statsSaldo, 
+    hasGoal 
+  }), [statsRealizadas, statsPrevistas, statsAderencia, statsSaldo, hasGoal]);
 
   const aderenciaTone = aderenciaStats.aderencia >= 80 ? 'success' : aderenciaStats.aderencia >= 60 ? 'warning' : 'danger';
   const aderenciaColor = aderenciaTone === 'success' ? 'bg-seven-success' : aderenciaTone === 'warning' ? 'bg-seven-warning' : 'bg-seven-danger';
@@ -94,7 +103,7 @@ export default function ConsultorReunioesPage() {
     if (filters.status && filters.status !== 'todos') d = d.filter(r => r.status === filters.status);
     if (filters.cliente && filters.cliente !== 'todos') d = d.filter(r => r.clienteNome === filters.cliente);
     if (filters.convidado && filters.convidado !== 'todos') d = d.filter(r => r.participantes.includes(filters.convidado));
-    return d.sort((a, b) => `${a.data}${a.startTime}`.localeCompare(`${b.data}${b.startTime}`));
+    return d.sort((a, b) => `${a.meetingDate}${a.startTime}`.localeCompare(`${b.meetingDate}${b.startTime}`));
   }, [search, filters, reunioesMes]);
 
   const grouped = useMemo(() => {
@@ -179,18 +188,21 @@ export default function ConsultorReunioesPage() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="ui-overline">Previstas</span>
-              <span className="text-sm font-semibold tabular-nums">{aderenciaStats.previstas}</span>
-              <span className="text-muted-foreground">({clientesAtivos.length}×4)</span>
+              <span className="text-sm font-semibold tabular-nums">
+                {aderenciaStats.hasGoal ? aderenciaStats.previstas : '—'}
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="ui-overline">Saldo</span>
-              <span className={cn('text-sm font-semibold tabular-nums', aderenciaStats.saldo < 0 && 'text-seven-success')}>
-                {aderenciaStats.saldo < 0 ? `+${Math.abs(aderenciaStats.saldo)}` : aderenciaStats.saldo}
+              <span className={cn('text-sm font-semibold tabular-nums', aderenciaStats.hasGoal && aderenciaStats.saldo < 0 && 'text-seven-success')}>
+                {aderenciaStats.hasGoal ? (aderenciaStats.saldo < 0 ? `+${Math.abs(aderenciaStats.saldo)}` : aderenciaStats.saldo) : '—'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="ui-overline">Aderência</span>
-              <span className={cn('text-base font-semibold tabular-nums', aderenciaText)}>{aderenciaStats.aderencia}%</span>
+              <span className={cn('text-base font-semibold tabular-nums', aderenciaText)}>
+                {aderenciaStats.hasGoal ? `${aderenciaStats.aderencia}%` : '—'}
+              </span>
             </div>
           </div>
         </div>
