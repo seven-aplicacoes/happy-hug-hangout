@@ -150,7 +150,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       // Conflict validation
       const endTime = calculateEndTime(startTime, duracao);
       const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
-        consultantId,
+        consultantId: consultorId,
         date: meetingDate,
         startTime,
         endTime,
