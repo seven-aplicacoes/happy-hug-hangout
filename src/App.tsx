@@ -44,6 +44,7 @@ import PortalClientePage from "@/pages/PortalClientePage";
 import IntegracoesPage from "@/pages/IntegracoesPage";
 import NotFound from "@/pages/NotFound";
 import NoAccess from "@/pages/NoAccess";
+import { ComingSoonPageWrapper } from "@/components/ComingSoonPageWrapper";
 
 
 const queryClient = new QueryClient();
@@ -77,23 +78,23 @@ const App = () => (
               <Route path="produtos" element={<AdminProdutosPage />} />
               <Route path="produtos-contratados" element={<Navigate to="/admin/clientes" replace />} />
               <Route path="contratos" element={<AdminContratosPage />} />
-              <Route path="renovacao" element={<AdminRenovacaoPage />} />
-              <Route path="ia" element={<AdminIAPage />} />
-              <Route path="inteligencia" element={<AdminInteligenciaPage />} />
-              <Route path="analise-avancada" element={<AdminAnaliseAvancadaPage />} />
-              <Route path="alertas" element={<AdminAlertasPage />} />
-              <Route path="mapa-carteira" element={<AdminMapaCarteiraPage />} />
-              <Route path="pipeline" element={<AdminPipelinePage />} />
+              <Route path="renovacao" element={<ComingSoonPageWrapper><AdminRenovacaoPage /></ComingSoonPageWrapper>} />
+              <Route path="ia" element={<ComingSoonPageWrapper><AdminIAPage /></ComingSoonPageWrapper>} />
+              <Route path="inteligencia" element={<ComingSoonPageWrapper><AdminInteligenciaPage /></ComingSoonPageWrapper>} />
+              <Route path="analise-avancada" element={<ComingSoonPageWrapper><AdminAnaliseAvancadaPage /></ComingSoonPageWrapper>} />
+              <Route path="alertas" element={<ComingSoonPageWrapper><AdminAlertasPage /></ComingSoonPageWrapper>} />
+              <Route path="mapa-carteira" element={<ComingSoonPageWrapper><AdminMapaCarteiraPage /></ComingSoonPageWrapper>} />
+              <Route path="pipeline" element={<ComingSoonPageWrapper><AdminPipelinePage /></ComingSoonPageWrapper>} />
               <Route path="consultores" element={<AdminConsultoresPage />} />
                <Route path="consultores/:id" element={<AdminConsultorDetalhePage />} />
                <Route path="permissoes-consultores" element={<AdminConsultantPermissionsPage />} />
                <Route path="metas-consultores" element={<AdminConsultantGoalsPage />} />
               <Route path="contratos/:id" element={<AdminContratoDetalhePage />} />
               <Route path="cliente/:id" element={<ClienteDetalhePage />} />
-              <Route path="metodologia" element={<MetodologiaPage />} />
+              <Route path="metodologia" element={<ComingSoonPageWrapper><MetodologiaPage /></ComingSoonPageWrapper>} />
               <Route path="documentos" element={<DocumentosPage />} />
-              <Route path="relacionamento" element={<AdminRelacionamentoPage />} />
-              <Route path="notificacoes" element={<AdminNotificacoesPage />} />
+              <Route path="relacionamento" element={<ComingSoonPageWrapper><AdminRelacionamentoPage /></ComingSoonPageWrapper>} />
+              <Route path="notificacoes" element={<ComingSoonPageWrapper><AdminNotificacoesPage /></ComingSoonPageWrapper>} />
               <Route path="tarefas" element={<AdminTarefasPage />} />
               <Route path="reunioes" element={<AdminReunioesPage />} />
               <Route path="integracoes" element={<IntegracoesPage />} />
@@ -105,10 +106,10 @@ const App = () => (
                <Route path="cliente/novo" element={<NovoClientePage />} />
               <Route path="reunioes" element={<ConsultorReunioesPage />} />
               <Route path="tarefas" element={<ConsultorTarefasPage />} />
-              <Route path="renovacao" element={<ConsultorRenovacaoPage />} />
+              <Route path="renovacao" element={<ComingSoonPageWrapper><ConsultorRenovacaoPage /></ComingSoonPageWrapper>} />
               <Route path="meu-perfil" element={<ConsultorMeuPerfilPage />} />
               <Route path="cliente/:id" element={<ClienteDetalhePage />} />
-              <Route path="metodologia" element={<MetodologiaPage />} />
+              <Route path="metodologia" element={<ComingSoonPageWrapper><MetodologiaPage /></ComingSoonPageWrapper>} />
               <Route path="documentos" element={<DocumentosPage />} />
               <Route path="integracoes" element={<IntegracoesPage />} />
             </Route>
