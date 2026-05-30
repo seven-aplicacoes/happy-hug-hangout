@@ -520,12 +520,12 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
           ) : (
             <>
               <StatusTag label={labelStatus[product.status] || product.status} />
-              {isParentEditing && mode === 'admin' && (
+              {mode === 'admin' && (
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={() => setIsEditing(true)} 
-                  className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5"
+                  className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5 font-bold"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                   Editar Produto
