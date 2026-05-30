@@ -458,10 +458,10 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       toast({ title: 'Sucesso', description: 'Contrato e produtos salvos com sucesso.' });
       onClose();
     } catch (error: any) {
-      console.error('Detailed error saving contract:', error);
+      console.error('Erro ao salvar módulos do contrato:', error);
       toast({ 
         title: 'Erro ao salvar', 
-        description: 'Não foi possível salvar o contrato. Verifique se os produtos e etapas estão preenchidos corretamente.', 
+        description: 'Não foi possível salvar as alterações do contrato. Verifique os dados obrigatórios.', 
         variant: 'destructive' 
       });
     } finally {
