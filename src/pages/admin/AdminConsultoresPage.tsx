@@ -439,6 +439,7 @@ export default function AdminConsultoresPage() {
           onSave={handleSaveConsultant}
           consultor={selectedConsultant}
           isProcessing={isProcessing}
+          modo=\"admin\"
         />
 
         <AlertDialog open={!!consultantToDelete} onOpenChange={() => setConsultantToDelete(null)}>
