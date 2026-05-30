@@ -82,14 +82,21 @@ export function useContractProductPhases(contractProductId?: string) {
           updated_by: user?.id,
         };
 
-        if (item.id && typeof item.id === 'string' && item.id.length > 10) {
+        if (item.id && typeof item.id === 'string' && item.id.length > 10 && !item.id.startsWith('temp-')) {
           p.id = item.id;
         } else {
           p.created_by = user?.id;
+          // Se for um novo item em um upsert em lote, é melhor gerar o ID no frontend 
+          // ou garantir que o campo não vá como null.
+          if (!item.id || String(item.id).startsWith('temp-')) {
+            p.id = crypto.randomUUID();
+          }
         }
 
         return p;
       });
+
+      console.log("Payload fases/módulos para upsert:", payload);
 
       const { data: savedPhases, error } = await supabase
         .from('contract_product_phases')
