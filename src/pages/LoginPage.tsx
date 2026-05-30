@@ -13,11 +13,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, selecionarPerfil, setUser } = useAuth();
+  const { login, selecionarPerfil, setUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await logout(); // Clear any existing session first
     if (!email || !senha) {
       toast({ title: 'Campos obrigatórios', description: 'Preencha e-mail e senha.', variant: 'destructive' });
       return;
@@ -178,7 +179,10 @@ export default function LoginPage() {
               type="button"
               variant="outline"
               className="w-full h-11"
-              onClick={() => navigate('/portal')}
+              onClick={async () => {
+                await logout();
+                navigate('/portal');
+              }}
             >
               <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
               Acessar portal do cliente
