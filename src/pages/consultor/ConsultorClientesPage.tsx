@@ -116,13 +116,9 @@ export default function ConsultorClientesPage() {
   })).filter(d => d.value > 0), [meusClientes]);
 
   const distProdutos = useMemo(() => {
-    const map: Record<string, number> = {};
-    meusClientes.forEach(c => {
-      const p = getProdutoAtualCliente(c.id, contratos || []) || 'Sem produto';
-      map[p] = (map[p] || 0) + 1;
-    });
-    return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [meusClientes, contratos]);
+    return []; // No longer needed
+  }, []);
+
 
 
   const data = useMemo(() => {
