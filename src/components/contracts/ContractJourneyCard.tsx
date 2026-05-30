@@ -403,9 +403,23 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
   );
 }
 
-function ConsultantAvailabilityConfig({ clientId, contractId, contractProductId, contractPhaseId, consultantId }: { clientId: string, contractId: string, contractProductId: string, contractPhaseId: string, consultantId: string }) {
-  const { availabilities, slots, isLoading, upsertAvailability, deleteAvailability } = useConsultantAvailability({ 
-    clientId, contractId, contractProductId, contractPhaseId, consultantId 
+function ConsultantAvailabilityConfig({ 
+  clientId, 
+  contractId, 
+  contractProductId, 
+  contractPhaseId, 
+  consultantId,
+  contractModuleMeetingId
+}: { 
+  clientId: string, 
+  contractId: string, 
+  contractProductId: string, 
+  contractPhaseId: string, 
+  consultantId: string,
+  contractModuleMeetingId?: string
+}) {
+  const { availabilities, isLoading, upsertAvailability, deleteAvailability } = useConsultantAvailability({ 
+    clientId, contractId, contractProductId, contractPhaseId, consultantId, contractModuleMeetingId
   });
   
   const [startDate, setStartDate] = useState('');
