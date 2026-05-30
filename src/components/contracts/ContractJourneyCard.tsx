@@ -409,11 +409,23 @@ function ConsultantAvailabilityConfig({
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
   const [weekday, setWeekday] = useState('1'); // Segunda
+
+  useEffect(() => {
+    if (availabilities && availabilities.length > 0) {
+      const last = availabilities[availabilities.length - 1];
+      setStartDate(last.start_date);
+      setEndDate(last.end_date);
+    }
+  }, [availabilities]);
   
   const handleAddAvailability = async () => {
     if (!startDate || !endDate || !consultantId) return;
     
+    // Check for existing availability with same weekday and meeting
+    const existing = availabilities?.find(av => av.weekday === parseInt(weekday));
+
     await upsertAvailability.mutateAsync({
+      id: existing?.id,
       contract_module_meeting_id: contractModuleMeetingId,
       consultant_id: consultantId,
       start_date: startDate,

@@ -58,9 +58,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
   const { meetings: moduleMeetings, isLoading: loadingMeetings } = useContractModuleMeetings(contractProductPhaseId);
   
-  const { slots, availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
+  const { availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
     contractModuleMeetingId: contractModuleMeetingId && contractModuleMeetingId !== 'none' ? contractModuleMeetingId : undefined,
-    contractPhaseId: contractProductPhaseId && contractProductPhaseId !== 'none' ? contractProductPhaseId : undefined,
     consultantId: consultorId || undefined
   });
 
@@ -250,7 +249,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="h-11 px-6 font-bold">Cancelar</Button>
       <Button 
         onClick={handleSave} 
-        disabled={isSubmitting || (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!slots || slots.length === 0) && !loadingAvailability)} 
+        disabled={isSubmitting || (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability)} 
         className="h-11 px-8 font-bold shadow-lg shadow-primary/20"
       >
         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Salvar Reunião'}
@@ -415,7 +414,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   )}
-                  {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!slots || slots.length === 0) && !loadingAvailability && (
+                  {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability && (
                     <div className="flex items-center gap-2 text-[10px] text-amber-600 font-bold bg-amber-50 p-2 rounded-lg border border-amber-100">
                       <AlertTriangle className="h-3 w-3" /> Nenhuma disponibilidade configurada.
                     </div>
