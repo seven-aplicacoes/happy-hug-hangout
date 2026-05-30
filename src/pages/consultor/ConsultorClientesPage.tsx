@@ -135,9 +135,10 @@ export default function ConsultorClientesPage() {
 
     // Ordenação
     if (sortKey === 'prioridade') {
-      d.sort((a, b) => ordemPrioridade[calcularPrioridade(a).nivel] - ordemPrioridade[calcularPrioridade(b).nivel]);
+      d.sort((a, b) => ordemPrioridade[calcularPrioridade(a, contratos || [], tarefas || []).nivel] - ordemPrioridade[calcularPrioridade(b, contratos || [], tarefas || []).nivel]);
     } else if (sortKey === 'tempoSemInteracao') {
-      d.sort((a, b) => diasDesdeUltimaReuniao(b.id) - diasDesdeUltimaReuniao(a.id));
+      d.sort((a, b) => (diasDesdeUltimaReuniao(b.id, reunioes || []) || 0) - (diasDesdeUltimaReuniao(a.id, reunioes || []) || 0));
+
     } else {
       d.sort((a, b) => a.nomeFantasia.localeCompare(b.nomeFantasia));
     }
