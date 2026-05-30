@@ -21,7 +21,9 @@ import {
   Briefcase,
   DollarSign,
   Users,
-  Loader2
+  Loader2,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +34,9 @@ import { useClienteHistorico } from '@/hooks/useClienteHistorico';
 import { usePortalDeliverables } from '@/hooks/usePortalDeliverables';
 import { usePortalSummary } from '@/hooks/usePortalSummary';
 import { usePortalCSAT } from '@/hooks/usePortalCSAT';
+import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
+import { cn } from '@/lib/utils';
+
 import { 
   Dialog, 
   DialogContent, 
@@ -352,7 +357,7 @@ function ModuleRow({ phase, onRateMeeting, csatStatus }: any) {
 }
 
 function PhaseMeetingsList({ moduleId, onRateMeeting, csatStatus }: any) {
-  const { meetings, isLoading } = useModuleMeetings(moduleId);
+  const { meetings, isLoading } = useContractModuleMeetings(moduleId);
   if (isLoading) return <Skeleton className="h-20 w-full" />;
   return (
     <div className="space-y-2">
