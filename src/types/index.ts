@@ -291,6 +291,11 @@ export interface Tarefa {
   contractProductId?: string;
   contractProductPhaseId?: string;
   completedAt?: string;
+  createdBy?: string;
+  createdByName?: string;
+  createdByRole?: string;
+  delegatedBy?: string;
+  delegatedByName?: string;
 }
 
 
