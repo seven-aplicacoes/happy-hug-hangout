@@ -108,7 +108,7 @@ export default function ConsultorReunioesPage() {
     if (filters.status && filters.status !== 'todos') d = d.filter(r => r.status === filters.status);
     if (filters.cliente && filters.cliente !== 'todos') d = d.filter(r => r.clienteNome === filters.cliente);
     if (filters.convidado && filters.convidado !== 'todos') d = d.filter(r => r.participantes.includes(filters.convidado));
-    return d.sort((a, b) => `${a.data}${a.startTime}`.localeCompare(`${b.data}${b.startTime}`));
+    return d.sort((a, b) => `${a.meetingDate}${a.startTime}`.localeCompare(`${b.meetingDate}${b.startTime}`));
   }, [search, filters, reunioesMes]);
 
   const grouped = useMemo(() => {
