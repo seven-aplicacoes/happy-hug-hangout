@@ -101,7 +101,7 @@ const App = () => (
              <Route path="/login" element={<RootRedirect><LoginPage /></RootRedirect>} />
              <Route path="/selecionar-ambiente" element={<Navigate to="/admin/dashboard" replace />} />
              <Route path="/no-access" element={<NoAccess />} />
-            <Route path="/portal" element={<PortalClientePage />} />
+            <Route path="/portal" element={<RootRedirect><PortalClientePage /></RootRedirect>} />
 
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboardPage />} />
