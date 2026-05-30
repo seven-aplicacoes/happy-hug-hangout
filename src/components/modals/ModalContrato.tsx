@@ -386,7 +386,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     if (!validate()) return;
 
     setIsLoading(true);
-    const queryClient = (window as any).queryClient;
+    // Removemos queryClient global pois usamos useQueryClient hook
     try {
       console.log('1. Iniciando salvamento do contrato:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
       
@@ -532,7 +532,14 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         }
       }
 
-      toast({ title: 'Sucesso', description: 'Contrato e produtos salvos com sucesso.' });
+      toast({ title: 'Sucesso', description: 'Produto adicionado ao contrato com sucesso.' });
+      
+      // Invalidar queries para atualizar a interface automaticamente
+      queryClient.invalidateQueries({ queryKey: ['contratos'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-products', contractId] });
+      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
+      
       onClose();
     } catch (error: any) {
       console.error('Erro detalhado ao salvar:', error);
