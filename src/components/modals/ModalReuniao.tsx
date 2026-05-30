@@ -53,8 +53,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
   const { products: contractProducts } = useContractProducts(contractId);
   const { phases: productPhases } = useContractProductPhases(contractProductId);
+  const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
 
   const contratosFiltrados = (contratos || []).filter(c => !clienteId || c.clienteId === clienteId);
+
 
   useEffect(() => {
     if (reuniao) {
