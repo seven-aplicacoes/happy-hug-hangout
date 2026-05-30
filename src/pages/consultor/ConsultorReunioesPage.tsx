@@ -41,10 +41,10 @@ export default function ConsultorReunioesPage() {
   const [mesAtual, setMesAtual] = useState({ year: now.getFullYear(), month: now.getMonth() });
 
   const { 
-    realizadas, 
-    previstas, 
-    saldo, 
-    aderencia, 
+    realizadas: statsRealizadas, 
+    previstas: statsPrevistas, 
+    saldo: statsSaldo, 
+    aderencia: statsAderencia, 
     hasGoal, 
     isLoading: loadingStats 
   } = useConsultantMeetingIndicators(consultorId, mesAtual.month, mesAtual.year);
