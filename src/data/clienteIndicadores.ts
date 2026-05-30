@@ -308,6 +308,7 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
   if (cliente.faseMetodologica === 'diagnostico') { score += 5; fatores.push('Em diagnóstico (atenção inicial)'); }
 
   if (ct) {
+    const dias = diasDesdeUltimaReuniao(cliente.id) ?? 0;
     const diasContrato = (Date.now() - new Date(ct.dataInicio).getTime()) / 86400000;
     if (diasContrato < 60) { score += 8; fatores.push('Contrato recente'); }
     else if (diasContrato > 270) { score += 12; fatores.push('Próximo da renovação'); }
