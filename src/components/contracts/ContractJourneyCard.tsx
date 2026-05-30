@@ -587,7 +587,7 @@ export function ContractJourneyCard({
 }) {
 
 
-  const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
+  const { products, isLoading: isLoadingProducts, upsertContractProducts } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
