@@ -318,7 +318,9 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
   if (score >= 60) nivel = 'critica';
   else if (score >= 35) nivel = 'alta';
   else if (score >= 15) nivel = 'media';
-  else nivel = 'baixa';
+  else if (fatores.length > 0) nivel = 'baixa';
+  else nivel = 'nao_definida';
+
 
   return { nivel, score, fatores: fatores.slice(0, 3) };
 }
