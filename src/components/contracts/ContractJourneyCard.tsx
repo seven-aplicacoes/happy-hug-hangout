@@ -68,7 +68,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
           <div className="flex items-center gap-2">
             <div className="text-right mr-3 hidden md:block">
               <p className="text-[10px] font-bold text-muted-foreground uppercase">Consultor</p>
-              <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
+              <p className="text-[11px] font-medium">{meeting.consultantName || phase.responsibleConsultantNome || contrato.consultantName || 'Não definido'}</p>
             </div>
             {meeting.status === 'pendente' ? (
               <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" onClick={() => onSchedule(meeting)}>
@@ -282,7 +282,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
           {phase.executorType || '-'}
         </div>
         <div className="md:col-span-2 text-[11px] font-medium text-muted-foreground truncate">
-          {phase.responsibleConsultantNome || '-'}
+          {phase.responsibleConsultantNome || contrato.consultantName || '-'}
         </div>
         <div className="md:col-span-2 flex justify-start">
           <StatusTag label={labelStatus[phase.status] || phase.status} />
