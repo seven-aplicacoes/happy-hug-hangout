@@ -49,6 +49,22 @@ import { ComingSoonPageWrapper } from "@/components/ComingSoonPageWrapper";
 
 const queryClient = new QueryClient();
 
+// Redireciona a rota raiz ou login para o dashboard adequado se autenticado
+const RootRedirect = ({ children }: { children?: React.ReactNode }) => {
+  const { user, perfil, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return null;
+  }
+
+  if (user) {
+    const target = perfil === 'admin' ? '/admin/dashboard' : (perfil === 'consultor' ? '/consultor/dashboard' : '/portal');
+    return <Navigate to={target} replace />;
+  }
+
+  return children ? <>{children}</> : <Navigate to=\"/login\" replace />;
+};
+
 // Redireciona /cliente/:id para a versão do layout adequado ao perfil ativo
 const ClienteRedirect = () => {
   const { id } = useParams();
