@@ -170,13 +170,22 @@ export default function PortalClientePage() {
           <div className="flex items-center gap-4">
             <SevenLogo fill="hsl(var(--primary))" height={20} />
             <Separator orientation="vertical" className="h-6" />
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 text-neutral-900 font-bold text-sm">
-                <Building2 className="h-4 w-4 text-primary" />
-                {cliente?.nomeFantasia}
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                {cliente?.avatar_url ? (
+                  <img src={cliente.avatar_url} alt={cliente.nomeFantasia} className="h-full w-full object-cover" />
+                ) : (
+                  (cliente?.nomeFantasia || 'C').charAt(0).toUpperCase()
+                )}
               </div>
-              <p className="text-[10px] text-neutral-500 font-medium">Contrato: {activeContract?.tipo || 'Ativo'}</p>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 text-neutral-900 font-bold text-sm">
+                  {cliente?.nomeFantasia}
+                </div>
+                <p className="text-[10px] text-neutral-500 font-medium">Contrato: {activeContract?.tipo || 'Ativo'}</p>
+              </div>
             </div>
+
           </div>
           <div className="flex items-center gap-4">
             <Button size="sm" className="hidden md:flex bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20" onClick={handleContactConsultant}>
