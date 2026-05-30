@@ -9,7 +9,7 @@ interface BaseModalProps {
   descricao?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
 const sizes = {
@@ -17,11 +17,12 @@ const sizes = {
   md: 'sm:max-w-lg',
   lg: 'sm:max-w-2xl',
   xl: 'sm:max-w-4xl',
+  full: 'sm:max-w-[95vw] w-[95vw]',
 };
 
 export const BaseModal = ({ open, onClose, titulo, descricao, children, footer, size = 'md' }: BaseModalProps) => (
   <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-    <DialogContent className={cn(sizes[size], "flex flex-col max-h-[90vh]")}>
+    <DialogContent className={cn(sizes[size], "flex flex-col max-h-[95vh] h-full")}>
       <DialogHeader className="shrink-0">
         <DialogTitle>{titulo}</DialogTitle>
         {descricao && <DialogDescription>{descricao}</DialogDescription>}

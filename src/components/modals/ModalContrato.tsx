@@ -289,26 +289,10 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       
       if (!p.startDate) {
         newErrors[`product_${pIndex}_startDate`] = 'Informe a data de início do produto.';
-      } else {
-        const pStart = parseISO(p.startDate);
-        if (dataInicio && isBefore(pStart, parseISO(dataInicio))) {
-          newErrors[`product_${pIndex}_startDate`] = 'A data de início precisa estar dentro do período do contrato.';
-        }
-        if (dataFim && isAfter(pStart, parseISO(dataFim))) {
-          newErrors[`product_${pIndex}_startDate`] = 'A data de início precisa estar dentro do período do contrato.';
-        }
       }
 
       if (!p.endDate) {
         newErrors[`product_${pIndex}_endDate`] = 'Informe a data final do produto.';
-      } else {
-        const pEnd = parseISO(p.endDate);
-        if (p.startDate && isBefore(pEnd, parseISO(p.startDate))) {
-          newErrors[`product_${pIndex}_endDate`] = 'A data final não pode ser anterior à data de início.';
-        }
-        if (dataFim && isAfter(pEnd, parseISO(dataFim))) {
-          newErrors[`product_${pIndex}_endDate`] = 'A data final precisa estar dentro do período do contrato.';
-        }
       }
 
       if (p.value < 0) newErrors[`product_${pIndex}_value`] = 'Informe um valor válido.';
@@ -322,13 +306,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         if (!ph.durationMinutes || ph.durationMinutes <= 0) newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
         if (ph.meetingsCount === undefined || ph.meetingsCount < 0) newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe a quantidade de encontros.';
         if (!ph.responsibleConsultantId) newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
-        
-        if (ph.startDate && p.startDate && isBefore(parseISO(ph.startDate), parseISO(p.startDate))) {
-          newErrors[`phase_${pIndex}_${phIndex}_startDate`] = 'Data fora do período do produto.';
-        }
-        if (ph.endDate && p.endDate && isAfter(parseISO(ph.endDate), parseISO(p.endDate))) {
-          newErrors[`phase_${pIndex}_${phIndex}_endDate`] = 'Data fora do período do produto.';
-        }
       });
     });
 
@@ -336,16 +313,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     
     if (Object.keys(newErrors).length > 0) {
       toast({ title: 'Campos obrigatórios', description: 'Revise os campos obrigatórios antes de salvar.', variant: 'destructive' });
-      
-      // Scroll to first error
-      setTimeout(() => {
-        const firstErrorKey = Object.keys(newErrors)[0];
-        const element = document.getElementById(`error-${firstErrorKey}`) || document.getElementsByName(firstErrorKey)[0];
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-      
       return false;
     }
     return true;
@@ -494,7 +461,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   ) : null;
 
   return (
-    <BaseModal open={open} onClose={onClose} titulo={contrato ? "Editar Contrato" : "Novo Contrato"} size="xl">
+    <BaseModal open={open} onClose={onClose} titulo={contrato ? "Editar Contrato" : "Novo Contrato"} size="full">
       <div ref={scrollContainerRef} className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 px-1">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
@@ -743,15 +710,22 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                 </CardContent>
               </Card>
             ))}
+            <div className="flex justify-center pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={addProduct} className="gap-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-primary">
+                <Plus className="h-4 w-4" /> Adicionar Outro Produto
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-6 mt-6 border-t">
-        <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-        <Button onClick={handleSave} disabled={isLoading} className="min-w-[140px]">
-          {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Finalizar e Salvar"}
-        </Button>
+        <div className="flex justify-between items-center w-full">
+          <Button variant="ghost" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={isLoading} className="min-w-[140px] shadow-lg shadow-primary/20">
+            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Finalizar e Salvar"}
+          </Button>
+        </div>
       </div>
     </BaseModal>
   );
