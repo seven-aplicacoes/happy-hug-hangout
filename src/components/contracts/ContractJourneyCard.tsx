@@ -347,11 +347,11 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
   );
 }
 
-function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin' }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' }) {
-
+function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin', onUpdateProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client', onUpdateProduct?: (data: any) => Promise<void> }) {
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
+  const [localProduct, setLocalProduct] = useState<any>(product);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -360,13 +360,29 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
     }
   }, [remotePhases]);
 
+  useEffect(() => {
+    setLocalProduct(product);
+  }, [product]);
+
   const handleSave = async () => {
     try {
+      // 1. Save product details if they changed
+      if (onUpdateProduct) {
+        await onUpdateProduct(localProduct);
+      }
+      
+      // 2. Save phases/modules
       await upsertPhases.mutateAsync(localPhases);
+      
       setIsEditing(false);
-      toast({ title: "Sucesso", description: "Jornada do produto atualizada." });
+      toast({ title: "Sucesso", description: "Produto do contrato atualizado com sucesso." });
     } catch (error) {
       console.error(error);
+      toast({ 
+        title: "Erro", 
+        description: "Não foi possível salvar as alterações do produto. Verifique os vínculos no Supabase.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -403,47 +419,106 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
     : (product.consultantHours || 0) + (product.silvaneHours || 0);
 
   return (
-    <div className="border rounded-xl mb-6 overflow-hidden bg-white shadow-sm border-muted/40">
-      <div className="p-5 flex flex-col md:flex-row md:items-center justify-between bg-muted/20 border-b gap-4">
-        <div className="flex items-center gap-4">
+    <div className="border rounded-xl mb-6 overflow-hidden bg-white shadow-sm border-muted/40 transition-all">
+      <div className={cn(
+        "p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors",
+        isEditing ? "bg-primary/5 border-b-primary/20" : "bg-muted/20 border-b"
+      )}>
+        <div className="flex items-center gap-4 flex-1">
           <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
              <Briefcase className="h-5 w-5 text-primary" />
           </div>
-          <div>
+          <div className="flex-1">
             <h4 className="font-black text-base text-foreground tracking-tight">{product.productNome}</h4>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
-                <Calendar className="h-3 w-3" />
-                {product.startDate ? new Date(product.startDate).toLocaleDateString() : '-'} a {product.endDate ? new Date(product.endDate).toLocaleDateString() : '-'}
-              </span>
-              {totalMinutes > 0 && (
-                <span className="text-[10px] font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5 uppercase">
-                  <Clock className="h-3 w-3" />
-                  Duração: {formatDuration(totalMinutes)}
+            
+            {isEditing ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground">Data Início</label>
+                  <Input 
+                    type="date" 
+                    value={localProduct.startDate || ''} 
+                    onChange={e => setLocalProduct({...localProduct, startDate: e.target.value})}
+                    className="h-8 text-xs font-medium"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground">Data Fim</label>
+                  <Input 
+                    type="date" 
+                    value={localProduct.endDate || ''} 
+                    onChange={e => setLocalProduct({...localProduct, endDate: e.target.value})}
+                    className="h-8 text-xs font-medium"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground">Valor (R$)</label>
+                  <Input 
+                    type="number" 
+                    value={localProduct.value || ''} 
+                    onChange={e => setLocalProduct({...localProduct, value: Number(e.target.value)})}
+                    className="h-8 text-xs font-medium tabular-nums"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" />
+                  {product.startDate ? new Date(product.startDate).toLocaleDateString() : '-'} a {product.endDate ? new Date(product.endDate).toLocaleDateString() : '-'}
                 </span>
-              )}
-            </div>
-
+                {product.value > 0 && (
+                  <span className="text-[10px] font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5 uppercase tabular-nums">
+                    <DollarSign className="h-3 w-3" />
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.value)}
+                  </span>
+                )}
+                {totalMinutes > 0 && (
+                  <span className="text-[10px] font-bold text-muted-foreground border-l pl-4 flex items-center gap-1.5 uppercase">
+                    <Clock className="h-3 w-3" />
+                    Duração: {formatDuration(totalMinutes)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <StatusTag label={labelStatus[product.status] || product.status} />
-          {isParentEditing && (
-            isEditing ? (
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" onClick={() => { setLocalPhases(remotePhases || []); setIsEditing(false); }} className="h-8 w-8 p-0">
-                  <X className="h-4 w-4" />
-                </Button>
-                <Button size="sm" onClick={handleSave} className="h-8 gap-1.5 px-3 shadow-lg shadow-primary/10">
-                  <Save className="h-3.5 w-3.5" />
-                  Salvar
-                </Button>
-              </div>
-            ) : (
-              <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)} className="h-8 w-8 p-0 text-muted-foreground hover:text-primary">
-                <Pencil className="h-3.5 w-3.5" />
+          {isEditing ? (
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => { 
+                  setLocalPhases(remotePhases || []); 
+                  setLocalProduct(product);
+                  setIsEditing(false); 
+                }} 
+                className="h-8 gap-1.5 px-3"
+              >
+                <X className="h-3.5 w-3.5" />
+                Cancelar
               </Button>
-            )
+              <Button size="sm" onClick={handleSave} className="h-8 gap-1.5 px-3 shadow-lg shadow-primary/20">
+                <Save className="h-3.5 w-3.5" />
+                Salvar
+              </Button>
+            </div>
+          ) : (
+            <>
+              <StatusTag label={labelStatus[product.status] || product.status} />
+              {isParentEditing && mode === 'admin' && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setIsEditing(true)} 
+                  className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Editar Produto
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -498,6 +573,7 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
   );
 }
 
+
 export function ContractJourneyCard({ 
   contrato, 
   isEditing = false,
@@ -511,7 +587,7 @@ export function ContractJourneyCard({
 }) {
 
 
-  const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
+  const { products, isLoading: isLoadingProducts, upsertContractProducts } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
@@ -597,6 +673,9 @@ export function ContractJourneyCard({
                   isEditing={isEditing}
                   onSchedule={handleScheduleMeeting}
                   mode={mode}
+                  onUpdateProduct={async (data) => {
+                    await upsertContractProducts.mutateAsync([data]);
+                  }}
                 />
               ))}
 
