@@ -731,6 +731,17 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                               </div>
                             ))}
                           </div>
+                          <div className="p-3 bg-muted/10 border-t flex justify-center">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => addPhaseToProduct(pIndex)}
+                              className="h-8 gap-1.5 text-[10px] font-bold text-primary hover:bg-primary/5"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Adicionar Módulo
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
