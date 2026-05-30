@@ -44,9 +44,9 @@ export default function ConsultorTarefasPage() {
 
   const tarefasFiltradas = tarefasState.filter(t => {
     if (filtroTipo === 'minhas') return t.consultorId === consultorId && t.tipo !== 'chamado';
-    if (filtroTipo === 'delegadas') return t.consultorId !== consultorId && t.origem === 'gestor';
-    if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.consultorId === consultorId;
-    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado';
+    if (filtroTipo === 'delegadas') return t.consultorId === consultorId && (t.createdByRole === 'admin' || t.createdByRole === 'gestor') && t.createdBy !== consultorId;
+    if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.status !== 'concluida';
+    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado' && t.consultorId === consultorId;
     return true;
   });
 
