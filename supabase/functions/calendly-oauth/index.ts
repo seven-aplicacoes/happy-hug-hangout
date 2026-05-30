@@ -30,7 +30,7 @@ serve(async (req) => {
 
       const clientId = Deno.env.get('CALENDLY_CLIENT_ID')
       const clientSecret = Deno.env.get('CALENDLY_CLIENT_SECRET')
-      const redirectUri = Deno.env.get('CALENDLY_REDIRECT_URI')
+      const redirectUri = (await req.json()).redirect_uri || Deno.env.get('CALENDLY_REDIRECT_URI')
 
       const response = await fetch('https://auth.calendly.com/oauth/token', {
         method: 'POST',
