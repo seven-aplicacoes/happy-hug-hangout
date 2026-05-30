@@ -133,7 +133,7 @@ export default function ConsultorTarefasPage() {
         {([
           { k: 'minhas' as const, l: 'Minhas tarefas' },
           { k: 'delegadas' as const, l: 'Delegadas pelo gestor' },
-          { k: 'chamados_abertos' as const, l: `Chamados abertos · ${chamadosAbertos}` },
+          { k: 'chamados_abertos' as const, l: `Chamados abertos${chamadosAbertosCount > 0 ? ` · ${chamadosAbertosCount}` : ''}` },
           { k: 'chamados_recebidos' as const, l: 'Chamados recebidos' },
         ]).map(opt => (
           <Button key={opt.k} size="sm"
