@@ -48,8 +48,6 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const { updateConsultant, isProcessing } = useConsultores();
   const { can } = useMyPermissions();
 
-  const canEdit = modo === 'admin' || consultorId === (supabase.auth.getUser() as any)?.data?.user?.id || can('perfil', 'edit');
-
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
