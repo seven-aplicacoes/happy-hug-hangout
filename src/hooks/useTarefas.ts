@@ -20,7 +20,8 @@ export function useTarefas() {
           *,
           clients (trade_name),
           contracts (type),
-          profiles:consultant_id (full_name)
+          profiles:consultant_id (full_name),
+          delegated_profile:delegated_by (full_name)
         `);
 
       if (perfil === 'consultor' && user?.consultorId) {
