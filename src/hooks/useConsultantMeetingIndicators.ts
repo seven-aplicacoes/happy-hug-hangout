@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useReunioes } from './useReunioes';
 import { useConsultantGoals } from './useConsultantGoals';
-import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 
 export function useConsultantMeetingIndicators(consultantId: string | undefined, month: number, year: number) {
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
@@ -23,11 +23,13 @@ export function useConsultantMeetingIndicators(consultantId: string | undefined,
     const endDate = endOfMonth(startDate);
 
     const reunioesMes = reunioes.filter(r => {
+      if (!r.meetingDate) return false;
       const rDate = parseISO(r.meetingDate);
       return isWithinInterval(rDate, { start: startDate, end: endDate });
     });
 
-    const realizadas = reunioesMes.filter(r => r.status === 'realizada' || r.status === 'concluída' || r.status === 'finalizada' || r.status === 'completed' || r.status === 'done').length;
+    // Valid statuses for 'realizada' based on the project's StatusReuniao type
+    const realizadas = reunioesMes.filter(r => r.status === 'realizada').length;
     const agendadas = reunioesMes.filter(r => r.status === 'agendada').length;
 
     // Find the meeting goal in the consultant goals
