@@ -102,7 +102,10 @@ export function useContractProductPhases(contractProductId?: string) {
           name
         `);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao salvar fases/módulos do contrato:", error);
+        throw error;
+      }
 
       // Get contract and client info from the product
       const productId = items[0]?.contractProductId;
