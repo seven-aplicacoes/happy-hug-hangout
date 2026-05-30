@@ -117,6 +117,17 @@ serve(async (req) => {
         .update({ status: 'completed' })
         .eq('id', session.id)
 
+      // 6. Record in timeline
+      await supabaseClient
+        .from('timeline_events')
+        .insert({
+          client_id: session.client_id,
+          type: 'reuniao',
+          title: 'Reunião Agendada (Calendly)',
+          description: `O encontro "${meeting.title}" foi agendado para o dia ${datePart} às ${timePart}.`,
+          date: new Date().toISOString()
+        })
+
       console.log('Meeting created and encounter updated successfully')
     }
 
