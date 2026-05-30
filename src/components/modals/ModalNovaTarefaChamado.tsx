@@ -132,7 +132,9 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
     }
   };
 
+  const contratosFiltrados = (todosContratos || []).filter(c => c.clienteId === (selClienteId || clienteId));
   const { clientProducts } = useClientProducts(selClienteId || clienteId);
+  const produtosFiltrados = (clientProducts || []).filter(cp => cp.contractId === contractId);
   const { phases: productPhases } = useContractProductPhases(contractProductId);
 
   return (
