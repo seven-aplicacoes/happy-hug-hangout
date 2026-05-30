@@ -25,7 +25,15 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
-function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: any, onSchedule: (meeting: ContractModuleMeeting) => void }) {
+interface MeetingListProps {
+  phase: any;
+  contrato: any;
+  onSchedule: (meeting: ContractModuleMeeting) => void;
+  mode?: 'admin' | 'client';
+}
+
+function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
+
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
   
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>;
@@ -84,7 +92,7 @@ function MeetingList({ phase, contrato, onSchedule }: { phase: any, contrato: an
   );
 }
 
-function DocumentList({ phase, contrato, type }: { phase: any, contrato: any, type: 'internal' | 'client' }) {
+function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, contrato: any, type: 'internal' | 'client', mode?: 'admin' | 'client' }) {
   const { perfil, user } = useAuth();
   const { documents, isLoading, deleteDocument, downloadDocument, uploadDocument } = useContractModuleDocuments(phase.id, contrato.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -173,7 +181,7 @@ function DocumentList({ phase, contrato, type }: { phase: any, contrato: any, ty
   );
 }
 
-function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void }) {
+function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' }) {
   const [expanded, setExpanded] = useState(false);
   const { consultores } = useConsultores();
   
@@ -299,30 +307,36 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule }
                 >
                   Encontros
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="internos" 
-                  className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 text-[11px] font-bold uppercase tracking-wider"
-                >
-                  Materiais de Apoio
-                </TabsTrigger>
+                {mode === 'admin' && (
+                  <TabsTrigger 
+                    value="internos" 
+                    className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 text-[11px] font-bold uppercase tracking-wider"
+                  >
+                    Materiais de Apoio
+                  </TabsTrigger>
+                )}
                 <TabsTrigger 
                   value="cliente" 
                   className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 text-[11px] font-bold uppercase tracking-wider"
                 >
-                  Entregáveis Cliente
+                  {mode === 'client' ? 'Materiais' : 'Entregáveis Cliente'}
                 </TabsTrigger>
+
               </TabsList>
             </div>
             
             <TabsContent value="encontros" className="mt-0">
-              <MeetingList phase={phase} contrato={contrato} onSchedule={onSchedule} />
+              <MeetingList phase={phase} contrato={contrato} onSchedule={onSchedule} mode={mode} />
             </TabsContent>
-            <TabsContent value="internos" className="mt-0">
-              <DocumentList phase={phase} contrato={contrato} type="internal" />
-            </TabsContent>
+            {mode === 'admin' && (
+              <TabsContent value="internos" className="mt-0">
+                <DocumentList phase={phase} contrato={contrato} type="internal" mode={mode} />
+              </TabsContent>
+            )}
             <TabsContent value="cliente" className="mt-0">
-              <DocumentList phase={phase} contrato={contrato} type="client" />
+              <DocumentList phase={phase} contrato={contrato} type="client" mode={mode} />
             </TabsContent>
+
           </Tabs>
         </div>
       )}
@@ -330,7 +344,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule }
   );
 }
 
-function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void }) {
+function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin' }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' }) {
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
