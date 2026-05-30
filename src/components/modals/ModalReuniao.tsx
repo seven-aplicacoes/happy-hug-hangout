@@ -113,6 +113,14 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     setErrors({});
   }, [reuniao, initialData, open]);
 
+  // Se houver dados iniciais (agendamento a partir de encontro), define status como agendada por padrão
+  useEffect(() => {
+    if (initialData && !reuniao) {
+      setStatus('agendada');
+    }
+  }, [initialData, reuniao, open]);
+
+
   // Atualiza o consultor responsável automaticamente quando o módulo/fase muda
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
