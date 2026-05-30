@@ -206,12 +206,13 @@ export default function ConsultorClientesPage() {
     { key: 'porte', header: 'Porte', render: (c) => <span className="text-xs text-muted-foreground">{labelPorte[getPorte(c)]}</span>, className: 'w-[90px]' },
     { key: 'status', header: 'Status', render: (c) => <StatusTag label={labelStatus[c.status]} />, className: 'w-[130px]' },
     { key: 'fase', header: 'Fase', render: (c) => <div className="flex justify-center w-full"><MethodologyStepper faseAtual={c.faseMetodologica} variant="compact" /></div>, className: 'w-[200px]' },
-    { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id); return <StatusTag label={labelEngajamento[e]} variant={variantEngajamento[e]} />; }, className: 'w-[120px]' },
-    { key: 'indice', header: <span className="inline-flex items-center gap-1">Índice <IndiceSevenInfo /></span>, render: (c) => <span className="font-mono">{c.indiceSeven}</span> },
+    { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id, reunioes || []); return <StatusTag label={labelEngajamento[e]} variant={variantEngajamento[e]} />; }, className: 'w-[120px]' },
+    { key: 'indice', header: <span className="inline-flex items-center gap-1">Índice <IndiceSevenInfo /></span>, render: (c) => <span className="font-mono">{c.indiceSeven || '—'}</span> },
     { key: 'ultima', header: 'Sem reunião', render: (c) => {
-      const dias = diasDesdeUltimaReuniao(c.id);
-      return <span className="font-mono text-xs tabular-nums">{dias}d</span>;
+      const dias = diasDesdeUltimaReuniao(c.id, reunioes || []);
+      return <span className="font-mono text-xs tabular-nums">{dias !== null ? `${dias}d` : 'Nenhuma'}</span>;
     }, className: 'w-[100px]' },
+
   ];
 
   if (isLoading) {
