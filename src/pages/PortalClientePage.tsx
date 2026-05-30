@@ -100,6 +100,29 @@ export default function PortalClientePage() {
 
   const isLoading = loadingFicha || loadingContratos || loadingProducts || loadingPhases || loadingDocs || loadingHist || loadingSummary;
 
+  // Debug logs
+  console.log("Portal Debug:", {
+    clientId,
+    cliente,
+    activeContract,
+    products,
+    currentProductId,
+    phases,
+    deliverables,
+    summary,
+    csatStatus,
+    isLoading,
+    loadingStates: {
+      ficha: loadingFicha,
+      contratos: loadingContratos,
+      products: loadingProducts,
+      phases: loadingPhases,
+      docs: loadingDocs,
+      hist: loadingHist,
+      summary: loadingSummary
+    }
+  });
+
   const handleLogin = async () => {
     setErro('');
     const res = await loginCliente(email, senha);
