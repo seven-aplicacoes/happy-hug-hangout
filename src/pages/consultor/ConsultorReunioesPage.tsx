@@ -199,13 +199,15 @@ export default function ConsultorReunioesPage() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="ui-overline">Saldo</span>
-              <span className={cn('text-sm font-semibold tabular-nums', aderenciaStats.saldo < 0 && 'text-seven-success')}>
-                {aderenciaStats.saldo < 0 ? `+${Math.abs(aderenciaStats.saldo)}` : aderenciaStats.saldo}
+              <span className={cn('text-sm font-semibold tabular-nums', aderenciaStats.hasGoal && aderenciaStats.saldo < 0 && 'text-seven-success')}>
+                {aderenciaStats.hasGoal ? (aderenciaStats.saldo < 0 ? `+${Math.abs(aderenciaStats.saldo)}` : aderenciaStats.saldo) : '—'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="ui-overline">Aderência</span>
-              <span className={cn('text-base font-semibold tabular-nums', aderenciaText)}>{aderenciaStats.aderencia}%</span>
+              <span className={cn('text-base font-semibold tabular-nums', aderenciaText)}>
+                {aderenciaStats.hasGoal ? `${aderenciaStats.aderencia}%` : '—'}
+              </span>
             </div>
           </div>
         </div>
