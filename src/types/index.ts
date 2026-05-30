@@ -194,6 +194,9 @@ export interface Contrato {
   faseMetodologica: FaseMetodologica;
   consultorId: string;
   consultorNome: string;
+  consultorTelefone?: string;
+  consultorEmail?: string;
+  consultorAvatar?: string;
   productId?: string;
   contractNumber?: string;
 }
