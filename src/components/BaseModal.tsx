@@ -22,18 +22,18 @@ const sizes = {
 
 export const BaseModal = ({ open, onClose, titulo, descricao, children, footer, size = 'md' }: BaseModalProps) => (
   <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-    <DialogContent className={cn(sizes[size], "flex flex-col max-h-[95vh] h-full")}>
-      <DialogHeader className="shrink-0">
+    <DialogContent className={cn(sizes[size], "flex flex-col max-h-[92vh] h-full p-0 overflow-hidden")}>
+      <DialogHeader className="p-6 pb-2 shrink-0">
         <DialogTitle>{titulo}</DialogTitle>
         {descricao && <DialogDescription>{descricao}</DialogDescription>}
       </DialogHeader>
       
-      <div className="flex-1 overflow-y-auto pr-2 min-h-0">
+      <div className="flex-1 overflow-y-auto px-6 min-h-0">
         {children}
       </div>
 
       {footer && (
-        <DialogFooter className="mt-4 pt-4 border-t shrink-0">
+        <DialogFooter className="p-6 pt-4 border-t shrink-0 sticky bottom-0 bg-white z-20">
           {footer}
         </DialogFooter>
       )}
