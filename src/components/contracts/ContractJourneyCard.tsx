@@ -75,7 +75,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
               </div>
               
               <div className="flex gap-2">
-                {mode === 'consultor' && (
+                {(mode === 'consultor' || mode === 'admin') && (
                   <Button 
                     size="sm" 
                     variant="ghost" 
@@ -110,7 +110,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
             <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                  <Settings className="h-4 w-4" /> Configurar Disponibilidade: {meeting.title}
+                  <Calendar className="h-4 w-4" /> Configurar Disponibilidade: {meeting.title}
                 </h4>
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setMeetingForAvailability(null)}>
                   <X className="h-4 w-4" />
@@ -434,20 +434,23 @@ function ConsultantAvailabilityConfig({
 
   return (
     <div className="space-y-4 mt-4 animate-in fade-in duration-300">
-      <div className="bg-white p-4 rounded-lg border border-primary/10 space-y-4">
-        <h5 className="text-xs font-black uppercase text-primary">Configurar Horários Recorrentes</h5>
+      <div className="bg-white p-4 rounded-lg border border-primary/10 space-y-4 shadow-sm">
+        <div className="flex items-center gap-2 border-b border-primary/10 pb-2">
+          <Settings className="h-4 w-4 text-primary" />
+          <h5 className="text-[11px] font-black uppercase tracking-wider text-primary">Configurar Horários Recorrentes</h5>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground">Período</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Período Disponível</label>
             <div className="flex gap-2">
-              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-8 text-[11px]" />
-              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-8 text-[11px]" />
+              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-9 text-[11px] font-medium" />
+              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-9 text-[11px] font-medium" />
             </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground">Dia da Semana</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Dia da Semana</label>
             <Select value={weekday} onValueChange={setWeekday}>
-              <SelectTrigger className="h-8 text-[11px]">
+              <SelectTrigger className="h-9 text-[11px] font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -461,44 +464,55 @@ function ConsultantAvailabilityConfig({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground">Horário (Início - Fim)</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Janela de Horário</label>
             <div className="flex gap-2">
-              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="h-8 text-[11px]" />
-              <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="h-8 text-[11px]" />
+              <div className="relative flex-1">
+                <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="h-9 pl-8 text-[11px] font-medium" />
+                <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+              <div className="relative flex-1">
+                <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="h-9 pl-8 text-[11px] font-medium" />
+                <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              </div>
             </div>
           </div>
         </div>
-        <Button size="sm" onClick={handleAddAvailability} className="w-full gap-2 font-bold h-9">
-          <Plus className="h-3.5 w-3.5" /> Adicionar Disponibilidade
+        <Button size="sm" onClick={handleAddAvailability} className="w-full gap-2 font-black uppercase text-[10px] tracking-widest h-10 shadow-lg shadow-primary/10">
+          <Plus className="h-4 w-4" /> Adicionar Disponibilidade
         </Button>
       </div>
 
-      <div className="space-y-2">
-        <h5 className="text-[10px] font-black uppercase text-muted-foreground px-1">Horários Configuradas</h5>
+      <div className="space-y-3">
+        <h5 className="text-[10px] font-black uppercase text-muted-foreground px-1 tracking-widest flex items-center gap-2">
+          <Calendar className="h-3.5 w-3.5" /> Horários Ativos
+        </h5>
         {availabilities?.length === 0 ? (
-          <div className="p-6 text-center text-xs text-muted-foreground border border-dashed rounded-lg bg-muted/5">
-            Nenhuma disponibilidade configurada para este módulo.
+          <div className="p-10 text-center text-xs text-muted-foreground border-2 border-dashed rounded-xl bg-muted/5 font-medium">
+            <Info className="h-8 w-8 mx-auto mb-2 opacity-20" />
+            <p>Nenhuma disponibilidade configurada para este encontro.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {availabilities?.map(av => (
-              <div key={av.id} className="flex items-center justify-between p-3 rounded-lg border bg-white group hover:border-primary/30 transition-all">
-                <div className="flex items-center gap-3">
-                   <div className="h-7 w-7 rounded bg-primary/5 flex items-center justify-center">
-                     <Clock className="h-3.5 w-3.5 text-primary" />
+              <div key={av.id} className="flex items-center justify-between p-4 rounded-xl border bg-white group hover:border-primary/40 transition-all shadow-sm hover:shadow-md">
+                <div className="flex items-center gap-4">
+                   <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                     <Clock className="h-5 w-5 text-primary" />
                    </div>
                    <div>
-                     <p className="text-[11px] font-bold">
+                     <p className="text-xs font-black uppercase tracking-tight text-foreground">
                        {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][av.weekday]}
                      </p>
-                     <p className="text-[10px] text-muted-foreground">
-                       {av.start_time.substring(0, 5)} - {av.end_time.substring(0, 5)} | {new Date(av.start_date).toLocaleDateString()} a {new Date(av.end_date).toLocaleDateString()}
+                     <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
+                       <span className="text-primary font-bold">{av.start_time.substring(0, 5)} - {av.end_time.substring(0, 5)}</span>
+                       <span className="opacity-30">|</span>
+                       <span>{new Date(av.start_date + 'T00:00:00').toLocaleDateString('pt-BR')} a {new Date(av.end_date + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                      </p>
                    </div>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => deleteAvailability.mutate(av.id)} className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Trash className="h-3.5 w-3.5" />
+                <Button size="icon" variant="ghost" onClick={() => deleteAvailability.mutate(av.id)} className="h-8 w-8 text-destructive hover:bg-destructive/10 transition-colors">
+                  <Trash className="h-4 w-4" />
                 </Button>
               </div>
             ))}

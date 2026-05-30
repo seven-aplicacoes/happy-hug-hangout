@@ -109,20 +109,30 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
                <p className="text-[11px] text-muted-foreground mt-2">Entre em contato com o consultor responsável.</p>
              </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[350px] overflow-y-auto pr-2">
               {availableSlots.map(slot => (
                 <button
                   key={slot.id}
                   onClick={() => setSelectedSlot(slot)}
                   className={cn(
-                    "flex flex-col items-start p-3 rounded-lg border text-left transition-all hover:border-primary/50",
-                    selectedSlot?.id === slot.id ? "bg-primary text-white border-primary shadow-md" : "bg-white border-muted"
+                    "flex flex-col items-start p-4 rounded-xl border text-left transition-all hover:border-primary hover:shadow-md group",
+                    selectedSlot?.id === slot.id ? "bg-primary text-white border-primary shadow-lg scale-[1.02]" : "bg-white border-muted shadow-sm"
                   )}
                 >
-                  <span className="text-xs font-bold">{new Date(slot.available_date).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</span>
-                  <span className="text-[11px] mt-1 flex items-center gap-1 opacity-80">
-                    <Clock className="h-3 w-3" /> {slot.start_time.substring(0, 5)} ({slot.duration_minutes} min)
+                  <span className={cn(
+                    "text-xs font-black uppercase tracking-tight",
+                    selectedSlot?.id === slot.id ? "text-white" : "text-foreground"
+                  )}>
+                    {new Date(slot.available_date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
                   </span>
+                  <div className="flex items-center gap-3 mt-2 w-full border-t border-current/10 pt-2">
+                    <span className="text-[11px] font-bold flex items-center gap-1.5 opacity-90">
+                      <Clock className="h-3.5 w-3.5" /> {slot.start_time.substring(0, 5)}
+                    </span>
+                    <span className="text-[11px] font-medium opacity-60 ml-auto">
+                      {slot.duration_minutes} min
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>
