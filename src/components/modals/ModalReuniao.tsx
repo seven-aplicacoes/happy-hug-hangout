@@ -165,38 +165,41 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     try {
       // 1. Availability validation (only if module/meeting is linked)
       if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
-        const selectedDate = new Date(meetingDate);
+        // Use local timezone parsing for meetingDate
+        const [year, month, day] = meetingDate.split('-').map(Number);
+        const selectedDate = new Date(year, month - 1, day);
         const dayOfWeek = selectedDate.getDay(); 
         
-        const isWithinPeriod = availabilities.some(av => {
-          const startDate = new Date(av.start_date);
-          const endDate = new Date(av.end_date);
+        const matchingAvailability = availabilities.find(av => {
+          const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
+          const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
+          const startDate = new Date(sYear, sMonth - 1, sDay);
+          const endDate = new Date(eYear, eMonth - 1, eDay);
+          
           const dateMatch = selectedDate >= startDate && selectedDate <= endDate;
           const weekdayMatch = av.weekday === dayOfWeek;
           
-          // Se o consultor definiu slots exatos, validamos contra o start_time dos slots
-          if (slots && slots.length > 0) {
-             return slots.some(s => s.available_date === meetingDate && s.start_time === startTime && !s.is_booked);
+          if (dateMatch && weekdayMatch) {
+            // Check if startTime is within the availability window
+            const timeMatch = startTime >= av.start_time && startTime <= av.end_time;
+            return timeMatch;
           }
-          
-          const timeMatch = startTime >= av.start_time && startTime <= av.end_time;
-          return dateMatch && weekdayMatch && timeMatch;
+          return false;
         });
 
-        if (!isWithinPeriod) {
+        if (!matchingAvailability) {
           toast({ 
-            title: "Fora da Disponibilidade", 
-            description: "Este horário não está disponível para agendamento. Escolha um dos horários liberados pelo consultor.", 
+            title: "Horário Indisponível", 
+            description: "Este horário não está disponível para este encontro. Escolha uma data e horário configurados pelo consultor.", 
             variant: "destructive" 
           });
           setIsSubmitting(false);
           return;
         }
       } else if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability) {
-        // Se tem encontro vinculado mas não tem disponibilidade configurada
         toast({ 
-          title: "Sem Disponibilidade", 
-          description: "Nenhuma disponibilidade configurada para este encontro. Entre em contato com o consultor.", 
+          title: "Nenhuma Disponibilidade", 
+          description: "Nenhuma disponibilidade configurada para este encontro. Entre em contato com o consultor responsável.", 
           variant: "destructive" 
         });
         setIsSubmitting(false);
@@ -363,20 +366,41 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.meetingDate && "text-destructive")}>Data Disponível *</Label>
-                  {slots && slots.length > 0 ? (
+                  {availabilities && availabilities.length > 0 ? (
                     <Select value={meetingDate} onValueChange={setMeetingDate}>
                       <SelectTrigger className={cn("h-11 font-medium bg-white", errors.meetingDate && "border-destructive")}>
                         <SelectValue placeholder="Selecione uma data" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from(new Set(slots.map(s => s.available_date))).sort().map(date => {
-                          const slotDate = new Date(date + 'T00:00:00');
-                          return (
-                            <SelectItem key={date} value={date}>
-                              {slotDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
-                            </SelectItem>
-                          );
-                        })}
+                        {(() => {
+                          const availableDates: string[] = [];
+                          availabilities.forEach(av => {
+                            const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
+                            const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
+                            const current = new Date(sYear, sMonth - 1, sDay);
+                            const end = new Date(eYear, eMonth - 1, eDay);
+
+                            while (current <= end) {
+                              if (current.getDay() === av.weekday) {
+                                const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+                                if (!availableDates.includes(dateStr)) {
+                                  availableDates.push(dateStr);
+                                }
+                              }
+                              current.setDate(current.getDate() + 1);
+                            }
+                          });
+
+                          return availableDates.sort().map(date => {
+                            const [y, m, d] = date.split('-').map(Number);
+                            const slotDate = new Date(y, m - 1, d);
+                            return (
+                              <SelectItem key={date} value={date}>
+                                {slotDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                              </SelectItem>
+                            );
+                          });
+                        })()}
                       </SelectContent>
                     </Select>
                   ) : (
@@ -401,20 +425,45 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.startTime && "text-destructive")}>Horário *</Label>
-                    {slots && slots.length > 0 && meetingDate ? (
+                    {availabilities && availabilities.length > 0 && meetingDate ? (
                       <Select value={startTime} onValueChange={setStartTime}>
                         <SelectTrigger className={cn("h-11 font-medium bg-white", errors.startTime && "border-destructive")}>
                           <SelectValue placeholder="Horário" />
                         </SelectTrigger>
                         <SelectContent>
-                          {slots
-                            .filter(s => s.available_date === meetingDate && !s.is_booked)
-                            .map(slot => (
-                              <SelectItem key={slot.id} value={slot.start_time}>
-                                {slot.start_time.substring(0, 5)}
+                          {(() => {
+                            const [y, m, d] = meetingDate.split('-').map(Number);
+                            const selDate = new Date(y, m - 1, d);
+                            const weekday = selDate.getDay();
+                            
+                            const matchingAvails = availabilities.filter(av => {
+                              const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
+                              const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
+                              const start = new Date(sYear, sMonth - 1, sDay);
+                              const end = new Date(eYear, eMonth - 1, eDay);
+                              return av.weekday === weekday && selDate >= start && selDate <= end;
+                            });
+
+                            const timeSlots: string[] = [];
+                            matchingAvails.forEach(av => {
+                              let current = av.start_time;
+                              const end = av.end_time;
+                              while (current < end) {
+                                timeSlots.push(current);
+                                // Increment by slot duration (assume 60min if not set)
+                                const [h, min] = current.split(':').map(Number);
+                                const next = new Date();
+                                next.setHours(h, min + (av.slot_duration_minutes || 60), 0);
+                                current = `${String(next.getHours()).padStart(2, '0')}:${String(next.getMinutes()).padStart(2, '0')}`;
+                              }
+                            });
+
+                            return [...new Set(timeSlots)].sort().map(time => (
+                              <SelectItem key={time} value={time}>
+                                {time.substring(0, 5)}
                               </SelectItem>
-                            ))
-                          }
+                            ));
+                          })()}
                         </SelectContent>
                       </Select>
                     ) : (
@@ -449,7 +498,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground animate-pulse">
                       <Loader2 className="h-3 w-3 animate-spin" /> Verificando horários...
                     </div>
-                  ) : slots && slots.length > 0 ? (
+                  ) : availabilities && availabilities.length > 0 ? (
                     <div className="flex items-center gap-2 text-[10px] text-emerald-600 font-bold bg-emerald-50 p-3 rounded-xl border border-emerald-100">
                       <CheckCircle2 className="h-4 w-4" /> Horários disponíveis sincronizados.
                     </div>
@@ -459,7 +508,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                         <AlertTriangle className="h-3.5 w-3.5" /> Atenção
                       </p>
                       <p className="text-[11px] text-amber-700 leading-relaxed font-medium">
-                        O consultor responsável ainda não configurou os horários para este encontro.
+                        Nenhuma disponibilidade configurada para este encontro. Entre em contato com o consultor responsável.
                       </p>
                     </div>
                   )}
