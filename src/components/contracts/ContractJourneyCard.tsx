@@ -436,6 +436,7 @@ function ConsultantAvailabilityConfig({
       contract_id: contractId,
       contract_product_id: contractProductId,
       contract_phase_id: contractPhaseId,
+      contract_module_meeting_id: contractModuleMeetingId,
       consultant_id: consultantId,
       start_date: startDate,
       end_date: endDate,
