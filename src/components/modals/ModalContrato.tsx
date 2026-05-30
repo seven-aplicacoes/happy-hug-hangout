@@ -441,8 +441,10 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                   responsible_consultant_id: ph.responsibleConsultantId,
                   client_visible: true
                 };
-                if (ph.id && typeof ph.id === 'string' && ph.id.length > 10) {
+                if (ph.id && typeof ph.id === 'string' && ph.id.length > 10 && !ph.id.startsWith('temp-')) {
                   phase.id = ph.id;
+                } else {
+                  phase.id = crypto.randomUUID();
                 }
                 return phase;
               });
