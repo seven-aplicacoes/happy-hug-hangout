@@ -348,7 +348,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Módulo</Label>
-            <Select value={contractProductPhaseId || 'none'} onValueChange={v => {
+            <Select value={contractProductPhaseId || 'none'} disabled={isLocked} onValueChange={v => {
               setContractProductPhaseId(v);
               setContractModuleMeetingId('');
               // Ao mudar o módulo, busca o responsável dele
@@ -359,7 +359,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             }}>
 
 
-              <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o módulo..." /></SelectTrigger>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue placeholder="Selecione o módulo..." /></SelectTrigger>
+
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
                 {(productPhases || []).map(p => (
