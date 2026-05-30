@@ -1,0 +1,100 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { ConsultantAvailability, ConsultantAvailableSlot } from '@/types';
+
+export function useConsultantAvailability(filters: {
+  clientId?: string;
+  contractId?: string;
+  contractProductId?: string;
+  contractPhaseId?: string;
+  consultantId?: string;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: availabilities, isLoading: isLoadingRules } = useQuery({
+    queryKey: ['consultant-availability', filters],
+    queryFn: async () => {
+      let query = supabase.from('consultant_availability').select('*');
+      
+      if (filters.clientId) query = query.eq('client_id', filters.clientId);
+      if (filters.contractId) query = query.eq('contract_id', filters.contractId);
+      if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
+      if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
+      if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as ConsultantAvailability[];
+    },
+    enabled: !!(filters.consultantId || filters.contractPhaseId),
+  });
+
+  const { data: slots, isLoading: isLoadingSlots } = useQuery({
+    queryKey: ['consultant-slots', filters],
+    queryFn: async () => {
+      let query = supabase.from('consultant_available_slots').select('*');
+      
+      if (filters.clientId) query = query.eq('client_id', filters.clientId);
+      if (filters.contractId) query = query.eq('contract_id', filters.contractId);
+      if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
+      if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
+      if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
+
+      const { data, error } = await query.order('available_date').order('start_time');
+      if (error) throw error;
+      return data as ConsultantAvailableSlot[];
+    },
+    enabled: !!(filters.consultantId || filters.contractPhaseId),
+  });
+
+  const upsertAvailability = useMutation({
+    mutationFn: async (availability: Partial<ConsultantAvailability>) => {
+      const { data, error } = await supabase
+        .from('consultant_availability')
+        .upsert(availability)
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['consultant-availability'] });
+      toast({ title: 'Sucesso', description: 'Disponibilidade salva com sucesso.' });
+    },
+  });
+
+  const deleteAvailability = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('consultant_availability').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['consultant-availability'] });
+      toast({ title: 'Sucesso', description: 'Disponibilidade removida.' });
+    },
+  });
+
+  const upsertSlot = useMutation({
+    mutationFn: async (slot: Partial<ConsultantAvailableSlot>) => {
+      const { data, error } = await supabase
+        .from('consultant_available_slots')
+        .upsert(slot)
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['consultant-slots'] });
+    },
+  });
+
+  return { 
+    availabilities, 
+    slots, 
+    isLoading: isLoadingRules || isLoadingSlots, 
+    upsertAvailability, 
+    deleteAvailability,
+    upsertSlot
+  };
+}
