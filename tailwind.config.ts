@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"Motiva Sans"', "system-ui", "sans-serif"],
-        editorial: ['"Instrument Serif"', '"Times New Roman"', "serif"],
+        editorial: ['"Motiva Sans"', "system-ui", "sans-serif"],
       },
       fontSize: {
         "display-xl": ["3.5rem", { lineHeight: "1.05", fontWeight: "100", letterSpacing: "-0.02em" }],
