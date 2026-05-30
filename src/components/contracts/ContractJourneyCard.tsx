@@ -1,8 +1,10 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info
 } from 'lucide-react';
+import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
+import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -324,7 +326,14 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
                 >
                   {mode === 'client' ? 'Materiais' : 'Entregáveis Cliente'}
                 </TabsTrigger>
-
+                {mode === 'consultor' && (
+                  <TabsTrigger 
+                    value="disponibilidade" 
+                    className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 text-[11px] font-bold uppercase tracking-wider"
+                  >
+                    Disponibilidade
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
             
@@ -340,9 +349,127 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
               <DocumentList phase={phase} contrato={contrato} type="client" mode={mode} />
             </TabsContent>
 
+            <TabsContent value="disponibilidade" className="mt-0">
+               <ConsultantAvailabilityConfig 
+                 clientId={contrato.clienteId}
+                 contractId={contrato.id}
+                 contractProductId={phase.contractProductId}
+                 contractPhaseId={phase.id}
+                 consultantId={phase.responsibleConsultantId}
+               />
+            </TabsContent>
           </Tabs>
         </div>
       )}
+    </div>
+  );
+}
+
+function ConsultantAvailabilityConfig({ clientId, contractId, contractProductId, contractPhaseId, consultantId }: { clientId: string, contractId: string, contractProductId: string, contractPhaseId: string, consultantId: string }) {
+  const { availabilities, slots, isLoading, upsertAvailability, deleteAvailability } = useConsultantAvailability({ 
+    clientId, contractId, contractProductId, contractPhaseId, consultantId 
+  });
+  
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('18:00');
+  const [weekday, setWeekday] = useState('1'); // Segunda
+  
+  const handleAddAvailability = async () => {
+    if (!startDate || !endDate || !consultantId) return;
+    
+    await upsertAvailability.mutateAsync({
+      client_id: clientId,
+      contract_id: contractId,
+      contract_product_id: contractProductId,
+      contract_phase_id: contractPhaseId,
+      consultant_id: consultantId,
+      start_date: startDate,
+      end_date: endDate,
+      weekday: parseInt(weekday),
+      start_time: startTime,
+      end_time: endTime,
+      slot_duration_minutes: 60,
+      is_active: true
+    });
+  };
+
+  if (isLoading) return <div className="p-4 text-center"><Loader2 className="h-4 w-4 animate-spin mx-auto" /></div>;
+
+  return (
+    <div className="space-y-4 mt-4 animate-in fade-in duration-300">
+      <div className="bg-white p-4 rounded-lg border border-primary/10 space-y-4">
+        <h5 className="text-xs font-black uppercase text-primary">Configurar Horários Recorrentes</h5>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">Período</label>
+            <div className="flex gap-2">
+              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-8 text-[11px]" />
+              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-8 text-[11px]" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">Dia da Semana</label>
+            <Select value={weekday} onValueChange={setWeekday}>
+              <SelectTrigger className="h-8 text-[11px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Segunda-feira</SelectItem>
+                <SelectItem value="2">Terça-feira</SelectItem>
+                <SelectItem value="3">Quarta-feira</SelectItem>
+                <SelectItem value="4">Quinta-feira</SelectItem>
+                <SelectItem value="5">Sexta-feira</SelectItem>
+                <SelectItem value="6">Sábado</SelectItem>
+                <SelectItem value="0">Domingo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">Horário (Início - Fim)</label>
+            <div className="flex gap-2">
+              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="h-8 text-[11px]" />
+              <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="h-8 text-[11px]" />
+            </div>
+          </div>
+        </div>
+        <Button size="sm" onClick={handleAddAvailability} className="w-full gap-2 font-bold h-9">
+          <Plus className="h-3.5 w-3.5" /> Adicionar Disponibilidade
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        <h5 className="text-[10px] font-black uppercase text-muted-foreground px-1">Horários Configuradas</h5>
+        {availabilities?.length === 0 ? (
+          <div className="p-6 text-center text-xs text-muted-foreground border border-dashed rounded-lg bg-muted/5">
+            Nenhuma disponibilidade configurada para este módulo.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {availabilities?.map(av => (
+              <div key={av.id} className="flex items-center justify-between p-3 rounded-lg border bg-white group hover:border-primary/30 transition-all">
+                <div className="flex items-center gap-3">
+                   <div className="h-7 w-7 rounded bg-primary/5 flex items-center justify-center">
+                     <Clock className="h-3.5 w-3.5 text-primary" />
+                   </div>
+                   <div>
+                     <p className="text-[11px] font-bold">
+                       {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][av.weekday]}
+                     </p>
+                     <p className="text-[10px] text-muted-foreground">
+                       {av.start_time.substring(0, 5)} - {av.end_time.substring(0, 5)} | {new Date(av.start_date).toLocaleDateString()} a {new Date(av.end_date).toLocaleDateString()}
+                     </p>
+                   </div>
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => deleteAvailability.mutate(av.id)} className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Trash className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -617,18 +744,26 @@ export function ContractJourneyCard({
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
+  const [clientScheduleModalOpen, setClientScheduleModalOpen] = useState(false);
+  const [selectedModuleMeeting, setSelectedModuleMeeting] = useState<ContractModuleMeeting | null>(null);
+
   const handleScheduleMeeting = (meeting: ContractModuleMeeting) => {
-    setInitialMeetingData({
-      clienteId: meeting.clientId,
-      contractId: meeting.contractId,
-      contractProductId: meeting.productId,
-      contractProductPhaseId: meeting.moduleId,
-      contractModuleMeetingId: meeting.id,
-      title: meeting.title,
-      consultorId: meeting.consultantId || '',
-      status: 'agendada'
-    });
-    setMeetingModalOpen(true);
+    if (mode === 'client') {
+      setSelectedModuleMeeting(meeting);
+      setClientScheduleModalOpen(true);
+    } else {
+      setInitialMeetingData({
+        clienteId: meeting.clientId,
+        contractId: meeting.contractId,
+        contractProductId: meeting.productId,
+        contractProductPhaseId: meeting.moduleId,
+        contractModuleMeetingId: meeting.id,
+        title: meeting.title,
+        consultorId: meeting.consultantId || '',
+        status: 'agendada'
+      });
+      setMeetingModalOpen(true);
+    }
   };
 
   if (isLoadingProducts) {
@@ -739,6 +874,14 @@ export function ContractJourneyCard({
         onClose={() => setMeetingModalOpen(false)} 
         initialData={initialMeetingData || undefined} 
       />
+
+      {selectedModuleMeeting && (
+        <ModalAgendamentoCliente
+          open={clientScheduleModalOpen}
+          onClose={() => setClientScheduleModalOpen(false)}
+          moduleMeeting={selectedModuleMeeting}
+        />
+      )}
     </AccordionItem>
   );
 }

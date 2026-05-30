@@ -13,7 +13,9 @@ import { useContractProducts } from '@/hooks/useContractProducts';
 import { useContractProductPhases } from '@/hooks/useContractProductPhases';
 import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle } from 'lucide-react';
+import { checkConsultantConflict } from '@/lib/conflicts';
+import { minutesToHHMM, hhmmToMinutes } from '@/lib/duration';
 import { cn } from '@/lib/utils';
 import type { Reuniao, StatusReuniao } from '@/types';
 
@@ -145,6 +147,26 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!validate()) return;
     setIsSubmitting(true);
     try {
+      // Conflict validation
+      const endTime = calculateEndTime(startTime, duracao);
+      const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
+        consultantId: consultorId,
+        date: meetingDate,
+        startTime,
+        endTime,
+        ignoreMeetingId: reuniao?.id
+      });
+
+      if (hasConflict) {
+        toast({ 
+          title: "Conflito de Agenda", 
+          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}).`, 
+          variant: "destructive" 
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload: Partial<Reuniao> = {
         id: reuniao?.id,
         title, tipo, clienteId,
@@ -313,3 +335,11 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     </BaseModal>
   );
 };
+
+function calculateEndTime(startTime: string, durationMinutes: number): string {
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0);
+  date.setMinutes(date.getMinutes() + durationMinutes);
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}

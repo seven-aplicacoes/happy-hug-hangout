@@ -432,6 +432,190 @@ export type Database = {
           },
         ]
       }
+      consultant_availability: {
+        Row: {
+          client_id: string | null
+          consultant_id: string
+          contract_id: string | null
+          contract_phase_id: string | null
+          contract_product_id: string | null
+          created_at: string
+          end_date: string
+          end_time: string
+          id: string
+          is_active: boolean
+          slot_duration_minutes: number
+          start_date: string
+          start_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id: string
+          contract_id?: string | null
+          contract_phase_id?: string | null
+          contract_product_id?: string | null
+          created_at?: string
+          end_date: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          slot_duration_minutes?: number
+          start_date: string
+          start_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string
+          contract_id?: string | null
+          contract_phase_id?: string | null
+          contract_product_id?: string | null
+          created_at?: string
+          end_date?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          slot_duration_minutes?: number
+          start_date?: string
+          start_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_availability_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_availability_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_availability_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_availability_contract_phase_id_fkey"
+            columns: ["contract_phase_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_availability_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultant_available_slots: {
+        Row: {
+          available_date: string
+          client_id: string | null
+          consultant_id: string
+          contract_id: string | null
+          contract_phase_id: string | null
+          contract_product_id: string | null
+          created_at: string
+          duration_minutes: number
+          end_time: string
+          id: string
+          is_booked: boolean
+          meeting_id: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          available_date: string
+          client_id?: string | null
+          consultant_id: string
+          contract_id?: string | null
+          contract_phase_id?: string | null
+          contract_product_id?: string | null
+          created_at?: string
+          duration_minutes: number
+          end_time: string
+          id?: string
+          is_booked?: boolean
+          meeting_id?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          available_date?: string
+          client_id?: string | null
+          consultant_id?: string
+          contract_id?: string | null
+          contract_phase_id?: string | null
+          contract_product_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          end_time?: string
+          id?: string
+          is_booked?: boolean
+          meeting_id?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_available_slots_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_available_slots_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_available_slots_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_available_slots_contract_phase_id_fkey"
+            columns: ["contract_phase_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_available_slots_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_available_slots_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultant_indicator_goals: {
         Row: {
           comparison_operator: string

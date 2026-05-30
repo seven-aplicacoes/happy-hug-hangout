@@ -430,3 +430,38 @@ export interface ContractProductPhase {
   clientVisible: boolean;
   meetingsScheduled?: number;
 }
+
+export interface ConsultantAvailability {
+  id: string;
+  client_id?: string;
+  contract_id?: string;
+  contract_product_id?: string;
+  contract_phase_id?: string;
+  consultant_id: string;
+  start_date: string;
+  end_date: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  slot_duration_minutes: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConsultantAvailableSlot {
+  id: string;
+  client_id?: string;
+  contract_id?: string;
+  contract_product_id?: string;
+  contract_phase_id?: string;
+  consultant_id: string;
+  available_date: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  is_booked: boolean;
+  meeting_id?: string;
+  created_at: string;
+  updated_at: string;
+}
