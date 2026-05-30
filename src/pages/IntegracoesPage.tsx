@@ -41,7 +41,7 @@ function fmtData(iso?: string) {
   return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function CardIntegracao({ integ, onSelect }: { integ: Integracao; onSelect: (i: Integracao) => void }) {
+function CardIntegracao({ integ, onSelect, perfil }: { integ: Integracao; onSelect: (i: Integracao) => void; perfil?: string }) {
   const Icon = iconCategoria[integ.categoria];
   return (
     <Card className="p-5 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer group" onClick={() => onSelect(integ)}>
