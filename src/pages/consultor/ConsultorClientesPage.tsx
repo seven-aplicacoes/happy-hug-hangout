@@ -103,8 +103,8 @@ export default function ConsultorClientesPage() {
 
   const filterConfigs: FilterConfig[] = [
     { key: 'status', label: 'Status', options: STATUS_OPTIONS },
-    { key: 'produto', label: 'Produto', options: PRODUTOS.map(p => ({ label: p, value: p })) },
     { key: 'porte', label: 'Porte', options: PORTE_OPTIONS },
+
     { key: 'engajamento', label: 'Engajamento', options: ENGAJAMENTO_OPTIONS },
     { key: 'prioridade', label: 'Prioridade', options: PRIORIDADE_OPTIONS },
   ];
