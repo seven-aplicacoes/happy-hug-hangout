@@ -297,16 +297,16 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
                 </span>
               </div>
             </div>
-            {modo === 'consultor' && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="shrink-0 self-start">
+            <div className="flex flex-wrap gap-2 shrink-0 self-start">
+              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
                 <Edit className="h-4 w-4 mr-2" /> Editar Perfil
               </Button>
-            )}
-            {modo === 'admin' && onExportar && (
-              <Button variant="outline" size="sm" onClick={onExportar} className="shrink-0 self-start">
-                <Download className="h-4 w-4 mr-2" /> Exportar Visão
-              </Button>
-            )}
+              {modo === 'admin' && onExportar && (
+                <Button variant="outline" size="sm" onClick={onExportar}>
+                  <Download className="h-4 w-4 mr-2" /> Exportar Visão
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
