@@ -368,7 +368,7 @@ export default function AdminDashboardPage() {
                     <DollarSign className="h-4 w-4 text-seven-success shrink-0" strokeWidth={1.5} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
-                      <p className="text-xs text-muted-foreground">Índice Seven: {c.indiceSeven} · {c.segmento}</p>
+                      <p className="text-xs text-muted-foreground">Índice Seven: {c.indiceSeven || '—'} · {c.segmento}</p>
                     </div>
                   </div>
                 </ListRow>
