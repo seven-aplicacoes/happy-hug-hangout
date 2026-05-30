@@ -325,8 +325,6 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
                 >
                   {mode === 'client' ? 'Materiais' : 'Entregáveis Cliente'}
                 </TabsTrigger>
-
-                </TabsTrigger>
                 {mode === 'consultor' && (
                   <TabsTrigger 
                     value="disponibilidade" 
