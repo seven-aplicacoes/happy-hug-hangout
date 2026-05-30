@@ -351,6 +351,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                   onChange={e => { setMeetingUrl(e.target.value); setLocation(e.target.value); }} 
                   className="h-11 pl-10" 
                   placeholder="Meet, Zoom ou Endereço" 
+                  disabled={reuniao?.source === 'calendly'}
                 />
                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
@@ -363,6 +364,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                 onChange={e => setDescription(e.target.value)} 
                 placeholder="Descreva os tópicos principais..." 
                 className="min-h-[120px] resize-none" 
+                disabled={reuniao?.source === 'calendly'}
               />
             </div>
           </div>
