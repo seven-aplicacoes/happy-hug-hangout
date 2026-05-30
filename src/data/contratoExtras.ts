@@ -29,12 +29,14 @@ export function getProdutoContrato(contratoId: string): Produto {
 }
 
 /** Produto atual do cliente — primeiro contrato vigente. */
-export function getProdutoAtualCliente(clienteId: string): Produto | null {
-  const ct = contratos.find(
+export function getProdutoAtualCliente(clienteId: string, customContratos?: Contrato[]): Produto | null {
+  const source = customContratos || contratos;
+  const ct = source.find(
     c => c.clienteId === clienteId && !['encerrado', 'churn', 'cancelado'].includes(c.status),
   );
   return ct ? getProdutoContrato(ct.id) : null;
 }
+
 
 /** Histórico de produtos consumidos pelo cliente (todos os contratos). */
 export interface HistoricoProduto {
