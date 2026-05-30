@@ -90,21 +90,25 @@ export const TaskCard = ({ tarefa, onClick, draggable, onDragStart, onDelete }: 
         )}
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{tarefa.clienteNome}</span>
-          {tarefa.contratoNome && (
-            <span className="flex items-center gap-1"><FileText className="h-3 w-3" />{tarefa.contratoNome}</span>
-          )}
+          <span className="flex items-center gap-1" title="Cliente"><Building2 className="h-3 w-3" />{tarefa.clienteNome}</span>
+          <span className="flex items-center gap-1" title="Contrato"><FileText className="h-3 w-3" />{tarefa.contratoNome || 'Sem contrato'}</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{tarefa.dataVencimento}</span>
-          <span className="flex items-center gap-1"><Tag className="h-3 w-3" />{tipoLabel[tarefa.tipo] || tarefa.tipo}</span>
+          <span className="flex items-center gap-1" title="Vencimento"><Calendar className="h-3 w-3" />{tarefa.dataVencimento || 'Sem data'}</span>
+          <span className="flex items-center gap-1" title="Tipo"><Tag className="h-3 w-3" />{tipoLabel[tarefa.tipo] || tarefa.tipo}</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1" title="Responsável"><UserCheck className="h-3 w-3" />{tarefa.consultorNome}</span>
+          {tarefa.createdByName && (
+            <span className="flex items-center gap-1" title={`Criada por ${tarefa.createdByName}`}><User className="h-3 w-3" />{tarefa.createdByName}</span>
+          )}
         </div>
 
         {tarefa.status === 'impedida' && tarefa.motivoImpedimento && (
           <p className="text-xs text-seven-danger bg-seven-danger/10 rounded px-2 py-1">{tarefa.motivoImpedimento}</p>
         )}
-
 
         <div className="flex items-center gap-2 pt-1 flex-wrap">
           {OrigemIcon && origemLabel && (
@@ -119,7 +123,6 @@ export const TaskCard = ({ tarefa, onClick, draggable, onDragStart, onDelete }: 
             label={getTaskStatusLabel(tarefa.status)} 
             variant={getTaskStatusVariant(tarefa.status)} 
           /> 
-
         </div>
       </CardContent>
     </Card>
