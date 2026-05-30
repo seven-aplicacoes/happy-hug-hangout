@@ -274,7 +274,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                 if (errors.clienteId) setErrors(prev => ({ ...prev, clienteId: false }));
               }}
             >
-              <SelectTrigger className={cn("h-11", errors.clienteId && "border-destructive focus:ring-destructive")}>
+              <SelectTrigger className={cn("h-11", errors.clienteId && "border-destructive focus:ring-destructive")} disabled={isLocked}>
                 <SelectValue placeholder="Selecione o cliente..." />
               </SelectTrigger>
               <SelectContent>
