@@ -3394,6 +3394,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_consultant_client_access: {
+        Args: { p_client_id: string }
+        Returns: boolean
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
