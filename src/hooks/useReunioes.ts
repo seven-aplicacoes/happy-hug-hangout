@@ -102,6 +102,7 @@ export function useReunioes() {
       if (reuniao.contractModuleMeetingId) {
         const meetingId = data[0].id;
         
+        // Define o status do encontro
         let status = 'agendado';
         if (reuniao.status === 'realizada') status = 'realizada';
         if (reuniao.status === 'cancelada') status = 'pendente';
@@ -121,6 +122,7 @@ export function useReunioes() {
           })
           .eq('id', reuniao.contractModuleMeetingId);
 
+        // Se marcada como realizada, libera CSAT automático
         if (reuniao.status === 'realizada') {
           await supabase
             .from('meeting_csat')
@@ -132,7 +134,16 @@ export function useReunioes() {
               contract_module_meeting_id: reuniao.contractModuleMeetingId,
               consultant_id: reuniao.consultorId,
               status: 'pending'
-            });
+            }, { onConflict: 'meeting_id' });
+        }
+        
+        // Se cancelada, limpa o CSAT pendente se houver
+        if (reuniao.status === 'cancelada') {
+          await supabase
+            .from('meeting_csat')
+            .delete()
+            .eq('meeting_id', meetingId)
+            .eq('status', 'pending');
         }
       }
 
