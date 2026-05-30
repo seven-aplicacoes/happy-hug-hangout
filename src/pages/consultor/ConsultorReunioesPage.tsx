@@ -87,11 +87,15 @@ export default function ConsultorReunioesPage() {
   const aderenciaStats = useMemo(() => {
     const realizadas = reunioesMes.filter(r => r.status === 'realizada').length;
     const agendadas = reunioesMes.filter(r => r.status === 'agendada').length;
-    const previstas = clientesAtivos.length * 4;
-    const aderencia = previstas > 0 ? Math.round((realizadas / previstas) * 100) : 0;
-    const saldo = previstas - realizadas - agendadas;
-    return { realizadas, agendadas, previstas, aderencia, saldo };
-  }, [reunioesMes, clientesAtivos]);
+    const aderenciaStats = { 
+      realizadas, 
+      previstas: hasGoal ? previstas : 0, 
+      aderencia, 
+      saldo, 
+      hasGoal 
+    };
+    return aderenciaStats;
+  }, [realizadas, previstas, aderencia, saldo, hasGoal]);
 
   const aderenciaTone = aderenciaStats.aderencia >= 80 ? 'success' : aderenciaStats.aderencia >= 60 ? 'warning' : 'danger';
   const aderenciaColor = aderenciaTone === 'success' ? 'bg-seven-success' : aderenciaTone === 'warning' ? 'bg-seven-warning' : 'bg-seven-danger';
