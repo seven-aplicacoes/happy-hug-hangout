@@ -465,6 +465,7 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
         onSave={handleUpdateProfile}
         consultor={consultor}
         isProcessing={isProcessing}
+        modo={modo}
       />
     </div>
   );
