@@ -98,15 +98,16 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
         titulo: tipo === 'tarefa' ? tituloTarefa : assunto,
         descricao,
         clienteId: selClienteId || clienteId,
+        contratoId: contractId || null,
         consultorId: responsavel || user?.consultorId,
         status: 'a_fazer' as StatusTarefa,
         prioridade,
-        contract_product_id: contractProductId || null,
-        contract_product_phase_id: contractProductPhaseId || null,
+        contractProductId: contractProductId || null,
+        contractProductPhaseId: contractProductPhaseId || null,
         dataVencimento: prazo || null,
         tipo: (tipo === 'chamado' ? 'chamado' : 'consultoria') as TipoDemanda,
-        origem: 'gestor' as const,
-        
+        origem: (user?.role === 'admin' || user?.role === 'gestor') ? 'gestor' : 'consultor',
+        delegatedBy: (user?.role === 'admin' || user?.role === 'gestor') && responsavel !== user?.id ? user?.id : null,
       } as any;
 
       await upsertTarefa.mutateAsync(novaTarefa);
