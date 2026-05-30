@@ -388,28 +388,36 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       console.log('1. Iniciando salvamento do contrato:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
       
       const contractData: any = {
-        id: contrato?.id || undefined,
-        clienteId,
-        contractNumber,
-        tipo,
-        valor,
-        dataInicio,
-        dataFim,
+        client_id: clienteId,
+        contract_number: contractNumber,
+        type: tipo,
+        value: valor,
+        start_date: dataInicio,
+        end_date: dataFim,
         status,
-        risco,
-        consultorId,
-        productId: contractProducts.length > 0 ? contractProducts[0].productId : undefined,
+        risk_level: risco,
+        consultant_id: consultorId,
+        product_id: contractProducts.length > 0 ? contractProducts[0].productId : undefined,
       };
       
-      const savedContractResult = await upsertContrato.mutateAsync(contractData);
-      const savedContract = Array.isArray(savedContractResult) ? savedContractResult[0] : savedContractResult;
-      const contractId = contrato?.id || savedContract?.id;
-
+      let contractId = contrato?.id;
       if (!contractId) {
-        console.error('Falha crítica: ID do contrato não retornado pelo Supabase.');
-        throw new Error('Não foi possível obter o ID do contrato salvo. Verifique a conexão com o banco.');
+        const { data: newContract, error: contractError } = await supabase
+          .from('contracts')
+          .insert([contractData])
+          .select()
+          .single();
+        
+        if (contractError) throw new Error(`Erro ao criar contrato: ${contractError.message}`);
+        contractId = newContract.id;
+      } else {
+        const { error: contractError } = await supabase
+          .from('contracts')
+          .update(contractData)
+          .eq('id', contractId);
+        
+        if (contractError) throw new Error(`Erro ao atualizar contrato: ${contractError.message}`);
       }
-
 
       console.log('2. Contrato persistido. ID:', contractId);
 
@@ -424,24 +432,20 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       }
 
       if (contractProducts.length > 0) {
-        console.log('4. Preparando payload dos produtos (snapshot)...');
-        const productsPayload = contractProducts.map(p => {
+        for (let i = 0; i < contractProducts.length; i++) {
+          const p = contractProducts[i];
           const consultantHours = (p.phases || []).filter((ph: any) => 
             ph.executorType?.toLowerCase() === 'consultor'
           ).reduce((acc: number, ph: any) => acc + (Number(ph.durationMinutes) || 0), 0);
           
-          const silvaneHours = (p.phases || []).filter((ph: any) => 
-            ph.executorType?.toLowerCase() === 'silvane'
-          ).reduce((acc: number, ph: any) => acc + (Number(ph.durationMinutes) || 0), 0);
-
-          const payload: any = {
+          const productPayload: any = {
             contract_id: contractId,
             product_id: p.productId,
             product_name: p.productName || p.productNome,
             product_description: p.productDescription,
             product_category: p.productCategory,
             consultant_hours: consultantHours,
-            silvane_hours: silvaneHours,
+            silvane_hours: p.silvaneHours || 0,
             start_date: p.startDate,
             end_date: p.endDate,
             value: Number(p.value) || 0,
@@ -449,92 +453,76 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             client_visible: true
           };
           
+          let cpId = p.id;
           if (p.id && typeof p.id === 'string' && p.id.length > 10 && !p.id.startsWith('temp-')) {
-            payload.id = p.id;
+            const { error: prodError } = await supabase
+              .from('contract_products')
+              .update(productPayload)
+              .eq('id', cpId);
+            
+            if (prodError) throw new Error(`Erro ao atualizar produto ${p.productName}: ${prodError.message}`);
+          } else {
+            const { data: newCP, error: prodError } = await supabase
+              .from('contract_products')
+              .insert([productPayload])
+              .select()
+              .single();
+            
+            if (prodError) throw new Error(`Erro ao criar produto ${p.productName}: ${prodError.message}`);
+            cpId = newCP.id;
           }
+
+          console.log(`4. Produto "${p.productName}" persistido. ID: ${cpId}. Sincronizando módulos...`);
+
+          const currentPhaseIds = p.phases.filter((ph: any) => ph.id && !String(ph.id).startsWith('temp-')).map((ph: any) => ph.id);
+          const { data: existingPhases } = await supabase.from('contract_product_phases').select('id').eq('contract_product_id', cpId);
+          const phasesToDelete = (existingPhases || []).filter((ph: any) => !currentPhaseIds.includes(ph.id)).map((ph: any) => ph.id);
           
-          return payload;
-        });
+          if (phasesToDelete.length > 0) {
+            await supabase.from('contract_product_phases').delete().in('id', phasesToDelete);
+          }
 
-        console.log('5. Enviando contract_products para o Supabase:', productsPayload);
-        const { data: savedProducts, error: productsError } = await supabase
-          .from('contract_products')
-          .upsert(productsPayload)
-          .select();
+          if (p.phases.length > 0) {
+            for (let phIndex = 0; phIndex < p.phases.length; phIndex++) {
+              const ph = p.phases[phIndex];
+              const phasePayload: any = {
+                contract_product_id: cpId,
+                methodology_phase_id: ph.methodologyPhaseId,
+                order_index: ph.orderIndex,
+                name: ph.name,
+                duration_minutes: Number(ph.durationMinutes) || 0,
+                executor_type: ph.executorType,
+                meetings_count: Number(ph.meetingsCount) || 0,
+                start_date: ph.startDate,
+                end_date: ph.endDate,
+                status: ph.status || 'pendente',
+                responsible_consultant_id: ph.responsibleConsultantId,
+                client_visible: true,
+                updated_at: new Date().toISOString()
+              };
 
-        if (productsError) {
-          console.error('Erro Supabase (contract_products):', productsError);
-          throw new Error(`Não foi possível salvar os produtos do contrato: ${productsError.message}`);
-        }
+              let phaseId = ph.id;
+              if (ph.id && typeof ph.id === 'string' && ph.id.length > 10 && !ph.id.startsWith('temp-')) {
+                const { error: phError } = await supabase
+                  .from('contract_product_phases')
+                  .update(phasePayload)
+                  .eq('id', phaseId);
+                
+                if (phError) throw new Error(`Erro ao atualizar módulo ${ph.name}: ${phError.message}`);
+              } else {
+                phaseId = crypto.randomUUID();
+                phasePayload.id = phaseId;
+                const { error: phError } = await supabase
+                  .from('contract_product_phases')
+                  .insert([phasePayload]);
+                
+                if (phError) throw new Error(`Erro ao criar módulo ${ph.name}: ${phError.message}`);
+              }
 
-        console.log('6. Produtos persistidos com sucesso. Sincronizando módulos...');
-
-
-        if (productsError) throw productsError;
-
-        for (let i = 0; i < contractProducts.length; i++) {
-          const product = contractProducts[i];
-          const dbProduct = (savedProducts || []).find((sp: any) => sp.product_id === product.productId);
-          const cpId = (product.id && !String(product.id).startsWith('temp-')) ? product.id : dbProduct?.id;
-
-          if (cpId) {
-            console.log(`7. Sincronizando módulos para o produto "${product.productName}" (ID: ${cpId})`);
-            const currentPhaseIds = product.phases.filter((ph: any) => ph.id && !String(ph.id).startsWith('temp-')).map((ph: any) => ph.id);
-            const { data: existingPhases } = await supabase.from('contract_product_phases').select('id').eq('contract_product_id', cpId);
-            const phasesToDelete = (existingPhases || []).filter((ph: any) => !currentPhaseIds.includes(ph.id)).map((ph: any) => ph.id);
-            if (phasesToDelete.length > 0) {
-              console.log(`8. Removendo módulos excluídos do produto:`, phasesToDelete);
-              await supabase.from('contract_product_phases').delete().in('id', phasesToDelete);
-            }
-
-            if (product.phases.length > 0) {
-              const phasesPayload = product.phases.map((ph: any) => {
-                const phase: any = {
-                  contract_product_id: cpId,
-                  methodology_phase_id: ph.methodologyPhaseId,
-                  order_index: ph.orderIndex,
-                  name: ph.name,
-                  duration_minutes: Number(ph.durationMinutes) || 0,
-                  executor_type: ph.executorType,
-                  meetings_count: Number(ph.meetingsCount) || 0,
-                  start_date: ph.startDate,
-                  end_date: ph.endDate,
-                  status: ph.status || 'pendente',
-                  responsible_consultant_id: ph.responsibleConsultantId,
-                  client_visible: true,
-                  updated_at: new Date().toISOString()
-                };
-                if (ph.id && typeof ph.id === 'string' && ph.id.length > 10 && !ph.id.startsWith('temp-')) {
-                  phase.id = ph.id;
-                } else {
-                  phase.id = crypto.randomUUID();
-                }
-                return phase;
+              console.log(`5. Sincronizando encontros para o módulo "${ph.name}" (ID: ${phaseId})...`);
+              await supabase.rpc('sync_contract_module_meetings_manual', { 
+                phase_id: phaseId 
               });
-
-              console.log(`9. Enviando módulos do produto "${product.productName}" para o Supabase:`, phasesPayload);
-              const { data: savedPhases, error: phasesError } = await supabase
-                .from('contract_product_phases')
-                .upsert(phasesPayload)
-                .select('id');
-              
-              if (phasesError) {
-                console.error(`Erro Supabase (contract_product_phases) para o produto "${product.productName}":`, phasesError);
-                throw new Error(`Erro ao salvar módulos do produto "${product.productName}": ${phasesError.message}`);
-              }
-
-              // Sincroniza encontros para cada fase salva
-              if (savedPhases) {
-                for (const phase of savedPhases) {
-                  console.log(`10. Sincronizando encontros para o módulo (ID: ${phase.id})...`);
-                  const { error: syncError } = await supabase.rpc('sync_contract_module_meetings_manual', { 
-                    phase_id: phase.id 
-                  });
-                  if (syncError) {
-                    console.error("Erro ao sincronizar encontros via RPC no modal:", syncError);
-                  }
-                }
-              }
             }
           }
         }
@@ -543,10 +531,10 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       toast({ title: 'Sucesso', description: 'Contrato e produtos salvos com sucesso.' });
       onClose();
     } catch (error: any) {
-      console.error('Erro ao salvar módulos do contrato:', error);
+      console.error('Erro detalhado ao salvar:', error);
       toast({ 
         title: 'Erro ao salvar', 
-        description: 'Não foi possível salvar as alterações do contrato. Verifique os dados obrigatórios.', 
+        description: error.message || 'Não foi possível salvar as alterações do contrato.', 
         variant: 'destructive' 
       });
     } finally {

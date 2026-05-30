@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   ArrowLeft, Briefcase, Calendar, DollarSign, Users, 
   ExternalLink, Loader2, Package, ListChecks, CheckCircle2,
-  Pencil, Save, X
+  Pencil, Save, X, Plus
 } from 'lucide-react';
 import { useContratos } from '@/hooks/useContratos';
 import { useContractProducts } from '@/hooks/useContractProducts';
@@ -19,6 +19,7 @@ import { Accordion } from '@/components/ui/accordion';
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useToast } from '@/hooks/use-toast';
+import { ModalContrato } from '@/components/modals/ModalContrato';
 
 export default function AdminContratoDetalhePage() {
   const { id } = useParams();
@@ -30,6 +31,7 @@ export default function AdminContratoDetalhePage() {
   
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 
   const contrato = useMemo(() => {
     return contratos?.find(c => c.id === id);
@@ -279,15 +281,33 @@ export default function AdminContratoDetalhePage() {
 
       {/* Jornada do Contrato */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-1 rounded-full bg-primary" />
-          <h2 className="text-lg font-black uppercase tracking-tight">Produtos e Jornada de Execução</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-1 rounded-full bg-primary" />
+            <h2 className="text-lg font-black uppercase tracking-tight">Produtos e Jornada de Execução</h2>
+          </div>
+          <Button 
+            onClick={() => setIsAddProductOpen(true)} 
+            size="sm" 
+            className="gap-2 shadow-sm font-bold"
+          >
+            <Plus className="h-4 w-4" />
+            Adicionar Produto
+          </Button>
         </div>
         
         <Accordion type="single" collapsible defaultValue={contrato.id} className="w-full">
           <ContractJourneyCard contrato={contrato} expanded={true} isEditing={isEditing} />
         </Accordion>
       </section>
+
+      {isAddProductOpen && (
+        <ModalContrato 
+          open={isAddProductOpen} 
+          onClose={() => setIsAddProductOpen(false)} 
+          contrato={contrato} 
+        />
+      )}
 
     </div>
   );

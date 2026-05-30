@@ -407,7 +407,7 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
       executorType: 'consultor',
       meetingsCount: 1,
       status: 'pendente',
-      responsibleConsultantId: contrato.responsavelId // Herda o responsável do contrato por padrão
+      responsibleConsultantId: contrato.consultorId // Herda o responsável do contrato por padrão
     }]);
   };
 
