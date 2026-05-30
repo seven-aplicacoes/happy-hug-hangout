@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { useAuth } from '@/contexts/AuthContext';
 import { labelStatus } from '@/data/mockData';
 import { useReunioes } from '@/hooks/useReunioes';
+import { useConsultantMeetingIndicators } from '@/hooks/useConsultantMeetingIndicators';
 import { useClientes } from '@/hooks/useClientes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
