@@ -20,6 +20,7 @@ import {
   ArrowUpRight, RefreshCw, Settings2, ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ModalMappingCalendly } from '@/components/modals/ModalMappingCalendly';
 
 const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
   agenda: CalendarDays,
@@ -41,7 +42,7 @@ function fmtData(iso?: string) {
   return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function CardIntegracao({ integ, onSelect, perfil }: { integ: Integracao; onSelect: (i: Integracao) => void; perfil?: string }) {
+function CardIntegracao({ integ, onSelect }: { integ: Integracao; onSelect: (i: Integracao) => void }) {
   const Icon = iconCategoria[integ.categoria];
   return (
     <Card className="p-5 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer group" onClick={() => onSelect(integ)}>
@@ -69,7 +70,7 @@ function CardIntegracao({ integ, onSelect, perfil }: { integ: Integracao; onSele
   );
 }
 
-function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () => void }) {
+function DetalheIntegracao({ integ, onClose, perfil, onShowMapping }: { integ: Integracao; onClose: () => void; perfil?: string; onShowMapping: () => void }) {
   const ativo = integ.status === 'conectado' || integ.status === 'beta';
   return (
     <Card className="p-6 sticky top-4">
@@ -159,7 +160,7 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
                    {integ.status === 'conectado' ? 'Reconectar Conta Central' : 'Conectar Conta Central'}
                  </Button>
                  {integ.status === 'conectado' && (
-                   <Button variant="outline" onClick={() => setShowMapping(true)}>
+                   <Button variant="outline" onClick={onShowMapping}>
                      <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Mapear Consultores
                    </Button>
                  )}
@@ -211,38 +212,38 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 export default function IntegracoesPage() {
   const [filtro, setFiltro] = useState<'todas' | CategoriaIntegracao>('todas');
   const [selecionada, setSelecionada] = useState<Integracao | null>(null);
-  const { user } = useAuth();
+  const [showMapping, setShowMapping] = useState(false);
+  const { user, perfil } = useAuth();
   const queryClient = useQueryClient();
 
-  // Load actual connection status
-  const { data: calendlyIntegration, isLoading: loadingIntegration } = useQuery({
-    queryKey: ['calendly-integration', user?.id],
+  // Load actual connection status (central account)
+  const { data: calendlyCentralAuth, isLoading: loadingIntegration } = useQuery({
+    queryKey: ['calendly-central-auth'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('consultant_calendar_integrations')
+        .from('calendly_central_auth')
         .select('*')
-        .eq('consultant_id', user?.id)
-        .eq('provider', 'calendly')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data;
-    },
-    enabled: !!user?.id
+    }
   });
 
   const updatedIntegracoes = useMemo(() => {
     return INTEGRACOES.map(i => {
-      if (i.id === 'calendly' && calendlyIntegration) {
+      if (i.id === 'calendly' && calendlyCentralAuth) {
         return {
           ...i,
           status: 'conectado' as StatusIntegracao,
-          conectadoEm: calendlyIntegration.created_at,
-          contaVinculada: calendlyIntegration.provider_user_uri
+          conectadoEm: calendlyCentralAuth.created_at,
+          contaVinculada: calendlyCentralAuth.provider_user_uri
         };
       }
       return i;
     });
-  }, [calendlyIntegration]);
+  }, [calendlyCentralAuth]);
 
   useEffect(() => {
     // Handle OAuth Callback
@@ -262,8 +263,7 @@ export default function IntegracoesPage() {
       if (error) throw error;
       
       toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
-      queryClient.invalidateQueries({ queryKey: ['calendly-integration'] });
-      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['calendly-central-auth'] });
       
       // Clear URL params
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -368,9 +368,18 @@ export default function IntegracoesPage() {
         </div>
 
         <div>
-          {selecionada && <DetalheIntegracao integ={selecionada} onClose={() => setSelecionada(null)} />}
+          {selecionada && (
+            <DetalheIntegracao 
+              integ={selecionada} 
+              onClose={() => setSelecionada(null)} 
+              perfil={perfil}
+              onShowMapping={() => setShowMapping(true)}
+            />
+          )}
         </div>
       </div>
+
+      {showMapping && <ModalMappingCalendly open={showMapping} onOpenChange={setShowMapping} />}
     </div>
   );
 }
