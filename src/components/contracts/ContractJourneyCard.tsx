@@ -347,7 +347,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
   );
 }
 
-function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin', onUpdateProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void> }) {
+function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin', onUpdateProduct, onDeleteProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void>, onDeleteProduct?: () => Promise<void> }) {
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
@@ -521,15 +521,26 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
             <>
               <StatusTag label={labelStatus[product.status] || product.status} />
               {mode === 'admin' && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => setIsEditing(true)} 
-                  className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5 font-bold"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Editar Produto
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setIsEditing(true)} 
+                    className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5 font-bold"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar Produto
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={onDeleteProduct} 
+                    className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                    title="Remover Produto"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               )}
             </>
           )}
@@ -591,16 +602,18 @@ export function ContractJourneyCard({
   contrato, 
   isEditing = false,
   expanded = false,
-  mode = 'admin'
+  mode = 'admin',
+  onAddProduct
 }: { 
   contrato: any, 
   isEditing?: boolean,
   expanded?: boolean,
-  mode?: 'admin' | 'client' | 'consultor'
+  mode?: 'admin' | 'client' | 'consultor',
+  onAddProduct?: () => void
 }) {
 
 
-  const { products, isLoading: isLoadingProducts, upsertContractProducts } = useContractProducts(contrato.id);
+  const { products, isLoading: isLoadingProducts, upsertContractProducts, deleteContractProduct } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
@@ -672,9 +685,22 @@ export function ContractJourneyCard({
 
         <AccordionContent>
           <div className="px-6 pb-8 pt-2 space-y-6">
-            <div className="flex items-center gap-2 border-b border-muted/60 pb-4">
-              <div className="h-6 w-1 rounded-full bg-primary" />
-              <h4 className="text-sm font-black uppercase tracking-tight text-muted-foreground">Detalhamento de Produtos e Módulos</h4>
+            <div className="flex items-center justify-between border-b border-muted/60 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-1 rounded-full bg-primary" />
+                <h4 className="text-sm font-black uppercase tracking-tight text-muted-foreground">Detalhamento de Produtos e Módulos</h4>
+              </div>
+              
+              {mode === 'admin' && onAddProduct && (
+                <Button 
+                  onClick={onAddProduct} 
+                  size="sm" 
+                  className="gap-2 shadow-sm font-bold bg-primary hover:bg-primary/90"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar Produto
+                </Button>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -688,6 +714,11 @@ export function ContractJourneyCard({
                   mode={mode}
                   onUpdateProduct={async (data) => {
                     await upsertContractProducts.mutateAsync([data]);
+                  }}
+                  onDeleteProduct={async () => {
+                    if (confirm(`Tem certeza que deseja remover o produto "${product.productNome}" deste contrato?\n\nIsso removerá também os módulos e encontros vinculados.`)) {
+                      await deleteContractProduct.mutateAsync(product.id);
+                    }
                   }}
                 />
               ))}

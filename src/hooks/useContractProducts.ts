@@ -113,8 +113,33 @@ export function useContractProducts(contractId?: string) {
     },
   });
 
+  const deleteContractProduct = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('contract_products')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error("Erro ao remover produto do contrato:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-products', contractId] });
+      queryClient.invalidateQueries({ queryKey: ['contratos'] });
+      toast({ title: 'Sucesso', description: 'Produto removido do contrato com sucesso.' });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Erro ao remover', 
+        description: error.message || 'Não foi possível remover o produto do contrato.', 
+        variant: 'destructive' 
+      });
+    }
+  });
+
   const isLoading = queryLoading && !!contractId;
 
-  return { products, isLoading, error, upsertContractProducts };
-
+  return { products, isLoading, error, upsertContractProducts, deleteContractProduct };
 }
