@@ -263,6 +263,34 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
     setContractProducts(updatedProducts);
   };
+  const addPhaseToProduct = (productIndex: number) => {
+    const updatedProducts = [...contractProducts];
+    const product = updatedProducts[productIndex];
+    
+    const nextOrder = product.phases.length > 0 
+      ? Math.max(...product.phases.map((ph: any) => ph.orderIndex || 0)) + 1 
+      : 1;
+
+    product.phases.push({
+      id: `temp-${Date.now()}`,
+      name: 'Novo Módulo',
+      orderIndex: nextOrder,
+      durationMinutes: 60,
+      executorType: 'consultor',
+      meetingsCount: 1,
+      status: 'pendente',
+      responsibleConsultantId: consultorId
+    });
+
+    const recalculatedPhases = recalculateProductStages(product.startDate || dataInicio, product.phases);
+    product.phases = recalculatedPhases;
+    
+    if (recalculatedPhases.length > 0) {
+      product.endDate = recalculatedPhases[recalculatedPhases.length - 1].endDate;
+    }
+
+    setContractProducts(updatedProducts);
+  };
 
 
   const validate = () => {
@@ -289,26 +317,10 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       
       if (!p.startDate) {
         newErrors[`product_${pIndex}_startDate`] = 'Informe a data de início do produto.';
-      } else {
-        const pStart = parseISO(p.startDate);
-        if (dataInicio && isBefore(pStart, parseISO(dataInicio))) {
-          newErrors[`product_${pIndex}_startDate`] = 'A data de início precisa estar dentro do período do contrato.';
-        }
-        if (dataFim && isAfter(pStart, parseISO(dataFim))) {
-          newErrors[`product_${pIndex}_startDate`] = 'A data de início precisa estar dentro do período do contrato.';
-        }
       }
 
       if (!p.endDate) {
         newErrors[`product_${pIndex}_endDate`] = 'Informe a data final do produto.';
-      } else {
-        const pEnd = parseISO(p.endDate);
-        if (p.startDate && isBefore(pEnd, parseISO(p.startDate))) {
-          newErrors[`product_${pIndex}_endDate`] = 'A data final não pode ser anterior à data de início.';
-        }
-        if (dataFim && isAfter(pEnd, parseISO(dataFim))) {
-          newErrors[`product_${pIndex}_endDate`] = 'A data final precisa estar dentro do período do contrato.';
-        }
       }
 
       if (p.value < 0) newErrors[`product_${pIndex}_value`] = 'Informe um valor válido.';
@@ -322,13 +334,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         if (!ph.durationMinutes || ph.durationMinutes <= 0) newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
         if (ph.meetingsCount === undefined || ph.meetingsCount < 0) newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe a quantidade de encontros.';
         if (!ph.responsibleConsultantId) newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
-        
-        if (ph.startDate && p.startDate && isBefore(parseISO(ph.startDate), parseISO(p.startDate))) {
-          newErrors[`phase_${pIndex}_${phIndex}_startDate`] = 'Data fora do período do produto.';
-        }
-        if (ph.endDate && p.endDate && isAfter(parseISO(ph.endDate), parseISO(p.endDate))) {
-          newErrors[`phase_${pIndex}_${phIndex}_endDate`] = 'Data fora do período do produto.';
-        }
       });
     });
 
@@ -336,16 +341,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     
     if (Object.keys(newErrors).length > 0) {
       toast({ title: 'Campos obrigatórios', description: 'Revise os campos obrigatórios antes de salvar.', variant: 'destructive' });
-      
-      // Scroll to first error
-      setTimeout(() => {
-        const firstErrorKey = Object.keys(newErrors)[0];
-        const element = document.getElementById(`error-${firstErrorKey}`) || document.getElementsByName(firstErrorKey)[0];
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-      
       return false;
     }
     return true;
@@ -466,8 +461,22 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
               });
 
               console.log(`Saving phases for product ${product.productId}:`, phasesPayload);
-              const { error: phasesError } = await supabase.from('contract_product_phases').upsert(phasesPayload);
+              const { data: savedPhases, error: phasesError } = await supabase
+                .from('contract_product_phases')
+                .upsert(phasesPayload)
+                .select('id');
+              
               if (phasesError) throw phasesError;
+
+              // Sincroniza encontros para cada fase salva
+              if (savedPhases) {
+                for (const phase of savedPhases) {
+                  const { error: syncError } = await supabase.rpc('sync_contract_module_meetings_manual', { 
+                    phase_id: phase.id 
+                  });
+                  if (syncError) console.error("Erro ao sincronizar encontros via RPC no modal:", syncError);
+                }
+              }
             }
           }
         }
@@ -494,15 +503,15 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   ) : null;
 
   return (
-    <BaseModal open={open} onClose={onClose} titulo={contrato ? "Editar Contrato" : "Novo Contrato"} size="xl">
+    <BaseModal open={open} onClose={onClose} titulo={contrato ? "Editar Contrato" : "Novo Contrato"} size="full">
       <div ref={scrollContainerRef} className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 px-1">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className={cn(errors.clienteId && "text-destructive")}>Cliente *</Label>
             <Select value={clienteId} onValueChange={v => { setClienteId(v); if(errors.clienteId) setErrors(prev => { const n={...prev}; delete n.clienteId; return n; }) }}>
-              <SelectTrigger className={cn(errors.clienteId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectTrigger className={cn("h-11 font-bold", errors.clienteId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
               <SelectContent>
-                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
+                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id} className="font-medium">{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
               </SelectContent>
             </Select>
             <ErrorMsg name="clienteId" />
@@ -510,9 +519,9 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           <div className="space-y-1">
             <Label className={cn(errors.consultorId && "text-destructive")}>Consultor Responsável Geral *</Label>
             <Select value={consultorId} onValueChange={v => { setConsultorId(v); if(errors.consultorId) setErrors(prev => { const n={...prev}; delete n.consultorId; return n; }) }}>
-              <SelectTrigger className={cn(errors.consultorId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectTrigger className={cn("h-11 font-bold", errors.consultorId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
               <SelectContent>
-                {(consultores || []).map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
+                {(consultores || []).map(c => <SelectItem key={c.id} value={c.id} className="font-medium">{c.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
             <ErrorMsg name="consultorId" />
@@ -524,7 +533,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             <Label className={cn(errors.tipo && "text-destructive")}>Tipo de Contrato *</Label>
             <Input 
               name="tipo"
-              className={cn(errors.tipo && "border-destructive")}
+              className={cn("h-11 font-bold", errors.tipo && "border-destructive")}
               value={tipo} 
               onChange={e => { setTipo(e.target.value); if(errors.tipo) setErrors(prev => { const n={...prev}; delete n.tipo; return n; }) }} 
               placeholder="Ex: Consultoria Estratégica" 
@@ -535,7 +544,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             <Label className={cn(errors.contractNumber && "text-destructive")}>Código/Identificação *</Label>
             <Input 
               name="contractNumber"
-              className={cn(errors.contractNumber && "border-destructive")}
+              className={cn("h-11 font-bold", errors.contractNumber && "border-destructive")}
               value={contractNumber} 
               onChange={e => { setContractNumber(e.target.value); if(errors.contractNumber) setErrors(prev => { const n={...prev}; delete n.contractNumber; return n; }) }} 
               placeholder="Ex: CTR-2024-001" 
@@ -547,7 +556,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className={cn(errors.valor && "text-destructive")}>Valor Total (R$)</Label>
-            <Input type="number" value={valor} onChange={e => setValor(Number(e.target.value))} />
+            <Input type="number" className="h-11 font-bold tabular-nums" value={valor} onChange={e => setValor(Number(e.target.value))} />
             <ErrorMsg name="valor" />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -555,7 +564,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
               <Label className={cn(errors.dataInicio && "text-destructive")}>Data Início *</Label>
               <Input 
                 type="date" 
-                className={cn(errors.dataInicio && "border-destructive")}
+                className={cn("h-11 font-bold", errors.dataInicio && "border-destructive")}
                 value={dataInicio} 
                 onChange={e => { setDataInicio(e.target.value); if(errors.dataInicio) setErrors(prev => { const n={...prev}; delete n.dataInicio; return n; }) }} 
               />
@@ -565,7 +574,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
               <Label className={cn(errors.dataFim && "text-destructive")}>Data Fim *</Label>
               <Input 
                 type="date" 
-                className={cn(errors.dataFim && "border-destructive")}
+                className={cn("h-11 font-bold", errors.dataFim && "border-destructive")}
                 value={dataFim} 
                 onChange={e => { setDataFim(e.target.value); if(errors.dataFim) setErrors(prev => { const n={...prev}; delete n.dataFim; return n; }) }} 
               />
@@ -589,63 +598,69 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             {contractProducts.map((p, pIndex) => (
               <Card key={pIndex} className={cn("border-2", (errors[`product_${pIndex}_productId`] || errors[`product_${pIndex}_startDate`] || errors[`product_${pIndex}_endDate`]) && "border-destructive")}>
                 <CardContent className="p-0">
-                  <div className="p-4 flex items-center justify-between bg-muted/20 border-b">
-                    <div className="flex items-center gap-3 flex-1">
-                      <Button variant="ghost" size="icon" onClick={() => toggleProductExpand(pIndex)}>
-                        {expandedProducts[pIndex] ? <ChevronUp /> : <ChevronDown />}
+                  <div className="p-5 flex items-center justify-between bg-muted/30 border-b">
+                    <div className="flex items-center gap-4 flex-1">
+                      <Button variant="ghost" size="icon" onClick={() => toggleProductExpand(pIndex)} className="h-8 w-8 hover:bg-primary/5">
+                        {expandedProducts[pIndex] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
-                      <div className="flex-1 max-w-[300px] space-y-1">
+                      <div className="flex-1 max-w-[400px] space-y-1">
                         <Select value={p.productId} onValueChange={v => updateProduct(pIndex, 'productId', v)}>
-                          <SelectTrigger className={cn("h-9 font-medium", errors[`product_${pIndex}_productId`] && "border-destructive")}>
+                          <SelectTrigger className={cn("h-10 font-bold text-sm", errors[`product_${pIndex}_productId`] && "border-destructive")}>
                             <SelectValue placeholder="Selecione o Produto..." />
                           </SelectTrigger>
                           <SelectContent>
                             {produtos?.filter(prod => prod.status === 'ativo').map(prod => (
-                              <SelectItem key={prod.id} value={prod.id}>{prod.name}</SelectItem>
+                              <SelectItem key={prod.id} value={prod.id} className="font-medium">{prod.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                         <ErrorMsg name={`product_${pIndex}_productId`} />
                       </div>
-                      <Badge variant="outline" className="bg-background">
+                      <Badge variant="outline" className="bg-background text-[10px] font-black uppercase tracking-widest px-2.5 h-6">
                         {p.phases?.length || 0} Módulos
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeProduct(pIndex)}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive h-8 w-8 hover:bg-destructive/5" 
+                        onClick={() => removeProduct(pIndex)}
+                        title="Remover Produto"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
                   {expandedProducts[pIndex] && (
-                    <div className="p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Data Início Produto *</Label>
+                    <div className="p-6 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Data Início Produto *</Label>
                           <Input 
                             type="date" 
-                            className={cn("h-8 text-xs", errors[`product_${pIndex}_startDate`] && "border-destructive")}
+                            className={cn("h-9 text-sm font-medium", errors[`product_${pIndex}_startDate`] && "border-destructive")}
                             value={p.startDate} 
                             onChange={e => updateProduct(pIndex, 'startDate', e.target.value)} 
                           />
                           <ErrorMsg name={`product_${pIndex}_startDate`} />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Data Fim Produto *</Label>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Data Fim Produto *</Label>
                           <Input 
                             type="date" 
-                            className={cn("h-8 text-xs", errors[`product_${pIndex}_endDate`] && "border-destructive")}
+                            className={cn("h-9 text-sm font-medium", errors[`product_${pIndex}_endDate`] && "border-destructive")}
                             value={p.endDate} 
                             onChange={e => updateProduct(pIndex, 'endDate', e.target.value)} 
                           />
                           <ErrorMsg name={`product_${pIndex}_endDate`} />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Valor do Produto (R$)</Label>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Valor do Produto (R$)</Label>
                           <Input 
                             type="number" 
-                            className={cn("h-8 text-xs", errors[`product_${pIndex}_value`] && "border-destructive")}
+                            className={cn("h-9 text-sm font-medium tabular-nums", errors[`product_${pIndex}_value`] && "border-destructive")}
                             value={p.value} 
                             onChange={e => updateProduct(pIndex, 'value', Number(e.target.value))} 
                           />
@@ -688,27 +703,31 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                 <div className="md:col-span-1 space-y-1">
                                   <Label className="text-[10px]">Duração</Label>
                                   <Input 
-                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_durationMinutes`] && "border-destructive")}
+                                    className={cn("h-8 text-xs font-medium", errors[`phase_${pIndex}_${phIndex}_durationMinutes`] && "border-destructive")}
                                     value={minutesToHHMM(ph.durationMinutes)} 
-                                    readOnly
+                                    onChange={e => {
+                                      if (validateHHMM(e.target.value)) {
+                                        updatePhase(pIndex, phIndex, 'durationMinutes', hhmmToMinutes(e.target.value));
+                                      }
+                                    }}
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Início</Label>
                                   <Input 
                                     type="date" 
-                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_startDate`] && "border-destructive")}
+                                    className={cn("h-8 text-xs font-medium", errors[`phase_${pIndex}_${phIndex}_startDate`] && "border-destructive")}
                                     value={ph.startDate} 
-                                    readOnly 
+                                    onChange={e => updatePhase(pIndex, phIndex, 'startDate', e.target.value)}
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Fim</Label>
                                   <Input 
                                     type="date" 
-                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_endDate`] && "border-destructive")}
+                                    className={cn("h-8 text-xs font-medium", errors[`phase_${pIndex}_${phIndex}_endDate`] && "border-destructive")}
                                     value={ph.endDate} 
-                                    readOnly 
+                                    onChange={e => updatePhase(pIndex, phIndex, 'endDate', e.target.value)}
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
@@ -736,6 +755,17 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                               </div>
                             ))}
                           </div>
+                          <div className="p-3 bg-muted/10 border-t flex justify-center">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => addPhaseToProduct(pIndex)}
+                              className="h-8 gap-1.5 text-[10px] font-bold text-primary hover:bg-primary/5"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Adicionar Módulo
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -743,13 +773,18 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                 </CardContent>
               </Card>
             ))}
+            <div className="flex justify-center pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={addProduct} className="gap-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-primary">
+                <Plus className="h-4 w-4" /> Adicionar Outro Produto
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 mt-6 border-t">
-        <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-        <Button onClick={handleSave} disabled={isLoading} className="min-w-[140px]">
+      <div className="flex justify-between items-center w-full pt-6 mt-6 border-t shrink-0">
+        <Button variant="ghost" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+        <Button onClick={handleSave} disabled={isLoading} className="min-w-[140px] shadow-lg shadow-primary/20">
           {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Finalizar e Salvar"}
         </Button>
       </div>
