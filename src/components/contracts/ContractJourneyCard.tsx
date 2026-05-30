@@ -401,7 +401,7 @@ function ConsultantAvailabilityConfig({
   contractModuleMeetingId?: string
 }) {
   const { availabilities, isLoading, upsertAvailability, deleteAvailability } = useConsultantAvailability({ 
-    clientId, contractId, contractProductId, contractPhaseId, consultantId, contractModuleMeetingId
+    consultantId, contractModuleMeetingId
   });
   
   const [startDate, setStartDate] = useState('');
@@ -414,10 +414,6 @@ function ConsultantAvailabilityConfig({
     if (!startDate || !endDate || !consultantId) return;
     
     await upsertAvailability.mutateAsync({
-      client_id: clientId,
-      contract_id: contractId,
-      contract_product_id: contractProductId,
-      contract_phase_id: contractPhaseId,
       contract_module_meeting_id: contractModuleMeetingId,
       consultant_id: consultantId,
       start_date: startDate,
@@ -507,7 +503,7 @@ function ConsultantAvailabilityConfig({
                      <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
                        <span className="text-primary font-bold">{av.start_time.substring(0, 5)} - {av.end_time.substring(0, 5)}</span>
                        <span className="opacity-30">|</span>
-                       <span>{new Date(av.start_date + 'T00:00:00').toLocaleDateString('pt-BR')} a {new Date(av.end_date + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                       <span>{new Date(av.start_date + 'T12:00:00').toLocaleDateString('pt-BR')} a {new Date(av.end_date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                      </p>
                    </div>
                 </div>
