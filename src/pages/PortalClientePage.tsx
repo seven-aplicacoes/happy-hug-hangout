@@ -269,58 +269,111 @@ export default function PortalClientePage() {
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Nav */}
-          <aside className="lg:w-64 space-y-6 shrink-0">
-            <div className="space-y-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 px-2">Navegação</p>
-              <nav className="space-y-1">
-                <NavButton active={activeTab === 'jornada'} onClick={() => setActiveTab('jornada')} icon={<LayoutDashboard className="h-4 w-4" />} label="Sua Jornada" />
-                <NavButton active={activeTab === 'contrato'} onClick={() => setActiveTab('contrato')} icon={<FileBadge className="h-4 w-4" />} label="Meu Contrato" />
-                <NavButton active={activeTab === 'entregaveis'} onClick={() => setActiveTab('entregaveis')} icon={<FileCheck className="h-4 w-4" />} label="Entregáveis" />
-                <NavButton active={activeTab === 'historico'} onClick={() => setActiveTab('historico')} icon={<History className="h-4 w-4" />} label="Histórico" />
-              </nav>
-            </div>
+        <div className="space-y-12">
+          {/* Main Content Section - Everything in Scroll */}
+          <main className="space-y-12">
+            {/* 1. Journey & Contracts */}
+            <section id="jornada" className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-primary rounded-full" />
+                  Sua Jornada e Contratos
+                </h2>
+              </div>
+              
+              {contratos?.map(contrato => (
+                <ContractSection 
+                  key={contrato.id} 
+                  contrato={contrato} 
+                  products={products}
+                  currentProductId={currentProductId}
+                  setSelectedProduct={setSelectedProduct}
+                  phases={phases}
+                  onRateMeeting={handleOpenCsat}
+                  csatStatus={csatStatus}
+                />
+              ))}
 
-            <Separator />
+              {contratos?.length === 0 && (
+                <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                  <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+                  <p className="text-neutral-400 text-sm">Nenhum contrato encontrado para este cliente.</p>
+                </div>
+              )}
+            </section>
 
-            <div className="space-y-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 px-2">Produtos</p>
-              <div className="space-y-2">
-                {products?.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedProduct(p.id)}
-                    className={cn(
-                      "w-full text-left p-3 rounded-lg text-xs font-medium border transition-all",
-                      currentProductId === p.id 
-                        ? "bg-primary text-white border-primary shadow-md" 
-                        : "bg-white text-neutral-600 border-neutral-100 hover:border-primary/50"
-                    )}
-                  >
-                    <p className="font-bold truncate">{p.productNome}</p>
-                    <p className={cn("text-[9px] opacity-70 mt-0.5", currentProductId === p.id ? "text-white" : "text-neutral-400")}>
-                      {p.status.toUpperCase()}
-                    </p>
-                  </button>
+            <Separator className="bg-neutral-200" />
+
+            {/* 2. Deliverables */}
+            <section id="entregaveis" className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <FileCheck className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Entregáveis</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {deliverables?.map(doc => (
+                  <Card key={doc.id} className="p-4 border-none shadow-sm bg-white hover:ring-1 hover:ring-primary/20 transition-all">
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-neutral-900 truncate">{doc.title}</h4>
+                        <p className="text-xs text-neutral-500 mt-1">Status: <span className="capitalize">{doc.status}</span></p>
+                        <p className="text-[10px] text-neutral-400 mt-0.5">{format(new Date(doc.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-3 w-full h-8 text-[10px] font-bold uppercase"
+                          onClick={() => window.open(doc.fileUrl, '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-2" /> Visualizar
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
                 ))}
+                {deliverables?.length === 0 && (
+                  <div className="col-span-full py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                    <FileText className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+                    <p className="text-neutral-400 text-sm">Nenhum entregável disponível ainda.</p>
+                  </div>
+                )}
               </div>
-            </div>
+            </section>
 
-            <Card className="p-4 bg-white border-none shadow-sm flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <User className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold">Seu Consultor</p>
-                <p className="font-medium text-neutral-900 text-sm truncate">{activeContract?.consultorNome}</p>
-              </div>
-            </Card>
-          </aside>
+            <Separator className="bg-neutral-200" />
 
-          {/* Content */}
-          <main className="flex-1 min-w-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* 3. History */}
+            <section id="historico" className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <History className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico</h2>
+              </div>
+              <div className="space-y-4">
+                {historico?.map(event => (
+                  <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex gap-6">
+                    <div className="md:w-32 shrink-0 border-r border-neutral-100 pr-6">
+                      <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">{event.tipo}</p>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                      <p className="text-sm text-neutral-500 leading-relaxed">{event.descricao}</p>
+                    </div>
+                  </Card>
+                ))}
+                {historico?.length === 0 && (
+                  <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                    <History className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+                    <p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </main>
+        </div>
+
               <TabsContent value="jornada" className="mt-0 space-y-8">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-xl font-bold text-neutral-900 uppercase tracking-tight flex items-center gap-3">
