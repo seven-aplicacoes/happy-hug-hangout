@@ -354,11 +354,12 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         </div>
 
         {isLocked && !phaseResponsibleId && contractProductPhaseId && contractProductPhaseId !== 'none' && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-xs flex items-center gap-2">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-xs flex items-center gap-2 mb-4">
             <UsersIcon className="h-4 w-4" />
             Este módulo ainda não possui consultor responsável definido. Defina um responsável antes de salvar o encontro.
           </div>
         )}
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
