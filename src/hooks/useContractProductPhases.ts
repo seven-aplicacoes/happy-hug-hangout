@@ -97,7 +97,39 @@ export function useContractProductPhases(contractProductId?: string) {
         .select();
 
       if (error) throw error;
+
+      // Sincroniza o responsável com os encontros vinculados
+      for (const phase of items) {
+        if (phase.id && phase.responsibleConsultantId) {
+          // Atualiza encontros pendentes ou agendados para o novo consultor
+          await supabase
+            .from('contract_module_meetings')
+            .update({ consultant_id: phase.responsibleConsultantId })
+            .eq('module_id', phase.id)
+            .in('status', ['pendente', 'agendado']);
+            
+          // Atualiza reuniões agendadas vinculadas
+          const { data: meetingsToUpdate } = await supabase
+            .from('contract_module_meetings')
+            .select('scheduled_meeting_id')
+            .eq('module_id', phase.id)
+            .eq('status', 'agendado')
+            .not('scheduled_meeting_id', 'is', null);
+
+          if (meetingsToUpdate && meetingsToUpdate.length > 0) {
+            const meetingIds = meetingsToUpdate.map(m => m.scheduled_meeting_id).filter(Boolean);
+            if (meetingIds.length > 0) {
+              await supabase
+                .from('meetings')
+                .update({ consultant_id: phase.responsibleConsultantId })
+                .in('id', meetingIds);
+            }
+          }
+        }
+      }
+
       return data;
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-product-phases', contractProductId] });
