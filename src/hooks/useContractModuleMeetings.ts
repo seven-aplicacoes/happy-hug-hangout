@@ -7,7 +7,7 @@ export function useContractModuleMeetings(moduleId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: meetings, isLoading, error } = useQuery({
+  const { data: meetings, isLoading: queryLoading, error } = useQuery({
     queryKey: ['contract-module-meetings', moduleId],
     queryFn: async () => {
       if (!moduleId) return [];
@@ -66,5 +66,8 @@ export function useContractModuleMeetings(moduleId?: string) {
     },
   });
 
+  const isLoading = queryLoading && !!moduleId;
+
   return { meetings, isLoading, error, updateMeeting };
+
 }
