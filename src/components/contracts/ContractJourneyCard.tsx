@@ -479,9 +479,11 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
                 }}
                 onDelete={() => removeLocalPhase(idx)}
                 onSchedule={onSchedule}
+                mode={mode}
               />
             ))}
-            {isEditing && (
+
+            {isEditing && mode === 'admin' && (
               <div className="p-3 border-t bg-muted/5 flex justify-center">
                 <Button variant="outline" size="sm" onClick={addPhase} className="h-8 gap-1.5 text-xs border-dashed">
                   <Plus className="h-3.5 w-3.5" />
@@ -504,12 +506,15 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
 export function ContractJourneyCard({ 
   contrato, 
   isEditing = false,
-  expanded = false
+  expanded = false,
+  mode = 'admin'
 }: { 
   contrato: any, 
   isEditing?: boolean,
-  expanded?: boolean
+  expanded?: boolean,
+  mode?: 'admin' | 'client'
 }) {
+
 
   const { products, isLoading: isLoadingProducts } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
@@ -596,8 +601,10 @@ export function ContractJourneyCard({
                   contrato={contrato} 
                   isEditing={isEditing}
                   onSchedule={handleScheduleMeeting}
+                  mode={mode}
                 />
               ))}
+
 
               {(!products || products.length === 0) && (
                 <div className="p-10 text-center bg-muted/10 rounded-xl border-2 border-dashed">
