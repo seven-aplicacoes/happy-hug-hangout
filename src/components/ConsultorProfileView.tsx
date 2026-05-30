@@ -25,9 +25,10 @@ import {
   Users, AlertTriangle, UserCheck, UserX, FileText,
   CalendarCheck, CalendarDays, TrendingUp, CheckCircle2,
   Clock, Ban, AlertCircle, Flame, ArrowUpRight, Download, Mail, Phone, MapPin,
-  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit,
+  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit, Plug, Calendar, ExternalLink, RefreshCw
 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface ConsultorProfileViewProps {
   consultorId: string;
