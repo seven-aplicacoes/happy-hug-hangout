@@ -12,8 +12,9 @@ import { useContratos } from '@/hooks/useContratos';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { useContractProductPhases } from '@/hooks/useContractProductPhases';
 import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
+import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { checkConsultantConflict } from '@/lib/conflicts';
 import { minutesToHHMM, hhmmToMinutes } from '@/lib/duration';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,11 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const { products: contractProducts } = useContractProducts(contractId);
   const { phases: productPhases } = useContractProductPhases(contractProductId);
   const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
+  const { slots, availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
+    contractModuleMeetingId: contractModuleMeetingId !== 'none' ? contractModuleMeetingId : undefined,
+    contractPhaseId: contractProductPhaseId !== 'none' ? contractProductPhaseId : undefined,
+    consultantId: consultorId || undefined
+  });
 
   const contratosFiltrados = (contratos || []).filter(c => !clienteId || c.clienteId === clienteId);
   const isLocked = !!initialData || !!reuniao;
@@ -147,7 +153,33 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!validate()) return;
     setIsSubmitting(true);
     try {
-      // Conflict validation
+      // 1. Availability validation (only if module/meeting is linked)
+      if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
+        const selectedDate = new Date(meetingDate);
+        const dayOfWeek = selectedDate.getDay(); // 0 is Sunday, same as our availabilities
+        
+        const isWithinPeriod = availabilities.some(av => {
+          const startDate = new Date(av.start_date);
+          const endDate = new Date(av.end_date);
+          const dateMatch = selectedDate >= startDate && selectedDate <= endDate;
+          const weekdayMatch = av.weekday === dayOfWeek;
+          const timeMatch = startTime >= av.start_time && startTime <= av.end_time;
+          
+          return dateMatch && weekdayMatch && timeMatch;
+        });
+
+        if (!isWithinPeriod) {
+          toast({ 
+            title: "Fora da Disponibilidade", 
+            description: "Este horário não está disponível para agendamento. Escolha um dos horários liberados pelo consultor.", 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 2. Conflict validation
       const endTime = calculateEndTime(startTime, duracao);
       const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
         consultantId: consultorId,
@@ -160,7 +192,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       if (hasConflict) {
         toast({ 
           title: "Conflito de Agenda", 
-          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}).`, 
+          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}). Escolha outro horário disponível.`, 
           variant: "destructive" 
         });
         setIsSubmitting(false);

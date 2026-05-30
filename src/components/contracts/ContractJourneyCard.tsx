@@ -364,14 +364,6 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
                 >
                   {mode === 'client' ? 'Materiais' : 'Entregáveis Cliente'}
                 </TabsTrigger>
-                {mode === 'consultor' && (
-                  <TabsTrigger 
-                    value="disponibilidade" 
-                    className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 text-[11px] font-bold uppercase tracking-wider"
-                  >
-                    Disponibilidade
-                  </TabsTrigger>
-                )}
               </TabsList>
             </div>
             
@@ -385,16 +377,6 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
             )}
             <TabsContent value="cliente" className="mt-0">
               <DocumentList phase={phase} contrato={contrato} type="client" mode={mode} />
-            </TabsContent>
-
-            <TabsContent value="disponibilidade" className="mt-0">
-               <ConsultantAvailabilityConfig 
-                 clientId={contrato.clienteId}
-                 contractId={contrato.id}
-                 contractProductId={phase.contractProductId}
-                 contractPhaseId={phase.id}
-                 consultantId={phase.responsibleConsultantId}
-               />
             </TabsContent>
           </Tabs>
         </div>
