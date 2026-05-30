@@ -126,24 +126,27 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
 
   return (
     <div className="space-y-4 mt-4 animate-in fade-in duration-300">
-      <div className="flex justify-end">
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileUpload} 
-          className="hidden" 
-        />
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="h-8 gap-1.5 text-xs font-bold border-dashed hover:border-primary hover:bg-primary/5"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadDocument.isPending}
-        >
-          {uploadDocument.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
-          Upload de {type === 'internal' ? 'Material' : 'Entregável'}
-        </Button>
-      </div>
+      {mode === 'admin' && (
+        <div className="flex justify-end">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            className="hidden" 
+          />
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="h-8 gap-1.5 text-xs font-bold border-dashed hover:border-primary hover:bg-primary/5"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadDocument.isPending}
+          >
+            {uploadDocument.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+            Upload de {type === 'internal' ? 'Material' : 'Entregável'}
+          </Button>
+        </div>
+      )}
+
 
       {!filteredDocs || filteredDocs.length === 0 ? (
         <div className="p-8 text-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed my-2">
