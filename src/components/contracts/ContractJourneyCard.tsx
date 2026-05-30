@@ -71,7 +71,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
             <div className="flex items-center gap-2">
               <div className="text-right mr-3 hidden md:block">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase">Consultor</p>
-                <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
+                <p className="text-[11px] font-medium">{meeting.consultantName || phase.responsibleConsultantNome || contrato.consultorNome || 'Responsável não definido'}</p>
               </div>
               
               <div className="flex gap-2">
