@@ -32,14 +32,25 @@ const MESES_LABEL: Record<number, string> = {
 
 export default function ConsultorReunioesPage() {
   const { user } = useAuth();
-  const consultorId = user?.consultorId || 'c1';
+  const consultorId = user?.consultorId;
   const { reunioes: allReunioes, isLoading: loadingReunioes } = useReunioes();
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
   
-  const isLoading = loadingReunioes || loadingClientes;
+  const now = new Date();
+  const [mesAtual, setMesAtual] = useState({ year: now.getFullYear(), month: now.getMonth() });
+
+  const { 
+    realizadas, 
+    previstas, 
+    saldo, 
+    aderencia, 
+    hasGoal, 
+    isLoading: loadingStats 
+  } = useConsultantMeetingIndicators(consultorId, mesAtual.month, mesAtual.year);
+  
+  const isLoading = loadingReunioes || loadingClientes || loadingStats;
   const reunioes = allReunioes || [];
-  const clientesAtivos = (clientes || []).filter(c => c.status === 'ativo');
 
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
