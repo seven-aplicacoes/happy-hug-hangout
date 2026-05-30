@@ -269,19 +269,20 @@ export function getClienteContexto(cliente: Cliente): ClienteContexto {
 
 // ---------- Prioridade automática do cliente ----------
 
-export type NivelPrioridade = 'critica' | 'alta' | 'media' | 'baixa';
+export type NivelPrioridade = 'critica' | 'alta' | 'media' | 'baixa' | 'nao_definida';
 
 export const labelPrioridade: Record<NivelPrioridade, string> = {
-  critica: 'Crítica', alta: 'Alta', media: 'Média', baixa: 'Baixa',
+  critica: 'Crítica', alta: 'Alta', media: 'Média', baixa: 'Baixa', nao_definida: 'Não definida',
 };
 
-export const variantPrioridade: Record<NivelPrioridade, 'danger' | 'warning' | 'info' | 'success'> = {
-  critica: 'danger', alta: 'warning', media: 'info', baixa: 'success',
+export const variantPrioridade: Record<NivelPrioridade, 'danger' | 'warning' | 'info' | 'success' | 'secondary'> = {
+  critica: 'danger', alta: 'warning', media: 'info', baixa: 'success', nao_definida: 'secondary',
 };
 
 export const ordemPrioridade: Record<NivelPrioridade, number> = {
-  critica: 0, alta: 1, media: 2, baixa: 3,
+  critica: 0, alta: 1, media: 2, baixa: 3, nao_definida: 4,
 };
+
 
 export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [], tarefas: Tarefa[] = []): { nivel: NivelPrioridade; score: number; fatores: string[] } {
   let score = 0;
