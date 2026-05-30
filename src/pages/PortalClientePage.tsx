@@ -10,39 +10,25 @@ import {
   CheckCircle2, 
   Building2, 
   LogOut, 
-  User, 
   Clock, 
   FileText, 
   Star,
   LayoutDashboard,
-  CheckCircle,
   History,
   FileCheck,
   ExternalLink,
   MessageCircle,
-  TrendingUp,
-  AlertTriangle,
-  CreditCard,
-  FileBadge,
-  ShieldCheck,
   Briefcase,
-  ChevronDown,
-  ChevronUp,
   DollarSign,
   Users,
-  Target,
-  ArrowRight
+  Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
 import { useClienteContratos } from '@/hooks/useClienteContratos';
-import { useContractProducts } from '@/hooks/useContractProducts';
-import { useContractProductPhases } from '@/hooks/useContractProductPhases';
-import { useContractModuleMeetings, useContractModuleMeetings as useModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useClientCSAT } from '@/hooks/useClientCSAT';
 import { useClienteHistorico } from '@/hooks/useClienteHistorico';
-import { useClienteTarefas } from '@/hooks/useClienteTarefas';
 import { usePortalDeliverables } from '@/hooks/usePortalDeliverables';
 import { usePortalSummary } from '@/hooks/usePortalSummary';
 import { usePortalCSAT } from '@/hooks/usePortalCSAT';
@@ -55,12 +41,14 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { StatusTag } from '@/components/StatusTag';
+import { labelStatus } from '@/data/mockData';
+import { Accordion } from '@/components/ui/accordion';
+
 
 export default function PortalClientePage() {
   const { clienteSession, loginCliente, logoutCliente } = useAuth();
@@ -87,21 +75,13 @@ export default function PortalClientePage() {
     [contratos]
   );
 
-  const { products, isLoading: loadingProducts } = useContractProducts(activeContract?.id);
-  const currentProductId = products?.[0]?.id;
-  const activeProduct = useMemo(() => 
-    products?.find(p => p.id === currentProductId),
-    [products, currentProductId]
-  );
-
-  const { phases, isLoading: loadingPhases } = useContractProductPhases(currentProductId);
   const { submitCSAT } = useClientCSAT(clientId);
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
-  const { deliverables, isLoading: loadingDocs } = usePortalDeliverables(clientId);
   const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
   const { csatStatus } = usePortalCSAT(clientId);
 
-  const isLoading = loadingFicha || loadingContratos || loadingProducts || loadingPhases || loadingDocs || loadingHist || loadingSummary;
+  const isLoading = loadingFicha || loadingContratos || loadingHist || loadingSummary;
+
 
   const handleLogin = async () => {
     setErro('');
@@ -215,58 +195,37 @@ export default function PortalClientePage() {
 
         {/* 1. Journey Section */}
         <section className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-8 bg-primary rounded-full" />
-            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Sua Jornada</h2>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-1 rounded-full bg-primary" />
+            <h2 className="text-lg font-black uppercase tracking-tight">Produtos e Jornada de Execução</h2>
           </div>
-          {contratos?.map(contrato => (
-            <ContractSection key={contrato.id} contrato={contrato} products={products} currentProductId={currentProductId} phases={phases} onRateMeeting={handleOpenCsat} csatStatus={csatStatus} />
-          ))}
+
+          <Accordion type="single" collapsible className="w-full" defaultValue={activeContract?.id}>
+            {contratos?.map(contrato => (
+              <ContractJourneyCard 
+                key={contrato.id} 
+                contrato={contrato} 
+                expanded={contrato.id === activeContract?.id} 
+                mode="client" 
+              />
+            ))}
+          </Accordion>
+
           {contratos?.length === 0 && (
             <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
               <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
-              <p className="text-neutral-400 text-sm">Nenhum contrato encontrado.</p>
+              <p className="text-neutral-400 text-sm">Nenhum contrato ativo encontrado.</p>
             </div>
           )}
         </section>
 
         <Separator />
 
-        {/* 2. Deliverables Section */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-3">
-            <FileCheck className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Entregáveis</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {deliverables?.map(doc => (
-              <Card key={doc.id} className="p-4 border-none shadow-sm bg-white hover:ring-1 hover:ring-primary/20 transition-all">
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/5 flex items-center justify-center text-primary"><FileText className="h-6 w-6" /></div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-neutral-900 truncate">{doc.title}</h4>
-                    <p className="text-xs text-neutral-500 mt-1 capitalize">{doc.status}</p>
-                    <p className="text-[10px] text-neutral-400 mt-0.5">{format(new Date(doc.date), "dd 'de' MMMM", { locale: ptBR })}</p>
-                    <Button variant="outline" size="sm" className="mt-3 w-full h-8 text-[10px] font-bold uppercase" onClick={() => window.open(doc.fileUrl, '_blank')}>
-                      <ExternalLink className="h-3 w-3 mr-2" /> Visualizar
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-            {deliverables?.length === 0 && (
-              <div className="col-span-full py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100"><p className="text-neutral-400 text-sm">Nenhum entregável disponível.</p></div>
-            )}
-          </div>
-        </section>
-
-        <Separator />
-
-        {/* 3. History Section */}
+        {/* 2. History Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
             <History className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico</h2>
+            <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico de Reuniões</h2>
           </div>
           <div className="space-y-4">
             {historico?.map(event => (
@@ -282,10 +241,13 @@ export default function PortalClientePage() {
               </Card>
             ))}
             {historico?.length === 0 && (
-              <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100"><p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p></div>
+              <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                <p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p>
+              </div>
             )}
           </div>
         </section>
+
       </div>
 
       <Dialog open={isCsatOpen} onOpenChange={setIsCsatOpen}>
