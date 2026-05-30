@@ -21,7 +21,10 @@ import {
   ExternalLink,
   MessageCircle,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  CreditCard,
+  FileBadge,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
@@ -36,6 +39,7 @@ import { usePortalDeliverables } from '@/hooks/usePortalDeliverables';
 import { usePortalSummary } from '@/hooks/usePortalSummary';
 import { usePortalCSAT } from '@/hooks/usePortalCSAT';
 import { 
+
   Dialog, 
   DialogContent, 
   DialogHeader, 
@@ -263,6 +267,7 @@ export default function PortalClientePage() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 px-2">Navegação</p>
               <nav className="space-y-1">
                 <NavButton active={activeTab === 'jornada'} onClick={() => setActiveTab('jornada')} icon={<LayoutDashboard className="h-4 w-4" />} label="Sua Jornada" />
+                <NavButton active={activeTab === 'contrato'} onClick={() => setActiveTab('contrato')} icon={<FileBadge className="h-4 w-4" />} label="Meu Contrato" />
                 <NavButton active={activeTab === 'entregaveis'} onClick={() => setActiveTab('entregaveis')} icon={<FileCheck className="h-4 w-4" />} label="Entregáveis" />
                 <NavButton active={activeTab === 'historico'} onClick={() => setActiveTab('historico')} icon={<History className="h-4 w-4" />} label="Histórico" />
               </nav>
