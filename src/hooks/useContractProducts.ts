@@ -71,31 +71,40 @@ export function useContractProducts(contractId?: string) {
 
   const upsertContractProducts = useMutation({
     mutationFn: async (items: Partial<ContractProduct>[]) => {
+      const payload = items.map(item => {
+        const p: any = {
+          contract_id: item.contractId,
+          product_id: item.productId,
+          status: item.status || 'ativo',
+          start_date: item.startDate,
+          end_date: item.endDate,
+          value: item.value,
+          client_visible: item.clientVisible !== undefined ? item.clientVisible : true,
+          internal_notes: item.internalNotes,
+          client_notes: item.clientNotes,
+          product_name: item.productName || item.productNome,
+          product_description: item.productDescription,
+          product_category: item.productCategory,
+          consultant_hours: item.consultantHours,
+          silvane_hours: item.silvaneHours,
+        };
+        
+        if (item.id && typeof item.id === 'string' && item.id.length > 10) {
+          p.id = item.id;
+        }
+        
+        return p;
+      });
+
       const { data, error } = await supabase
         .from('contract_products')
-        .upsert(items.map(item => {
-          const payload: any = {
-            contract_id: item.contractId,
-            product_id: item.productId,
-            status: item.status || 'ativo',
-            start_date: item.startDate,
-            end_date: item.endDate,
-            
-            value: item.value,
-            client_visible: item.clientVisible !== undefined ? item.clientVisible : true,
-            internal_notes: item.internalNotes,
-            client_notes: item.clientNotes,
-          };
-          
-          if (item.id && typeof item.id === 'string' && item.id.length > 10) {
-            payload.id = item.id;
-          }
-          
-          return payload;
-        }))
+        .upsert(payload)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao salvar produto do contrato:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {

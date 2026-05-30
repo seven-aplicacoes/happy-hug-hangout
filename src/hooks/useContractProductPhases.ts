@@ -102,7 +102,10 @@ export function useContractProductPhases(contractProductId?: string) {
           name
         `);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao salvar fases/módulos do contrato:", error);
+        throw error;
+      }
 
       // Get contract and client info from the product
       const productId = items[0]?.contractProductId;
@@ -119,6 +122,8 @@ export function useContractProductPhases(contractProductId?: string) {
         if (cpData) {
           contractId = cpData.contract_id;
           clientId = (cpData as any).contracts?.client_id;
+        } else {
+          console.warn("Could not find contract/client for product:", productId);
         }
       }
 
@@ -146,7 +151,7 @@ export function useContractProductPhases(contractProductId?: string) {
                 contract_id: contractId,
                 client_id: clientId,
                 meeting_number: meetingNumber,
-                title: `${phase.name} - Encontro ${meetingNumber}`,
+                title: `${phase.name}`,
                 status: 'pendente',
                 consultant_id: phase.responsible_consultant_id,
                 order_index: meetingNumber

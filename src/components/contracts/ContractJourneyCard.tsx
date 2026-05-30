@@ -366,21 +366,30 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
 
   const handleSave = async () => {
     try {
+      console.log("Iniciando salvamento do produto e módulos...", { localProduct, localPhases });
+      
       // 1. Save product details if they changed
       if (onUpdateProduct) {
         await onUpdateProduct(localProduct);
       }
       
-      // 2. Save phases/modules
-      await upsertPhases.mutateAsync(localPhases);
+      // 2. Prepare phases for saving
+      const phasesToSave = localPhases.map((phase, index) => ({
+        ...phase,
+        contractProductId: product.id,
+        orderIndex: index + 1
+      }));
+      
+      // 3. Save phases/modules
+      await upsertPhases.mutateAsync(phasesToSave);
       
       setIsEditing(false);
       toast({ title: "Sucesso", description: "Produto do contrato atualizado com sucesso." });
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error("Erro ao salvar produto do contrato:", error);
       toast({ 
         title: "Erro", 
-        description: "Não foi possível salvar as alterações do produto. Verifique os vínculos no Supabase.",
+        description: error.message || "Não foi possível salvar as alterações do produto. Verifique os vínculos no Supabase.",
         variant: "destructive"
       });
     }
@@ -397,17 +406,21 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
       durationMinutes: 60, 
       executorType: 'consultor',
       meetingsCount: 1,
-      status: 'pendente'
+      status: 'pendente',
+      responsibleConsultantId: contrato.responsavelId // Herda o responsável do contrato por padrão
     }]);
   };
 
   const removeLocalPhase = async (index: number) => {
     const phase = localPhases[index];
-    if (phase.id) {
+    if (phase.id && !phase.id.startsWith('temp-')) {
+      if (!confirm('Tem certeza que deseja remover este módulo e todos os seus encontros?')) return;
       try {
         await deletePhase.mutateAsync(phase.id);
+        toast({ title: "Sucesso", description: "Módulo removido com sucesso." });
       } catch (error) {
         console.error(error);
+        toast({ title: "Erro", description: "Não foi possível remover o módulo.", variant: "destructive" });
         return;
       }
     }
@@ -507,12 +520,12 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
           ) : (
             <>
               <StatusTag label={labelStatus[product.status] || product.status} />
-              {isParentEditing && mode === 'admin' && (
+              {mode === 'admin' && (
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={() => setIsEditing(true)} 
-                  className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5"
+                  className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5 font-bold"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                   Editar Produto
