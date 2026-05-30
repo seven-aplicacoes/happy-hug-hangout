@@ -675,7 +675,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     type="date" 
                                     className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_startDate`] && "border-destructive")}
                                     value={ph.startDate} 
-                                    onChange={e => updatePhase(pIndex, phIndex, 'startDate', e.target.value)}
+                                    readOnly 
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
@@ -684,7 +684,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     type="date" 
                                     className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_endDate`] && "border-destructive")}
                                     value={ph.endDate} 
-                                    onChange={e => updatePhase(pIndex, phIndex, 'endDate', e.target.value)}
+                                    readOnly 
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
