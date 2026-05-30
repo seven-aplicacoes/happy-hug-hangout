@@ -96,6 +96,8 @@ export function useContractProductPhases(contractProductId?: string) {
         return p;
       });
 
+      console.log("Payload fases/módulos para upsert:", payload);
+
       const { data: savedPhases, error } = await supabase
         .from('contract_product_phases')
         .upsert(payload)
