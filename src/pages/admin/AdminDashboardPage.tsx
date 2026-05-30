@@ -127,7 +127,7 @@ export default function AdminDashboardPage() {
     const ltvMedio = totalContratos > 0 ? contratos.reduce((a, c) => a + c.valor, 0) / totalContratos : 0;
     const ltvFormatado = `R$ ${Math.round(ltvMedio).toLocaleString('pt-BR')}`;
     const clientesBloqueados = clientes.filter(c => c.status === 'suspenso' || c.status === 'bloqueado').length;
-    const indiceMedio = clientes.length > 0 ? Math.round(clientes.reduce((a, c) => a + c.indiceSeven, 0) / clientes.length) : 0;
+    const indiceMedio = clientes.length > 0 ? Math.round(clientes.reduce((a, c) => a + (c.indiceSeven || 0), 0) / clientes.length) : 0;
 
     const priorizados = calcularPriorizacao(clientes, contratos, reunioes, tarefas);
     const upsell = clientes.filter(c => c.potencialUpsell);
