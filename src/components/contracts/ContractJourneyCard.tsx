@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useConsultores } from '@/hooks/useConsultores';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ModalReuniao } from '@/components/modals/ModalReuniao';
+import { ModalAgendarReuniao } from '@/components/modals/ModalAgendarReuniao';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
