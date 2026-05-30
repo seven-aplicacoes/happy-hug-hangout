@@ -11,6 +11,7 @@ import { Loader2, Shield, Mail, Key, MapPin } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface Props {
   open: boolean;
@@ -28,37 +29,61 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
     porte: '' as any,
     consultorId: '',
     cep: '', street: '', number: '', complement: '', neighborhood: '',
-    institutional_email: '',
+    email: '', institutional_email: '', contact_phone: '',
     liberarPortal: false, emailPortal: '', senhaPortal: '',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+  const set = (k: string, v: any) => {
+    setForm(prev => ({ ...prev, [k]: v }));
+    if (errors[k]) setErrors(prev => ({ ...prev, [k]: undefined }));
+  };
 
-  const handleSalvar = async () => {
-    if (!form.razaoSocial.trim()) {
-      toast({ title: "Campo obrigatório", description: "Informe a Razão Social.", variant: "destructive" });
-      return;
-    }
-    if (!form.nomeFantasia.trim()) {
-      toast({ title: "Campo obrigatório", description: "Informe o Nome Fantasia.", variant: "destructive" });
-      return;
-    }
+  const validate = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!form.razaoSocial.trim()) newErrors.razaoSocial = "Razão social é obrigatória.";
+    if (!form.nomeFantasia.trim()) newErrors.nomeFantasia = "Nome fantasia é obrigatório.";
+    
     const cleanCnpj = form.cnpj.replace(/\D/g, '');
     if (cleanCnpj.length !== 14) {
-      toast({ title: "CNPJ inválido", description: "O CNPJ deve conter 14 dígitos.", variant: "destructive" });
-      return;
-    }
-    if (!form.consultorId) {
-      toast({ title: "Campo obrigatório", description: "Selecione um Consultor Responsável.", variant: "destructive" });
-      return;
+      newErrors.cnpj = "Informe um CNPJ válido.";
+    } else {
+      const { data: existingCnpj } = await supabase.from('clients').select('id').eq('cnpj', form.cnpj).maybeSingle();
+      if (existingCnpj) newErrors.cnpj = "Este CNPJ já está cadastrado.";
     }
 
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "Informe um e-mail válido.";
+    }
+    
+    if (!form.consultorId) newErrors.consultorId = "Selecione um responsável interno.";
+    
+    if (!form.cep.trim()) newErrors.cep = "CEP é obrigatório.";
+    if (!form.street.trim()) newErrors.street = "Logradouro é obrigatório.";
+    if (!form.number.trim()) newErrors.number = "Número é obrigatório.";
+    if (!form.neighborhood.trim()) newErrors.neighborhood = "Bairro é obrigatório.";
+    if (!form.regiao) newErrors.regiao = "Região é obrigatória.";
+    if (!form.porte) newErrors.porte = "Porte é obrigatório.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSalvar = async () => {
     setIsLoading(true);
+    const isValid = await validate();
+    if (!isValid) {
+      setIsLoading(false);
+      toast({ title: "Erro na validação", description: "Por favor, corrija os campos destacados.", variant: "destructive" });
+      return;
+    }
     try {
       const result = await upsertCliente.mutateAsync({
         razaoSocial: form.razaoSocial,
         nomeFantasia: form.nomeFantasia,
         cnpj: form.cnpj,
+        email: form.email,
+        contact_phone: form.contact_phone,
         clinicSpecialty: form.clinicSpecialty,
         regiao: form.regiao as any,
         porte: form.porte,
@@ -97,9 +122,10 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
         porte: '' as any,
         consultorId: '',
         cep: '', street: '', number: '', complement: '', neighborhood: '',
-        institutional_email: '',
+        email: '', institutional_email: '', contact_phone: '',
         liberarPortal: false, emailPortal: '', senhaPortal: '',
       });
+      setErrors({});
     } catch (error) {
       console.error(error);
     } finally {
@@ -112,16 +138,18 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
         <p className="text-xs font-semibold text-muted-foreground ">Dados Básicos</p>
         <div className="space-y-0.5">
-          <Label>Razão Social *</Label>
-          <Input value={form.razaoSocial} onChange={e => set('razaoSocial', e.target.value)} placeholder="Razão social completa" />
+          <Label className={cn(errors.razaoSocial && "text-destructive")}>Razão Social *</Label>
+          <Input value={form.razaoSocial} onChange={e => set('razaoSocial', e.target.value)} placeholder="Razão social completa" className={cn(errors.razaoSocial && "border-destructive")} />
+          {errors.razaoSocial && <p className="text-[10px] text-destructive font-medium">{errors.razaoSocial}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <Label>Nome Fantasia *</Label>
-            <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" />
+            <Label className={cn(errors.nomeFantasia && "text-destructive")}>Nome Fantasia *</Label>
+            <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" className={cn(errors.nomeFantasia && "border-destructive")} />
+            {errors.nomeFantasia && <p className="text-[10px] text-destructive font-medium">{errors.nomeFantasia}</p>}
           </div>
           <div className="space-y-0.5">
-            <Label>CNPJ *</Label>
+            <Label className={cn(errors.cnpj && "text-destructive")}>CNPJ *</Label>
             <Input 
               value={form.cnpj} 
               onChange={e => {
@@ -134,7 +162,9 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
                 set('cnpj', masked);
               }} 
               placeholder="00.000.000/0001-00" 
+              className={cn(errors.cnpj && "border-destructive")}
             />
+            {errors.cnpj && <p className="text-[10px] text-destructive font-medium">{errors.cnpj}</p>}
           </div>
         </div>
 
@@ -155,6 +185,7 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
                 <SelectItem value="Grande">Grande</SelectItem>
               </SelectContent>
             </Select>
+            {errors.porte && <p className="text-[10px] text-destructive font-medium">{errors.porte}</p>}
           </div>
         </div>
 
@@ -163,18 +194,21 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
         </p>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-0.5">
-            <Label>CEP</Label>
-            <Input value={form.cep} onChange={e => set('cep', e.target.value)} placeholder="00000-000" />
+            <Label className={cn(errors.cep && "text-destructive")}>CEP *</Label>
+            <Input value={form.cep} onChange={e => set('cep', e.target.value)} placeholder="00000-000" className={cn(errors.cep && "border-destructive")} />
+            {errors.cep && <p className="text-[10px] text-destructive font-medium">{errors.cep}</p>}
           </div>
           <div className="col-span-2 space-y-0.5">
-            <Label>Logradouro</Label>
-            <Input value={form.street} onChange={e => set('street', e.target.value)} placeholder="Rua, Av, etc" />
+            <Label className={cn(errors.street && "text-destructive")}>Logradouro *</Label>
+            <Input value={form.street} onChange={e => set('street', e.target.value)} placeholder="Rua, Av, etc" className={cn(errors.street && "border-destructive")} />
+            {errors.street && <p className="text-[10px] text-destructive font-medium">{errors.street}</p>}
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-0.5">
-            <Label>Número</Label>
-            <Input value={form.number} onChange={e => set('number', e.target.value)} />
+            <Label className={cn(errors.number && "text-destructive")}>Número *</Label>
+            <Input value={form.number} onChange={e => set('number', e.target.value)} className={cn(errors.number && "border-destructive")} />
+            {errors.number && <p className="text-[10px] text-destructive font-medium">{errors.number}</p>}
           </div>
           <div className="col-span-2 space-y-0.5">
             <Label>Complemento</Label>
@@ -183,13 +217,14 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <Label>Bairro</Label>
-            <Input value={form.neighborhood} onChange={e => set('neighborhood', e.target.value)} />
+            <Label className={cn(errors.neighborhood && "text-destructive")}>Bairro *</Label>
+            <Input value={form.neighborhood} onChange={e => set('neighborhood', e.target.value)} className={cn(errors.neighborhood && "border-destructive")} />
+            {errors.neighborhood && <p className="text-[10px] text-destructive font-medium">{errors.neighborhood}</p>}
           </div>
           <div className="space-y-0.5">
-            <Label>Região</Label>
+            <Label className={cn(errors.regiao && "text-destructive")}>Região *</Label>
             <Select value={form.regiao} onValueChange={v => set('regiao', v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className={cn(errors.regiao && "border-destructive")}><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="norte">Norte</SelectItem>
                 <SelectItem value="nordeste">Nordeste</SelectItem>
@@ -198,6 +233,7 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
                 <SelectItem value="sul">Sul</SelectItem>
               </SelectContent>
             </Select>
+            {errors.regiao && <p className="text-[10px] text-destructive font-medium">{errors.regiao}</p>}
           </div>
         </div>
 
@@ -208,13 +244,14 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
             <Input value={form.clinicSpecialty} onChange={e => set('clinicSpecialty', e.target.value)} placeholder="Ex: Dermatologia, Odontologia, Oftalmologia" />
           </div>
           <div className="space-y-0.5">
-            <Label>Responsável *</Label>
+            <Label className={cn(errors.consultorId && "text-destructive")}>Responsável *</Label>
             <Select value={form.consultorId} onValueChange={v => set('consultorId', v)}>
-              <SelectTrigger><SelectValue placeholder={loadingConsultores ? "Carregando..." : "Selecione..."} /></SelectTrigger>
+              <SelectTrigger className={cn(errors.consultorId && "border-destructive")}><SelectValue placeholder={loadingConsultores ? "Carregando..." : "Selecione..."} /></SelectTrigger>
               <SelectContent>
                 {consultores && consultores.map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
+            {errors.consultorId && <p className="text-[10px] text-destructive font-medium">{errors.consultorId}</p>}
           </div>
         </div>
 

@@ -269,18 +269,18 @@ export function getClienteContexto(cliente: Cliente): ClienteContexto {
 
 // ---------- Prioridade automática do cliente ----------
 
-export type NivelPrioridade = 'critica' | 'alta' | 'media' | 'baixa';
+export type NivelPrioridade = 'critica' | 'alta' | 'media' | 'baixa' | 'nao_definida';
 
 export const labelPrioridade: Record<NivelPrioridade, string> = {
-  critica: 'Crítica', alta: 'Alta', media: 'Média', baixa: 'Baixa',
+  critica: 'Crítica', alta: 'Alta', media: 'Média', baixa: 'Baixa', nao_definida: 'Não definida',
 };
 
-export const variantPrioridade: Record<NivelPrioridade, 'danger' | 'warning' | 'info' | 'success'> = {
-  critica: 'danger', alta: 'warning', media: 'info', baixa: 'success',
+export const variantPrioridade: Record<NivelPrioridade, 'danger' | 'warning' | 'info' | 'success' | 'neutral'> = {
+  critica: 'danger', alta: 'warning', media: 'info', baixa: 'success', nao_definida: 'neutral',
 };
 
 export const ordemPrioridade: Record<NivelPrioridade, number> = {
-  critica: 0, alta: 1, media: 2, baixa: 3,
+  critica: 0, alta: 1, media: 2, baixa: 3, nao_definida: 4,
 };
 
 export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [], tarefas: Tarefa[] = []): { nivel: NivelPrioridade; score: number; fatores: string[] } {
@@ -289,8 +289,9 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
 
   const eng = calcularEngajamento(cliente.id);
   const dias = diasDesdeUltimaReuniao(cliente.id);
-  if (eng === 'critico') { score += 40; fatores.push(`${dias}d sem reunião`); }
-  else if (eng === 'atencao') { score += 20; fatores.push(`${dias}d sem reunião`); }
+  if (eng === 'critico') { score += 40; fatores.push(`${dias ?? 0}d sem reunião`); }
+  else if (eng === 'atencao') { score += 20; fatores.push(`${dias ?? 0}d sem reunião`); }
+  else if (eng === 'nao_avaliado') { score = 0; } // Cliente novo ou sem reuniões não deve ter score de prioridade alto por padrão
 
   const ct = contratos.find(c => c.clienteId === cliente.id && (c.status === 'ativo' || c.status === 'em_renovacao'));
   if (ct) {
@@ -307,6 +308,7 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
   if (cliente.faseMetodologica === 'diagnostico') { score += 5; fatores.push('Em diagnóstico (atenção inicial)'); }
 
   if (ct) {
+    const dias = diasDesdeUltimaReuniao(cliente.id) ?? 0;
     const diasContrato = (Date.now() - new Date(ct.dataInicio).getTime()) / 86400000;
     if (diasContrato < 60) { score += 8; fatores.push('Contrato recente'); }
     else if (diasContrato > 270) { score += 12; fatores.push('Próximo da renovação'); }
@@ -316,7 +318,8 @@ export function calcularPrioridade(cliente: Cliente, contratos: Contrato[] = [],
   if (score >= 60) nivel = 'critica';
   else if (score >= 35) nivel = 'alta';
   else if (score >= 15) nivel = 'media';
-  else nivel = 'baixa';
+  else if (score > 0) nivel = 'baixa';
+  else nivel = 'nao_definida';
 
   return { nivel, score, fatores: fatores.slice(0, 3) };
 }

@@ -61,6 +61,7 @@ export function useClienteFicha(clientId?: string) {
         briefing: data.briefing,
         contact_name: data.contact_name,
         contact_phone: data.contact_phone,
+        avatar_url: data.avatar_url,
       } as Cliente;
     },
     enabled: !!clientId,
@@ -95,6 +96,7 @@ export function useClienteFicha(clientId?: string) {
       if (updates.number !== undefined) payload.number = updates.number;
       if (updates.complement !== undefined) payload.complement = updates.complement;
       if (updates.neighborhood !== undefined) payload.neighborhood = updates.neighborhood;
+      if (updates.avatar_url !== undefined) payload.avatar_url = updates.avatar_url;
 
       payload.updated_at = new Date().toISOString();
       payload.updated_by = user?.id;
