@@ -347,11 +347,49 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.meetingDate && "text-destructive")}>Data *</Label>
-            <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className={cn("h-11", errors.meetingDate && "border-destructive")} />
+            {slots && slots.length > 0 ? (
+              <Select value={meetingDate} onValueChange={setMeetingDate}>
+                <SelectTrigger className={cn("h-11", errors.meetingDate && "border-destructive")}>
+                  <SelectValue placeholder="Selecione uma data" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from(new Set(slots.map(s => s.available_date))).map(date => (
+                    <SelectItem key={date} value={date}>
+                      {new Date(date).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className={cn("h-11", errors.meetingDate && "border-destructive")} />
+            )}
+            {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!slots || slots.length === 0) && !loadingAvailability && (
+              <p className="text-[10px] text-amber-600 font-bold flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> Nenhuma disponibilidade configurada.
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.startTime && "text-destructive")}>Horário *</Label>
-            <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={cn("h-11", errors.startTime && "border-destructive")} />
+            {slots && slots.length > 0 && meetingDate ? (
+              <Select value={startTime} onValueChange={setStartTime}>
+                <SelectTrigger className={cn("h-11", errors.startTime && "border-destructive")}>
+                  <SelectValue placeholder="Selecione o horário" />
+                </SelectTrigger>
+                <SelectContent>
+                  {slots
+                    .filter(s => s.available_date === meetingDate && !s.is_booked)
+                    .map(slot => (
+                      <SelectItem key={slot.id} value={slot.start_time}>
+                        {slot.start_time.substring(0, 5)} ({slot.duration_minutes} min)
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={cn("h-11", errors.startTime && "border-destructive")} />
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Duração (min)</Label>
