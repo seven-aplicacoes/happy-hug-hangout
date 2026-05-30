@@ -46,7 +46,7 @@ export function getProdutoAtualCliente(clienteId: string, customContratos?: Cont
 /** Histórico de produtos consumidos pelo cliente (todos os contratos). */
 export interface HistoricoProduto {
   contratoId: string;
-  produto: Produto;
+  produto: string;
   inicio: string;
   fim: string;
   status: StatusContrato;
