@@ -27,6 +27,7 @@ import {
   Clock, Ban, AlertCircle, Flame, ArrowUpRight, Download, Mail, Phone, MapPin,
   Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit,
 } from 'lucide-react';
+import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 
 interface ConsultorProfileViewProps {
   consultorId: string;
@@ -45,6 +46,7 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const { toast } = useToast();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { updateConsultant, isProcessing } = useConsultores();
+  const { can } = useMyPermissions();
 
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
@@ -297,16 +299,18 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
                 </span>
               </div>
             </div>
-            {modo === 'consultor' && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="shrink-0 self-start">
-                <Edit className="h-4 w-4 mr-2" /> Editar Perfil
-              </Button>
-            )}
-            {modo === 'admin' && onExportar && (
-              <Button variant="outline" size="sm" onClick={onExportar} className="shrink-0 self-start">
-                <Download className="h-4 w-4 mr-2" /> Exportar Visão
-              </Button>
-            )}
+            <div className="flex flex-wrap gap-2 shrink-0 self-start">
+              {(modo === 'admin' ? can('consultores', 'edit') : can('perfil', 'edit')) && (
+                <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
+                  <Edit className="h-4 w-4 mr-2" /> {modo === 'admin' ? 'Editar Usuário' : 'Editar Perfil'}
+                </Button>
+              )}
+              {modo === 'admin' && onExportar && (
+                <Button variant="outline" size="sm" onClick={onExportar}>
+                  <Download className="h-4 w-4 mr-2" /> Exportar Visão
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -465,6 +469,7 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
         onSave={handleUpdateProfile}
         consultor={consultor}
         isProcessing={isProcessing}
+        modo={modo}
       />
     </div>
   );

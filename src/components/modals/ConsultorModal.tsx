@@ -29,6 +29,7 @@ interface ConsultorModalProps {
   onSave: (data: any) => Promise<void>;
   consultor?: ConsultantProfile | null;
   isProcessing: boolean;
+  modo?: 'admin' | 'consultor';
 }
 
 interface IBGEState {
@@ -57,6 +58,7 @@ export const ConsultorModal = ({
   onSave,
   consultor,
   isProcessing,
+  modo = 'admin',
 }: ConsultorModalProps) => {
   const { toast } = useToast();
   const [states, setStates] = useState<IBGEState[]>([]);
@@ -253,6 +255,7 @@ export const ConsultorModal = ({
                 onValueChange={(value) =>
                   setFormData({ ...formData, role: value })
                 }
+                disabled={modo === 'consultor'}
                 required
               >
                 <SelectTrigger id="role">
@@ -272,6 +275,7 @@ export const ConsultorModal = ({
                 onValueChange={(value) =>
                   setFormData({ ...formData, status: value })
                 }
+                disabled={modo === 'consultor'}
                 required
               >
                 <SelectTrigger id="status">
@@ -294,6 +298,7 @@ export const ConsultorModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, max_clients: parseInt(e.target.value) || 0 })
                 }
+                disabled={modo === 'consultor'}
                 required
               />
             </div>
@@ -308,6 +313,7 @@ export const ConsultorModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, hours_available: parseInt(e.target.value) || 0 })
                 }
+                disabled={modo === 'consultor'}
                 required
               />
             </div>
