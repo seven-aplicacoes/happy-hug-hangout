@@ -137,6 +137,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   const addProduct = () => {
     const newIndex = contractProducts.length;
     setContractProducts([...contractProducts, { 
+      id: `temp-${Date.now()}`,
       productId: '', 
       startDate: dataInicio, 
       endDate: dataFim || addWeeks(parseISO(dataInicio), 4).toISOString().split('T')[0], 
@@ -152,7 +153,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     // Clear errors for this product
     const newErrors = { ...errors };
     Object.keys(newErrors).forEach(key => {
-      if (key.startsWith(`product_${index}_`) || key.startsWith(`phase_${index}_`)) {
+      if (key.startsWith(`product_${index}`) || key.startsWith(`phase_${index}`)) {
         delete newErrors[key];
       }
     });
@@ -162,12 +163,15 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   const recalculateProductStages = (productStartDate: string, phases: any[]) => {
     let currentStart = productStartDate;
     return phases.map(phase => {
+      // Se a fase já tem datas definidas manualmente e não estamos recalculando tudo, 
+      // poderíamos manter. Mas para o snapshot inicial, vamos gerar as sequências.
       if (!currentStart) return { ...phase };
-      const start = currentStart;
-      // Aproximação: assume 8h/dia, 5 dias/semana se não tiver durationMinutes
+      
+      const start = phase.startDate || currentStart;
       const totalMinutes = phase.durationMinutes || 0;
       const daysToAdd = Math.ceil(totalMinutes / (8 * 60)) || 7; 
-      const end = format(addWeeks(parseISO(start), Math.ceil(daysToAdd / 7)), 'yyyy-MM-dd');
+      const end = phase.endDate || format(addWeeks(parseISO(start), Math.ceil(daysToAdd / 7)), 'yyyy-MM-dd');
+      
       currentStart = end;
       return { ...phase, startDate: start, endDate: end };
     });
@@ -207,13 +211,9 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       }
     }
     
-    if (field === 'startDate') {
-      const recalculatedPhases = recalculateProductStages(value, updated[index].phases);
+    if (field === 'startDate' || field === 'endDate') {
+      const recalculatedPhases = recalculateProductStages(updated[index].startDate || dataInicio, updated[index].phases);
       updated[index].phases = recalculatedPhases;
-      
-      if (recalculatedPhases.length > 0) {
-        updated[index].endDate = recalculatedPhases[recalculatedPhases.length - 1].endDate;
-      }
     }
 
     setContractProducts(updated);
@@ -231,12 +231,10 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     const phase = updatedProducts[productIndex].phases[phaseIndex];
     phase[field] = value;
 
-    const productStartDate = updatedProducts[productIndex].startDate || dataInicio;
-    const recalculatedPhases = recalculateProductStages(productStartDate, updatedProducts[productIndex].phases);
-    updatedProducts[productIndex].phases = recalculatedPhases;
-
-    if (recalculatedPhases.length > 0) {
-      updatedProducts[productIndex].endDate = recalculatedPhases[recalculatedPhases.length - 1].endDate;
+    if (field === 'startDate' || field === 'endDate' || field === 'durationMinutes') {
+      const productStartDate = updatedProducts[productIndex].startDate || dataInicio;
+      const recalculatedPhases = recalculateProductStages(productStartDate, updatedProducts[productIndex].phases);
+      updatedProducts[productIndex].phases = recalculatedPhases;
     }
 
     setContractProducts(updatedProducts);
@@ -256,10 +254,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     // Recalcular datas
     const productStartDate = updatedProducts[productIndex].startDate || dataInicio;
     updatedProducts[productIndex].phases = recalculateProductStages(productStartDate, updatedProducts[productIndex].phases);
-    
-    if (updatedProducts[productIndex].phases.length > 0) {
-      updatedProducts[productIndex].endDate = updatedProducts[productIndex].phases[updatedProducts[productIndex].phases.length - 1].endDate;
-    }
 
     setContractProducts(updatedProducts);
   };
@@ -284,10 +278,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
     const recalculatedPhases = recalculateProductStages(product.startDate || dataInicio, product.phases);
     product.phases = recalculatedPhases;
-    
-    if (recalculatedPhases.length > 0) {
-      product.endDate = recalculatedPhases[recalculatedPhases.length - 1].endDate;
-    }
 
     setContractProducts(updatedProducts);
   };
@@ -313,34 +303,78 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     }
 
     contractProducts.forEach((p, pIndex) => {
-      if (!p.productId) newErrors[`product_${pIndex}_productId`] = 'Selecione um produto.';
+      const productName = p.productName || `Produto ${pIndex + 1}`;
+      if (!p.productId) {
+        newErrors[`product_${pIndex}_productId`] = 'Selecione um produto.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+      }
       
       if (!p.startDate) {
         newErrors[`product_${pIndex}_startDate`] = 'Informe a data de início do produto.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
       }
 
       if (!p.endDate) {
         newErrors[`product_${pIndex}_endDate`] = 'Informe a data final do produto.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+      } else if (p.startDate && isBefore(parseISO(p.endDate), parseISO(p.startDate))) {
+        newErrors[`product_${pIndex}_endDate`] = 'Data final não pode ser anterior à inicial.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
       }
 
-      if (p.value < 0) newErrors[`product_${pIndex}_value`] = 'Informe um valor válido.';
+      if (p.value < 0) {
+        newErrors[`product_${pIndex}_value`] = 'Informe um valor válido.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+      }
 
       if (p.phases.length === 0 && p.productId) {
         newErrors[`product_${pIndex}_phases_empty`] = 'O produto precisa ter pelo menos um módulo.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
       }
 
       p.phases.forEach((ph: any, phIndex: number) => {
-        if (!ph.name.trim()) newErrors[`phase_${pIndex}_${phIndex}_name`] = 'Informe o nome do módulo.';
-        if (!ph.durationMinutes || ph.durationMinutes <= 0) newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
-        if (ph.meetingsCount === undefined || ph.meetingsCount < 1) newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe pelo menos 1 encontro.';
-        if (!ph.responsibleConsultantId) newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
+        if (!ph.name.trim()) {
+          newErrors[`phase_${pIndex}_${phIndex}_name`] = 'Informe o nome do módulo.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
+        if (!ph.durationMinutes || ph.durationMinutes <= 0) {
+          newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
+        if (ph.meetingsCount === undefined || ph.meetingsCount < 1) {
+          newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe pelo menos 1 encontro.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
+        if (!ph.responsibleConsultantId) {
+          newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
       });
     });
 
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
-      toast({ title: 'Campos obrigatórios', description: 'Revise os campos obrigatórios antes de salvar.', variant: 'destructive' });
+      const firstErrorKey = Object.keys(newErrors)[0];
+      let msg = 'Revise os campos obrigatórios antes de salvar.';
+      
+      if (firstErrorKey.includes('phase')) {
+        msg = 'Existem módulos com dados incompletos.';
+      } else if (firstErrorKey.includes('product')) {
+        msg = 'Existem produtos com dados incompletos.';
+      }
+
+      toast({ title: 'Erro de validação', description: msg, variant: 'destructive' });
+      
+      setTimeout(() => {
+        const element = document.getElementById(`error-${firstErrorKey}`) || 
+                        document.getElementsByName(firstErrorKey)[0] ||
+                        document.getElementById(`product-card-${firstErrorKey.split('_')[1]}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 200);
+
       return false;
     }
     return true;
@@ -351,7 +385,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
     setIsLoading(true);
     try {
-      console.log('Saving contract payload:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
+      console.log('1. Iniciando salvamento do contrato:', { clienteId, tipo, contractNumber, valor, dataInicio, dataFim, status, risco, consultorId });
       
       const contractData: any = {
         id: contrato?.id || undefined,
@@ -368,25 +402,30 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       };
       
       const savedContractResult = await upsertContrato.mutateAsync(contractData);
-      
-      // Since upsert might return multiple or just one, let's be careful
       const savedContract = Array.isArray(savedContractResult) ? savedContractResult[0] : savedContractResult;
       const contractId = contrato?.id || savedContract?.id;
 
-      if (!contractId) throw new Error('Falha ao obter ID do contrato salvo.');
+      if (!contractId) {
+        console.error('Falha crítica: ID do contrato não retornado pelo Supabase.');
+        throw new Error('Não foi possível obter o ID do contrato salvo. Verifique a conexão com o banco.');
+      }
 
-      console.log('Contract saved with ID:', contractId);
+
+      console.log('2. Contrato persistido. ID:', contractId);
 
       // Handle deletions
-      const currentProductIds = contractProducts.filter(p => p.id).map(p => p.id);
+      const currentProductIds = contractProducts.filter(p => p.id && !String(p.id).startsWith('temp-')).map(p => p.id);
       const productsToDelete = existingProducts?.filter(p => !currentProductIds.includes(p.id)) || [];
-      for (const p of productsToDelete) {
-        await supabase.from('contract_products').delete().eq('id', p.id);
+      if (productsToDelete.length > 0) {
+        console.log('3. Removendo produtos excluídos:', productsToDelete.map(p => p.id));
+        for (const p of productsToDelete) {
+          await supabase.from('contract_products').delete().eq('id', p.id);
+        }
       }
 
       if (contractProducts.length > 0) {
+        console.log('4. Preparando payload dos produtos (snapshot)...');
         const productsPayload = contractProducts.map(p => {
-          // Calculate totals from phases for snapshotting correctly
           const consultantHours = (p.phases || []).filter((ph: any) => 
             ph.executorType?.toLowerCase() === 'consultor'
           ).reduce((acc: number, ph: any) => acc + (Number(ph.durationMinutes) || 0), 0);
@@ -409,30 +448,42 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             status: p.status || 'ativo',
             client_visible: true
           };
-          if (p.id && typeof p.id === 'string' && p.id.length > 10) {
+          
+          if (p.id && typeof p.id === 'string' && p.id.length > 10 && !p.id.startsWith('temp-')) {
             payload.id = p.id;
           }
+          
           return payload;
         });
 
-        console.log('Saving contract products payload:', productsPayload);
+        console.log('5. Enviando contract_products para o Supabase:', productsPayload);
         const { data: savedProducts, error: productsError } = await supabase
           .from('contract_products')
           .upsert(productsPayload)
           .select();
+
+        if (productsError) {
+          console.error('Erro Supabase (contract_products):', productsError);
+          throw new Error(`Não foi possível salvar os produtos do contrato: ${productsError.message}`);
+        }
+
+        console.log('6. Produtos persistidos com sucesso. Sincronizando módulos...');
+
 
         if (productsError) throw productsError;
 
         for (let i = 0; i < contractProducts.length; i++) {
           const product = contractProducts[i];
           const dbProduct = (savedProducts || []).find((sp: any) => sp.product_id === product.productId);
-          const cpId = product.id || dbProduct?.id;
+          const cpId = (product.id && !String(product.id).startsWith('temp-')) ? product.id : dbProduct?.id;
 
           if (cpId) {
-            const currentPhaseIds = product.phases.filter((ph: any) => ph.id).map((ph: any) => ph.id);
+            console.log(`7. Sincronizando módulos para o produto "${product.productName}" (ID: ${cpId})`);
+            const currentPhaseIds = product.phases.filter((ph: any) => ph.id && !String(ph.id).startsWith('temp-')).map((ph: any) => ph.id);
             const { data: existingPhases } = await supabase.from('contract_product_phases').select('id').eq('contract_product_id', cpId);
             const phasesToDelete = (existingPhases || []).filter((ph: any) => !currentPhaseIds.includes(ph.id)).map((ph: any) => ph.id);
             if (phasesToDelete.length > 0) {
+              console.log(`8. Removendo módulos excluídos do produto:`, phasesToDelete);
               await supabase.from('contract_product_phases').delete().in('id', phasesToDelete);
             }
 
@@ -450,7 +501,8 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                   end_date: ph.endDate,
                   status: ph.status || 'pendente',
                   responsible_consultant_id: ph.responsibleConsultantId,
-                  client_visible: true
+                  client_visible: true,
+                  updated_at: new Date().toISOString()
                 };
                 if (ph.id && typeof ph.id === 'string' && ph.id.length > 10 && !ph.id.startsWith('temp-')) {
                   phase.id = ph.id;
@@ -460,21 +512,27 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                 return phase;
               });
 
-              console.log(`Saving phases for product ${product.productId}:`, phasesPayload);
+              console.log(`9. Enviando módulos do produto "${product.productName}" para o Supabase:`, phasesPayload);
               const { data: savedPhases, error: phasesError } = await supabase
                 .from('contract_product_phases')
                 .upsert(phasesPayload)
                 .select('id');
               
-              if (phasesError) throw phasesError;
+              if (phasesError) {
+                console.error(`Erro Supabase (contract_product_phases) para o produto "${product.productName}":`, phasesError);
+                throw new Error(`Erro ao salvar módulos do produto "${product.productName}": ${phasesError.message}`);
+              }
 
               // Sincroniza encontros para cada fase salva
               if (savedPhases) {
                 for (const phase of savedPhases) {
+                  console.log(`10. Sincronizando encontros para o módulo (ID: ${phase.id})...`);
                   const { error: syncError } = await supabase.rpc('sync_contract_module_meetings_manual', { 
                     phase_id: phase.id 
                   });
-                  if (syncError) console.error("Erro ao sincronizar encontros via RPC no modal:", syncError);
+                  if (syncError) {
+                    console.error("Erro ao sincronizar encontros via RPC no modal:", syncError);
+                  }
                 }
               }
             }
@@ -609,7 +667,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
 
           <div className="space-y-4">
             {contractProducts.map((p, pIndex) => (
-              <Card key={pIndex} className={cn("border-2", (errors[`product_${pIndex}_productId`] || errors[`product_${pIndex}_startDate`] || errors[`product_${pIndex}_endDate`]) && "border-destructive")}>
+              <Card id={`product-card-${pIndex}`} key={pIndex} className={cn("border-2", (errors[`product_${pIndex}_productId`] || errors[`product_${pIndex}_startDate`] || errors[`product_${pIndex}_endDate`]) && "border-destructive")}>
                 <CardContent className="p-0">
                   <div className="p-5 flex items-center justify-between bg-muted/30 border-b">
                     <div className="flex items-center gap-4 flex-1">
@@ -733,6 +791,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     value={ph.startDate} 
                                     onChange={e => updatePhase(pIndex, phIndex, 'startDate', e.target.value)}
                                   />
+                                  <ErrorMsg name={`phase_${pIndex}_${phIndex}_startDate`} />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Fim</Label>
@@ -742,6 +801,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     value={ph.endDate} 
                                     onChange={e => updatePhase(pIndex, phIndex, 'endDate', e.target.value)}
                                   />
+                                  <ErrorMsg name={`phase_${pIndex}_${phIndex}_endDate`} />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Responsável *</Label>
