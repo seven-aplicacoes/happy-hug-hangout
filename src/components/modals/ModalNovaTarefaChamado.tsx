@@ -28,7 +28,7 @@ interface Props {
 export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, contractProductId: propContractProductId }: Props) => {
   const { user } = useAuth();
   const { clientes } = useClientes();
-  const { contratos } = useContratos();
+  const { contratos: todosContratos } = useContratos();
   const { consultores } = useConsultores();
   const { upsertTarefa } = useTarefas();
 
