@@ -82,15 +82,17 @@ const PRODUTO_COLORS = ['#A18261', '#7B6249', '#C9B59A', '#3D3328', '#E5DDD0', '
 export default function ConsultorClientesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { clientes, isLoading: loadingClientes } = useClientes();
+  const { clientes, isLoading: loadingClientes, deleteCliente } = useClientes();
   const { contratos, isLoading: loadingContratos } = useContratos();
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
   
   const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions;
-
   const meusClientes = clientes || [];
+
+  const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null);
+
   
 
   const [search, setSearch] = useState('');
