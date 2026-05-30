@@ -61,7 +61,12 @@ export function useTarefas() {
           impedimentHistory: Array.isArray(t.impediment_history) ? t.impediment_history : [],
           contractProductId: t.contract_product_id,
           contractProductPhaseId: t.contract_product_phase_id,
-          completedAt: t.completed_at
+          completedAt: t.completed_at,
+          createdBy: t.created_by,
+          createdByName: t.created_by_name,
+          createdByRole: t.created_by_role,
+          delegatedBy: t.delegated_by,
+          delegatedByName: t.delegated_profile?.full_name
         };
       }) as (Tarefa & { isAtrasada?: boolean })[];
     },
