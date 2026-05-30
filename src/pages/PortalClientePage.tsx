@@ -21,26 +21,10 @@ import {
   ExternalLink,
   MessageCircle,
   TrendingUp,
-  AlertTriangle
-} from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useClienteFicha } from '@/hooks/useClienteFicha';
-import { useClienteContratos } from '@/hooks/useClienteContratos';
-import { useContractProducts } from '@/hooks/useContractProducts';
-import { useContractProductPhases } from '@/hooks/useContractProductPhases';
-import { useContractModuleMeetings, useContractModuleMeetings as useModuleMeetings } from '@/hooks/useContractModuleMeetings';
-import { useClientCSAT } from '@/hooks/useClientCSAT';
-import { useClienteHistorico } from '@/hooks/useClienteHistorico';
-import { useClienteTarefas } from '@/hooks/useClienteTarefas';
-import { usePortalDeliverables } from '@/hooks/usePortalDeliverables';
-import { usePortalSummary } from '@/hooks/usePortalSummary';
-import { usePortalCSAT } from '@/hooks/usePortalCSAT';
-import { 
+  AlertTriangle,
   CreditCard,
   FileBadge,
-  ShieldCheck,
-  TrendingUp,
-  AlertTriangle
+  ShieldCheck
 } from 'lucide-react';
 import { 
   Dialog, 
