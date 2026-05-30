@@ -71,9 +71,12 @@ export default function ConsultorClientesPage() {
   const navigate = useNavigate();
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { contratos, isLoading: loadingContratos } = useContratos();
+  const { reunioes, isLoading: loadingReunioes } = useReunioes();
+  const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
   
-  const isLoading = loadingClientes || loadingContratos || loadingPermissions;
+  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions;
+
   const meusClientes = clientes || [];
   
 
