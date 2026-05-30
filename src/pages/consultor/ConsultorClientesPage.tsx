@@ -269,9 +269,9 @@ export default function ConsultorClientesPage() {
         <SectionHeader
           overline="Visão geral"
           titulo="Composição da Carteira"
-          descricao="Distribuição por etapa metodológica e por produto contratado"
+          descricao="Distribuição por etapa metodológica"
         />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <Card>
             <CardContent className="p-5">
               <p className="ui-overline mb-3">Por etapa metodológica</p>
@@ -288,26 +288,9 @@ export default function ConsultorClientesPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-5">
-              <p className="ui-overline mb-3">Por produto contratado</p>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={distProdutos} layout="vertical" margin={{ top: 5, right: 20, left: 80, bottom: 5 }}>
-                    <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
-                    <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                      {distProdutos.map((_, i) => <Cell key={i} fill={PRODUTO_COLORS[i % PRODUTO_COLORS.length]} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </section>
+
 
       {/* Ordenação e filtros */}
       <div className="space-y-3">
