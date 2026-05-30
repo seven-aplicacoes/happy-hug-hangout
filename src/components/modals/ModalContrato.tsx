@@ -598,63 +598,69 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             {contractProducts.map((p, pIndex) => (
               <Card key={pIndex} className={cn("border-2", (errors[`product_${pIndex}_productId`] || errors[`product_${pIndex}_startDate`] || errors[`product_${pIndex}_endDate`]) && "border-destructive")}>
                 <CardContent className="p-0">
-                  <div className="p-4 flex items-center justify-between bg-muted/20 border-b">
-                    <div className="flex items-center gap-3 flex-1">
-                      <Button variant="ghost" size="icon" onClick={() => toggleProductExpand(pIndex)}>
-                        {expandedProducts[pIndex] ? <ChevronUp /> : <ChevronDown />}
+                  <div className="p-5 flex items-center justify-between bg-muted/30 border-b">
+                    <div className="flex items-center gap-4 flex-1">
+                      <Button variant="ghost" size="icon" onClick={() => toggleProductExpand(pIndex)} className="h-8 w-8 hover:bg-primary/5">
+                        {expandedProducts[pIndex] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
-                      <div className="flex-1 max-w-[300px] space-y-1">
+                      <div className="flex-1 max-w-[400px] space-y-1">
                         <Select value={p.productId} onValueChange={v => updateProduct(pIndex, 'productId', v)}>
-                          <SelectTrigger className={cn("h-9 font-medium", errors[`product_${pIndex}_productId`] && "border-destructive")}>
+                          <SelectTrigger className={cn("h-10 font-bold text-sm", errors[`product_${pIndex}_productId`] && "border-destructive")}>
                             <SelectValue placeholder="Selecione o Produto..." />
                           </SelectTrigger>
                           <SelectContent>
                             {produtos?.filter(prod => prod.status === 'ativo').map(prod => (
-                              <SelectItem key={prod.id} value={prod.id}>{prod.name}</SelectItem>
+                              <SelectItem key={prod.id} value={prod.id} className="font-medium">{prod.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                         <ErrorMsg name={`product_${pIndex}_productId`} />
                       </div>
-                      <Badge variant="outline" className="bg-background">
+                      <Badge variant="outline" className="bg-background text-[10px] font-black uppercase tracking-widest px-2.5 h-6">
                         {p.phases?.length || 0} Módulos
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeProduct(pIndex)}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive h-8 w-8 hover:bg-destructive/5" 
+                        onClick={() => removeProduct(pIndex)}
+                        title="Remover Produto"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
                   {expandedProducts[pIndex] && (
-                    <div className="p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Data Início Produto *</Label>
+                    <div className="p-6 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Data Início Produto *</Label>
                           <Input 
                             type="date" 
-                            className={cn("h-8 text-xs", errors[`product_${pIndex}_startDate`] && "border-destructive")}
+                            className={cn("h-9 text-sm font-medium", errors[`product_${pIndex}_startDate`] && "border-destructive")}
                             value={p.startDate} 
                             onChange={e => updateProduct(pIndex, 'startDate', e.target.value)} 
                           />
                           <ErrorMsg name={`product_${pIndex}_startDate`} />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Data Fim Produto *</Label>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Data Fim Produto *</Label>
                           <Input 
                             type="date" 
-                            className={cn("h-8 text-xs", errors[`product_${pIndex}_endDate`] && "border-destructive")}
+                            className={cn("h-9 text-sm font-medium", errors[`product_${pIndex}_endDate`] && "border-destructive")}
                             value={p.endDate} 
                             onChange={e => updateProduct(pIndex, 'endDate', e.target.value)} 
                           />
                           <ErrorMsg name={`product_${pIndex}_endDate`} />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Valor do Produto (R$)</Label>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Valor do Produto (R$)</Label>
                           <Input 
                             type="number" 
-                            className={cn("h-8 text-xs", errors[`product_${pIndex}_value`] && "border-destructive")}
+                            className={cn("h-9 text-sm font-medium tabular-nums", errors[`product_${pIndex}_value`] && "border-destructive")}
                             value={p.value} 
                             onChange={e => updateProduct(pIndex, 'value', Number(e.target.value))} 
                           />
