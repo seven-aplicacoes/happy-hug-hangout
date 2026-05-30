@@ -48,6 +48,7 @@ const ENGAJAMENTO_OPTIONS = [
   { label: 'Em dia', value: 'em_dia' },
   { label: 'Atenção', value: 'atencao' },
   { label: 'Crítico', value: 'critico' },
+  { label: 'Não avaliado', value: 'nao_avaliado' },
 ];
 
 const PRIORIDADE_OPTIONS = [
@@ -55,6 +56,7 @@ const PRIORIDADE_OPTIONS = [
   { label: 'Alta', value: 'alta' },
   { label: 'Média', value: 'media' },
   { label: 'Baixa', value: 'baixa' },
+  { label: 'Não definida', value: 'nao_definida' },
 ];
 
 type SortKey = 'prioridade' | 'tempoSemInteracao' | 'alfabetica';
@@ -127,9 +129,9 @@ export default function ConsultorClientesPage() {
 
     // Ordenação
     if (sortKey === 'prioridade') {
-      d.sort((a, b) => ordemPrioridade[calcularPrioridade(a).nivel] - ordemPrioridade[calcularPrioridade(b).nivel]);
+      d.sort((a, b) => (ordemPrioridade[calcularPrioridade(a).nivel] ?? 99) - (ordemPrioridade[calcularPrioridade(b).nivel] ?? 99));
     } else if (sortKey === 'tempoSemInteracao') {
-      d.sort((a, b) => diasDesdeUltimaReuniao(b.id) - diasDesdeUltimaReuniao(a.id));
+      d.sort((a, b) => (diasDesdeUltimaReuniao(b.id) ?? -1) - (diasDesdeUltimaReuniao(a.id) ?? -1));
     } else {
       d.sort((a, b) => a.nomeFantasia.localeCompare(b.nomeFantasia));
     }
@@ -192,14 +194,14 @@ export default function ConsultorClientesPage() {
         </TooltipProvider>
       );
     }, className: 'w-[110px]' },
-    { key: 'produto', header: 'Produto', render: (c) => <span className="text-xs text-muted-foreground">{getProdutoAtualCliente(c.id) || '—'}</span> },
     { key: 'porte', header: 'Porte', render: (c) => <span className="text-xs text-muted-foreground">{labelPorte[getPorte(c)]}</span>, className: 'w-[90px]' },
     { key: 'status', header: 'Status', render: (c) => <StatusTag label={labelStatus[c.status]} />, className: 'w-[130px]' },
     { key: 'fase', header: 'Fase', render: (c) => <div className="flex justify-center w-full"><MethodologyStepper faseAtual={c.faseMetodologica} variant="compact" /></div>, className: 'w-[200px]' },
-    { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id); return <StatusTag label={labelEngajamento[e]} variant={variantEngajamento[e]} />; }, className: 'w-[120px]' },
+    { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id); return <StatusTag label={e === 'nao_avaliado' ? 'Não avaliado' : labelEngajamento[e]} variant={e === 'nao_avaliado' ? 'neutral' : variantEngajamento[e]} />; }, className: 'w-[120px]' },
     { key: 'indice', header: <span className="inline-flex items-center gap-1">Índice <IndiceSevenInfo /></span>, render: (c) => <span className="font-mono">{c.indiceSeven}</span> },
     { key: 'ultima', header: 'Sem reunião', render: (c) => {
       const dias = diasDesdeUltimaReuniao(c.id);
+      if (dias === null) return <span className="text-[10px] text-muted-foreground">Sem reuniões</span>;
       return <span className="font-mono text-xs tabular-nums">{dias}d</span>;
     }, className: 'w-[100px]' },
   ];
