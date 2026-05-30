@@ -9,6 +9,7 @@ export function useConsultantAvailability(filters: {
   contractProductId?: string;
   contractPhaseId?: string;
   consultantId?: string;
+  contractModuleMeetingId?: string;
 }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -23,6 +24,7 @@ export function useConsultantAvailability(filters: {
       if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
       if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
       if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
+      if (filters.contractModuleMeetingId) query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -41,6 +43,7 @@ export function useConsultantAvailability(filters: {
       if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
       if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
       if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
+      if (filters.contractModuleMeetingId) query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
 
       const { data, error } = await query.order('available_date').order('start_time');
       if (error) throw error;

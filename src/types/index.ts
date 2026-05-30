@@ -437,6 +437,7 @@ export interface ConsultantAvailability {
   contract_id?: string;
   contract_product_id?: string;
   contract_phase_id?: string;
+  contract_module_meeting_id?: string;
   consultant_id: string;
   start_date: string;
   end_date: string;
@@ -455,6 +456,7 @@ export interface ConsultantAvailableSlot {
   contract_id?: string;
   contract_product_id?: string;
   contract_phase_id?: string;
+  contract_module_meeting_id?: string;
   consultant_id: string;
   available_date: string;
   start_time: string;

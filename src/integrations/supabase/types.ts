@@ -437,6 +437,7 @@ export type Database = {
           client_id: string | null
           consultant_id: string
           contract_id: string | null
+          contract_module_meeting_id: string | null
           contract_phase_id: string | null
           contract_product_id: string | null
           created_at: string
@@ -454,6 +455,7 @@ export type Database = {
           client_id?: string | null
           consultant_id: string
           contract_id?: string | null
+          contract_module_meeting_id?: string | null
           contract_phase_id?: string | null
           contract_product_id?: string | null
           created_at?: string
@@ -471,6 +473,7 @@ export type Database = {
           client_id?: string | null
           consultant_id?: string
           contract_id?: string | null
+          contract_module_meeting_id?: string | null
           contract_phase_id?: string | null
           contract_product_id?: string | null
           created_at?: string
@@ -507,6 +510,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "consultant_availability_contract_module_meeting_id_fkey"
+            columns: ["contract_module_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "consultant_availability_contract_phase_id_fkey"
             columns: ["contract_phase_id"]
             isOneToOne: false
@@ -528,6 +538,7 @@ export type Database = {
           client_id: string | null
           consultant_id: string
           contract_id: string | null
+          contract_module_meeting_id: string | null
           contract_phase_id: string | null
           contract_product_id: string | null
           created_at: string
@@ -544,6 +555,7 @@ export type Database = {
           client_id?: string | null
           consultant_id: string
           contract_id?: string | null
+          contract_module_meeting_id?: string | null
           contract_phase_id?: string | null
           contract_product_id?: string | null
           created_at?: string
@@ -560,6 +572,7 @@ export type Database = {
           client_id?: string | null
           consultant_id?: string
           contract_id?: string | null
+          contract_module_meeting_id?: string | null
           contract_phase_id?: string | null
           contract_product_id?: string | null
           created_at?: string
@@ -591,6 +604,13 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_available_slots_contract_module_meeting_id_fkey"
+            columns: ["contract_module_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
             referencedColumns: ["id"]
           },
           {
