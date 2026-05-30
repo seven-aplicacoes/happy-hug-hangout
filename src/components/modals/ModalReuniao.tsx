@@ -371,8 +371,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Encontro / Slot</Label>
-            <Select value={contractModuleMeetingId || 'none'} onValueChange={setContractModuleMeetingId}>
-              <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o encontro..." /></SelectTrigger>
+            <Select value={contractModuleMeetingId || 'none'} disabled={isLocked} onValueChange={setContractModuleMeetingId}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue placeholder="Selecione o encontro..." /></SelectTrigger>
+
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
                 {(moduleMeetings || []).map(m => (
