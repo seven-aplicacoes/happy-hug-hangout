@@ -84,18 +84,13 @@ export default function ConsultorReunioesPage() {
     });
   }, [reunioes, mesAtual]);
 
-  const aderenciaStats = useMemo(() => {
-    const realizadas = reunioesMes.filter(r => r.status === 'realizada').length;
-    const agendadas = reunioesMes.filter(r => r.status === 'agendada').length;
-    const aderenciaStats = { 
-      realizadas, 
-      previstas: hasGoal ? previstas : 0, 
-      aderencia, 
-      saldo, 
-      hasGoal 
-    };
-    return aderenciaStats;
-  }, [realizadas, previstas, aderencia, saldo, hasGoal]);
+  const aderenciaStats = useMemo(() => ({ 
+    realizadas: statsRealizadas, 
+    previstas: statsPrevistas, 
+    aderencia: statsAderencia, 
+    saldo: statsSaldo, 
+    hasGoal 
+  }), [statsRealizadas, statsPrevistas, statsAderencia, statsSaldo, hasGoal]);
 
   const aderenciaTone = aderenciaStats.aderencia >= 80 ? 'success' : aderenciaStats.aderencia >= 60 ? 'warning' : 'danger';
   const aderenciaColor = aderenciaTone === 'success' ? 'bg-seven-success' : aderenciaTone === 'warning' ? 'bg-seven-warning' : 'bg-seven-danger';
