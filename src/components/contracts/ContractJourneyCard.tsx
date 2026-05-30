@@ -521,15 +521,26 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
             <>
               <StatusTag label={labelStatus[product.status] || product.status} />
               {mode === 'admin' && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => setIsEditing(true)} 
-                  className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5 font-bold"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Editar Produto
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setIsEditing(true)} 
+                    className="h-8 gap-1.5 px-3 border-primary/20 text-primary hover:bg-primary/5 font-bold"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar Produto
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={onDeleteProduct} 
+                    className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                    title="Remover Produto"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               )}
             </>
           )}
