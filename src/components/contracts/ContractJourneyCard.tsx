@@ -348,6 +348,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
 }
 
 function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin' }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' }) {
+
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
