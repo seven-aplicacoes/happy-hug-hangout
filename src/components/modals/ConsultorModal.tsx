@@ -255,6 +255,7 @@ export const ConsultorModal = ({
                 onValueChange={(value) =>
                   setFormData({ ...formData, role: value })
                 }
+                disabled={modo === 'consultor'}
                 required
               >
                 <SelectTrigger id="role">
