@@ -245,7 +245,9 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
             </div>
           </div>
 
-          {consultantCalendly?.connected ? (
+          {!consultantCalendly.loaded ? (
+            <div className="h-10 w-40 animate-pulse bg-muted rounded-lg" />
+          ) : consultantCalendly.connected && consultantCalendly.schedulingUrl ? (
             <Button 
               onClick={handleAgendarCalendly} 
               disabled={isSubmitting}
@@ -255,9 +257,12 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
               {isSubmitting ? 'Iniciando...' : 'Agendar via Calendly'}
             </Button>
           ) : (
-            <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-lg border border-amber-100 text-amber-700 text-[11px] font-bold uppercase">
-              <AlertTriangle className="h-4 w-4" />
-              Calendly não conectado - Agendamento Manual
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-lg border border-amber-100 text-amber-700 text-[11px] font-bold uppercase">
+                <AlertTriangle className="h-4 w-4" />
+                O consultor responsável ainda não conectou o Calendly.
+              </div>
+              <p className="text-[10px] text-muted-foreground">Você pode prosseguir com o agendamento manual abaixo.</p>
             </div>
           )}
         </div>
