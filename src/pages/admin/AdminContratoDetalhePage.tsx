@@ -20,6 +20,7 @@ import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useToast } from '@/hooks/use-toast';
 import { ModalContrato } from '@/components/modals/ModalContrato';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminContratoDetalhePage() {
   const { id } = useParams();
