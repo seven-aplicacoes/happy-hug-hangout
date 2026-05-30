@@ -19,11 +19,13 @@ export function useClientes() {
           consultant:profiles!clients_consultant_id_fkey (
             full_name
           )
-        `);
+        `)
+        .is('deleted_at', null);
 
       if (user?.role !== 'admin' && perfil === 'consultor' && user?.consultorId) {
         query = query.eq('consultant_id', user.consultorId);
       }
+
 
       const { data, error } = await query;
       if (error) throw error;
@@ -113,12 +115,16 @@ export function useClientes() {
 
   const deleteCliente = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('clients').delete().eq('id', id);
+      const { error } = await supabase
+        .from('clients')
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq('id', id);
       if (error) throw error;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      toast({ title: 'Sucesso', description: 'Cliente removido com sucesso.' });
+      toast({ title: 'Sucesso', description: 'Cliente excluído com sucesso.' });
     },
     onError: (error: any) => {
       toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });

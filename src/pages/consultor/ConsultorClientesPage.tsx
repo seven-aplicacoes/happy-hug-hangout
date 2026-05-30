@@ -19,10 +19,11 @@ import { MethodologyStepper } from '@/components/MethodologyStepper';
 // Removed ModalNovoCliente import as it's no longer used here
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Target, Loader2 } from 'lucide-react';
+import { Plus, Target, Loader2, Trash2 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import type { Cliente, FaseMetodologica, Contrato } from '@/types';
 import { useClientes } from '@/hooks/useClientes';
+
 import { useContratos } from '@/hooks/useContratos';
 import { useReunioes } from '@/hooks/useReunioes';
 import { useTarefas } from '@/hooks/useTarefas';
@@ -33,7 +34,19 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
+
 const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
 
 const STATUS_OPTIONS = [
   { label: 'Ativo', value: 'ativo' },
@@ -69,15 +82,17 @@ const PRODUTO_COLORS = ['#A18261', '#7B6249', '#C9B59A', '#3D3328', '#E5DDD0', '
 export default function ConsultorClientesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { clientes, isLoading: loadingClientes } = useClientes();
+  const { clientes, isLoading: loadingClientes, deleteCliente } = useClientes();
   const { contratos, isLoading: loadingContratos } = useContratos();
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
   
   const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions;
-
   const meusClientes = clientes || [];
+
+  const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null);
+
   
 
   const [search, setSearch] = useState('');
@@ -88,8 +103,8 @@ export default function ConsultorClientesPage() {
 
   const filterConfigs: FilterConfig[] = [
     { key: 'status', label: 'Status', options: STATUS_OPTIONS },
-    { key: 'produto', label: 'Produto', options: PRODUTOS.map(p => ({ label: p, value: p })) },
     { key: 'porte', label: 'Porte', options: PORTE_OPTIONS },
+
     { key: 'engajamento', label: 'Engajamento', options: ENGAJAMENTO_OPTIONS },
     { key: 'prioridade', label: 'Prioridade', options: PRIORIDADE_OPTIONS },
   ];
@@ -101,13 +116,9 @@ export default function ConsultorClientesPage() {
   })).filter(d => d.value > 0), [meusClientes]);
 
   const distProdutos = useMemo(() => {
-    const map: Record<string, number> = {};
-    meusClientes.forEach(c => {
-      const p = getProdutoAtualCliente(c.id, contratos || []) || 'Sem produto';
-      map[p] = (map[p] || 0) + 1;
-    });
-    return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [meusClientes, contratos]);
+    return []; // No longer needed
+  }, []);
+
 
 
   const data = useMemo(() => {
@@ -115,8 +126,8 @@ export default function ConsultorClientesPage() {
     const q = normalize(search);
     if (q) d = d.filter(c => normalize(c.nomeFantasia).includes(q) || normalize(c.razaoSocial).includes(q));
     if (filters.status && filters.status !== 'todos') d = d.filter(c => c.status === filters.status);
-    if (filters.produto && filters.produto !== 'todos') d = d.filter(c => getProdutoAtualCliente(c.id, contratos || []) === filters.produto);
     if (filters.porte && filters.porte !== 'todos') d = d.filter(c => getPorte(c) === filters.porte);
+
     if (filters.engajamento && filters.engajamento !== 'todos') d = d.filter(c => calcularEngajamento(c.id, reunioes || []) === filters.engajamento);
     if (filters.prioridade && filters.prioridade !== 'todos') d = d.filter(c => calcularPrioridade(c, contratos || [], tarefas || []).nivel === filters.prioridade);
 
@@ -202,18 +213,27 @@ export default function ConsultorClientesPage() {
         </TooltipProvider>
       );
     }, className: 'w-[110px]' },
-    { key: 'produto', header: 'Produto', render: (c) => <span className="text-xs text-muted-foreground">{getProdutoAtualCliente(c.id, contratos || []) || '—'}</span> },
     { key: 'porte', header: 'Porte', render: (c) => <span className="text-xs text-muted-foreground">{labelPorte[getPorte(c)]}</span>, className: 'w-[90px]' },
     { key: 'status', header: 'Status', render: (c) => <StatusTag label={labelStatus[c.status]} />, className: 'w-[130px]' },
-    { key: 'fase', header: 'Fase', render: (c) => <div className="flex justify-center w-full"><MethodologyStepper faseAtual={c.faseMetodologica} variant="compact" /></div>, className: 'w-[200px]' },
     { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id, reunioes || []); return <StatusTag label={labelEngajamento[e]} variant={variantEngajamento[e]} />; }, className: 'w-[120px]' },
     { key: 'indice', header: <span className="inline-flex items-center gap-1">Índice <IndiceSevenInfo /></span>, render: (c) => <span className="font-mono">{c.indiceSeven || '—'}</span> },
-    { key: 'ultima', header: 'Sem reunião', render: (c) => {
-      const dias = diasDesdeUltimaReuniao(c.id, reunioes || []);
-      return <span className="font-mono text-xs tabular-nums">{dias !== null ? `${dias}d` : 'Nenhuma'}</span>;
-    }, className: 'w-[100px]' },
-
+    { 
+      key: 'acoes', 
+      header: 'Ações', 
+      render: (c) => (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 text-destructive hover:bg-destructive/10" 
+          onClick={(e) => { e.stopPropagation(); setClienteToDelete(c); }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+      className: 'w-[60px]'
+    },
   ];
+
 
   if (isLoading) {
     return (
@@ -249,9 +269,9 @@ export default function ConsultorClientesPage() {
         <SectionHeader
           overline="Visão geral"
           titulo="Composição da Carteira"
-          descricao="Distribuição por etapa metodológica e por produto contratado"
+          descricao="Distribuição por etapa metodológica"
         />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <Card>
             <CardContent className="p-5">
               <p className="ui-overline mb-3">Por etapa metodológica</p>
@@ -268,26 +288,9 @@ export default function ConsultorClientesPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-5">
-              <p className="ui-overline mb-3">Por produto contratado</p>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={distProdutos} layout="vertical" margin={{ top: 5, right: 20, left: 80, bottom: 5 }}>
-                    <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
-                    <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                      {distProdutos.map((_, i) => <Cell key={i} fill={PRODUTO_COLORS[i % PRODUTO_COLORS.length]} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </section>
+
 
       {/* Ordenação e filtros */}
       <div className="space-y-3">
@@ -325,6 +328,37 @@ export default function ConsultorClientesPage() {
       </div>
       <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} />
       
+      <AlertDialog open={!!clienteToDelete} onOpenChange={(open) => !open && setClienteToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Cliente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o cliente <strong>"{clienteToDelete?.nomeFantasia || clienteToDelete?.razaoSocial}"</strong>?
+              <br /><br />
+              Essa ação removerá o cliente da sua carteira e poderá afetar contratos, reuniões, documentos e registros vinculados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                if (clienteToDelete) {
+                  try {
+                    await deleteCliente.mutateAsync(clienteToDelete.id);
+                    setClienteToDelete(null);
+                  } catch (error) {
+                    console.error("Erro ao excluir:", error);
+                  }
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirmar exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
