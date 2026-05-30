@@ -3,7 +3,7 @@ import { StatusTag } from '@/components/StatusTag';
 import { getTaskStatusLabel, getTaskStatusVariant } from '@/constants/taskStatus';
 import { contextoEstrategicoTarefa } from '@/data/documentos';
 import type { Tarefa, NivelRisco, OrigemDemanda } from '@/types';
-import { Calendar, Building2, Zap, Tag, FileText, Video, UserCheck, RotateCcw, Headphones, AlertTriangle, Trash2 } from 'lucide-react';
+import { Calendar, Building2, Zap, Tag, FileText, Video, UserCheck, RotateCcw, Headphones, AlertTriangle, Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
