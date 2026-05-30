@@ -455,17 +455,27 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             status: p.status || 'ativo',
             client_visible: true
           };
-          if (p.id && typeof p.id === 'string' && p.id.length > 10) {
+          
+          if (p.id && typeof p.id === 'string' && p.id.length > 10 && !p.id.startsWith('temp-')) {
             payload.id = p.id;
           }
+          
           return payload;
         });
 
-        console.log('Saving contract products payload:', productsPayload);
+        console.log('5. Enviando contract_products para o Supabase:', productsPayload);
         const { data: savedProducts, error: productsError } = await supabase
           .from('contract_products')
           .upsert(productsPayload)
           .select();
+
+        if (productsError) {
+          console.error('Erro Supabase (contract_products):', productsError);
+          throw new Error(`Não foi possível salvar os produtos do contrato: ${productsError.message}`);
+        }
+
+        console.log('6. Produtos persistidos com sucesso. Sincronizando módulos...');
+
 
         if (productsError) throw productsError;
 
