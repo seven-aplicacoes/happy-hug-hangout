@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -188,6 +189,32 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 export default function IntegracoesPage() {
   const [filtro, setFiltro] = useState<'todas' | CategoriaIntegracao>('todas');
   const [selecionada, setSelecionada] = useState<Integracao | null>(INTEGRACOES[0]);
+
+  useEffect(() => {
+    // Handle OAuth Callback
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      handleExchangeCode(code);
+    }
+  }, []);
+
+  const handleExchangeCode = async (code: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('calendly-oauth', {
+        body: { action: 'exchange_code', code }
+      });
+
+      if (error) throw error;
+      
+      toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
+      // Clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error: any) {
+      console.error('Error exchanging code:', error);
+      toast({ title: 'Erro ao conectar', description: error.message, variant: 'destructive' });
+    }
+  };
 
   const lista = useMemo(
     () => filtro === 'todas' ? INTEGRACOES : INTEGRACOES.filter(i => i.categoria === filtro),
