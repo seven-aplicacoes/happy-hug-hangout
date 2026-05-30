@@ -32,8 +32,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const { upsertReuniao } = useReunioes();
   const { toast } = useToast();
   const { clientes } = useClientes();
-  const { consultores } = useConsultores();
-  const { contratos } = useContratos();
+  const { consultores, isLoading: loadingConsultores } = useConsultores();
+  const { contratos, isLoading: loadingContratos } = useContratos();
   
   const [title, setTitle] = useState('');
   const [tipo, setTipo] = useState('');
@@ -54,9 +54,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
 
-  const { products: contractProducts } = useContractProducts(contractId);
-  const { phases: productPhases } = useContractProductPhases(contractProductId);
-  const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
+  const { products: contractProducts, isLoading: loadingProducts } = useContractProducts(contractId);
+  const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
+  const { meetings: moduleMeetings, isLoading: loadingMeetings } = useContractModuleMeetings(contractProductPhaseId);
   
   const { slots, availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
     contractModuleMeetingId: contractModuleMeetingId && contractModuleMeetingId !== 'none' ? contractModuleMeetingId : undefined,
@@ -369,11 +369,14 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                         <SelectValue placeholder="Selecione uma data" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from(new Set(slots.map(s => s.available_date))).sort().map(date => (
-                          <SelectItem key={date} value={date}>
-                            {new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
-                          </SelectItem>
-                        ))}
+                        {Array.from(new Set(slots.map(s => s.available_date))).sort().map(date => {
+                          const slotDate = new Date(date + 'T00:00:00');
+                          return (
+                            <SelectItem key={date} value={date}>
+                              {slotDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   ) : (
