@@ -105,7 +105,7 @@ export const TaskCard = ({ tarefa, onClick, draggable, onDragStart, onDelete }: 
         <div className="space-y-1 pt-1 border-t border-muted-foreground/10">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground" title="Responsável">
             <UserCheck className="h-3 w-3 text-primary/70" />
-            <span className="font-semibold text-foreground/80">Resp.:</span> {tarefa.consultorNome || 'Não informado'}
+            <span className="font-semibold text-foreground/80">Responsável:</span> {tarefa.consultorNome || 'Não informado'}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground" title="Criador">
             <User className="h-3 w-3 opacity-60" />
