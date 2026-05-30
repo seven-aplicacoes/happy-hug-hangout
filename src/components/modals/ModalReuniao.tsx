@@ -202,10 +202,11 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     <BaseModal 
       open={open} 
       onClose={onClose} 
-      titulo={reuniao ? "Editar Reunião" : "Nova Reunião"}
+      titulo={reuniao ? "Reagendar Reunião" : "Nova Reunião"}
       size="lg"
       footer={footer}
     >
+
       <div className="space-y-6 py-2">
         <div className="space-y-2">
           <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.title && "text-destructive")}>
