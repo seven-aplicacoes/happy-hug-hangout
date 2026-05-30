@@ -178,7 +178,10 @@ export default function LoginPage() {
               type="button"
               variant="outline"
               className="w-full h-11"
-              onClick={() => navigate('/portal')}
+              onClick={async () => {
+                await logout();
+                navigate('/portal');
+              }}
             >
               <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
               Acessar portal do cliente
