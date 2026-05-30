@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
 
 interface ConsultorProfileViewProps {
   consultorId: string;
