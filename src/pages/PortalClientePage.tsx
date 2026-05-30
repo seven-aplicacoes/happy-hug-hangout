@@ -290,22 +290,25 @@ function IndicatorCard({ title, value, icon }: { title: string, value: string, i
 
 
 
-function StarRating({ value, onChange }: any) {
+function StarRating({ value, onChange }: { value: number, onChange: (v: number) => void }) {
   return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <button key={s} type="button" onClick={() => onChange(s)}><Star className={cn("h-6 w-6", value >= s ? "fill-yellow-400 text-yellow-400" : "text-neutral-200")} /></button>
+    <div className="flex gap-2">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <button key={i} onClick={() => onChange(i)} className={cn("transition-all", value >= i ? "text-yellow-500 fill-yellow-500" : "text-neutral-200")}>
+          <Star className="h-8 w-8" />
+        </button>
       ))}
     </div>
   );
 }
 
-function NpsScale({ value, onChange }: any) {
+function NpsScale({ value, onChange }: { value: number, onChange: (v: number) => void }) {
   return (
-    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
-      {Array.from({ length: 11 }).map((_, i) => (
-        <button key={i} type="button" onClick={() => onChange(i)} className={cn("h-8 w-8 flex items-center justify-center rounded border", value === i ? "bg-primary text-white" : "bg-white")}>{i}</button>
+    <div className="flex justify-between gap-1">
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+        <button key={i} onClick={() => onChange(i)} className={cn("flex-1 h-10 text-xs font-bold transition-all flex items-center justify-center rounded border", value === i ? "bg-primary text-white" : "bg-white")}>{i}</button>
       ))}
     </div>
   );
 }
+
