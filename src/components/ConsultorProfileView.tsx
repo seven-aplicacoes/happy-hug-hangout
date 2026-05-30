@@ -56,103 +56,20 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const { contratos, isLoading: loadingContratos } = useContratos();
   const queryClient = useQueryClient();
 
-  // Calendly Integration State
-  const { data: calendlyIntegration, isLoading: loadingIntegration } = useQuery({
-    queryKey: ['calendly-integration', consultorId],
+  // Calendly Mapping State (Central Integration)
+  const { data: calendlyMapping, isLoading: loadingMapping } = useQuery({
+    queryKey: ['consultant-calendly-mapping', consultorId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('consultant_calendar_integrations')
+        .from('consultant_calendly_settings')
         .select('*')
         .eq('consultant_id', consultorId)
-        .eq('provider', 'calendly')
         .maybeSingle();
       if (error) throw error;
       return data;
     },
     enabled: !!consultorId
   });
-
-  // Calendly Event Types
-  const { data: calendlyEventTypes, isLoading: loadingEventTypes } = useQuery({
-    queryKey: ['calendly-event-types', consultorId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('consultant_calendly_event_types')
-        .select('*')
-        .eq('consultant_id', consultorId)
-        .order('name');
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!consultorId && !!calendlyIntegration
-  });
-
-  const handleSetDefaultEventType = async (uri: string, url: string) => {
-    try {
-      // 1. Update table
-      await supabase
-        .from('consultant_calendly_event_types')
-        .update({ is_default: false })
-        .eq('consultant_id', consultorId);
-      
-      await supabase
-        .from('consultant_calendly_event_types')
-        .update({ is_default: true })
-        .eq('calendly_event_type_uri', uri);
-
-      // 2. Update profile
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          calendly_event_type_uri: uri,
-          calendly_scheduling_url: url
-        })
-        .eq('id', consultorId);
-
-      if (error) throw error;
-
-      toast({ title: 'Sucesso', description: 'Tipo de evento padrão atualizado.' });
-      queryClient.invalidateQueries({ queryKey: ['calendly-event-types', consultorId] });
-      queryClient.invalidateQueries({ queryKey: ['profiles', consultorId] });
-    } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
-    }
-  };
-
-  const handleConnectCalendly = () => {
-    toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
-    const client_id = 'CALENDLY_CLIENT_ID'; 
-    // We use a specific redirect URI that matches what's configured in Calendly dashboard
-    const redirect_uri = encodeURIComponent(window.location.origin + window.location.pathname);
-    const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
-    window.location.href = url;
-  };
-
-  useEffect(() => {
-    // Handle OAuth Callback if code is in URL
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code && modo === 'consultor') {
-      const exchangeCode = async () => {
-        try {
-          const redirect_uri = window.location.origin + window.location.pathname;
-          const { data, error } = await supabase.functions.invoke('calendly-oauth', {
-            body: { action: 'exchange_code', code, redirect_uri }
-          });
-          if (error) throw error;
-          toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
-          queryClient.invalidateQueries({ queryKey: ['calendly-integration', consultorId] });
-          queryClient.invalidateQueries({ queryKey: ['profiles', consultorId] });
-          // Clear URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } catch (error: any) {
-          console.error('Error exchanging code:', error);
-          toast({ title: 'Erro ao conectar', description: error.message, variant: 'destructive' });
-        }
-      };
-      exchangeCode();
-    }
-  }, [consultorId, modo, queryClient]);
   
   // Clientes are already filtered in useClientes hook for non-admins if profile is consultor
   const meusClientes = useMemo(() => {
