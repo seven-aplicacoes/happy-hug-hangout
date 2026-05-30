@@ -82,7 +82,7 @@ export default function PortalClientePage() {
 
   const { csatStatus, submitCSAT } = usePortalCSAT(clientId);
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
-  const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
+  const { data: summary, isLoading: loadingSummary } = usePortalSummary(clientId);
   // const { csatStatus } = usePortalCSAT(clientId); // Remove redundant line
 
   const isLoading = loadingFicha || loadingContratos || loadingHist || loadingSummary;
