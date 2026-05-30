@@ -23,14 +23,14 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { action, code } = await req.json()
+    const { action, code, redirect_uri } = await req.json()
 
     if (action === 'exchange_code') {
       if (!code) throw new Error('Missing code')
 
       const clientId = Deno.env.get('CALENDLY_CLIENT_ID')
       const clientSecret = Deno.env.get('CALENDLY_CLIENT_SECRET')
-      const redirectUri = (await req.json()).redirect_uri || Deno.env.get('CALENDLY_REDIRECT_URI')
+      const redirectUri = redirect_uri || Deno.env.get('CALENDLY_REDIRECT_URI')
 
       const response = await fetch('https://auth.calendly.com/oauth/token', {
         method: 'POST',
