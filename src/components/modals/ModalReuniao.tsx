@@ -186,12 +186,12 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground", errors.title && "text-destructive")}>Título da Reunião *</Label>
-            <Input value={title} disabled={isLocked} onChange={e => setTitle(e.target.value)} className={cn("h-11 font-medium", errors.title && "border-destructive")} />
+            <Input value={title} onChange={e => setTitle(e.target.value)} className={cn("h-11 font-medium", errors.title && "border-destructive")} />
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tipo de Reunião</Label>
-            <Select value={tipo} onValueChange={setTipo} disabled={isLocked}>
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+            <Select value={tipo} onValueChange={setTipo}>
+              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Check-in Semanal">Check-in Semanal</SelectItem>
                 <SelectItem value="Alinhamento Estratégico">Alinhamento Estratégico</SelectItem>
@@ -206,8 +206,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
-            <Select value={status} onValueChange={(v: any) => setStatus(v)} disabled={isLocked}>
-              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+            <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="agendada">Agendada</SelectItem>
                 <SelectItem value="realizada">Realizada</SelectItem>
