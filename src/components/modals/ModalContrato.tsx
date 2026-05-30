@@ -332,7 +332,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       p.phases.forEach((ph: any, phIndex: number) => {
         if (!ph.name.trim()) newErrors[`phase_${pIndex}_${phIndex}_name`] = 'Informe o nome do módulo.';
         if (!ph.durationMinutes || ph.durationMinutes <= 0) newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
-        if (ph.meetingsCount === undefined || ph.meetingsCount < 0) newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe a quantidade de encontros.';
+        if (ph.meetingsCount === undefined || ph.meetingsCount < 1) newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe pelo menos 1 encontro.';
         if (!ph.responsibleConsultantId) newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
       });
     });
@@ -503,8 +503,21 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   ) : null;
 
   return (
-    <BaseModal open={open} onClose={onClose} titulo={contrato ? "Editar Contrato" : "Novo Contrato"} size="full">
-      <div ref={scrollContainerRef} className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 px-1">
+    <BaseModal 
+      open={open} 
+      onClose={onClose} 
+      titulo={contrato ? "Editar Contrato" : "Novo Contrato"} 
+      size="full"
+      footer={
+        <div className="flex justify-between items-center w-full">
+          <Button variant="ghost" onClick={onClose} disabled={isLoading} className="font-bold">Cancelar</Button>
+          <Button onClick={handleSave} disabled={isLoading} className="min-w-[180px] shadow-lg shadow-primary/20 font-bold">
+            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Finalizar e Salvar"}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-8 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className={cn(errors.clienteId && "text-destructive")}>Cliente *</Label>
@@ -746,9 +759,13 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                   <Label className="text-[10px]">Encontros</Label>
                                   <Input 
                                     type="number"
-                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_meetingsCount`] && "border-destructive")}
+                                    min="1"
+                                    className={cn("h-8 text-xs font-medium tabular-nums", errors[`phase_${pIndex}_${phIndex}_meetingsCount`] && "border-destructive")}
                                     value={ph.meetingsCount || 0} 
-                                    onChange={e => updatePhase(pIndex, phIndex, 'meetingsCount', Number(e.target.value))} 
+                                    onChange={e => {
+                                      const val = Number(e.target.value);
+                                      updatePhase(pIndex, phIndex, 'meetingsCount', val < 1 ? 1 : val);
+                                    }} 
                                   />
                                   <ErrorMsg name={`phase_${pIndex}_${phIndex}_meetingsCount`} />
                                 </div>
@@ -782,12 +799,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center w-full pt-6 mt-6 border-t shrink-0">
-        <Button variant="ghost" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-        <Button onClick={handleSave} disabled={isLoading} className="min-w-[140px] shadow-lg shadow-primary/20">
-          {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Finalizar e Salvar"}
-        </Button>
-      </div>
     </BaseModal>
   );
 };
