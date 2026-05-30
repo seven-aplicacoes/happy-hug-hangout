@@ -29,6 +29,7 @@ interface ConsultorModalProps {
   onSave: (data: any) => Promise<void>;
   consultor?: ConsultantProfile | null;
   isProcessing: boolean;
+  modo?: 'admin' | 'consultor';
 }
 
 interface IBGEState {
