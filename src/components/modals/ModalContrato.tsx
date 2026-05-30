@@ -501,7 +501,8 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                   end_date: ph.endDate,
                   status: ph.status || 'pendente',
                   responsible_consultant_id: ph.responsibleConsultantId,
-                  client_visible: true
+                  client_visible: true,
+                  updated_at: new Date().toISOString()
                 };
                 if (ph.id && typeof ph.id === 'string' && ph.id.length > 10 && !ph.id.startsWith('temp-')) {
                   phase.id = ph.id;
