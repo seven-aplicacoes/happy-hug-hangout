@@ -35,8 +35,8 @@ interface MeetingListProps {
 }
 
 function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
-
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
+  const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>;
   if (!meetings || meetings.length === 0) return <div className="p-8 text-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed my-2">Nenhum encontro configurado para este módulo.</div>;
@@ -47,47 +47,85 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
         <span className="text-[10px] font-black uppercase text-muted-foreground">Progresso: {meetings.filter(m => m.status === 'realizada').length}/{meetings.length} encontros</span>
       </div>
       {meetings.map((meeting) => (
-        <div key={meeting.id} className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4">
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-              meeting.status === 'realizada' ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
-            )}>
-              #{meeting.meetingNumber}
+        <div key={meeting.id} className="space-y-2">
+          <div className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                meeting.status === 'realizada' ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
+              )}>
+                #{meeting.meetingNumber}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{meeting.title}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  <StatusTag label={meeting.status} variant={meeting.status === 'realizada' ? 'success' : meeting.status === 'agendado' ? 'info' : 'neutral'} />
+                  {meeting.scheduledAt && (
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-3 w-3" /> {new Date(meeting.scheduledAt).toLocaleDateString('pt-BR')} às {new Date(meeting.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{meeting.title}</p>
-              <div className="flex items-center gap-3 mt-1">
-                <StatusTag label={meeting.status} variant={meeting.status === 'realizada' ? 'success' : meeting.status === 'agendado' ? 'info' : 'neutral'} />
-                {meeting.scheduledAt && (
-                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> {new Date(meeting.scheduledAt).toLocaleDateString('pt-BR')} às {new Date(meeting.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+            <div className="flex items-center gap-2">
+              <div className="text-right mr-3 hidden md:block">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">Consultor</p>
+                <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
+              </div>
+              
+              <div className="flex gap-2">
+                {mode === 'consultor' && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className={cn(
+                      "h-8 gap-1.5 px-3 text-[10px] font-black uppercase",
+                      meetingForAvailability === meeting.id ? "bg-primary text-white hover:bg-primary/90" : "text-primary hover:bg-primary/5"
+                    )}
+                    onClick={() => setMeetingForAvailability(meetingForAvailability === meeting.id ? null : meeting.id)}
+                  >
+                    <Settings className="h-3.5 w-3.5" /> Disponibilidade
+                  </Button>
+                )}
+
+                {meeting.status === 'pendente' ? (
+                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" onClick={() => onSchedule(meeting)}>
+                    <Calendar className="h-3.5 w-3.5" /> Agendar
+                  </Button>
+                ) : meeting.status === 'agendado' ? (
+                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
+                    Reagendar
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
+                  </Button>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="text-right mr-3 hidden md:block">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase">Consultor</p>
-              <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
-            </div>
-            {meeting.status === 'pendente' ? (
-              <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" onClick={() => onSchedule(meeting)}>
-                <Calendar className="h-3.5 w-3.5" /> Agendar
-              </Button>
-            ) : meeting.status === 'agendado' ? (
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
-                  Reagendar
+          
+          {meetingForAvailability === meeting.id && (
+            <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
+                  <Settings className="h-4 w-4" /> Configurar Disponibilidade: {meeting.title}
+                </h4>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setMeetingForAvailability(null)}>
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
-            ) : (
-              <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
-              </Button>
-            )}
-          </div>
+              <ConsultantAvailabilityConfig 
+                clientId={meeting.clientId}
+                contractId={meeting.contractId}
+                contractProductId={meeting.productId}
+                contractPhaseId={meeting.moduleId}
+                consultantId={meeting.consultantId || phase.responsibleConsultantId}
+                contractModuleMeetingId={meeting.id}
+              />
+            </div>
+          )}
         </div>
       ))}
     </div>
