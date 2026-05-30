@@ -40,6 +40,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [contractProductId, setContractProductId] = useState('');
   const [contractProductPhaseId, setContractProductPhaseId] = useState('');
   const [contractModuleMeetingId, setContractModuleMeetingId] = useState('');
+  const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
+
   const [consultorId, setConsultorId] = useState('');
   const [status, setStatus] = useState<StatusReuniao>('agendada');
   const [meetingDate, setMeetingDate] = useState('');
