@@ -91,52 +91,99 @@ export function useContractProductPhases(contractProductId?: string) {
         return p;
       });
 
-      const { data, error } = await supabase
+      const { data: savedPhases, error } = await supabase
         .from('contract_product_phases')
         .upsert(payload)
-        .select();
+        .select(`
+          id,
+          contract_product_id,
+          meetings_count,
+          responsible_consultant_id,
+          name,
+          contract_products (
+            contract_id,
+            contracts (
+              cliente_id
+            )
+          )
+        `);
 
       if (error) throw error;
 
-      // Sincroniza o responsável com os encontros vinculados
-      for (const phase of items) {
-        if (phase.id && phase.responsibleConsultantId) {
-          // Atualiza encontros pendentes ou agendados para o novo consultor
-          await supabase
+      // Sincroniza o responsável e cria encontros se necessário
+      for (const phase of savedPhases as any[]) {
+        if (phase.id) {
+          // 1. Check existing meetings
+          const { count: existingCount } = await supabase
             .from('contract_module_meetings')
-            .update({ consultant_id: phase.responsibleConsultantId })
-            .eq('module_id', phase.id)
-            .in('status', ['pendente', 'agendado']);
-            
-          // Atualiza reuniões agendadas vinculadas
-          const { data: meetingsToUpdate } = await supabase
-            .from('contract_module_meetings')
-            .select('scheduled_meeting_id')
-            .eq('module_id', phase.id)
-            .eq('status', 'agendado')
-            .not('scheduled_meeting_id', 'is', null);
+            .select('*', { count: 'exact', head: true })
+            .eq('module_id', phase.id);
 
-          if (meetingsToUpdate && meetingsToUpdate.length > 0) {
-            const meetingIds = meetingsToUpdate.map(m => m.scheduled_meeting_id).filter(Boolean);
-            if (meetingIds.length > 0) {
-              await supabase
-                .from('meetings')
-                .update({ consultant_id: phase.responsibleConsultantId })
-                .in('id', meetingIds);
+          const targetCount = phase.meetings_count || 0;
+          
+          if (targetCount > (existingCount || 0)) {
+            // Need to create missing meetings
+            const diff = targetCount - (existingCount || 0);
+            const newMeetings = [];
+            
+            for (let i = 1; i <= diff; i++) {
+              const meetingNumber = (existingCount || 0) + i;
+              newMeetings.push({
+                module_id: phase.id,
+                product_id: phase.contract_product_id,
+                contract_id: phase.contract_products?.contract_id,
+                client_id: phase.contract_products?.contracts?.cliente_id,
+                meeting_number: meetingNumber,
+                title: `${phase.name} - Encontro ${meetingNumber}`,
+                status: 'pendente',
+                consultant_id: phase.responsible_consultant_id,
+                order_index: meetingNumber
+              });
+            }
+            
+            if (newMeetings.length > 0) {
+              await supabase.from('contract_module_meetings').insert(newMeetings);
+            }
+          }
+
+          // 2. Sync consultant for existing meetings
+          if (phase.responsible_consultant_id) {
+            // Atualiza encontros pendentes ou agendados para o novo consultor
+            await supabase
+              .from('contract_module_meetings')
+              .update({ consultant_id: phase.responsible_consultant_id })
+              .eq('module_id', phase.id)
+              .in('status', ['pendente', 'agendado']);
+              
+            // Atualiza reuniões agendadas vinculadas
+            const { data: meetingsToUpdate } = await supabase
+              .from('contract_module_meetings')
+              .select('scheduled_meeting_id')
+              .eq('module_id', phase.id)
+              .eq('status', 'agendado')
+              .not('scheduled_meeting_id', 'is', null);
+
+            if (meetingsToUpdate && meetingsToUpdate.length > 0) {
+              const meetingIds = meetingsToUpdate.map(m => m.scheduled_meeting_id).filter(Boolean);
+              if (meetingIds.length > 0) {
+                await supabase
+                  .from('meetings')
+                  .update({ consultant_id: phase.responsible_consultant_id })
+                  .in('id', meetingIds);
+              }
             }
           }
         }
       }
 
-      return data;
-
+      return savedPhases;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
       queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
       queryClient.invalidateQueries({ queryKey: ['reunioes'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-products'] });
     },
-
   });
 
   const deletePhase = useMutation({
