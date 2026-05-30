@@ -140,30 +140,41 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 
         {integ.id === 'calendly' ? (
           <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
-             <Button 
-               className={cn(
-                 "bg-primary hover:bg-primary/90",
-                 integ.status === 'conectado' && "bg-emerald-600 hover:bg-emerald-700"
-               )}
-               onClick={() => {
-                 if (integ.status === 'conectado') {
-                    toast({ title: 'Configurações', description: 'O Calendly já está conectado.' });
-                    return;
-                 }
-                 toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
-                 const client_id = 'CALENDLY_CLIENT_ID'; 
-                 const redirect_uri = encodeURIComponent(window.location.origin + (window.location.pathname.includes('/consultor') ? '/consultor/integracoes' : '/admin/integracoes'));
-                 const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
-                 window.location.href = url;
-               }}
-             >
-               <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> 
-               {integ.status === 'conectado' ? 'Calendly Conectado' : 'Conectar Calendly'}
-             </Button>
+             {perfil === 'admin' ? (
+               <>
+                 <Button 
+                   className={cn(
+                     "bg-primary hover:bg-primary/90",
+                     integ.status === 'conectado' && "bg-emerald-600 hover:bg-emerald-700"
+                   )}
+                   onClick={() => {
+                     toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
+                     const client_id = 'CALENDLY_CLIENT_ID'; 
+                     const redirect_uri = encodeURIComponent(window.location.origin + '/admin/integracoes');
+                     const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
+                     window.location.href = url;
+                   }}
+                 >
+                   <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> 
+                   {integ.status === 'conectado' ? 'Reconectar Conta Central' : 'Conectar Conta Central'}
+                 </Button>
+                 {integ.status === 'conectado' && (
+                   <Button variant="outline" onClick={() => setShowMapping(true)}>
+                     <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Mapear Consultores
+                   </Button>
+                 )}
+               </>
+             ) : (
+               <div className="text-center py-2">
+                 <p className="text-xs text-muted-foreground italic">
+                   A integração com Calendly é gerenciada pela administração.
+                 </p>
+               </div>
+             )}
              <p className="text-[10px] text-muted-foreground text-center px-4">
-               {integ.status === 'conectado' 
-                 ? 'Sua agenda está sincronizada com a Seven.' 
-                 : 'Ao conectar, o Calendly poderá criar e gerenciar eventos na sua agenda sincronizados com a Seven.'}
+               {perfil === 'admin' 
+                 ? 'Conecte a conta central do Calendly para toda a empresa.' 
+                 : 'Sua agenda será vinculada ao link configurado pelo administrador.'}
              </p>
           </div>
         ) : (
