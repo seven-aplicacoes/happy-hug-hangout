@@ -509,9 +509,9 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           <div className="space-y-1">
             <Label className={cn(errors.clienteId && "text-destructive")}>Cliente *</Label>
             <Select value={clienteId} onValueChange={v => { setClienteId(v); if(errors.clienteId) setErrors(prev => { const n={...prev}; delete n.clienteId; return n; }) }}>
-              <SelectTrigger className={cn(errors.clienteId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectTrigger className={cn("h-11 font-bold", errors.clienteId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
               <SelectContent>
-                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
+                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id} className="font-medium">{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
               </SelectContent>
             </Select>
             <ErrorMsg name="clienteId" />
@@ -519,9 +519,9 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
           <div className="space-y-1">
             <Label className={cn(errors.consultorId && "text-destructive")}>Consultor Responsável Geral *</Label>
             <Select value={consultorId} onValueChange={v => { setConsultorId(v); if(errors.consultorId) setErrors(prev => { const n={...prev}; delete n.consultorId; return n; }) }}>
-              <SelectTrigger className={cn(errors.consultorId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectTrigger className={cn("h-11 font-bold", errors.consultorId && "border-destructive")}><SelectValue placeholder="Selecione..." /></SelectTrigger>
               <SelectContent>
-                {(consultores || []).map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
+                {(consultores || []).map(c => <SelectItem key={c.id} value={c.id} className="font-medium">{c.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
             <ErrorMsg name="consultorId" />
@@ -533,7 +533,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             <Label className={cn(errors.tipo && "text-destructive")}>Tipo de Contrato *</Label>
             <Input 
               name="tipo"
-              className={cn(errors.tipo && "border-destructive")}
+              className={cn("h-11 font-bold", errors.tipo && "border-destructive")}
               value={tipo} 
               onChange={e => { setTipo(e.target.value); if(errors.tipo) setErrors(prev => { const n={...prev}; delete n.tipo; return n; }) }} 
               placeholder="Ex: Consultoria Estratégica" 
@@ -544,7 +544,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
             <Label className={cn(errors.contractNumber && "text-destructive")}>Código/Identificação *</Label>
             <Input 
               name="contractNumber"
-              className={cn(errors.contractNumber && "border-destructive")}
+              className={cn("h-11 font-bold", errors.contractNumber && "border-destructive")}
               value={contractNumber} 
               onChange={e => { setContractNumber(e.target.value); if(errors.contractNumber) setErrors(prev => { const n={...prev}; delete n.contractNumber; return n; }) }} 
               placeholder="Ex: CTR-2024-001" 
@@ -556,7 +556,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className={cn(errors.valor && "text-destructive")}>Valor Total (R$)</Label>
-            <Input type="number" value={valor} onChange={e => setValor(Number(e.target.value))} />
+            <Input type="number" className="h-11 font-bold tabular-nums" value={valor} onChange={e => setValor(Number(e.target.value))} />
             <ErrorMsg name="valor" />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -564,7 +564,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
               <Label className={cn(errors.dataInicio && "text-destructive")}>Data Início *</Label>
               <Input 
                 type="date" 
-                className={cn(errors.dataInicio && "border-destructive")}
+                className={cn("h-11 font-bold", errors.dataInicio && "border-destructive")}
                 value={dataInicio} 
                 onChange={e => { setDataInicio(e.target.value); if(errors.dataInicio) setErrors(prev => { const n={...prev}; delete n.dataInicio; return n; }) }} 
               />
@@ -574,7 +574,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
               <Label className={cn(errors.dataFim && "text-destructive")}>Data Fim *</Label>
               <Input 
                 type="date" 
-                className={cn(errors.dataFim && "border-destructive")}
+                className={cn("h-11 font-bold", errors.dataFim && "border-destructive")}
                 value={dataFim} 
                 onChange={e => { setDataFim(e.target.value); if(errors.dataFim) setErrors(prev => { const n={...prev}; delete n.dataFim; return n; }) }} 
               />
