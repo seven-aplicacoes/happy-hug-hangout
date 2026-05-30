@@ -58,6 +58,7 @@ export const ConsultorModal = ({
   onSave,
   consultor,
   isProcessing,
+  modo = 'admin',
 }: ConsultorModalProps) => {
   const { toast } = useToast();
   const [states, setStates] = useState<IBGEState[]>([]);
