@@ -461,8 +461,22 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
               });
 
               console.log(`Saving phases for product ${product.productId}:`, phasesPayload);
-              const { error: phasesError } = await supabase.from('contract_product_phases').upsert(phasesPayload);
+              const { data: savedPhases, error: phasesError } = await supabase
+                .from('contract_product_phases')
+                .upsert(phasesPayload)
+                .select('id');
+              
               if (phasesError) throw phasesError;
+
+              // Sincroniza encontros para cada fase salva
+              if (savedPhases) {
+                for (const phase of savedPhases) {
+                  const { error: syncError } = await supabase.rpc('sync_contract_module_meetings_manual', { 
+                    phase_id: phase.id 
+                  });
+                  if (syncError) console.error("Erro ao sincronizar encontros via RPC no modal:", syncError);
+                }
+              }
             }
           }
         }
