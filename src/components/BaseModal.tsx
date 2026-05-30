@@ -9,7 +9,7 @@ interface BaseModalProps {
   descricao?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 }
 
 const sizes = {
@@ -17,6 +17,7 @@ const sizes = {
   md: 'sm:max-w-lg',
   lg: 'sm:max-w-2xl',
   xl: 'sm:max-w-4xl',
+  '2xl': 'sm:max-w-[1200px] w-[85vw]',
   full: 'sm:max-w-[95vw] w-[95vw]',
 };
 
