@@ -49,6 +49,102 @@ export default function ClienteDetalhePage() {
   const [fichaSuccessFactors, setFichaSuccessFactors] = useState<string[]>([]);
   const [fichaNewPain, setFichaNewPain] = useState('');
   const [fichaNewSuccessFactor, setFichaNewSuccessFactor] = useState('');
+  const [isUploadingAvatar, setIsSubmittingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !id) return;
+
+    // Validate size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo permitido é 2MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate type
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast({
+        title: "Formato inválido",
+        description: "Use JPG, PNG ou WEBP.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmittingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${id}-${Date.now()}.${fileExt}`;
+      const filePath = `${id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('client-avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('client-avatars')
+        .getPublicUrl(filePath);
+
+      // Remove old avatar if exists
+      if (cliente?.avatar_path) {
+        await supabase.storage
+          .from('client-avatars')
+          .remove([cliente.avatar_path]);
+      }
+
+      await updateCliente.mutateAsync({
+        avatar_url: publicUrl,
+        avatar_path: filePath
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Imagem de perfil atualizada com sucesso."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro no upload",
+        description: error.message || "Não foi possível enviar a imagem.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!id || !cliente?.avatar_path) return;
+
+    try {
+      await supabase.storage
+        .from('client-avatars')
+        .remove([cliente.avatar_path]);
+
+      await updateCliente.mutateAsync({
+        avatar_url: '',
+        avatar_path: ''
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Imagem removida com sucesso."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao remover",
+        description: error.message || "Não foi possível remover a imagem.",
+        variant: "destructive"
+      });
+    }
+  };
+
 
   useEffect(() => {
     if (cliente) {
