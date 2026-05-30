@@ -61,7 +61,10 @@ export function useClienteFicha(clientId?: string) {
         briefing: data.briefing,
         contact_name: data.contact_name,
         contact_phone: data.contact_phone,
+        avatar_url: data.avatar_url,
+        avatar_path: data.avatar_path,
       } as Cliente;
+
     },
     enabled: !!clientId,
   });
