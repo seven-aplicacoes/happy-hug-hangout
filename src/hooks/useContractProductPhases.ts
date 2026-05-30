@@ -151,7 +151,7 @@ export function useContractProductPhases(contractProductId?: string) {
                 contract_id: contractId,
                 client_id: clientId,
                 meeting_number: meetingNumber,
-                title: `${phase.name} - Encontro ${meetingNumber}`,
+                title: `${phase.name}`,
                 status: 'pendente',
                 consultant_id: phase.responsible_consultant_id,
                 order_index: meetingNumber
