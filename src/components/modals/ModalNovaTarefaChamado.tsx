@@ -239,15 +239,27 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
                 </Select>
               </div>
               
-              {clientProducts && clientProducts.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contrato do Cliente</Label>
+                <Select value={contractId} onValueChange={v => { setContractId(v); setContractProductId(''); setContractProductPhaseId(''); }}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Selecione o contrato..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contratosFiltrados.map(c => <SelectItem key={c.id} value={c.id}>{c.tipo} ({c.status})</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {produtosFiltrados.length > 0 && (
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Produto Contratado</Label>
-                  <Select value={contractProductId} onValueChange={setContractProductId}>
+                  <Select value={contractProductId} onValueChange={v => { setContractProductId(v); setContractProductPhaseId(''); }}>
                     <SelectTrigger className="h-10">
                       <SelectValue placeholder="Selecione o produto..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {clientProducts.map(cp => <SelectItem key={cp.id} value={cp.id}>{cp.productNome}</SelectItem>)}
+                      {produtosFiltrados.map(cp => <SelectItem key={cp.id} value={cp.id}>{cp.productNome}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -255,7 +267,7 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
 
               {productPhases && productPhases.length > 0 && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Etapa da Jornada</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Etapa / Módulo</Label>
                   <Select value={contractProductPhaseId} onValueChange={setContractProductPhaseId}>
                     <SelectTrigger className="h-10">
                       <SelectValue placeholder="Selecione a etapa..." />
