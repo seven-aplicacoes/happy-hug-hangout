@@ -300,29 +300,32 @@ export const variantEngajamento: Record<NivelEngajamento, 'success' | 'warning' 
   critico: 'danger',
 };
 
-/** Dias desde a última reunião realizada do cliente. Se nunca houve, retorna dias desde dataInicio. */
-export function diasDesdeUltimaReuniao(clienteId: string): number {
+/** Dias desde a última reunião realizada do cliente. Se nunca houve, retorna null. */
+export function diasDesdeUltimaReuniao(clienteId: string): number | null {
   const hojeMs = Date.now();
   const reunioesCl = reunioes
     .filter(r => r.clienteId === clienteId && r.status === 'realizada')
     .map(r => ({ ...r, _d: r.meetingDate || r.data || '' }))
     .filter(r => !!r._d)
     .sort((a, b) => b._d.localeCompare(a._d));
+  
   if (reunioesCl.length > 0) {
     return Math.max(0, Math.floor((hojeMs - new Date(reunioesCl[0]._d).getTime()) / 86400000));
   }
-  const cl = clientes.find(c => c.id === clienteId);
-  if (cl) return Math.max(0, Math.floor((hojeMs - new Date(cl.dataInicio).getTime()) / 86400000));
-  return 999;
+  
+  // Se não há reuniões, não retornamos 999. O chamador decide o que mostrar.
+  return null;
 }
 
-/** 1-8d → em_dia · 9-15d → atenção · >15d → crítico */
-export function calcularEngajamento(clienteId: string): NivelEngajamento {
+/** 1-8d → em_dia · 9-15d → atenção · >15d → crítico · null → sem_dados */
+export function calcularEngajamento(clienteId: string): NivelEngajamento | 'sem_dados' {
   const d = diasDesdeUltimaReuniao(clienteId);
+  if (d === null) return 'sem_dados';
   if (d <= 8) return 'em_dia';
   if (d <= 15) return 'atencao';
   return 'critico';
 }
+
 
 export const labelEspecialidade: Record<string, string> = {
   gestao: 'Gestão',
