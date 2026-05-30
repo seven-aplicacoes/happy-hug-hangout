@@ -284,27 +284,13 @@ export default function AdminContratoDetalhePage() {
 
       {/* Jornada do Contrato */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 rounded-full bg-primary" />
-            <h2 className="text-lg font-black uppercase tracking-tight">Produtos e Jornada de Execução</h2>
-          </div>
-          <Button 
-            onClick={() => setIsAddProductOpen(true)} 
-            size="sm" 
-            className="gap-2 shadow-sm font-bold"
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar Produto
-          </Button>
-        </div>
-        
         <Accordion type="single" collapsible defaultValue={contrato.id} className="w-full">
           <ContractJourneyCard 
             contrato={contrato} 
             expanded={true} 
             isEditing={isEditing} 
             mode={isAdmin ? 'admin' : 'consultor'}
+            onAddProduct={() => setIsAddProductOpen(true)}
           />
         </Accordion>
       </section>
