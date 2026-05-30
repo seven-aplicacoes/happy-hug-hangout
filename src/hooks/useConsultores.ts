@@ -8,11 +8,13 @@ export type ConsultantProfile = {
   email: string;
   role: 'admin' | 'consultor' | 'cliente';
   specialty: string | null;
+  phone: string | null;
   city: string | null;
   state: string | null;
   status: string | null;
   avatar_url: string | null;
   created_at: string | null;
+  entry_date?: string | null;
   max_clients?: number;
   hours_available?: number;
 };

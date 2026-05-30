@@ -67,6 +67,7 @@ export const ConsultorModal = ({
     full_name: "",
     email: "",
     specialty: "",
+    phone: "",
     city: "",
     state: "",
     password: "", // Only for creation
@@ -128,6 +129,7 @@ export const ConsultorModal = ({
         full_name: consultor.full_name || "",
         email: consultor.email || "",
         specialty: consultor.specialty || "",
+        phone: consultor.phone || "",
         city: consultor.city || "",
         state: consultor.state || "",
         password: "",
@@ -141,6 +143,7 @@ export const ConsultorModal = ({
         full_name: "",
         email: "",
         specialty: "",
+        phone: "",
         city: "",
         state: "",
         password: "",
@@ -221,6 +224,28 @@ export const ConsultorModal = ({
               </div>
             )}
             
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="phone">Telefone</Label>
+              <Input
+                id="phone"
+                placeholder="(00) 00000-0000"
+                value={formData.phone}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "");
+                  if (value.length > 11) value = value.slice(0, 11);
+                  if (value.length > 10) {
+                    value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+                  } else if (value.length > 6) {
+                    value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+                  } else if (value.length > 2) {
+                    value = value.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
+                  } else if (value.length > 0) {
+                    value = value.replace(/^(\d{0,2}).*/, "($1");
+                  }
+                  setFormData({ ...formData, phone: value });
+                }}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="role">Tipo de Acesso *</Label>
               <Select

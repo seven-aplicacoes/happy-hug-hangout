@@ -18,11 +18,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateCapacidade, getAlertaCapacidadeFromData, labelCapacidade, variantCapacidade } from '@/data/consultorExtras';
 import { CapacityGauge } from '@/components/CapacityGauge';
 import type { Cliente, Reuniao, Tarefa, TimelineEvent } from '@/types';
+import { useConsultores } from '@/hooks/useConsultores';
+import { ConsultorModal } from '@/components/modals/ConsultorModal';
+import { useToast } from '@/hooks/use-toast';
 import {
   Users, AlertTriangle, UserCheck, UserX, FileText,
   CalendarCheck, CalendarDays, TrendingUp, CheckCircle2,
   Clock, Ban, AlertCircle, Flame, ArrowUpRight, Download, Mail, Phone, MapPin,
-  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus,
+  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit,
 } from 'lucide-react';
 
 interface ConsultorProfileViewProps {
@@ -39,6 +42,9 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
   const seteDiasAtras = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
   const [carteiraFilter, setCarteiraFilter] = useState<CarteiraFilter>('todos');
+  const { toast } = useToast();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { updateConsultant, isProcessing } = useConsultores();
 
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
@@ -71,12 +77,34 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   useEffect(() => {
     const fetchConsultor = async () => {
       setLoadingConsultor(true);
-      const { data } = await supabase.from('profiles').select('*').eq('id', consultorId).single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', consultorId).single();
+      if (error) {
+        console.error("Erro ao buscar consultor:", error);
+      }
       if (data) setConsultor(data);
       setLoadingConsultor(false);
     };
     fetchConsultor();
   }, [consultorId]);
+
+  const handleUpdateProfile = async (userData: any) => {
+    try {
+      await updateConsultant({ ...userData, id: consultorId });
+      // Refresh local state
+      const { data } = await supabase.from('profiles').select('*').eq('id', consultorId).single();
+      if (data) setConsultor(data);
+      toast({
+        title: "Perfil atualizado com sucesso.",
+      });
+    } catch (error: any) {
+      console.error("Erro ao atualizar perfil:", error);
+      toast({
+        title: "Não foi possível atualizar o perfil.",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const isLoading = loadingClientes || loadingReunioes || loadingTarefas || loadingContratos || loadingConsultor;
 
@@ -253,11 +281,27 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
               <p className="text-sm text-muted-foreground">{consultor.cargo || 'Consultor'} · {labelEspecialidade[consultor.specialty || consultor.especialidade]}</p>
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />{consultor.email}</span>
-                <span className="inline-flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" />{consultor.phone || consultor.telefone || '—'}</span>
-                <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{consultor.city || consultor.cidade || '—'}/{consultor.state || consultor.estado || '—'}</span>
-                <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />Entrada: {(consultor.entry_date || consultor.meetingDateEntrada || '').split('-').reverse().join('/')}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" />
+                  {consultor.phone || consultor.telefone ? (consultor.phone || consultor.telefone) : 'Telefone não informado'}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {consultor.city || consultor.cidade || consultor.state || consultor.estado ? 
+                    `${consultor.city || consultor.cidade || '—'}/${consultor.state || consultor.estado || '—'}` : 
+                    'Localização não informada'}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Entrada: {(consultor.entry_date || consultor.meetingDateEntrada) ? (consultor.entry_date || consultor.meetingDateEntrada).split('-').reverse().join('/') : '—'}
+                </span>
               </div>
             </div>
+            {modo === 'consultor' && (
+              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="shrink-0 self-start">
+                <Edit className="h-4 w-4 mr-2" /> Editar Perfil
+              </Button>
+            )}
             {modo === 'admin' && onExportar && (
               <Button variant="outline" size="sm" onClick={onExportar} className="shrink-0 self-start">
                 <Download className="h-4 w-4 mr-2" /> Exportar Visão
@@ -414,6 +458,14 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
       })()}
 
       {/* 3. Indicadores de performance */}
+
+      <ConsultorModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleUpdateProfile}
+        consultor={consultor}
+        isProcessing={isProcessing}
+      />
     </div>
   );
 };
