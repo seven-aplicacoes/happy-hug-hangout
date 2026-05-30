@@ -234,25 +234,29 @@ export default function IntegracoesPage() {
           <Card className="p-5 mt-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-4">Atividade recente</p>
             <div className="space-y-3">
-              {EVENTOS_INTEGRACAO.map(ev => {
-                const integ = INTEGRACOES.find(i => i.id === ev.integracaoId);
-                return (
-                  <div key={ev.id} className="flex gap-3 pb-3 border-b border-border/60 last:border-0 last:pb-0">
-                    <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-                      <RefreshCw className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-sm font-medium">{ev.titulo}</p>
-                        <span className="text-[11px] text-muted-foreground shrink-0">{fmtData(ev.data)}</span>
+              {EVENTOS_INTEGRACAO.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">Nenhuma atividade recente.</p>
+              ) : (
+                EVENTOS_INTEGRACAO.map(ev => {
+                  const integ = INTEGRACOES.find(i => i.id === ev.integracaoId);
+                  return (
+                    <div key={ev.id} className="flex gap-3 pb-3 border-b border-border/60 last:border-0 last:pb-0">
+                      <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+                        <RefreshCw className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {integ?.nome} · {ev.detalhe}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="text-sm font-medium">{ev.titulo}</p>
+                          <span className="text-[11px] text-muted-foreground shrink-0">{fmtData(ev.data)}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {integ?.nome} · {ev.detalhe}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </Card>
         </div>
