@@ -11,8 +11,10 @@ import { useConsultores } from '@/hooks/useConsultores';
 import { useContratos } from '@/hooks/useContratos';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { useContractProductPhases } from '@/hooks/useContractProductPhases';
+import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import type { Reuniao, StatusReuniao } from '@/types';
 
@@ -51,8 +53,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
   const { products: contractProducts } = useContractProducts(contractId);
   const { phases: productPhases } = useContractProductPhases(contractProductId);
+  const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
 
   const contratosFiltrados = (contratos || []).filter(c => !clienteId || c.clienteId === clienteId);
+
 
   useEffect(() => {
     if (reuniao) {
@@ -313,11 +317,24 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               setContractProductPhaseId(v);
               setContractModuleMeetingId('');
             }}>
+
               <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o módulo..." /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
                 {(productPhases || []).map(p => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Encontro / Slot</Label>
+            <Select value={contractModuleMeetingId || 'none'} onValueChange={setContractModuleMeetingId}>
+              <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o encontro..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {(moduleMeetings || []).map(m => (
+                  <SelectItem key={m.id} value={m.id}>{m.title || `Encontro ${m.meetingNumber}`}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -342,6 +359,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             </div>
           </div>
         </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">

@@ -24,7 +24,10 @@ import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import type { Cliente, FaseMetodologica, Contrato } from '@/types';
 import { useClientes } from '@/hooks/useClientes';
 import { useContratos } from '@/hooks/useContratos';
+import { useReunioes } from '@/hooks/useReunioes';
+import { useTarefas } from '@/hooks/useTarefas';
 import { Skeleton } from '@/components/ui/skeleton';
+
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -68,9 +71,12 @@ export default function ConsultorClientesPage() {
   const navigate = useNavigate();
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { contratos, isLoading: loadingContratos } = useContratos();
+  const { reunioes, isLoading: loadingReunioes } = useReunioes();
+  const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { can, isLoading: loadingPermissions } = useMyPermissions();
   
-  const isLoading = loadingClientes || loadingContratos || loadingPermissions;
+  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions;
+
   const meusClientes = clientes || [];
   
 
@@ -97,21 +103,23 @@ export default function ConsultorClientesPage() {
   const distProdutos = useMemo(() => {
     const map: Record<string, number> = {};
     meusClientes.forEach(c => {
-      const p = getProdutoAtualCliente(c.id) || 'Sem produto';
+      const p = getProdutoAtualCliente(c.id, contratos || []) || 'Sem produto';
       map[p] = (map[p] || 0) + 1;
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [meusClientes]);
+  }, [meusClientes, contratos]);
+
 
   const data = useMemo(() => {
     let d = [...meusClientes];
     const q = normalize(search);
     if (q) d = d.filter(c => normalize(c.nomeFantasia).includes(q) || normalize(c.razaoSocial).includes(q));
     if (filters.status && filters.status !== 'todos') d = d.filter(c => c.status === filters.status);
-    if (filters.produto && filters.produto !== 'todos') d = d.filter(c => getProdutoAtualCliente(c.id) === filters.produto);
+    if (filters.produto && filters.produto !== 'todos') d = d.filter(c => getProdutoAtualCliente(c.id, contratos || []) === filters.produto);
     if (filters.porte && filters.porte !== 'todos') d = d.filter(c => getPorte(c) === filters.porte);
-    if (filters.engajamento && filters.engajamento !== 'todos') d = d.filter(c => calcularEngajamento(c.id) === filters.engajamento);
-    if (filters.prioridade && filters.prioridade !== 'todos') d = d.filter(c => calcularPrioridade(c).nivel === filters.prioridade);
+    if (filters.engajamento && filters.engajamento !== 'todos') d = d.filter(c => calcularEngajamento(c.id, reunioes || []) === filters.engajamento);
+    if (filters.prioridade && filters.prioridade !== 'todos') d = d.filter(c => calcularPrioridade(c, contratos || [], tarefas || []).nivel === filters.prioridade);
+
     if (dateRangeValue.from) d = d.filter(c => new Date(c.dataInicio) >= dateRangeValue.from!);
     if (dateRangeValue.to) d = d.filter(c => new Date(c.dataInicio) <= dateRangeValue.to!);
     if (toggleValues.encerrandoEmBreve) {
@@ -127,9 +135,10 @@ export default function ConsultorClientesPage() {
 
     // Ordenação
     if (sortKey === 'prioridade') {
-      d.sort((a, b) => ordemPrioridade[calcularPrioridade(a).nivel] - ordemPrioridade[calcularPrioridade(b).nivel]);
+      d.sort((a, b) => ordemPrioridade[calcularPrioridade(a, contratos || [], tarefas || []).nivel] - ordemPrioridade[calcularPrioridade(b, contratos || [], tarefas || []).nivel]);
     } else if (sortKey === 'tempoSemInteracao') {
-      d.sort((a, b) => diasDesdeUltimaReuniao(b.id) - diasDesdeUltimaReuniao(a.id));
+      d.sort((a, b) => (diasDesdeUltimaReuniao(b.id, reunioes || []) || 0) - (diasDesdeUltimaReuniao(a.id, reunioes || []) || 0));
+
     } else {
       d.sort((a, b) => a.nomeFantasia.localeCompare(b.nomeFantasia));
     }
@@ -171,7 +180,8 @@ export default function ConsultorClientesPage() {
       );
     }},
     { key: 'prioridade', header: 'Prioridade', render: (c) => {
-      const p = calcularPrioridade(c);
+      const p = calcularPrioridade(c, contratos || [], tarefas || []);
+
       return (
         <TooltipProvider delayDuration={150}>
           <Tooltip>
@@ -192,16 +202,17 @@ export default function ConsultorClientesPage() {
         </TooltipProvider>
       );
     }, className: 'w-[110px]' },
-    { key: 'produto', header: 'Produto', render: (c) => <span className="text-xs text-muted-foreground">{getProdutoAtualCliente(c.id) || '—'}</span> },
+    { key: 'produto', header: 'Produto', render: (c) => <span className="text-xs text-muted-foreground">{getProdutoAtualCliente(c.id, contratos || []) || '—'}</span> },
     { key: 'porte', header: 'Porte', render: (c) => <span className="text-xs text-muted-foreground">{labelPorte[getPorte(c)]}</span>, className: 'w-[90px]' },
     { key: 'status', header: 'Status', render: (c) => <StatusTag label={labelStatus[c.status]} />, className: 'w-[130px]' },
     { key: 'fase', header: 'Fase', render: (c) => <div className="flex justify-center w-full"><MethodologyStepper faseAtual={c.faseMetodologica} variant="compact" /></div>, className: 'w-[200px]' },
-    { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id); return <StatusTag label={labelEngajamento[e]} variant={variantEngajamento[e]} />; }, className: 'w-[120px]' },
-    { key: 'indice', header: <span className="inline-flex items-center gap-1">Índice <IndiceSevenInfo /></span>, render: (c) => <span className="font-mono">{c.indiceSeven}</span> },
+    { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id, reunioes || []); return <StatusTag label={labelEngajamento[e]} variant={variantEngajamento[e]} />; }, className: 'w-[120px]' },
+    { key: 'indice', header: <span className="inline-flex items-center gap-1">Índice <IndiceSevenInfo /></span>, render: (c) => <span className="font-mono">{c.indiceSeven || '—'}</span> },
     { key: 'ultima', header: 'Sem reunião', render: (c) => {
-      const dias = diasDesdeUltimaReuniao(c.id);
-      return <span className="font-mono text-xs tabular-nums">{dias}d</span>;
+      const dias = diasDesdeUltimaReuniao(c.id, reunioes || []);
+      return <span className="font-mono text-xs tabular-nums">{dias !== null ? `${dias}d` : 'Nenhuma'}</span>;
     }, className: 'w-[100px]' },
+
   ];
 
   if (isLoading) {

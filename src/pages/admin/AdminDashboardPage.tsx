@@ -35,6 +35,7 @@ function calcularPriorizacao(clientes: Cliente[], contratos: Contrato[], reunioe
   const hoje = new Date();
   const hojeStr = hoje.toISOString().slice(0, 10);
 
+
   return (clientes || [])
     .map((c) => {
       let pontuacao = 0;
@@ -49,11 +50,13 @@ function calcularPriorizacao(clientes: Cliente[], contratos: Contrato[], reunioe
         motivos.push(c.status === 'suspenso' ? 'Cliente pausado' : 'Em risco contratual');
         acoes.push('Revisar situação contratual');
       }
-      if (calcularEngajamento(c.id) === 'critico') {
+      const eng = calcularEngajamento(c.id, reunioes);
+      if (eng === 'critico') {
         pontuacao += 25;
-        motivos.push(`Risco ${labelEngajamento[calcularEngajamento(c.id)].toLowerCase()}`);
+        motivos.push(`Risco ${labelEngajamento[eng].toLowerCase()}`);
         acoes.push('Agendar reunião de recuperação');
       }
+
       if (diasSemInteracao > 15) {
         pontuacao += 15;
         motivos.push(`${diasSemInteracao} dias sem interação`);
@@ -124,17 +127,18 @@ export default function AdminDashboardPage() {
     const ltvMedio = totalContratos > 0 ? contratos.reduce((a, c) => a + c.valor, 0) / totalContratos : 0;
     const ltvFormatado = `R$ ${Math.round(ltvMedio).toLocaleString('pt-BR')}`;
     const clientesBloqueados = clientes.filter(c => c.status === 'suspenso' || c.status === 'bloqueado').length;
-    const indiceMedio = clientes.length > 0 ? Math.round(clientes.reduce((a, c) => a + c.indiceSeven, 0) / clientes.length) : 0;
+    const indiceMedio = clientes.length > 0 ? Math.round(clientes.reduce((a, c) => a + (c.indiceSeven || 0), 0) / clientes.length) : 0;
 
     const priorizados = calcularPriorizacao(clientes, contratos, reunioes, tarefas);
     const upsell = clientes.filter(c => c.potencialUpsell);
 
     // Engajamento por dias sem reunião
-    const engajamentoCounts = { em_dia: 0, atencao: 0, critico: 0 };
+    const engajamentoCounts = { em_dia: 0, atencao: 0, critico: 0, sem_dados: 0 };
     clientes.forEach(c => { 
-      const e = calcularEngajamento(c.id);
+      const e = calcularEngajamento(c.id, reunioes);
       if (e in engajamentoCounts) engajamentoCounts[e as keyof typeof engajamentoCounts]++; 
     });
+
 
     // Alertas operacionais
     const alertasCounts = { critico: 0, atencao: 0, oportunidade: 0 };
@@ -181,7 +185,7 @@ export default function AdminDashboardPage() {
     { key: 'nome', header: 'Cliente', render: (c) => <span className="font-medium">{c.nomeFantasia}</span> },
     { key: 'consultor', header: 'Usuário', render: (c) => <span className="text-xs">{c.consultorNome}</span> },
     { key: 'situacao', header: 'Situação', render: (c) => <StatusTag label={c.situacaoContrato} /> },
-    { key: 'risco', header: 'Risco', render: (c) => <StatusTag label={labelEngajamento[calcularEngajamento(c.id)]} variant={calcularEngajamento(c.id) === 'critico' ? 'danger' : calcularEngajamento(c.id) === 'atencao' ? 'warning' : 'success'} /> },
+    { key: 'risco', header: 'Risco', render: (c) => { const e = calcularEngajamento(c.id, reunioes); return <StatusTag label={labelEngajamento[e]} variant={e === 'critico' ? 'danger' : e === 'atencao' ? 'warning' : e === 'sem_dados' ? 'info' : 'success'} />; } },
     {
       key: 'dias', header: 'Dias s/ interação', className: 'w-[100px]', render: (c) => (
         <span className={`font-mono text-sm font-bold ${c.diasSemInteracao > 20 ? 'text-seven-danger' : c.diasSemInteracao > 10 ? 'text-seven-warning' : 'text-muted-foreground'}`}>
@@ -193,7 +197,7 @@ export default function AdminDashboardPage() {
     { key: 'acao', header: 'Ação recomendada', className: 'max-w-[180px]', render: (c) => <span className="text-xs font-medium">{c.acaoRecomendada}</span> },
     {
       key: 'acoes', header: '', className: 'w-[60px]', render: (c) => (
-        (calcularEngajamento(c.id) === 'critico') ? (
+        (calcularEngajamento(c.id, reunioes) === 'critico') ? (
           <Button variant="ghost" size="sm" className="text-seven-danger" onClick={(e) => { e.stopPropagation(); setStatusModal({ open: true, clienteNome: c.nomeFantasia, statusAtual: c.status }); }}>
             <Shield className="h-3.5 w-3.5" />
           </Button>
@@ -364,7 +368,7 @@ export default function AdminDashboardPage() {
                     <DollarSign className="h-4 w-4 text-seven-success shrink-0" strokeWidth={1.5} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
-                      <p className="text-xs text-muted-foreground">Índice Seven: {c.indiceSeven} · {c.segmento}</p>
+                      <p className="text-xs text-muted-foreground">Índice Seven: {c.indiceSeven || '—'} · {c.segmento}</p>
                     </div>
                   </div>
                 </ListRow>

@@ -95,12 +95,38 @@ export function useReunioes() {
         .select();
 
       if (error) throw error;
+
+      // Se estiver vinculada a um encontro da jornada, atualiza o status desse encontro
+      if (reuniao.contractModuleMeetingId) {
+        const meetingId = data[0].id;
+        const status = reuniao.status === 'realizada' ? 'realizada' : 'agendado';
+        const scheduledAt = reuniao.meetingDate && reuniao.startTime 
+          ? `${reuniao.meetingDate}T${reuniao.startTime}` 
+          : null;
+
+        await supabase
+          .from('contract_module_meetings')
+          .update({
+            status,
+            scheduled_meeting_id: meetingId,
+            scheduled_at: scheduledAt,
+            consultant_id: reuniao.consultorId,
+            completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null
+          })
+          .eq('id', reuniao.contractModuleMeetingId);
+      }
+
       return data;
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reunioes'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
       toast({ title: 'Sucesso', description: 'Reunião salva com sucesso.' });
     },
+
     onError: (error: any) => {
       console.error('Erro ao salvar reunião:', error);
       toast({ 
