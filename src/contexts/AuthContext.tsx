@@ -178,9 +178,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { ok: true };
   };
 
-  const logoutCliente = () => setClienteSession(null);
+  const logoutCliente = async () => {
+    await supabase.auth.signOut();
+    setClienteSession(null);
+    setUser(null);
+    setPerfil(null);
+  };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setPerfil(null);
     setClienteSession(null);
