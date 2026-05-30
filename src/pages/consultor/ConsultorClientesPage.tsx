@@ -24,7 +24,10 @@ import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import type { Cliente, FaseMetodologica, Contrato } from '@/types';
 import { useClientes } from '@/hooks/useClientes';
 import { useContratos } from '@/hooks/useContratos';
+import { useReunioes } from '@/hooks/useReunioes';
+import { useTarefas } from '@/hooks/useTarefas';
 import { Skeleton } from '@/components/ui/skeleton';
+
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
