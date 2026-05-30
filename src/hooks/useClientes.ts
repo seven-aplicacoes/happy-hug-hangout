@@ -60,6 +60,7 @@ export function useClientes() {
         success_factors: c.success_factors || [],
         current_objective: c.current_objective,
         briefing: c.briefing,
+        avatar_url: c.avatar_url,
       })) as Cliente[];
     },
   });
@@ -93,6 +94,7 @@ export function useClientes() {
         number: newCliente.number,
         complement: newCliente.complement,
         neighborhood: newCliente.neighborhood,
+        avatar_url: newCliente.avatar_url,
       };
 
       const { data, error } = await supabase

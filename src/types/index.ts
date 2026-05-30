@@ -73,6 +73,7 @@ export interface Cliente {
   briefing?: string;
   contact_name?: string;
   contact_phone?: string;
+  avatar_url?: string | null;
   updated_at?: string;
   updated_by?: string;
 }
