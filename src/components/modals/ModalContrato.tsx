@@ -703,27 +703,31 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                 <div className="md:col-span-1 space-y-1">
                                   <Label className="text-[10px]">Duração</Label>
                                   <Input 
-                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_durationMinutes`] && "border-destructive")}
+                                    className={cn("h-8 text-xs font-medium", errors[`phase_${pIndex}_${phIndex}_durationMinutes`] && "border-destructive")}
                                     value={minutesToHHMM(ph.durationMinutes)} 
-                                    readOnly
+                                    onChange={e => {
+                                      if (validateHHMM(e.target.value)) {
+                                        updatePhase(pIndex, phIndex, 'durationMinutes', hhmmToMinutes(e.target.value));
+                                      }
+                                    }}
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Início</Label>
                                   <Input 
                                     type="date" 
-                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_startDate`] && "border-destructive")}
+                                    className={cn("h-8 text-xs font-medium", errors[`phase_${pIndex}_${phIndex}_startDate`] && "border-destructive")}
                                     value={ph.startDate} 
-                                    readOnly 
+                                    onChange={e => updatePhase(pIndex, phIndex, 'startDate', e.target.value)}
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Fim</Label>
                                   <Input 
                                     type="date" 
-                                    className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_endDate`] && "border-destructive")}
+                                    className={cn("h-8 text-xs font-medium", errors[`phase_${pIndex}_${phIndex}_endDate`] && "border-destructive")}
                                     value={ph.endDate} 
-                                    readOnly 
+                                    onChange={e => updatePhase(pIndex, phIndex, 'endDate', e.target.value)}
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
