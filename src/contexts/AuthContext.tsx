@@ -63,6 +63,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               consultorId: profile.id,
             });
             setPerfil(profile.role === 'admin' ? 'admin' : (profile.role === 'consultor' ? 'consultor' : null));
+
+            // If it's a client, also set the client session
+            if (profile.role === 'cliente') {
+              const { data: clientData } = await supabase
+                .from('clients')
+                .select('id, trade_name')
+                .eq('auth_user_id', session.user.id)
+                .single();
+
+              if (clientData) {
+                setClienteSession({
+                  clienteId: clientData.id,
+                  nome: clientData.trade_name,
+                  email: session.user.email || '',
+                });
+              }
+            }
           }
         }
       } catch (error) {
