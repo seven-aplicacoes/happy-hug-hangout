@@ -207,13 +207,9 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       }
     }
     
-    if (field === 'startDate') {
-      const recalculatedPhases = recalculateProductStages(value, updated[index].phases);
+    if (field === 'startDate' || field === 'endDate') {
+      const recalculatedPhases = recalculateProductStages(updated[index].startDate || dataInicio, updated[index].phases);
       updated[index].phases = recalculatedPhases;
-      
-      if (recalculatedPhases.length > 0) {
-        updated[index].endDate = recalculatedPhases[recalculatedPhases.length - 1].endDate;
-      }
     }
 
     setContractProducts(updated);
