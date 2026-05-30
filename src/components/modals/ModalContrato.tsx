@@ -758,14 +758,13 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 mt-6 border-t">
+      
         <div className="flex justify-between items-center w-full">
           <Button variant="ghost" onClick={onClose} disabled={isLoading}>Cancelar</Button>
           <Button onClick={handleSave} disabled={isLoading} className="min-w-[140px] shadow-lg shadow-primary/20">
             {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : "Finalizar e Salvar"}
           </Button>
         </div>
-      </div>
     </BaseModal>
   );
 };
