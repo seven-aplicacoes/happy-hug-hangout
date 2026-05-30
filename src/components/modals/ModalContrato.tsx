@@ -518,13 +518,16 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                 return phase;
               });
 
-              console.log(`Saving phases for product ${product.productId}:`, phasesPayload);
+              console.log(`9. Enviando módulos do produto "${product.productName}" para o Supabase:`, phasesPayload);
               const { data: savedPhases, error: phasesError } = await supabase
                 .from('contract_product_phases')
                 .upsert(phasesPayload)
                 .select('id');
               
-              if (phasesError) throw phasesError;
+              if (phasesError) {
+                console.error(`Erro Supabase (contract_product_phases) para o produto "${product.productName}":`, phasesError);
+                throw new Error(`Erro ao salvar módulos do produto "${product.productName}": ${phasesError.message}`);
+              }
 
               // Sincroniza encontros para cada fase salva
               if (savedPhases) {
