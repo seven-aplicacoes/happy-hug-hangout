@@ -29,7 +29,7 @@ interface MeetingListProps {
   phase: any;
   contrato: any;
   onSchedule: (meeting: ContractModuleMeeting) => void;
-  mode?: 'admin' | 'client';
+  mode?: 'admin' | 'client' | 'consultor';
 }
 
 function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
@@ -92,7 +92,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
   );
 }
 
-function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, contrato: any, type: 'internal' | 'client', mode?: 'admin' | 'client' }) {
+function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, contrato: any, type: 'internal' | 'client', mode?: 'admin' | 'client' | 'consultor' }) {
   const { perfil, user } = useAuth();
   const { documents, isLoading, deleteDocument, downloadDocument, uploadDocument } = useContractModuleDocuments(phase.id, contrato.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -184,7 +184,7 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
   );
 }
 
-function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' }) {
+function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor' }) {
   const [expanded, setExpanded] = useState(false);
   const { consultores } = useConsultores();
   
@@ -347,7 +347,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
   );
 }
 
-function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin', onUpdateProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client', onUpdateProduct?: (data: any) => Promise<void> }) {
+function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin', onUpdateProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void> }) {
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
@@ -596,7 +596,7 @@ export function ContractJourneyCard({
   contrato: any, 
   isEditing?: boolean,
   expanded?: boolean,
-  mode?: 'admin' | 'client'
+  mode?: 'admin' | 'client' | 'consultor'
 }) {
 
 

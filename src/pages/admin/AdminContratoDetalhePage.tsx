@@ -20,6 +20,7 @@ import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useToast } from '@/hooks/use-toast';
 import { ModalContrato } from '@/components/modals/ModalContrato';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminContratoDetalhePage() {
   const { id } = useParams();
@@ -29,6 +30,8 @@ export default function AdminContratoDetalhePage() {
   const { clientes } = useClientes();
   const { consultores } = useConsultores();
   
+  const { perfil, user } = useAuth();
+  const isAdmin = perfil === 'admin';
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
@@ -297,7 +300,12 @@ export default function AdminContratoDetalhePage() {
         </div>
         
         <Accordion type="single" collapsible defaultValue={contrato.id} className="w-full">
-          <ContractJourneyCard contrato={contrato} expanded={true} isEditing={isEditing} />
+          <ContractJourneyCard 
+            contrato={contrato} 
+            expanded={true} 
+            isEditing={isEditing} 
+            mode={isAdmin ? 'admin' : 'consultor'}
+          />
         </Accordion>
       </section>
 
