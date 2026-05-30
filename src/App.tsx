@@ -44,6 +44,7 @@ import PortalClientePage from "@/pages/PortalClientePage";
 import IntegracoesPage from "@/pages/IntegracoesPage";
 import NotFound from "@/pages/NotFound";
 import NoAccess from "@/pages/NoAccess";
+import { ComingSoonPageWrapper } from "@/components/ComingSoonPageWrapper";
 
 
 const queryClient = new QueryClient();
