@@ -299,7 +299,7 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
             </div>
             <div className="flex flex-wrap gap-2 shrink-0 self-start">
               <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
-                <Edit className="h-4 w-4 mr-2" /> Editar Perfil
+                <Edit className="h-4 w-4 mr-2" /> {modo === 'admin' ? 'Editar Usuário' : 'Editar Perfil'}
               </Button>
               {modo === 'admin' && onExportar && (
                 <Button variant="outline" size="sm" onClick={onExportar}>
