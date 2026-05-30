@@ -367,7 +367,9 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       toast({ title: 'Erro de validação', description: msg, variant: 'destructive' });
       
       setTimeout(() => {
-        const element = document.getElementById(`error-${firstErrorKey}`) || document.getElementsByName(firstErrorKey)[0];
+        const element = document.getElementById(`error-${firstErrorKey}`) || 
+                        document.getElementsByName(firstErrorKey)[0] ||
+                        document.getElementById(`product-card-${firstErrorKey.split('_')[1]}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
