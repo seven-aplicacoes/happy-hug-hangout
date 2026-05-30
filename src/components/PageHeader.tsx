@@ -10,7 +10,7 @@ interface PageHeaderProps {
 export const PageHeader = ({ titulo, subtitulo, children, className }: PageHeaderProps) => (
   <div className={cn('flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 pb-6 border-b border-border/60', className)}>
     <div className="space-y-1.5 min-w-0">
-      <h1 className="text-3xl sm:text-[2rem] font-thin text-foreground leading-[1.1] tracking-tight">
+      <h1 className="text-3xl sm:text-[2rem] font-semibold text-foreground leading-[1.1] tracking-tight">
         {titulo}
       </h1>
       {subtitulo && (

@@ -186,7 +186,7 @@
 
   /* ========== UI overline — small caps with disciplined tracking ========== */
   .ui-overline {
-    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground;
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground;
   }
   .ui-overline-strong {
     @apply text-[11px] font-bold uppercase tracking-[0.16em] text-foreground;
