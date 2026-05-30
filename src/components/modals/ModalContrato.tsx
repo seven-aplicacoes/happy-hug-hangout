@@ -662,11 +662,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                   <Input 
                                     className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_durationMinutes`] && "border-destructive")}
                                     value={minutesToHHMM(ph.durationMinutes)} 
-                                    onChange={e => {
-                                      if (validateHHMM(e.target.value)) {
-                                        updatePhase(pIndex, phIndex, 'durationMinutes', hhmmToMinutes(e.target.value));
-                                      }
-                                    }}
+                                    readOnly
                                   />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
@@ -687,7 +683,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     readOnly 
                                   />
                                 </div>
-                                <div className="md:col-span-2 space-y-1">
+                                <div className="md:col-span-3 space-y-1">
                                   <Label className="text-[10px]">Responsável *</Label>
                                   <Select value={ph.responsibleConsultantId} onValueChange={v => updatePhase(pIndex, phIndex, 'responsibleConsultantId', v)}>
                                     <SelectTrigger className={cn("h-8 text-xs", errors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] && "border-destructive")}>
@@ -699,7 +695,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                   </Select>
                                   <ErrorMsg name={`phase_${pIndex}_${phIndex}_responsibleConsultantId`} />
                                 </div>
-                                <div className="md:col-span-2 space-y-1">
+                                <div className="md:col-span-1 space-y-1">
                                   <Label className="text-[10px]">Encontros</Label>
                                   <Input 
                                     type="number"
