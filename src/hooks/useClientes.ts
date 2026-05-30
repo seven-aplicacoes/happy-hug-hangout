@@ -19,11 +19,13 @@ export function useClientes() {
           consultant:profiles!clients_consultant_id_fkey (
             full_name
           )
-        `);
+        `)
+        .is('deleted_at', null);
 
       if (user?.role !== 'admin' && perfil === 'consultor' && user?.consultorId) {
         query = query.eq('consultant_id', user.consultorId);
       }
+
 
       const { data, error } = await query;
       if (error) throw error;
