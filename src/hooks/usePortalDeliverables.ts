@@ -10,9 +10,12 @@ export function usePortalDeliverables(clientId?: string) {
       const { data, error } = await supabase
         .from('documents')
         .select(`
-          *,
-          module:contract_product_phases(name),
-          product:contract_products(product_name)
+          id,
+          title,
+          status,
+          created_at,
+          file_url,
+          file_name
         `)
         .eq('client_id', clientId)
         .eq('visibility', 'client')
@@ -23,13 +26,10 @@ export function usePortalDeliverables(clientId?: string) {
       return data.map(d => ({
         id: d.id,
         title: d.title,
-        description: d.description,
         status: d.status || 'entregue',
         date: d.created_at,
         fileUrl: d.file_url,
-        fileName: d.file_name,
-        moduleName: d.module?.name,
-        productName: d.product?.product_name
+        fileName: d.file_name
       }));
     },
     enabled: !!clientId,
@@ -37,3 +37,4 @@ export function usePortalDeliverables(clientId?: string) {
 
   return { deliverables, isLoading };
 }
+

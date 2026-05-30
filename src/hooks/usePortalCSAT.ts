@@ -7,8 +7,6 @@ export function usePortalCSAT(clientId?: string) {
     queryFn: async () => {
       if (!clientId) return [];
       
-      // Get all meetings for this client that are 'realizada' and have csat_enabled = true
-      // and check if they already have a response
       const { data: meetings, error: meetingsError } = await supabase
         .from('contract_module_meetings')
         .select(`
@@ -16,13 +14,10 @@ export function usePortalCSAT(clientId?: string) {
           title,
           scheduled_at,
           completed_at,
-          csat_enabled,
-          module:contract_product_phases(name),
-          product:contract_products(product_name)
+          status
         `)
         .eq('client_id', clientId)
-        .eq('status', 'realizada')
-        .eq('csat_enabled', true);
+        .eq('status', 'realizada');
 
       if (meetingsError) throw meetingsError;
 
@@ -45,3 +40,4 @@ export function usePortalCSAT(clientId?: string) {
 
   return { csatStatus, isLoading };
 }
+
