@@ -106,10 +106,10 @@ const App = () => (
                <Route path="cliente/novo" element={<NovoClientePage />} />
               <Route path="reunioes" element={<ConsultorReunioesPage />} />
               <Route path="tarefas" element={<ConsultorTarefasPage />} />
-              <Route path="renovacao" element={<ConsultorRenovacaoPage />} />
+              <Route path="renovacao" element={<ComingSoonPageWrapper><ConsultorRenovacaoPage /></ComingSoonPageWrapper>} />
               <Route path="meu-perfil" element={<ConsultorMeuPerfilPage />} />
               <Route path="cliente/:id" element={<ClienteDetalhePage />} />
-              <Route path="metodologia" element={<MetodologiaPage />} />
+              <Route path="metodologia" element={<ComingSoonPageWrapper><MetodologiaPage /></ComingSoonPageWrapper>} />
               <Route path="documentos" element={<DocumentosPage />} />
               <Route path="integracoes" element={<IntegracoesPage />} />
             </Route>
