@@ -214,6 +214,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           </Label>
           <Input 
             value={title} 
+            disabled={isLocked}
             onChange={e => {
               setTitle(e.target.value);
               if (errors.title) setErrors(prev => ({ ...prev, title: false }));
@@ -221,6 +222,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             className={cn("h-11 font-medium", errors.title && "border-destructive focus-visible:ring-destructive")}
             placeholder="Ex: Reunião de Alinhamento Mensal"
           />
+
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
