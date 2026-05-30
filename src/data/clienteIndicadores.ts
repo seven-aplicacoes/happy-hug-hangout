@@ -275,9 +275,10 @@ export const labelPrioridade: Record<NivelPrioridade, string> = {
   critica: 'Crítica', alta: 'Alta', media: 'Média', baixa: 'Baixa', nao_definida: 'Não definida',
 };
 
-export const variantPrioridade: Record<NivelPrioridade, 'danger' | 'warning' | 'info' | 'success' | 'secondary'> = {
-  critica: 'danger', alta: 'warning', media: 'info', baixa: 'success', nao_definida: 'secondary',
+export const variantPrioridade: Record<NivelPrioridade, 'danger' | 'warning' | 'info' | 'success' | 'neutral'> = {
+  critica: 'danger', alta: 'warning', media: 'info', baixa: 'success', nao_definida: 'neutral',
 };
+
 
 export const ordemPrioridade: Record<NivelPrioridade, number> = {
   critica: 0, alta: 1, media: 2, baixa: 3, nao_definida: 4,
