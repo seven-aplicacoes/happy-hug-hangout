@@ -263,7 +263,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             </Label>
             <Select 
               value={clienteId} 
+              disabled={isLocked}
               onValueChange={v => {
+
                 setClienteId(v);
                 setContractId('');
                 setContractProductId('');
