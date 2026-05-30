@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfDay, differenceInDays, parseISO } from 'date-fns';
+import type { Cliente, FaseMetodologica } from '@/types';
 
 export function useAdminDashboardMetrics() {
   return useQuery({
@@ -8,7 +9,7 @@ export function useAdminDashboardMetrics() {
     queryFn: async () => {
       // 1. Fetch all required data in parallel
       const [
-        { data: clients, error: clientsError },
+        { data: clientsRaw, error: clientsError },
         { data: contracts, error: contractsError },
         { data: tasks, error: tasksError },
         { data: meetings, error: meetingsError },
@@ -32,6 +33,44 @@ export function useAdminDashboardMetrics() {
 
       const hoje = startOfDay(new Date());
 
+      // Map clients to standard Cliente type
+      const clients: Cliente[] = (clientsRaw || []).map((c: any) => ({
+        id: c.id,
+        razaoSocial: c.corporate_name,
+        nomeFantasia: c.trade_name,
+        cnpj: c.cnpj,
+        segmento: c.segment,
+        clinicSpecialty: c.clinic_specialty,
+        regiao: c.region,
+        consultorId: c.consultant_id,
+        porte: c.company_size as any,
+        consultorNome: c.consultant?.full_name || 'Não atribuído',
+        especialidade: 'gestao',
+        faseMetodologica: c.methodology_phase as FaseMetodologica,
+        indiceSeven: c.seven_index || 0,
+        potencialUpsell: c.upsell_potential || false,
+        dataInicio: c.start_date,
+        ultimaInteracao: c.last_interaction,
+        status: c.status,
+        faturamentoMensal: Number(c.monthly_revenue) || 0,
+        portal_access_enabled: c.portal_access_enabled,
+        auth_user_id: c.auth_user_id,
+        email: c.email,
+        institutional_email: c.institutional_email,
+        cep: c.cep,
+        street: c.street,
+        number: c.number,
+        complement: c.complement,
+        neighborhood: c.neighborhood,
+        pains: c.pains || [],
+        success_factors: c.success_factors || [],
+        current_objective: c.current_objective,
+        briefing: c.briefing,
+        avatar_url: c.avatar_url,
+        avatar_path: c.avatar_path,
+        created_at: c.created_at
+      }));
+
       // Helper for last interaction
       const getLastInteraction = (clientId: string) => {
         const lastMeeting = meetings.filter(m => m.client_id === clientId && m.meeting_date).sort((a, b) => b.meeting_date.localeCompare(a.meeting_date))[0]?.meeting_date;
@@ -43,7 +82,7 @@ export function useAdminDashboardMetrics() {
 
       const clientsWithMetrics = clients.map(c => {
         const lastInteraction = getLastInteraction(c.id);
-        const creationDate = parseISO(c.created_at);
+        const creationDate = c.dataInicio ? parseISO(c.dataInicio) : ( (c as any).created_at ? parseISO((c as any).created_at) : hoje);
         const diasSemInteracao = lastInteraction 
             ? differenceInDays(hoje, lastInteraction) 
             : differenceInDays(hoje, creationDate);
@@ -51,7 +90,6 @@ export function useAdminDashboardMetrics() {
         return {
           ...c,
           diasSemInteracao: Math.max(0, diasSemInteracao),
-          consultorNome: c.consultant?.full_name || 'Não atribuído',
         };
       });
 
