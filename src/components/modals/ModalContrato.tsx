@@ -137,6 +137,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
   const addProduct = () => {
     const newIndex = contractProducts.length;
     setContractProducts([...contractProducts, { 
+      id: `temp-${Date.now()}`,
       productId: '', 
       startDate: dataInicio, 
       endDate: dataFim || addWeeks(parseISO(dataInicio), 4).toISOString().split('T')[0], 
