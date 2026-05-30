@@ -121,8 +121,12 @@ export function useReunioes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reunioes'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
       toast({ title: 'Sucesso', description: 'Reunião salva com sucesso.' });
     },
+
     onError: (error: any) => {
       console.error('Erro ao salvar reunião:', error);
       toast({ 
