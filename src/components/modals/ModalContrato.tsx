@@ -532,10 +532,13 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
               // Sincroniza encontros para cada fase salva
               if (savedPhases) {
                 for (const phase of savedPhases) {
+                  console.log(`10. Sincronizando encontros para o módulo (ID: ${phase.id})...`);
                   const { error: syncError } = await supabase.rpc('sync_contract_module_meetings_manual', { 
                     phase_id: phase.id 
                   });
-                  if (syncError) console.error("Erro ao sincronizar encontros via RPC no modal:", syncError);
+                  if (syncError) {
+                    console.error("Erro ao sincronizar encontros via RPC no modal:", syncError);
+                  }
                 }
               }
             }
