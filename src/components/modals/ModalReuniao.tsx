@@ -162,9 +162,25 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!validate()) return;
     setIsSubmitting(true);
     try {
+      // Regra de reagendamento: 2 horas antes
+      if (reuniao?.meetingDate && reuniao?.startTime) {
+        const now = new Date();
+        const scheduledDate = new Date(`${reuniao.meetingDate}T${reuniao.startTime}`);
+        const diffInHours = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        
+        if (diffInHours < 2 && diffInHours > 0) {
+          toast({
+            title: "Reagendamento bloqueado",
+            description: "Este encontro só pode ser reagendado até 2 horas antes do horário marcado.",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // 1. Availability validation (only if module/meeting is linked)
       if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
-        // Use local timezone parsing for meetingDate
         const [year, month, day] = meetingDate.split('-').map(Number);
         const selectedDate = new Date(year, month - 1, day);
         const dayOfWeek = selectedDate.getDay(); 
@@ -179,7 +195,6 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           const weekdayMatch = av.weekday === dayOfWeek;
           
           if (dateMatch && weekdayMatch) {
-            // Check if startTime is within the availability window
             const timeMatch = startTime >= av.start_time && startTime <= av.end_time;
             return timeMatch;
           }
@@ -198,7 +213,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       } else if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability) {
         toast({ 
           title: "Nenhuma Disponibilidade", 
-          description: "Nenhuma disponibilidade configurada para este encontro. Entre em contato com o consultor responsável.", 
+          description: "Nenhuma disponibilidade configurada para este encontro. Configure a disponibilidade antes de agendar.", 
           variant: "destructive" 
         });
         setIsSubmitting(false);

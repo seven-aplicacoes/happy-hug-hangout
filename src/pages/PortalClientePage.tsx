@@ -62,7 +62,7 @@ export default function PortalClientePage() {
   const [erro, setErro] = useState('');
   
   const [isCsatOpen, setIsCsatOpen] = useState(false);
-  const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
+  const [selectedCsat, setSelectedCsat] = useState<any>(null);
   const [csatRatings, setCsatRatings] = useState({
     meeting: 0,
     consultant: 0,
@@ -80,10 +80,10 @@ export default function PortalClientePage() {
     [contratos]
   );
 
-  const { submitCSAT } = useClientCSAT(clientId);
+  const { csatStatus, submitCSAT } = usePortalCSAT(clientId);
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
-  const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
-  const { csatStatus } = usePortalCSAT(clientId);
+  const { data: summary, isLoading: loadingSummary } = usePortalSummary(clientId);
+  // const { csatStatus } = usePortalCSAT(clientId); // Remove redundant line
 
   const isLoading = loadingFicha || loadingContratos || loadingHist || loadingSummary;
 
@@ -94,19 +94,16 @@ export default function PortalClientePage() {
     if (!res.ok) setErro(res.erro || 'Erro ao entrar.');
   };
 
-  const handleOpenCsat = (meeting: any) => {
-    setSelectedMeeting(meeting);
+  const handleOpenCsat = (csat: any) => {
+    setSelectedCsat(csat);
     setCsatRatings({ meeting: 0, consultant: 0, clarity: 0, nps: 0, comment: '' });
     setIsCsatOpen(true);
   };
 
   const handleSubmitCsat = async () => {
-    if (!selectedMeeting || !clientId || !activeContract) return;
+    if (!selectedCsat || !clientId) return;
     await submitCSAT.mutateAsync({
-      meeting_id: selectedMeeting.id,
-      client_id: clientId,
-      contract_id: activeContract.id,
-      consultant_id: activeContract.consultorId,
+      id: selectedCsat.id,
       rating_meeting: csatRatings.meeting,
       rating_consultant: csatRatings.consultant,
       rating_clarity: csatRatings.clarity,
@@ -204,8 +201,31 @@ export default function PortalClientePage() {
           <IndicatorCard title="Encontros Previstos" value={`${summary?.totalMeetings || 0}`} icon={<Calendar className="h-5 w-5 text-blue-500" />} />
           <IndicatorCard title="Encontros Realizados" value={`${summary?.realizedMeetings || 0} de ${summary?.totalMeetings || 0}`} icon={<CheckCircle2 className="h-5 w-5 text-green-500" />} />
           <IndicatorCard title="Próxima Reunião" value={summary?.nextMeetingDate ? format(new Date(summary.nextMeetingDate), "dd/MM/yy 'às' HH:mm") : 'Nenhuma agendada'} icon={<Clock className="h-5 w-5 text-amber-500" />} />
-          <IndicatorCard title="CSAT Pendente" value={`${csatStatus?.filter(s => !s.isResponded).length || 0}`} icon={<Star className="h-5 w-5 text-yellow-500" />} />
+          <IndicatorCard title="CSAT Pendente" value={`${csatStatus?.length || 0}`} icon={<Star className="h-5 w-5 text-yellow-500" />} />
         </div>
+
+        {/* 0. CSAT Alerts */}
+        {csatStatus && csatStatus.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-1 rounded-full bg-yellow-500" />
+              <h2 className="text-lg font-black uppercase tracking-tight">Avaliações Pendentes</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {csatStatus.map(csat => (
+                <Card key={csat.id} className="p-4 border-yellow-200 bg-yellow-50/30 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-neutral-900">{csat.meeting?.title}</p>
+                    <p className="text-[10px] text-neutral-500">{format(new Date(csat.released_at), "dd/MM/yyyy")}</p>
+                  </div>
+                  <Button size="sm" onClick={() => handleOpenCsat(csat)} className="bg-yellow-500 hover:bg-yellow-600 text-white text-[10px] h-8 font-bold">
+                    Avaliar
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 1. Journey Section */}
         <section className="space-y-6">
@@ -268,7 +288,7 @@ export default function PortalClientePage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Star className="h-5 w-5 text-yellow-500 fill-yellow-500" /> Avaliação do Encontro</DialogTitle>
-            <DialogDescription>Como foi sua experiência no encontro: <span className="font-semibold text-neutral-900">{selectedMeeting?.title}</span>?</DialogDescription>
+            <DialogDescription>Como foi sua experiência no encontro: <span className="font-semibold text-neutral-900">{selectedCsat?.meeting?.title}</span>?</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="space-y-4">
