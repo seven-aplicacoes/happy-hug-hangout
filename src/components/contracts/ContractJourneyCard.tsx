@@ -1,9 +1,10 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
+import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -743,18 +744,26 @@ export function ContractJourneyCard({
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
+  const [clientScheduleModalOpen, setClientScheduleModalOpen] = useState(false);
+  const [selectedModuleMeeting, setSelectedModuleMeeting] = useState<ContractModuleMeeting | null>(null);
+
   const handleScheduleMeeting = (meeting: ContractModuleMeeting) => {
-    setInitialMeetingData({
-      clienteId: meeting.clientId,
-      contractId: meeting.contractId,
-      contractProductId: meeting.productId,
-      contractProductPhaseId: meeting.moduleId,
-      contractModuleMeetingId: meeting.id,
-      title: meeting.title,
-      consultorId: meeting.consultantId || '',
-      status: 'agendada'
-    });
-    setMeetingModalOpen(true);
+    if (mode === 'client') {
+      setSelectedModuleMeeting(meeting);
+      setClientScheduleModalOpen(true);
+    } else {
+      setInitialMeetingData({
+        clienteId: meeting.clientId,
+        contractId: meeting.contractId,
+        contractProductId: meeting.productId,
+        contractProductPhaseId: meeting.moduleId,
+        contractModuleMeetingId: meeting.id,
+        title: meeting.title,
+        consultorId: meeting.consultantId || '',
+        status: 'agendada'
+      });
+      setMeetingModalOpen(true);
+    }
   };
 
   if (isLoadingProducts) {
@@ -865,6 +874,14 @@ export function ContractJourneyCard({
         onClose={() => setMeetingModalOpen(false)} 
         initialData={initialMeetingData || undefined} 
       />
+
+      {selectedModuleMeeting && (
+        <ModalAgendamentoCliente
+          open={clientScheduleModalOpen}
+          onClose={() => setClientScheduleModalOpen(false)}
+          moduleMeeting={selectedModuleMeeting}
+        />
+      )}
     </AccordionItem>
   );
 }
