@@ -131,6 +131,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     }
   }, [contractProductPhaseId, productPhases, reuniao, consultorId]);
 
+  const isLocked = !!initialData || !!reuniao;
+
+
 
   const validate = () => {
     const newErrors: Record<string, boolean> = {};
