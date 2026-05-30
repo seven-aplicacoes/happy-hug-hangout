@@ -458,16 +458,6 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
                   >
                     <RefreshCw className="h-4 w-4 mr-2" /> Reconectar
                   </Button>
-                  {consultor?.calendly_scheduling_url && (
-                    <a 
-                      href={consultor.calendly_scheduling_url} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      Ver link de agendamento <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
                 </div>
               ) : (
                 <Button 
@@ -479,6 +469,33 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
               )}
             </div>
           </div>
+
+          {calendlyEventTypes && calendlyEventTypes.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-blue-50">
+              <h4 className="text-[10px] font-black uppercase text-blue-600/60 tracking-widest mb-4">Selecione o Tipo de Evento para Clientes</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {calendlyEventTypes.map((et: any) => (
+                  <Card 
+                    key={et.id} 
+                    className={cn(
+                      "p-4 cursor-pointer transition-all border-2",
+                      et.is_default ? "border-blue-500 bg-blue-50/20 shadow-md" : "border-transparent bg-white hover:border-blue-200"
+                    )}
+                    onClick={() => handleSetDefaultEventType(et.calendly_event_type_uri, et.calendly_scheduling_url)}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <Clock className="h-4 w-4 text-blue-600" />
+                      </div>
+                      {et.is_default && <StatusTag label="Padrão" variant="info" />}
+                    </div>
+                    <p className="text-sm font-bold text-blue-900 mb-1">{et.name}</p>
+                    <p className="text-[10px] text-blue-600/70 font-medium">{et.duration} minutos</p>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
