@@ -328,12 +328,13 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Produto</Label>
-            <Select value={contractProductId || 'none'} onValueChange={v => {
+            <Select value={contractProductId || 'none'} disabled={isLocked} onValueChange={v => {
               setContractProductId(v);
               setContractProductPhaseId('');
               setContractModuleMeetingId('');
             }}>
-              <SelectTrigger className="h-11"><SelectValue placeholder="Selecione um produto..." /></SelectTrigger>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue placeholder="Selecione um produto..." /></SelectTrigger>
+
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
                 {(contractProducts || []).map(p => (
