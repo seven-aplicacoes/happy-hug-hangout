@@ -602,16 +602,18 @@ export function ContractJourneyCard({
   contrato, 
   isEditing = false,
   expanded = false,
-  mode = 'admin'
+  mode = 'admin',
+  onAddProduct
 }: { 
   contrato: any, 
   isEditing?: boolean,
   expanded?: boolean,
-  mode?: 'admin' | 'client' | 'consultor'
+  mode?: 'admin' | 'client' | 'consultor',
+  onAddProduct?: () => void
 }) {
 
 
-  const { products, isLoading: isLoadingProducts, upsertContractProducts } = useContractProducts(contrato.id);
+  const { products, isLoading: isLoadingProducts, upsertContractProducts, deleteContractProduct } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
