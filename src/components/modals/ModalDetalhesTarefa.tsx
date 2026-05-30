@@ -196,6 +196,25 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
 
         {/* Coluna Lateral: Metadados */}
         <div className="bg-muted/20 p-4 rounded-xl space-y-5 h-fit border border-muted">
+          {tarefa.createdByName && (
+            <div className="space-y-1.5 pb-2 border-b border-muted-foreground/10">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <User className="h-3 w-3" /> Criada por
+              </Label>
+              <div className="text-xs font-semibold">{tarefa.createdByName} <span className="font-normal opacity-70">({tarefa.createdByRole})</span></div>
+              <div className="text-[10px] text-muted-foreground">{format(new Date(tarefa.dataCriacao), "dd/MM/yyyy 'às' HH:mm")}</div>
+            </div>
+          )}
+
+          {tarefa.delegatedByName && (
+            <div className="space-y-1.5 pb-2 border-b border-muted-foreground/10">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <UserCheck className="h-3 w-3" /> Delegada por
+              </Label>
+              <div className="text-xs font-semibold">{tarefa.delegatedByName}</div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
               <Clock className="h-3 w-3" /> Status
