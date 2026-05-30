@@ -90,6 +90,7 @@ export default function PortalClientePage() {
 
   const handleLogin = async () => {
     setErro('');
+    await logoutCliente(); // Clear any existing session first
     const res = await loginCliente(email, senha);
     if (!res.ok) {
       setErro(res.erro || 'Erro ao entrar.');
