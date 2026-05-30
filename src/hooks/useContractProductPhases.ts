@@ -132,8 +132,11 @@ export function useContractProductPhases(contractProductId?: string) {
 
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contract-product-phases', contractProductId] });
+      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
+      queryClient.invalidateQueries({ queryKey: ['reunioes'] });
     },
+
   });
 
   const deletePhase = useMutation({
