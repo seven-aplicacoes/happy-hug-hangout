@@ -71,6 +71,53 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
     enabled: !!consultorId
   });
 
+  // Calendly Event Types
+  const { data: calendlyEventTypes, isLoading: loadingEventTypes } = useQuery({
+    queryKey: ['calendly-event-types', consultorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('consultant_calendly_event_types')
+        .select('*')
+        .eq('consultant_id', consultorId)
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!consultorId && !!calendlyIntegration
+  });
+
+  const handleSetDefaultEventType = async (uri: string, url: string) => {
+    try {
+      // 1. Update table
+      await supabase
+        .from('consultant_calendly_event_types')
+        .update({ is_default: false })
+        .eq('consultant_id', consultorId);
+      
+      await supabase
+        .from('consultant_calendly_event_types')
+        .update({ is_default: true })
+        .eq('calendly_event_type_uri', uri);
+
+      // 2. Update profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          calendly_event_type_uri: uri,
+          calendly_scheduling_url: url
+        })
+        .eq('id', consultorId);
+
+      if (error) throw error;
+
+      toast({ title: 'Sucesso', description: 'Tipo de evento padrão atualizado.' });
+      queryClient.invalidateQueries({ queryKey: ['calendly-event-types', consultorId] });
+      queryClient.invalidateQueries({ queryKey: ['profiles', consultorId] });
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    }
+  };
+
   const handleConnectCalendly = () => {
     toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
     const client_id = 'CALENDLY_CLIENT_ID'; 
