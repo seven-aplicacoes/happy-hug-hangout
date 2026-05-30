@@ -313,34 +313,76 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     }
 
     contractProducts.forEach((p, pIndex) => {
-      if (!p.productId) newErrors[`product_${pIndex}_productId`] = 'Selecione um produto.';
+      const productName = p.productName || `Produto ${pIndex + 1}`;
+      if (!p.productId) {
+        newErrors[`product_${pIndex}_productId`] = 'Selecione um produto.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+      }
       
       if (!p.startDate) {
         newErrors[`product_${pIndex}_startDate`] = 'Informe a data de início do produto.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
       }
 
       if (!p.endDate) {
         newErrors[`product_${pIndex}_endDate`] = 'Informe a data final do produto.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+      } else if (p.startDate && isBefore(parseISO(p.endDate), parseISO(p.startDate))) {
+        newErrors[`product_${pIndex}_endDate`] = 'Data final não pode ser anterior à inicial.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
       }
 
-      if (p.value < 0) newErrors[`product_${pIndex}_value`] = 'Informe um valor válido.';
+      if (p.value < 0) {
+        newErrors[`product_${pIndex}_value`] = 'Informe um valor válido.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+      }
 
       if (p.phases.length === 0 && p.productId) {
         newErrors[`product_${pIndex}_phases_empty`] = 'O produto precisa ter pelo menos um módulo.';
+        setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
       }
 
       p.phases.forEach((ph: any, phIndex: number) => {
-        if (!ph.name.trim()) newErrors[`phase_${pIndex}_${phIndex}_name`] = 'Informe o nome do módulo.';
-        if (!ph.durationMinutes || ph.durationMinutes <= 0) newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
-        if (ph.meetingsCount === undefined || ph.meetingsCount < 1) newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe pelo menos 1 encontro.';
-        if (!ph.responsibleConsultantId) newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
+        if (!ph.name.trim()) {
+          newErrors[`phase_${pIndex}_${phIndex}_name`] = 'Informe o nome do módulo.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
+        if (!ph.durationMinutes || ph.durationMinutes <= 0) {
+          newErrors[`phase_${pIndex}_${phIndex}_durationMinutes`] = 'A duração precisa ser maior que zero.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
+        if (ph.meetingsCount === undefined || ph.meetingsCount < 1) {
+          newErrors[`phase_${pIndex}_${phIndex}_meetingsCount`] = 'Informe pelo menos 1 encontro.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
+        if (!ph.responsibleConsultantId) {
+          newErrors[`phase_${pIndex}_${phIndex}_responsibleConsultantId`] = 'Selecione um responsável.';
+          setExpandedProducts(prev => ({ ...prev, [pIndex]: true }));
+        }
       });
     });
 
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
-      toast({ title: 'Campos obrigatórios', description: 'Revise os campos obrigatórios antes de salvar.', variant: 'destructive' });
+      const firstErrorKey = Object.keys(newErrors)[0];
+      let msg = 'Revise os campos obrigatórios antes de salvar.';
+      
+      if (firstErrorKey.includes('phase')) {
+        msg = 'Existem módulos com dados incompletos.';
+      } else if (firstErrorKey.includes('product')) {
+        msg = 'Existem produtos com dados incompletos.';
+      }
+
+      toast({ title: 'Erro de validação', description: msg, variant: 'destructive' });
+      
+      setTimeout(() => {
+        const element = document.getElementById(`error-${firstErrorKey}`) || document.getElementsByName(firstErrorKey)[0];
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 200);
+
       return false;
     }
     return true;
