@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -141,8 +142,8 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
                onClick={() => {
                  toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
                  // Simular fluxo OAuth: redirect_uri = window.location.origin + '/integracoes/callback'
-                 const client_id = 'CALENDLY_CLIENT_ID';
-                 const redirect_uri = encodeURIComponent(window.location.origin + '/consultor/integracoes');
+                 const client_id = 'CALENDLY_CLIENT_ID'; // Value is handled securely by the edge function during exchange
+                 const redirect_uri = encodeURIComponent(window.location.origin + (window.location.pathname.includes('/consultor') ? '/consultor/integracoes' : '/admin/integracoes'));
                  const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
                  console.log('Redirecting to:', url);
                  window.location.href = url;
@@ -188,6 +189,32 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 export default function IntegracoesPage() {
   const [filtro, setFiltro] = useState<'todas' | CategoriaIntegracao>('todas');
   const [selecionada, setSelecionada] = useState<Integracao | null>(INTEGRACOES[0]);
+
+  useEffect(() => {
+    // Handle OAuth Callback
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      handleExchangeCode(code);
+    }
+  }, []);
+
+  const handleExchangeCode = async (code: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('calendly-oauth', {
+        body: { action: 'exchange_code', code }
+      });
+
+      if (error) throw error;
+      
+      toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
+      // Clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error: any) {
+      console.error('Error exchanging code:', error);
+      toast({ title: 'Erro ao conectar', description: error.message, variant: 'destructive' });
+    }
+  };
 
   const lista = useMemo(
     () => filtro === 'todas' ? INTEGRACOES : INTEGRACOES.filter(i => i.categoria === filtro),
