@@ -153,7 +153,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
     // Clear errors for this product
     const newErrors = { ...errors };
     Object.keys(newErrors).forEach(key => {
-      if (key.startsWith(`product_${index}_`) || key.startsWith(`phase_${index}_`)) {
+      if (key.startsWith(`product_${index}`) || key.startsWith(`phase_${index}`)) {
         delete newErrors[key];
       }
     });
