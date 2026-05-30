@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -134,31 +134,53 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
-        {integ.status === 'conectado' || integ.status === 'beta' ? (
-          <>
-            <Button onClick={() => toast({ title: 'Sincronização iniciada', description: `${integ.nome} está sincronizando.` })}>
-              <RefreshCw className="h-4 w-4 mr-2" strokeWidth={1.5} /> Sincronizar agora
-            </Button>
-            <Button variant="outline" onClick={() => toast({ title: 'Configurações abertas', description: 'Edite escopos e preferências.' })}>
-              <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Configurações
-            </Button>
-          </>
-        ) : integ.status === 'disponivel' ? (
-          <Button onClick={() => toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` })}>
-            <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar {integ.nome}
-          </Button>
+        {integ.id === 'calendly' ? (
+          <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
+             <Button 
+               className="bg-primary hover:bg-primary/90"
+               onClick={() => {
+                 toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
+                 // Simular fluxo OAuth: redirect_uri = window.location.origin + '/integracoes/callback'
+                 const client_id = 'CALENDLY_CLIENT_ID';
+                 const redirect_uri = encodeURIComponent(window.location.origin + '/consultor/integracoes');
+                 const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
+                 console.log('Redirecting to:', url);
+                 window.location.href = url;
+               }}
+             >
+               <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar Calendly
+             </Button>
+             <p className="text-[10px] text-muted-foreground text-center px-4">
+               Ao conectar, o Calendly poderá criar e gerenciar eventos na sua agenda sincronizados com a Seven.
+             </p>
+          </div>
         ) : (
-          <Button variant="outline" disabled>
-            <Clock className="h-4 w-4 mr-2" strokeWidth={1.5} /> Em breve
-          </Button>
+          <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
+            {integ.status === 'conectado' || integ.status === 'beta' ? (
+              <>
+                <Button onClick={() => toast({ title: 'Sincronização iniciada', description: `${integ.nome} está sincronizando.` })}>
+                  <RefreshCw className="h-4 w-4 mr-2" strokeWidth={1.5} /> Sincronizar agora
+                </Button>
+                <Button variant="outline" onClick={() => toast({ title: 'Configurações abertas', description: 'Edite escopos e preferências.' })}>
+                  <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Configurações
+                </Button>
+              </>
+            ) : integ.status === 'disponivel' ? (
+              <Button onClick={() => toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` })}>
+                <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar {integ.nome}
+              </Button>
+            ) : (
+              <Button variant="outline" disabled>
+                <Clock className="h-4 w-4 mr-2" strokeWidth={1.5} /> Em breve
+              </Button>
+            )}
+            {integ.documentacaoUrl && (
+              <a href={integ.documentacaoUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 self-start">
+                Documentação <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
+              </a>
+            )}
+          </div>
         )}
-        {integ.documentacaoUrl && (
-          <a href={integ.documentacaoUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 self-start">
-            Documentação <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
-          </a>
-        )}
-      </div>
     </Card>
   );
 }
