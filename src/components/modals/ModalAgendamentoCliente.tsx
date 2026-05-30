@@ -262,7 +262,6 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
       </div>
     </BaseModal>
   );
-  );
 };
 
 function calculateEndTime(startTime: string, durationMinutes: number): string {
