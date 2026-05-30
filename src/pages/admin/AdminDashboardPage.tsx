@@ -27,13 +27,14 @@ import { useAdminDashboardMetrics } from '@/hooks/admin/useAdminDashboardMetrics
 import { DashboardModal } from './AdminDashboardModals';
 import { labelCapacidade, variantCapacidade, calculateCapacidade } from '@/data/consultorExtras';
 import { startOfDay, format } from 'date-fns';
+import type { StatusContrato } from '@/types';
 
 interface ClientePriorizado {
   id: string;
   nomeFantasia: string;
   avatar_url?: string;
   consultorNome: string;
-  status: string;
+  status: StatusContrato;
   diasSemInteracao: number;
   motivoAlerta: string;
   acaoRecomendada: string;
@@ -44,7 +45,7 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { data: metrics, isLoading, isError } = useAdminDashboardMetrics();
   
-  const [statusModal, setStatusModal] = useState<{ open: boolean; clienteId: string; clienteNome: string; statusAtual: any } | null>(null);
+  const [statusModal, setStatusModal] = useState<{ open: boolean; clienteId: string; clienteNome: string; statusAtual: StatusContrato } | null>(null);
   const [activeModal, setActiveModal] = useState<{ open: boolean; title: string; data: any[] } | null>(null);
 
   const stats = useMemo(() => {
@@ -53,7 +54,6 @@ export default function AdminDashboardPage() {
     const { clients, contracts, tasks, meetings, consultants, walletHealth } = metrics;
     const hojeStr = format(startOfDay(new Date()), 'yyyy-MM-dd');
 
-    // Clientes que exigem ação (priorização real)
     const priorizados: ClientePriorizado[] = clients
       .map(c => {
         let pontuacao = 0;
@@ -76,14 +76,14 @@ export default function AdminDashboardPage() {
           acoes.push('Agendar reunião');
         }
 
-        const tarefasAtrasadas = tasks.filter(t => t.client_id === c.id && t.status !== 'concluida' && t.due_date && t.due_date < hojeStr);
+        const tarefasAtrasadas = tasks.filter(t => t.clienteId === c.id && t.status !== 'concluida' && t.dataVencimento && t.dataVencimento < hojeStr);
         if (tarefasAtrasadas.length > 0) {
           pontuacao += 15;
           motivos.push(`${tarefasAtrasadas.length} tarefas atrasadas`);
           acoes.push('Resolver pendências');
         }
 
-        const tarefasImpedidas = tasks.filter(t => t.client_id === c.id && t.status === 'impedida');
+        const tarefasImpedidas = tasks.filter(t => t.clienteId === c.id && t.status === 'impedida');
         if (tarefasImpedidas.length > 0) {
           pontuacao += 15;
           motivos.push('Tarefa impedida');
@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
 
         return {
           id: c.id,
-          nomeFantasia: c.trade_name,
+          nomeFantasia: c.nomeFantasia,
           avatar_url: c.avatar_url,
           consultorNome: c.consultorNome,
           status: c.status,
@@ -109,20 +109,20 @@ export default function AdminDashboardPage() {
 
     const ativos = clients.filter(c => c.status === 'ativo').length;
     const emRisco = clients.filter(c => (c.status === 'bloqueado' || c.status === 'suspenso')).length;
-    const reunioesHoje = meetings.filter(m => m.meeting_date === hojeStr).length;
+    const reunioesHoje = meetings.filter(m => m.meetingDate === hojeStr).length;
     const tarefasPendentes = tasks.filter(t => t.status !== 'concluida').length;
     const tarefasImpedidas = tasks.filter(t => t.status === 'impedida').length;
     
     const contratosAtivos = contracts.filter(c => c.status === 'ativo').length;
     const taxaRenovacao = contracts.length > 0 ? Math.round((contratosAtivos / contracts.length) * 100) : 0;
-    const ltvTotal = contracts.reduce((acc, c) => acc + (Number(c.value) || 0), 0);
+    const ltvTotal = contracts.reduce((acc, c) => acc + (c.valor || 0), 0);
     const ltvMedio = contracts.length > 0 ? ltvTotal / contracts.length : 0;
 
-    const indiceMedio = clients.length > 0 ? Math.round(clients.reduce((acc, c) => acc + (c.seven_index || 0), 0) / clients.length) : 0;
+    const indiceMedio = clients.length > 0 ? Math.round(clients.reduce((acc, c) => acc + (c.indiceSeven || 0), 0) / clients.length) : 0;
 
     const consultoresStats = consultants.filter(p => p.role === 'consultor').map(cons => {
       const cap = calculateCapacidade(cons.id, { hours_available: cons.hours_available, max_clients: cons.max_clients }, clients, meetings, contracts);
-      const numTarefas = tasks.filter(t => t.consultant_id === cons.id && t.status !== 'concluida').length;
+      const numTarefas = tasks.filter(t => t.consultorId === cons.id && t.status !== 'concluida').length;
       return {
         ...cons,
         cap,
@@ -272,7 +272,7 @@ export default function AdminDashboardPage() {
           <StatCard titulo="Contratos em risco" valor={emRisco} icon={ShieldAlert} variant="danger" subtitulo="Status bloqueado/suspenso" />
           <StatCard titulo="Bloqueados" valor={stats.emRisco} icon={ShieldAlert} variant="danger" subtitulo="Risco operacional ativo" />
           <StatCard titulo="Tarefas impedidas" valor={tarefasImpedidas} icon={Clock} variant="warning" subtitulo="Bloqueios operacionais" />
-          <StatCard titulo="Potencial Upsell" valor={metrics.clients.filter(c => c.upsell_potential).length} icon={DollarSign} variant="success" subtitulo="Oportunidades mapeadas" />
+          <StatCard titulo="Potencial Upsell" valor={metrics.clients.filter(c => c.potencialUpsell).length} icon={DollarSign} variant="success" subtitulo="Oportunidades mapeadas" />
         </div>
       </section>
 
