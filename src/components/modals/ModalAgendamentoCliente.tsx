@@ -36,7 +36,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
     loaded: boolean;
   }>({ connected: false, schedulingUrl: null, loaded: false });
 
-  // Check if consultant has Calendly connected
+  // Check if consultant has Calendly mapping
   useEffect(() => {
     async function checkCalendly() {
       if (!moduleMeeting.consultantId) {
@@ -45,62 +45,39 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
       }
       
       const { data, error } = await supabase
-        .from('profiles')
-        .select('calendly_connected, calendly_scheduling_url')
-        .eq('id', moduleMeeting.consultantId)
+        .from('consultant_calendly_settings')
+        .select('calendly_scheduling_url, is_active')
+        .eq('consultant_id', moduleMeeting.consultantId)
+        .eq('is_active', true)
         .maybeSingle();
         
       if (!error && data) {
         setConsultantCalendly({
-          connected: !!data.calendly_connected,
+          connected: true,
           schedulingUrl: data.calendly_scheduling_url,
           loaded: true
         });
       } else {
-        setConsultantCalendly(prev => ({ ...prev, loaded: true }));
+        setConsultantCalendly(prev => ({ ...prev, loaded: true, connected: false }));
       }
     }
     checkCalendly();
   }, [moduleMeeting.consultantId]);
 
   const handleAgendarCalendly = async () => {
-    if (!consultantCalendly?.schedulingUrl) {
-      toast({
-        title: "Calendly não configurado",
-        description: "O consultor responsável ainda não conectou o Calendly. Entre em contato com a equipe.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      // 1. Create a session token
-      const sessionToken = crypto.randomUUID();
-      
-      // 2. Save session to DB
-      const { error: sessionError } = await supabase
-        .from('calendly_booking_sessions')
-        .insert({
-          session_token: sessionToken,
-          client_id: moduleMeeting.clientId,
-          contract_id: moduleMeeting.contractId,
-          contract_product_id: moduleMeeting.productId,
-          contract_phase_id: moduleMeeting.moduleId,
-          contract_module_meeting_id: moduleMeeting.id,
-          consultant_id: moduleMeeting.consultantId,
-          status: 'pending'
-        });
+      const { data, error } = await supabase.functions.invoke('calendly-api', {
+        body: { 
+          action: 'get_booking_url',
+          meetingId: moduleMeeting.id
+        }
+      });
 
-      if (sessionError) throw sessionError;
+      if (error) throw error;
+      if (!data?.url) throw new Error('Could not generate booking URL');
 
-      // 3. Open Calendly with session token in tracking params
-      // We use utm_term or salesforce_uuid as custom external ID mapping is limited in free tier
-      // but 'utm_term' usually works well for tracking.
-      const calendlyUrl = new URL(consultantCalendly.schedulingUrl);
-      calendlyUrl.searchParams.set('utm_term', sessionToken);
-      
-      window.open(calendlyUrl.toString(), '_blank');
+      window.open(data.url, '_blank');
       
       toast({
         title: "Calendly aberto",
@@ -260,7 +237,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-lg border border-amber-100 text-amber-700 text-[11px] font-bold uppercase">
                 <AlertTriangle className="h-4 w-4" />
-                O consultor responsável ainda não conectou o Calendly.
+                O consultor responsável ainda não possui link de agendamento configurado.
               </div>
               <p className="text-[10px] text-muted-foreground">Você pode prosseguir com o agendamento manual abaixo.</p>
             </div>
@@ -380,7 +357,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
             <Calendar className="h-12 w-12 text-blue-200 mx-auto mb-4" />
             <h4 className="text-sm font-bold text-blue-900 mb-2">Integração Calendly Ativa</h4>
             <p className="text-xs text-blue-700/70 max-w-sm mx-auto">
-              Utilize o botão acima para agendar seu encontro diretamente na agenda oficial do consultor.
+              Utilize o botão acima para agendar seu encontro diretamente na agenda central vinculada ao consultor.
             </p>
           </div>
         )}
