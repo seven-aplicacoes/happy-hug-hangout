@@ -15,7 +15,7 @@ export function useContractModuleMeetings(moduleId?: string) {
         .from('contract_module_meetings')
         .select(`
           *,
-          consultant:profiles!consultant_id (full_name)
+          consultant:profiles!consultant_id (full_name, phone, email, avatar_url)
         `)
         .eq('module_id', moduleId)
         .order('order_index');
@@ -37,6 +37,9 @@ export function useContractModuleMeetings(moduleId?: string) {
         completedAt: m.completed_at,
         orderIndex: m.order_index,
         consultantName: m.consultant?.full_name,
+        consultantPhone: m.consultant?.phone,
+        consultantEmail: m.consultant?.email,
+        consultantAvatar: m.consultant?.avatar_url,
       })) as ContractModuleMeeting[];
     },
     enabled: !!moduleId,

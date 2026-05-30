@@ -16,7 +16,7 @@ export function useContractProductPhases(contractProductId?: string) {
         .from('contract_product_phases')
         .select(`
           *,
-          responsible_consultant:profiles!contract_product_phases_responsible_consultant_id_fkey (full_name),
+          responsible_consultant:profiles!contract_product_phases_responsible_consultant_id_fkey (full_name, phone, email, avatar_url),
           meetings:contract_module_meetings(count),
           scheduled:contract_module_meetings(count).filter('status', 'eq', 'agendado'),
           realized:contract_module_meetings(count).filter('status', 'eq', 'realizada'),
@@ -50,6 +50,9 @@ export function useContractProductPhases(contractProductId?: string) {
           status: p.status,
           responsibleConsultantId: p.responsible_consultant_id,
           responsibleConsultantNome: p.responsible_consultant?.full_name,
+          responsibleConsultantPhone: p.responsible_consultant?.phone,
+          responsibleConsultantEmail: p.responsible_consultant?.email,
+          responsibleConsultantAvatar: p.responsible_consultant?.avatar_url,
           internalNotes: p.internal_notes,
           clientNotes: p.client_notes,
           clientVisible: p.client_visible,
