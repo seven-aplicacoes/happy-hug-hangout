@@ -14,6 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendly_booking_sessions: {
+        Row: {
+          client_id: string | null
+          consultant_id: string | null
+          contract_id: string | null
+          contract_module_meeting_id: string | null
+          contract_phase_id: string | null
+          contract_product_id: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          session_token: string
+          status: string
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          contract_module_meeting_id?: string | null
+          contract_phase_id?: string | null
+          contract_product_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_token: string
+          status?: string
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string | null
+          contract_id?: string | null
+          contract_module_meeting_id?: string | null
+          contract_phase_id?: string | null
+          contract_product_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_token?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendly_booking_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendly_booking_sessions_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendly_booking_sessions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendly_booking_sessions_contract_module_meeting_id_fkey"
+            columns: ["contract_module_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendly_booking_sessions_contract_phase_id_fkey"
+            columns: ["contract_phase_id"]
+            isOneToOne: false
+            referencedRelation: "contract_product_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendly_booking_sessions_contract_product_id_fkey"
+            columns: ["contract_product_id"]
+            isOneToOne: false
+            referencedRelation: "contract_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_alerts: {
         Row: {
           client_id: string | null
@@ -2163,6 +2248,11 @@ export type Database = {
       }
       meetings: {
         Row: {
+          calendly_cancel_url: string | null
+          calendly_event_type_uri: string | null
+          calendly_event_uri: string | null
+          calendly_invitee_uri: string | null
+          calendly_reschedule_url: string | null
           cancel_reason: string | null
           canceled_at: string | null
           canceled_by: string | null
@@ -2204,6 +2294,11 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          calendly_cancel_url?: string | null
+          calendly_event_type_uri?: string | null
+          calendly_event_uri?: string | null
+          calendly_invitee_uri?: string | null
+          calendly_reschedule_url?: string | null
           cancel_reason?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
@@ -2245,6 +2340,11 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          calendly_cancel_url?: string | null
+          calendly_event_type_uri?: string | null
+          calendly_event_uri?: string | null
+          calendly_invitee_uri?: string | null
+          calendly_reschedule_url?: string | null
           cancel_reason?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
@@ -3160,6 +3260,10 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          calendly_connected: boolean | null
+          calendly_event_type_uri: string | null
+          calendly_scheduling_url: string | null
+          calendly_user_uri: string | null
           city: string | null
           created_at: string | null
           email: string
@@ -3177,6 +3281,10 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          calendly_connected?: boolean | null
+          calendly_event_type_uri?: string | null
+          calendly_scheduling_url?: string | null
+          calendly_user_uri?: string | null
           city?: string | null
           created_at?: string | null
           email: string
@@ -3194,6 +3302,10 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          calendly_connected?: boolean | null
+          calendly_event_type_uri?: string | null
+          calendly_scheduling_url?: string | null
+          calendly_user_uri?: string | null
           city?: string | null
           created_at?: string | null
           email?: string

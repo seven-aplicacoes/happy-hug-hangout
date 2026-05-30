@@ -17,18 +17,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Check auth
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('Missing Authorization header')
-    }
+    if (!authHeader) throw new Error('Missing Authorization header')
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''))
-    if (authError || !user) {
-      throw new Error('Unauthorized')
-    }
+    if (authError || !user) throw new Error('Unauthorized')
 
-    const { action, code } = await req.json()
+    const { action, code, consultant_id } = await req.json()
 
     if (action === 'exchange_code') {
       if (!code) throw new Error('Missing code')
@@ -56,21 +51,49 @@ serve(async (req) => {
         throw new Error(data.error_description || data.error || 'Failed to exchange code')
       }
 
+      // Get user info from Calendly to get URIs
+      const userResponse = await fetch('https://api.calendly.com/users/me', {
+        headers: { 'Authorization': `Bearer ${data.access_token}` }
+      })
+      const userData = await userResponse.json()
+      const userUri = userData.resource.uri
+      const schedulingUrl = userData.resource.scheduling_url
+
+      // Get event types to find a default one if needed
+      const eventTypesResponse = await fetch(`https://api.calendly.com/event_types?user=${userUri}`, {
+        headers: { 'Authorization': `Bearer ${data.access_token}` }
+      })
+      const eventTypesData = await eventTypesResponse.json()
+      const firstEventType = eventTypesData.collection[0]
+
       // Save tokens to DB
       const { error: dbError } = await supabaseClient
         .from('consultant_calendar_integrations')
         .upsert({
           consultant_id: user.id,
           provider: 'calendly',
-          access_token_encrypted: data.access_token, // Ideally encrypt this if you have an encryption key
+          access_token_encrypted: data.access_token,
           refresh_token_encrypted: data.refresh_token,
           expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
           scope: data.scope,
-          provider_user_uri: data.owner,
+          provider_user_uri: userUri,
           status: 'active'
         }, { onConflict: 'consultant_id, provider' })
 
       if (dbError) throw dbError
+
+      // Update consultant profile
+      const { error: profileError } = await supabaseClient
+        .from('profiles')
+        .update({
+          calendly_user_uri: userUri,
+          calendly_scheduling_url: schedulingUrl,
+          calendly_event_type_uri: firstEventType?.uri || null,
+          calendly_connected: true
+        })
+        .eq('id', user.id)
+
+      if (profileError) throw profileError
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
