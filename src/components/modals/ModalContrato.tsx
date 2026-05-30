@@ -797,6 +797,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     value={ph.startDate} 
                                     onChange={e => updatePhase(pIndex, phIndex, 'startDate', e.target.value)}
                                   />
+                                  <ErrorMsg name={`phase_${pIndex}_${phIndex}_startDate`} />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Fim</Label>
@@ -806,6 +807,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
                                     value={ph.endDate} 
                                     onChange={e => updatePhase(pIndex, phIndex, 'endDate', e.target.value)}
                                   />
+                                  <ErrorMsg name={`phase_${pIndex}_${phIndex}_endDate`} />
                                 </div>
                                 <div className="md:col-span-2 space-y-1">
                                   <Label className="text-[10px]">Responsável *</Label>
