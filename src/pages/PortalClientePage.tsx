@@ -24,8 +24,16 @@ import {
   AlertTriangle,
   CreditCard,
   FileBadge,
-  ShieldCheck
+  ShieldCheck,
+  Briefcase,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+  Users,
+  Target,
+  ArrowRight
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
 import { useClienteContratos } from '@/hooks/useClienteContratos';
@@ -313,61 +321,35 @@ export default function PortalClientePage() {
           {/* Content */}
           <main className="flex-1 min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsContent value="jornada" className="mt-0 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-neutral-900">{activeProduct?.productNome || 'Sua Jornada'}</h2>
+              <TabsContent value="jornada" className="mt-0 space-y-8">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-bold text-neutral-900 uppercase tracking-tight flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-primary rounded-full" />
+                    Contratos e Jornada
+                  </h2>
                 </div>
                 
-                {products?.length === 0 && (
+                {contratos?.map(contrato => (
+                  <ContractSection 
+                    key={contrato.id} 
+                    contrato={contrato} 
+                    products={products}
+                    currentProductId={currentProductId}
+                    setSelectedProduct={setSelectedProduct}
+                    phases={phases}
+                    onRateMeeting={handleOpenCsat}
+                    csatStatus={csatStatus}
+                  />
+                ))}
+
+                {contratos?.length === 0 && (
                   <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
                     <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
-                    <p className="text-neutral-400 text-sm">Nenhum produto vinculado a este contrato.</p>
+                    <p className="text-neutral-400 text-sm">Nenhum contrato encontrado para este cliente.</p>
                   </div>
                 )}
-
-                
-                <div className="space-y-4">
-                  {phases?.map((phase, idx) => (
-                    <Card key={phase.id} className="overflow-hidden border-none shadow-sm bg-white">
-                      <div className="flex">
-                        <div className={cn("w-1.5 shrink-0", 
-                          phase.status === 'concluida' ? "bg-green-500" : 
-                          phase.status === 'em_andamento' ? "bg-primary animate-pulse" : "bg-neutral-200"
-                        )} />
-                        <div className="p-5 flex-1 space-y-4">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Módulo {idx + 1}</p>
-                              <h3 className="font-semibold text-lg text-neutral-900">{phase.name}</h3>
-                              {phase.clientNotes && <p className="text-sm text-neutral-500 mt-1">{phase.clientNotes}</p>}
-                            </div>
-                            <div className="text-right">
-                              <p className={cn("text-[10px] font-bold uppercase px-2 py-0.5 rounded-full inline-block",
-                                phase.status === 'concluida' ? "bg-green-50 text-green-600" : 
-                                phase.status === 'em_andamento' ? "bg-primary/10 text-primary" : "bg-neutral-50 text-neutral-400"
-                              )}>
-                                {phase.status.replace('_', ' ')}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <PhaseMeetingsList 
-                            moduleId={phase.id} 
-                            onRateMeeting={handleOpenCsat}
-                            csatStatus={csatStatus}
-                          />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                  {phases?.length === 0 && (
-                    <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
-                      <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
-                      <p className="text-neutral-400 text-sm">Nenhum módulo encontrado para este produto.</p>
-                    </div>
-                  )}
-                </div>
               </TabsContent>
+
 
 
               <TabsContent value="entregaveis" className="mt-0">
@@ -451,6 +433,339 @@ export default function PortalClientePage() {
   );
 }
 
+function ContractSection({ 
+  contrato, 
+  products, 
+  currentProductId, 
+  setSelectedProduct,
+  phases,
+  onRateMeeting,
+  csatStatus
+}: { 
+  contrato: any, 
+  products: any[] | undefined, 
+  currentProductId: string | undefined,
+  setSelectedProduct: (id: string) => void,
+  phases: any[] | undefined,
+  onRateMeeting: (m: any) => void,
+  csatStatus: any[] | undefined
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-none shadow-md bg-white overflow-hidden">
+        <div className="p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-xl bg-neutral-50 flex items-center justify-center text-neutral-400 border border-neutral-100">
+                <Briefcase className="h-7 w-7" />
+              </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-bold text-neutral-900">{contrato.tipo}</h3>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase border border-green-100/50">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    {contrato.status}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-xs text-neutral-500 font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {contrato.dataInicio ? format(new Date(contrato.dataInicio), 'dd/MM/yyyy') : '--'} A {contrato.dataFim ? format(new Date(contrato.dataFim), 'dd/MM/yyyy') : '--'}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <DollarSign className="h-3.5 w-3.5" />
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor)}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" />
+                    Consultor {contrato.consultorNome}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 self-end md:self-center">
+              <div className="px-3 py-1.5 rounded-lg bg-neutral-50 border border-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                {products?.length || 0} PRODUTOS
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-neutral-400 hover:bg-neutral-50"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {isExpanded && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-4 bg-primary/40 rounded-full" />
+            <h4 className="text-sm font-bold text-neutral-500 uppercase tracking-widest">Detalhamento de Produtos e Módulos</h4>
+          </div>
+
+          {products?.map(product => (
+            <ProductSection 
+              key={product.id} 
+              product={product} 
+              phases={product.id === currentProductId ? phases : []} 
+              onRateMeeting={onRateMeeting}
+              csatStatus={csatStatus}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProductSection({ product, phases, onRateMeeting, csatStatus }: { product: any, phases: any[] | undefined, onRateMeeting: (m: any) => void, csatStatus: any[] | undefined }) {
+  return (
+    <Card className="border border-neutral-100 shadow-sm bg-neutral-50/30 overflow-hidden">
+      <div className="p-6 border-b border-neutral-100 bg-white">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-neutral-50 flex items-center justify-center text-neutral-400 border border-neutral-100">
+              <Briefcase className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-3">
+                <h4 className="text-lg font-bold text-neutral-900">{product.productNome}</h4>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[9px] font-bold uppercase border border-green-100/50">
+                  <div className="h-1 w-1 rounded-full bg-green-500" />
+                  {product.status}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-1.5 text-[11px] text-neutral-500 font-bold uppercase tracking-tight">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" />
+                  {product.startDate ? format(new Date(product.startDate), 'dd/MM/yyyy') : '--'} A {product.endDate ? format(new Date(product.endDate), 'dd/MM/yyyy') : '--'}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" />
+                  DURAÇÃO: {(product.consultantHours || 0) / 60}H
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Target className="h-3 w-3" />
+                  {product.productCategory || 'GERAL'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-0 overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-white border-b border-neutral-100">
+              <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Módulo</th>
+              <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-widest hidden md:table-cell">Executor</th>
+              <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-widest hidden lg:table-cell">Responsável</th>
+              <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Status</th>
+              <th className="px-6 py-3 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Duração / Enc.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {phases?.map((phase, idx) => (
+              <ModuleRow 
+                key={phase.id} 
+                phase={phase} 
+                onRateMeeting={onRateMeeting}
+                csatStatus={csatStatus}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
+function ModuleRow({ phase, onRateMeeting, csatStatus }: { phase: any, onRateMeeting: (m: any) => void, csatStatus: any[] | undefined }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <tr 
+        className={cn(
+          "group cursor-pointer transition-colors border-b border-neutral-100 last:border-0",
+          isOpen ? "bg-white" : "hover:bg-neutral-50/50 bg-white"
+        )}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className={cn("transition-transform", isOpen ? "rotate-180" : "rotate-0")}>
+              <ChevronDown className="h-4 w-4 text-neutral-400" />
+            </div>
+            <span className="text-sm font-bold text-neutral-900">{phase.name}</span>
+          </div>
+        </td>
+        <td className="px-6 py-4 hidden md:table-cell">
+          <span className="text-xs font-medium text-neutral-500 capitalize">{phase.executorType || 'Consultor'}</span>
+        </td>
+        <td className="px-6 py-4 hidden lg:table-cell">
+          <span className="text-xs font-medium text-neutral-500">{phase.responsibleConsultantNome || 'Não definido'}</span>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500 text-[9px] font-bold uppercase w-fit border border-neutral-200/50">
+            <div className={cn("h-1 w-1 rounded-full", 
+              phase.status === 'concluida' ? "bg-green-500" : 
+              phase.status === 'em_andamento' ? "bg-primary" : "bg-neutral-400"
+            )} />
+            {phase.status.replace('_', ' ')}
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-4 text-xs font-bold text-neutral-500">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3 w-3" />
+              {(phase.durationMinutes || 0) / 60}h
+            </div>
+            <div className="flex items-center gap-1.5 text-neutral-300">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              3/3
+            </div>
+          </div>
+        </td>
+      </tr>
+      {isOpen && (
+        <tr className="bg-white border-b border-neutral-100">
+          <td colSpan={5} className="px-8 py-0">
+            <div className="pb-8 pt-4">
+              <Tabs defaultValue="encontros" className="w-full">
+                <TabsList className="bg-transparent border-b border-neutral-100 rounded-none h-auto p-0 mb-6 gap-8">
+                  <TabsTrigger value="encontros" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-[10px] font-bold uppercase tracking-widest">Encontros</TabsTrigger>
+                  <TabsTrigger value="materiais" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-[10px] font-bold uppercase tracking-widest">Materiais de Apoio</TabsTrigger>
+                  <TabsTrigger value="entregaveis" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-[10px] font-bold uppercase tracking-widest">Entregáveis Cliente</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="encontros" className="mt-0">
+                  <div className="space-y-4">
+                    <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-4">Progresso: 0/3 Encontros</div>
+                    <PhaseMeetingsList 
+                      moduleId={phase.id} 
+                      onRateMeeting={onRateMeeting}
+                      csatStatus={csatStatus}
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="materiais" className="mt-0">
+                  <div className="py-8 text-center bg-neutral-50 rounded-lg border border-dashed border-neutral-200">
+                    <p className="text-xs text-neutral-400 italic">Materiais de apoio vinculados a este módulo serão exibidos aqui.</p>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="entregaveis" className="mt-0">
+                  <div className="py-8 text-center bg-neutral-50 rounded-lg border border-dashed border-neutral-200">
+                    <p className="text-xs text-neutral-400 italic">Entregáveis pendentes ou concluídos deste módulo.</p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function PhaseMeetingsList({ moduleId, onRateMeeting, csatStatus }: { moduleId: string, onRateMeeting: (m: any) => void, csatStatus?: any[] }) {
+  const { meetings, isLoading } = useModuleMeetings(moduleId);
+  if (isLoading) return <div className="space-y-3 mt-4"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>;
+  if (!meetings || meetings.length === 0) return null;
+  
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-4">
+      {meetings.map((m) => {
+        const isCompleted = m.status === 'realizada';
+        const isScheduled = m.status === 'agendado';
+        const csatInfo = csatStatus?.find(s => s.id === m.id);
+        const isResponded = csatInfo?.isResponded;
+        
+        return (
+          <Card key={m.id} className="p-4 bg-white border border-neutral-100 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-lg bg-neutral-50 flex items-center justify-center text-[10px] font-bold text-neutral-400 border border-neutral-100 group-hover:bg-primary/5 group-hover:text-primary transition-colors shrink-0">
+                #{m.meetingNumber}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-bold text-neutral-900 truncate">{m.title || `Encontro ${m.meetingNumber}`}</p>
+                  <div className={cn("flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border", 
+                    isCompleted ? "bg-green-50 text-green-600 border-green-100/50" : 
+                    isScheduled ? "bg-amber-50 text-amber-600 border-amber-100/50" : "bg-neutral-50 text-neutral-400 border-neutral-100"
+                  )}>
+                    <div className={cn("h-1 w-1 rounded-full", isCompleted ? "bg-green-500" : isScheduled ? "bg-amber-500" : "bg-neutral-400")} />
+                    {m.status}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-1 text-[10px] font-medium text-neutral-400">
+                  {m.scheduledAt && (
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3 w-3" />
+                      {format(new Date(m.scheduledAt), "dd/MM/yyyy 'às' HH:mm")}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5">
+                    <span className="uppercase text-[9px] text-neutral-300 font-bold">Consultor</span>
+                    {m.consultantName || 'Não definido'}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {isCompleted && !isResponded && (
+                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold text-primary border-primary/20 hover:bg-primary/5" onClick={() => onRateMeeting(m)}>
+                  <Star className="h-3 w-3 mr-1.5 fill-primary/10" /> AVALIAR
+                </Button>
+              )}
+              {isResponded && <span className="text-[9px] font-bold text-green-600 uppercase bg-green-50 px-2 py-0.5 rounded border border-green-100/50">Avaliado</span>}
+              {!isCompleted && (
+                <Button variant="outline" size="sm" className="h-9 px-4 text-[11px] font-bold text-neutral-900 border-neutral-200 hover:bg-neutral-50 shadow-sm">
+                  {isScheduled ? 'Reagendar' : 'Agendar'}
+                </Button>
+              )}
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function StarRating({ value, onChange }: { value: number, onChange: (v: number) => void }) {
+  return (
+    <div className="flex gap-2">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button key={star} type="button" onClick={() => onChange(star)} className={cn("transition-all", value >= star ? "text-yellow-400" : "text-neutral-200 hover:text-neutral-300")}>
+          <Star className={cn("h-7 w-7", value >= star ? "fill-current" : "fill-none")} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function NpsScale({ value, onChange }: { value: number, onChange: (v: number) => void }) {
+  return (
+    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
+      {Array.from({ length: 11 }).map((_, i) => (
+        <button key={i} type="button" onClick={() => onChange(i)} className={cn("h-9 w-9 flex items-center justify-center rounded-md text-xs font-bold border transition-all shrink-0", value === i ? "bg-primary border-primary text-white" : "bg-white border-neutral-200 text-neutral-500 hover:border-primary/50")}>
+          {i}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function IndicatorCard({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) {
   return (
     <Card className="p-4 border-none shadow-sm bg-white flex items-center gap-4">
@@ -481,71 +796,3 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
   );
 }
 
-function PhaseMeetingsList({ moduleId, onRateMeeting, csatStatus }: { moduleId: string, onRateMeeting: (m: any) => void, csatStatus?: any[] }) {
-  const { meetings, isLoading } = useModuleMeetings(moduleId);
-  if (isLoading) return <div className="space-y-2 mt-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>;
-  if (!meetings || meetings.length === 0) return null;
-  
-  return (
-    <div className="mt-4 space-y-2">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Encontros do Módulo</p>
-      {meetings.map((m) => {
-        const isCompleted = m.status === 'realizada';
-        const isScheduled = m.status === 'agendado';
-        const csatInfo = csatStatus?.find(s => s.id === m.id);
-        const isResponded = csatInfo?.isResponded;
-        
-        return (
-          <div key={m.id} className="flex items-center justify-between p-3 rounded-lg bg-neutral-50 border border-neutral-100">
-            <div className="flex items-center gap-3">
-              <div className={cn("h-8 w-8 rounded-full flex items-center justify-center border", 
-                isCompleted ? "bg-green-100 text-green-600 border-green-200" : 
-                isScheduled ? "bg-blue-100 text-blue-600 border-blue-200" : "bg-white text-neutral-300 border-neutral-200"
-              )}>
-                {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-neutral-900 truncate">{m.title || `Encontro ${m.meetingNumber}`}</p>
-                <p className="text-[10px] text-neutral-500">
-                  {isCompleted && m.completedAt ? `Realizado: ${format(new Date(m.completedAt), "dd/MM/yy")}` : 
-                   isScheduled && m.scheduledAt ? `Agendado: ${format(new Date(m.scheduledAt), "dd/MM/yy 'às' HH:mm")}` : 
-                   'Previsto na jornada'}
-                </p>
-              </div>
-            </div>
-            {isCompleted && !isResponded && (
-              <Button variant="ghost" size="sm" className="h-7 text-[9px] font-bold text-primary hover:bg-primary/10" onClick={() => onRateMeeting(m)}>
-                <Star className="h-3 w-3 mr-1" /> AVALIAR
-              </Button>
-            )}
-            {isResponded && <span className="text-[9px] font-bold text-green-600 uppercase bg-green-50 px-2 py-0.5 rounded">Feedback Enviado</span>}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function StarRating({ value, onChange }: { value: number, onChange: (v: number) => void }) {
-  return (
-    <div className="flex gap-2">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button key={star} type="button" onClick={() => onChange(star)} className={cn("transition-all", value >= star ? "text-yellow-400" : "text-neutral-200 hover:text-neutral-300")}>
-          <Star className={cn("h-7 w-7", value >= star ? "fill-current" : "fill-none")} />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function NpsScale({ value, onChange }: { value: number, onChange: (v: number) => void }) {
-  return (
-    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
-      {Array.from({ length: 11 }).map((_, i) => (
-        <button key={i} type="button" onClick={() => onChange(i)} className={cn("h-9 w-9 flex items-center justify-center rounded-md text-xs font-bold border transition-all shrink-0", value === i ? "bg-primary border-primary text-white" : "bg-white border-neutral-200 text-neutral-500 hover:border-primary/50")}>
-          {i}
-        </button>
-      ))}
-    </div>
-  );
-}
