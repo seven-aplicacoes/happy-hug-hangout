@@ -110,7 +110,7 @@ export default function ConsultorClientesPage() {
     const q = normalize(search);
     if (q) d = d.filter(c => normalize(c.nomeFantasia).includes(q) || normalize(c.razaoSocial).includes(q));
     if (filters.status && filters.status !== 'todos') d = d.filter(c => c.status === filters.status);
-    if (filters.produto && filters.produto !== 'todos') d = d.filter(c => getProdutoAtualCliente(c.id) === filters.produto);
+    if (filters.produto && filters.produto !== 'todos') d = d.filter(c => (getProdutoAtualCliente(c.id) || 'Sem produto') === filters.produto);
     if (filters.porte && filters.porte !== 'todos') d = d.filter(c => getPorte(c) === filters.porte);
     if (filters.engajamento && filters.engajamento !== 'todos') d = d.filter(c => (calcularEngajamento(c.id) as string) === filters.engajamento);
     if (filters.prioridade && filters.prioridade !== 'todos') d = d.filter(c => calcularPrioridade(c).nivel === filters.prioridade);
