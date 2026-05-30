@@ -11,7 +11,7 @@ import { useConsultores } from '@/hooks/useConsultores';
 import { useProdutos } from '@/hooks/useProdutos';
 import { useMethodology } from '@/hooks/useMethodology';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Plus, Calendar, User, Building2, Tag, Flag, Clock, X, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Calendar, User, Building2, Tag, Flag, Clock, X, Loader2, UserCheck } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
