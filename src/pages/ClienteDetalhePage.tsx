@@ -261,7 +261,6 @@ export default function ClienteDetalhePage() {
   const isConsultor = perfil === 'consultor';
   const indicePadrao = isConsultor ? '/consultor/clientes' : '/admin/clientes';
   const indiceLabel = isConsultor ? 'Meus Clientes' : 'Clientes';
-  const isAdmin = perfil === 'admin';
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 animate-in fade-in duration-500">
@@ -581,7 +580,11 @@ export default function ClienteDetalhePage() {
         ) : contratosCliente.length > 0 ? (
           <Accordion type="single" collapsible className="w-full space-y-4">
             {contratosCliente.map(contrato => (
-              <ContractJourneyCard key={contrato.id} contrato={contrato} />
+              <ContractJourneyCard 
+                key={contrato.id} 
+                contrato={contrato} 
+                mode={isAdmin ? 'admin' : 'consultor'} 
+              />
             ))}
           </Accordion>
         ) : (
