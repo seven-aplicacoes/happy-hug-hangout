@@ -327,6 +327,18 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             </Select>
           </div>
           <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Encontro / Slot</Label>
+            <Select value={contractModuleMeetingId || 'none'} onValueChange={setContractModuleMeetingId}>
+              <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o encontro..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {(moduleMeetings || []).map(m => (
+                  <SelectItem key={m.id} value={m.id}>{m.title || `Encontro ${m.meetingNumber}`}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Local / Link</Label>
             <div className="relative">
               <Input 
@@ -346,6 +358,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             </div>
           </div>
         </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
