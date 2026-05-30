@@ -275,6 +275,7 @@ export const ConsultorModal = ({
                 onValueChange={(value) =>
                   setFormData({ ...formData, status: value })
                 }
+                disabled={modo === 'consultor'}
                 required
               >
                 <SelectTrigger id="status">
