@@ -40,6 +40,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [contractProductId, setContractProductId] = useState('');
   const [contractProductPhaseId, setContractProductPhaseId] = useState('');
   const [contractModuleMeetingId, setContractModuleMeetingId] = useState('');
+  const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
+
   const [consultorId, setConsultorId] = useState('');
   const [status, setStatus] = useState<StatusReuniao>('agendada');
   const [meetingDate, setMeetingDate] = useState('');
@@ -110,6 +112,25 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     }
     setErrors({});
   }, [reuniao, initialData, open]);
+
+  // Atualiza o consultor responsável automaticamente quando o módulo/fase muda
+  useEffect(() => {
+    if (contractProductPhaseId && contractProductPhaseId !== 'none') {
+      const selectedPhase = productPhases?.find(p => p.id === contractProductPhaseId);
+      if (selectedPhase?.responsibleConsultantId) {
+        setPhaseResponsibleId(selectedPhase.responsibleConsultantId);
+        // Se for uma nova reunião ou se o consultor não estiver definido, pré-seleciona o responsável do módulo
+        if (!reuniao && (!consultorId || consultorId === '')) {
+          setConsultorId(selectedPhase.responsibleConsultantId);
+        }
+      } else {
+        setPhaseResponsibleId(null);
+      }
+    } else {
+      setPhaseResponsibleId(null);
+    }
+  }, [contractProductPhaseId, productPhases, reuniao, consultorId]);
+
 
   const validate = () => {
     const newErrors: Record<string, boolean> = {};
@@ -257,6 +278,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             </Label>
             <Select 
               value={consultorId} 
+              disabled={!!phaseResponsibleId}
+
               onValueChange={v => {
                 setConsultorId(v);
                 if (errors.consultorId) setErrors(prev => ({ ...prev, consultorId: false }));
@@ -316,7 +339,13 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             <Select value={contractProductPhaseId || 'none'} onValueChange={v => {
               setContractProductPhaseId(v);
               setContractModuleMeetingId('');
+              // Ao mudar o módulo, busca o responsável dele
+              const phase = productPhases?.find(p => p.id === v);
+              if (phase?.responsibleConsultantId) {
+                setConsultorId(phase.responsibleConsultantId);
+              }
             }}>
+
 
               <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o módulo..." /></SelectTrigger>
               <SelectContent>
