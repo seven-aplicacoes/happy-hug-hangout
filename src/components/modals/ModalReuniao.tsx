@@ -362,6 +362,71 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Título da Reunião</Label>
+            <Input 
+              value={title} 
+              disabled={isLocked}
+              onChange={e => {
+                setTitle(e.target.value);
+                if (errors.title) setErrors(prev => ({ ...prev, title: false }));
+              }} 
+              className={cn("h-11 font-medium", errors.title && "border-destructive focus-visible:ring-destructive")}
+              placeholder="Ex: Reunião de Alinhamento Mensal"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tipo de Reunião</Label>
+            <Select value={tipo} onValueChange={setTipo} disabled={isLocked}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Check-in Semanal">Check-in Semanal</SelectItem>
+                <SelectItem value="Alinhamento Estratégico">Alinhamento Estratégico</SelectItem>
+                <SelectItem value="Apresentação de Resultados">Apresentação de Resultados</SelectItem>
+                <SelectItem value="Workshop / Treinamento">Workshop / Treinamento</SelectItem>
+                <SelectItem value="Outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
+            <Select value={status} onValueChange={(v: any) => setStatus(v)} disabled={isLocked}>
+              <SelectTrigger className="h-11" disabled={isLocked}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="agendada">Agendada</SelectItem>
+                <SelectItem value="realizada">Realizada</SelectItem>
+                <SelectItem value="cancelada">Cancelada</SelectItem>
+                <SelectItem value="remarcada">Remarcada</SelectItem>
+                <SelectItem value="reagendada">Reagendada</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Local / Link</Label>
+            <div className="relative">
+              <Input 
+                value={meetingUrl || location} 
+                onChange={e => {
+                  setMeetingUrl(e.target.value);
+                  setLocation(e.target.value);
+                }} 
+                className="h-11 pl-10"
+                placeholder="Meet, Zoom ou Endereço" 
+              />
+              {meetingUrl?.startsWith('http') ? (
+                <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              ) : (
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
 
           <div className="space-y-2">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Módulo</Label>
