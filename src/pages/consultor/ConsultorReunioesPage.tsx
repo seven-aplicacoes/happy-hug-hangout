@@ -193,8 +193,9 @@ export default function ConsultorReunioesPage() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="ui-overline">Previstas</span>
-              <span className="text-sm font-semibold tabular-nums">{aderenciaStats.previstas}</span>
-              <span className="text-muted-foreground">({clientesAtivos.length}×4)</span>
+              <span className="text-sm font-semibold tabular-nums">
+                {aderenciaStats.hasGoal ? aderenciaStats.previstas : '—'}
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="ui-overline">Saldo</span>
