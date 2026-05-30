@@ -5,7 +5,7 @@ import { TaskCard } from '@/components/TaskCard';
 import { StatusTag } from '@/components/StatusTag';
 import { BaseModal } from '@/components/BaseModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { labelStatus, chamados } from '@/data/mockData';
+import { labelStatus } from '@/data/mockData';
 import { useTarefas } from '@/hooks/useTarefas';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
