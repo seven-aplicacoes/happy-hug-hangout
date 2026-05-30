@@ -7,10 +7,11 @@ export function useContractProductPhases(contractProductId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: phases, isLoading, error } = useQuery({
+  const { data: phases, isLoading: queryLoading, error } = useQuery({
     queryKey: ['contract-product-phases', contractProductId],
     queryFn: async () => {
       if (!contractProductId) return [];
+
       const { data, error } = await supabase
         .from('contract_product_phases')
         .select(`
@@ -112,6 +113,8 @@ export function useContractProductPhases(contractProductId?: string) {
       queryClient.invalidateQueries({ queryKey: ['contract-product-phases', contractProductId] });
     },
   });
+
+  const isLoading = queryLoading && !!contractProductId;
 
   return { phases, isLoading, error, upsertPhases, deletePhase };
 }

@@ -100,6 +100,29 @@ export default function PortalClientePage() {
 
   const isLoading = loadingFicha || loadingContratos || loadingProducts || loadingPhases || loadingDocs || loadingHist || loadingSummary;
 
+  // Debug logs
+  console.log("Portal Debug:", {
+    clientId,
+    cliente,
+    activeContract,
+    products,
+    currentProductId,
+    phases,
+    deliverables,
+    summary,
+    csatStatus,
+    isLoading,
+    loadingStates: {
+      ficha: loadingFicha,
+      contratos: loadingContratos,
+      products: loadingProducts,
+      phases: loadingPhases,
+      docs: loadingDocs,
+      hist: loadingHist,
+      summary: loadingSummary
+    }
+  });
+
   const handleLogin = async () => {
     setErro('');
     const res = await loginCliente(email, senha);
@@ -311,11 +334,19 @@ export default function PortalClientePage() {
 
           {/* Content */}
           <main className="flex-1 min-w-0">
-            <Tabs value={activeTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsContent value="jornada" className="mt-0 space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-neutral-900">{activeProduct?.productNome || 'Sua Jornada'}</h2>
                 </div>
+                
+                {products?.length === 0 && (
+                  <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                    <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+                    <p className="text-neutral-400 text-sm">Nenhum produto vinculado a este contrato.</p>
+                  </div>
+                )}
+
                 
                 <div className="space-y-4">
                   {phases?.map((phase, idx) => (
@@ -351,8 +382,15 @@ export default function PortalClientePage() {
                       </div>
                     </Card>
                   ))}
+                  {phases?.length === 0 && (
+                    <div className="py-20 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
+                      <LayoutDashboard className="h-10 w-10 text-neutral-200 mx-auto mb-4" />
+                      <p className="text-neutral-400 text-sm">Nenhum módulo encontrado para este produto.</p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
+
 
               <TabsContent value="entregaveis" className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

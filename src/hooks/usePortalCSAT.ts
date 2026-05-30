@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export function usePortalCSAT(clientId?: string) {
-  const { data: csatStatus, isLoading } = useQuery({
+  const { data: csatStatus, isLoading: queryLoading } = useQuery({
+
     queryKey: ['portal-csat-status', clientId],
     queryFn: async () => {
       if (!clientId) return [];
@@ -38,6 +39,9 @@ export function usePortalCSAT(clientId?: string) {
     enabled: !!clientId,
   });
 
+  const isLoading = queryLoading && !!clientId;
+
   return { csatStatus, isLoading };
 }
+
 

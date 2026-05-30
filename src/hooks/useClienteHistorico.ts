@@ -9,7 +9,7 @@ export function useClienteHistorico(clientId?: string) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: historico, isLoading, error } = useQuery({
+  const { data: historico, isLoading: queryLoading, error } = useQuery({
     queryKey: ['cliente-historico', clientId],
     queryFn: async () => {
       if (!clientId) return [];
@@ -67,5 +67,8 @@ export function useClienteHistorico(clientId?: string) {
     },
   });
 
+  const isLoading = queryLoading && !!clientId;
+
   return { historico, isLoading, error, addEvento };
+
 }

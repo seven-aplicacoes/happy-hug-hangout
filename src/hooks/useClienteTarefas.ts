@@ -10,7 +10,7 @@ export function useClienteTarefas(clientId?: string) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: tarefas, isLoading, error } = useQuery({
+  const { data: tarefas, isLoading: queryLoading, error } = useQuery({
     queryKey: ['cliente-tarefas', clientId],
     queryFn: async () => {
       if (!clientId) return [];
@@ -95,5 +95,8 @@ export function useClienteTarefas(clientId?: string) {
     },
   });
 
+  const isLoading = queryLoading && !!clientId;
+
   return { tarefas, isLoading, error, upsertTarefa };
+
 }

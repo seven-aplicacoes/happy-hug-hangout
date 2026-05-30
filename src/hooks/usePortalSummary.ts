@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export function usePortalSummary(clientId?: string) {
-  const { data: summary, isLoading } = useQuery({
+  const { data: summary, isLoading: queryLoading } = useQuery({
+
     queryKey: ['portal-summary', clientId],
     queryFn: async () => {
       if (!clientId) return null;
@@ -30,5 +31,8 @@ export function usePortalSummary(clientId?: string) {
     enabled: !!clientId,
   });
 
+  const isLoading = queryLoading && !!clientId;
+
   return { summary, isLoading };
 }
+

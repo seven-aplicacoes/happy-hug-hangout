@@ -29,7 +29,7 @@ export function useContractProducts(contractId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: products, isLoading, error } = useQuery({
+  const { data: products, isLoading: queryLoading, error } = useQuery({
     queryKey: ['contract-products', contractId],
     queryFn: async () => {
       if (!contractId) return [];
@@ -104,5 +104,8 @@ export function useContractProducts(contractId?: string) {
     },
   });
 
+  const isLoading = queryLoading && !!contractId;
+
   return { products, isLoading, error, upsertContractProducts };
+
 }
