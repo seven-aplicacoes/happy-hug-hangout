@@ -128,67 +128,18 @@ export function useContractProductPhases(contractProductId?: string) {
       }
 
       // Sincroniza o responsável e cria encontros se necessário
+      // Observação: Existe um gatilho no banco de dados (tr_sync_contract_module_meetings)
+      // que executa a função sync_contract_module_meetings_manual para automatizar isso.
+      // Chamamos manualmente aqui para garantir feedback imediato e cobrir casos específicos.
       for (const phase of savedPhases as any[]) {
         if (phase.id) {
-          // 1. Check existing meetings
-          const { count: existingCount } = await supabase
-            .from('contract_module_meetings')
-            .select('*', { count: 'exact', head: true })
-            .eq('module_id', phase.id);
-
-          const targetCount = phase.meetings_count || 0;
-          
-          if (targetCount > (existingCount || 0)) {
-            // Need to create missing meetings
-            const diff = targetCount - (existingCount || 0);
-            const newMeetings = [];
-            
-            for (let i = 1; i <= diff; i++) {
-              const meetingNumber = (existingCount || 0) + i;
-              newMeetings.push({
-                module_id: phase.id,
-                product_id: phase.contract_product_id,
-                contract_id: contractId,
-                client_id: clientId,
-                meeting_number: meetingNumber,
-                title: `${phase.name}`,
-                status: 'pendente',
-                consultant_id: phase.responsible_consultant_id,
-                order_index: meetingNumber
-              });
-            }
-            
-            if (newMeetings.length > 0) {
-              await supabase.from('contract_module_meetings').insert(newMeetings);
-            }
-          }
-
-          // 2. Sync consultant for existing meetings
-          if (phase.responsible_consultant_id) {
-            // Atualiza encontros pendentes ou agendados para o novo consultor
-            await supabase
-              .from('contract_module_meetings')
-              .update({ consultant_id: phase.responsible_consultant_id })
-              .eq('module_id', phase.id)
-              .in('status', ['pendente', 'agendado']);
-              
-            // Atualiza reuniões agendadas vinculadas
-            const { data: meetingsToUpdate } = await supabase
-              .from('contract_module_meetings')
-              .select('scheduled_meeting_id')
-              .eq('module_id', phase.id)
-              .eq('status', 'agendado')
-              .not('scheduled_meeting_id', 'is', null);
-
-            if (meetingsToUpdate && meetingsToUpdate.length > 0) {
-              const meetingIds = meetingsToUpdate.map(m => m.scheduled_meeting_id).filter(Boolean);
-              if (meetingIds.length > 0) {
-                await supabase
-                  .from('meetings')
-                  .update({ consultant_id: phase.responsible_consultant_id })
-                  .in('id', meetingIds);
-              }
-            }
+          try {
+            const { error: syncError } = await supabase.rpc('sync_contract_module_meetings_manual', { 
+              phase_id: phase.id 
+            });
+            if (syncError) console.error("Erro ao sincronizar encontros via RPC:", syncError);
+          } catch (e) {
+            console.error("Exceção ao sincronizar encontros:", e);
           }
         }
       }
