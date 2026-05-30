@@ -113,6 +113,25 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     setErrors({});
   }, [reuniao, initialData, open]);
 
+  // Atualiza o consultor responsável automaticamente quando o módulo/fase muda
+  useEffect(() => {
+    if (contractProductPhaseId && contractProductPhaseId !== 'none') {
+      const selectedPhase = productPhases?.find(p => p.id === contractProductPhaseId);
+      if (selectedPhase?.responsibleConsultantId) {
+        setPhaseResponsibleId(selectedPhase.responsibleConsultantId);
+        // Se for uma nova reunião ou se o consultor não estiver definido, pré-seleciona o responsável do módulo
+        if (!reuniao && (!consultorId || consultorId === '')) {
+          setConsultorId(selectedPhase.responsibleConsultantId);
+        }
+      } else {
+        setPhaseResponsibleId(null);
+      }
+    } else {
+      setPhaseResponsibleId(null);
+    }
+  }, [contractProductPhaseId, productPhases, reuniao, consultorId]);
+
+
   const validate = () => {
     const newErrors: Record<string, boolean> = {};
     if (!title.trim()) newErrors.title = true;
