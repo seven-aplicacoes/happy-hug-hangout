@@ -23,12 +23,12 @@ export function DashboardModal({ open, onOpenChange, title, data }: DashboardMod
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
             {c.avatar_url ? (
-              <img src={c.avatar_url} alt={c.trade_name} className="h-full w-full object-cover" />
+              <img src={c.avatar_url} alt={c.nomeFantasia || c.trade_name} className="h-full w-full object-cover" />
             ) : (
-              (c.trade_name || 'C').charAt(0).toUpperCase()
+              (c.nomeFantasia || c.trade_name || 'C').charAt(0).toUpperCase()
             )}
           </div>
-          <span className="font-medium">{c.trade_name}</span>
+          <span className="font-medium">{c.nomeFantasia || c.trade_name}</span>
         </div>
       ),
     },
