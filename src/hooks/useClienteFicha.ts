@@ -98,6 +98,9 @@ export function useClienteFicha(clientId?: string) {
       if (updates.number !== undefined) payload.number = updates.number;
       if (updates.complement !== undefined) payload.complement = updates.complement;
       if (updates.neighborhood !== undefined) payload.neighborhood = updates.neighborhood;
+      if (updates.avatar_url !== undefined) payload.avatar_url = updates.avatar_url;
+      if (updates.avatar_path !== undefined) payload.avatar_path = updates.avatar_path;
+
 
       payload.updated_at = new Date().toISOString();
       payload.updated_by = user?.id;
