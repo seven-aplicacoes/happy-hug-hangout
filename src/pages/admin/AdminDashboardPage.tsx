@@ -50,11 +50,13 @@ function calcularPriorizacao(clientes: Cliente[], contratos: Contrato[], reunioe
         motivos.push(c.status === 'suspenso' ? 'Cliente pausado' : 'Em risco contratual');
         acoes.push('Revisar situação contratual');
       }
-      if (calcularEngajamento(c.id) === 'critico') {
+      const eng = calcularEngajamento(c.id, reunioes);
+      if (eng === 'critico') {
         pontuacao += 25;
-        motivos.push(`Risco ${labelEngajamento[calcularEngajamento(c.id)].toLowerCase()}`);
+        motivos.push(`Risco ${labelEngajamento[eng].toLowerCase()}`);
         acoes.push('Agendar reunião de recuperação');
       }
+
       if (diasSemInteracao > 15) {
         pontuacao += 15;
         motivos.push(`${diasSemInteracao} dias sem interação`);
