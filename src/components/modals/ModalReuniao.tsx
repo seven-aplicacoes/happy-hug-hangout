@@ -339,7 +339,13 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             <Select value={contractProductPhaseId || 'none'} onValueChange={v => {
               setContractProductPhaseId(v);
               setContractModuleMeetingId('');
+              // Ao mudar o módulo, busca o responsável dele
+              const phase = productPhases?.find(p => p.id === v);
+              if (phase?.responsibleConsultantId) {
+                setConsultorId(phase.responsibleConsultantId);
+              }
             }}>
+
 
               <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o módulo..." /></SelectTrigger>
               <SelectContent>
