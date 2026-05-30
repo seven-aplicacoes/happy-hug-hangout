@@ -414,7 +414,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   )}
-                  {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!slots || slots.length === 0) && !loadingAvailability && (
+                  {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability && (
                     <div className="flex items-center gap-2 text-[10px] text-amber-600 font-bold bg-amber-50 p-2 rounded-lg border border-amber-100">
                       <AlertTriangle className="h-3 w-3" /> Nenhuma disponibilidade configurada.
                     </div>
