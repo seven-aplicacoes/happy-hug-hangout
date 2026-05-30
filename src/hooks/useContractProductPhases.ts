@@ -116,6 +116,5 @@ export function useContractProductPhases(contractProductId?: string) {
 
   const isLoading = queryLoading && !!contractProductId;
 
-  const upsertPhases = useMutation({
-
+  return { phases, isLoading, error, upsertPhases, deletePhase };
 }
