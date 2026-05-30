@@ -192,7 +192,7 @@ export default function ConsultorClientesPage() {
         </TooltipProvider>
       );
     }, className: 'w-[110px]' },
-    { key: 'produto', header: 'Produto', render: (c) => <span className="text-xs text-muted-foreground">{getProdutoAtualCliente(c.id) || '—'}</span> },
+    { key: 'produto', header: 'Produto', render: (c) => <span className="text-xs text-muted-foreground">{getProdutoAtualCliente(c.id, contratos || []) || '—'}</span> },
     { key: 'porte', header: 'Porte', render: (c) => <span className="text-xs text-muted-foreground">{labelPorte[getPorte(c)]}</span>, className: 'w-[90px]' },
     { key: 'status', header: 'Status', render: (c) => <StatusTag label={labelStatus[c.status]} />, className: 'w-[130px]' },
     { key: 'fase', header: 'Fase', render: (c) => <div className="flex justify-center w-full"><MethodologyStepper faseAtual={c.faseMetodologica} variant="compact" /></div>, className: 'w-[200px]' },
