@@ -19,10 +19,11 @@ import { MethodologyStepper } from '@/components/MethodologyStepper';
 // Removed ModalNovoCliente import as it's no longer used here
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Target, Loader2 } from 'lucide-react';
+import { Plus, Target, Loader2, Trash2 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import type { Cliente, FaseMetodologica, Contrato } from '@/types';
 import { useClientes } from '@/hooks/useClientes';
+
 import { useContratos } from '@/hooks/useContratos';
 import { useReunioes } from '@/hooks/useReunioes';
 import { useTarefas } from '@/hooks/useTarefas';
