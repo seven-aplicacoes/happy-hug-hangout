@@ -25,9 +25,10 @@ import {
   Users, AlertTriangle, UserCheck, UserX, FileText,
   CalendarCheck, CalendarDays, TrendingUp, CheckCircle2,
   Clock, Ban, AlertCircle, Flame, ArrowUpRight, Download, Mail, Phone, MapPin,
-  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit,
+  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit, Plug, Calendar, ExternalLink, RefreshCw
 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface ConsultorProfileViewProps {
   consultorId: string;
@@ -52,6 +53,57 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { contratos, isLoading: loadingContratos } = useContratos();
+  const queryClient = useQueryClient();
+
+  // Calendly Integration State
+  const { data: calendlyIntegration, isLoading: loadingIntegration } = useQuery({
+    queryKey: ['calendly-integration', consultorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('consultant_calendar_integrations')
+        .select('*')
+        .eq('consultant_id', consultorId)
+        .eq('provider', 'calendly')
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!consultorId
+  });
+
+  const handleConnectCalendly = () => {
+    toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
+    const client_id = 'CALENDLY_CLIENT_ID'; 
+    // We use a specific redirect URI that matches what's configured in Calendly dashboard
+    const redirect_uri = encodeURIComponent(window.location.origin + window.location.pathname);
+    const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
+    window.location.href = url;
+  };
+
+  useEffect(() => {
+    // Handle OAuth Callback if code is in URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code && modo === 'consultor') {
+      const exchangeCode = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('calendly-oauth', {
+            body: { action: 'exchange_code', code }
+          });
+          if (error) throw error;
+          toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
+          queryClient.invalidateQueries({ queryKey: ['calendly-integration', consultorId] });
+          queryClient.invalidateQueries({ queryKey: ['profiles', consultorId] });
+          // Clear URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error: any) {
+          console.error('Error exchanging code:', error);
+          toast({ title: 'Erro ao conectar', description: error.message, variant: 'destructive' });
+        }
+      };
+      exchangeCode();
+    }
+  }, [consultorId, modo, queryClient]);
   
   // Clientes are already filtered in useClientes hook for non-admins if profile is consultor
   const meusClientes = useMemo(() => {
@@ -308,6 +360,74 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
               {modo === 'admin' && onExportar && (
                 <Button variant="outline" size="sm" onClick={onExportar}>
                   <Download className="h-4 w-4 mr-2" /> Exportar Visão
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 1.1 Integração Calendly */}
+      <Card className="overflow-hidden border-blue-100 bg-blue-50/10">
+        <CardHeader className="border-b border-blue-50 bg-blue-50/30 py-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
+              <Calendar className="h-5 w-5 text-blue-600" /> Integração Calendly
+            </CardTitle>
+            {calendlyIntegration ? (
+              <StatusTag label="Conectado" variant="success" />
+            ) : (
+              <StatusTag label="Não Conectado" variant="neutral" />
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <p className="text-sm text-blue-800/80 leading-relaxed">
+                Conecte sua conta do Calendly para permitir que seus clientes agendem encontros diretamente através do Portal do Cliente. Isso sincroniza automaticamente sua disponibilidade e cria reuniões no sistema.
+              </p>
+              {calendlyIntegration && (
+                <div className="flex flex-wrap gap-4 mt-4">
+                  <div className="bg-white/80 border border-blue-100 rounded-lg p-3 flex flex-col min-w-[200px]">
+                    <span className="text-[10px] font-black uppercase text-blue-600/60 tracking-wider">Conta Vinculada</span>
+                    <span className="text-sm font-bold text-blue-900 truncate">{calendlyIntegration.provider_user_uri?.replace('https://api.calendly.com/users/', '') || 'Ativa'}</span>
+                  </div>
+                  <div className="bg-white/80 border border-blue-100 rounded-lg p-3 flex flex-col min-w-[150px]">
+                    <span className="text-[10px] font-black uppercase text-blue-600/60 tracking-wider">Conectado em</span>
+                    <span className="text-sm font-bold text-blue-900">{new Date(calendlyIntegration.created_at).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="shrink-0">
+              {calendlyIntegration ? (
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50 h-11 px-6 font-bold"
+                    onClick={handleConnectCalendly}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" /> Reconectar
+                  </Button>
+                  {consultor?.calendly_scheduling_url && (
+                    <a 
+                      href={consultor.calendly_scheduling_url} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      Ver link de agendamento <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 h-11 px-8 font-bold"
+                  onClick={handleConnectCalendly}
+                >
+                  <Plug className="h-4 w-4 mr-2" /> Conectar Calendly
                 </Button>
               )}
             </div>
