@@ -98,7 +98,10 @@ export function useClientes() {
         number: newCliente.number,
         complement: newCliente.complement,
         neighborhood: newCliente.neighborhood,
+        avatar_url: newCliente.avatar_url,
+        avatar_path: newCliente.avatar_path,
       };
+
 
       const { data, error } = await supabase
         .from('clients')
