@@ -8,7 +8,6 @@ export function useAdminDashboardMetrics() {
   return useQuery({
     queryKey: ['admin-dashboard-metrics'],
     queryFn: async () => {
-      // 1. Fetch all required data in parallel
       const [
         { data: clientsRaw, error: clientsError },
         { data: contractsRaw, error: contractsError },
@@ -18,7 +17,7 @@ export function useAdminDashboardMetrics() {
         { data: alerts, error: alertsError },
       ] = await Promise.all([
         supabase.from('clients').select('*, consultant:profiles!clients_consultant_id_fkey(full_name)').is('deleted_at', null),
-        supabase.from('contracts').select('*, clients(trade_name), profiles(full_name)'),
+        supabase.from('contracts').select('*, clients(trade_name, corporate_name), profiles(full_name)'),
         supabase.from('tasks').select('*, clients(trade_name)'),
         supabase.from('meetings').select('*, client:client_id(trade_name, corporate_name), profile:consultant_id(full_name)'),
         supabase.from('profiles').select('*').in('role', ['consultor', 'admin']),
@@ -34,7 +33,6 @@ export function useAdminDashboardMetrics() {
 
       const hoje = startOfDay(new Date());
 
-      // Map to standard types
       const clients: Cliente[] = (clientsRaw || []).map((c: any) => ({
         id: c.id,
         razaoSocial: c.corporate_name,
@@ -113,12 +111,12 @@ export function useAdminDashboardMetrics() {
         contratoId: t.contract_id,
         consultorId: t.consultant_id,
         consultorNome: t.profiles?.full_name || 'Desconhecido',
+        tipo: t.demand_type || 'consultoria',
         status: normalizeTaskStatus(t.status),
         prioridade: t.priority,
         dataVencimento: t.due_date ? t.due_date.split('T')[0] : '',
         dataCriacao: t.created_at,
         completedAt: t.completed_at,
-        due_date: t.due_date
       }));
 
       // Helper for last interaction
@@ -143,7 +141,6 @@ export function useAdminDashboardMetrics() {
         };
       });
 
-      // Wallet Health
       const walletHealth = {
         emDia: clientsWithMetrics.filter(c => c.diasSemInteracao <= 8).length,
         atencao: clientsWithMetrics.filter(c => c.diasSemInteracao > 8 && c.diasSemInteracao <= 15).length,
