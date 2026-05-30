@@ -292,13 +292,16 @@ export const labelEngajamento: Record<NivelEngajamento, string> = {
   em_dia: 'Em dia',
   atencao: 'Atenção',
   critico: 'Crítico',
+  sem_dados: 'Sem dados',
 };
 
-export const variantEngajamento: Record<NivelEngajamento, 'success' | 'warning' | 'danger'> = {
+export const variantEngajamento: Record<NivelEngajamento, 'success' | 'warning' | 'danger' | 'info'> = {
   em_dia: 'success',
   atencao: 'warning',
   critico: 'danger',
+  sem_dados: 'info',
 };
+
 
 /** Dias desde a última reunião realizada do cliente. Se nunca houve, retorna null. */
 export function diasDesdeUltimaReuniao(clienteId: string): number | null {
