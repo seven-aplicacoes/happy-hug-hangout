@@ -185,7 +185,7 @@ export default function AdminDashboardPage() {
     { key: 'nome', header: 'Cliente', render: (c) => <span className="font-medium">{c.nomeFantasia}</span> },
     { key: 'consultor', header: 'Usuário', render: (c) => <span className="text-xs">{c.consultorNome}</span> },
     { key: 'situacao', header: 'Situação', render: (c) => <StatusTag label={c.situacaoContrato} /> },
-    { key: 'risco', header: 'Risco', render: (c) => <StatusTag label={labelEngajamento[calcularEngajamento(c.id)]} variant={calcularEngajamento(c.id) === 'critico' ? 'danger' : calcularEngajamento(c.id) === 'atencao' ? 'warning' : 'success'} /> },
+    { key: 'risco', header: 'Risco', render: (c) => { const e = calcularEngajamento(c.id, reunioes); return <StatusTag label={labelEngajamento[e]} variant={e === 'critico' ? 'danger' : e === 'atencao' ? 'warning' : e === 'sem_dados' ? 'info' : 'success'} />; } },
     {
       key: 'dias', header: 'Dias s/ interação', className: 'w-[100px]', render: (c) => (
         <span className={`font-mono text-sm font-bold ${c.diasSemInteracao > 20 ? 'text-seven-danger' : c.diasSemInteracao > 10 ? 'text-seven-warning' : 'text-muted-foreground'}`}>
