@@ -81,8 +81,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-             <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<RootRedirect />} />
+             <Route path="/login" element={<RootRedirect><LoginPage /></RootRedirect>} />
              <Route path="/selecionar-ambiente" element={<Navigate to="/admin/dashboard" replace />} />
              <Route path="/no-access" element={<NoAccess />} />
             <Route path="/portal" element={<PortalClientePage />} />
