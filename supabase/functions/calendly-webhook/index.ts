@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 async function verifySignature(signature: string, body: string, signingKey: string) {
-  // Calendly signature format: t=<timestamp>,v1=<signature>
   const parts = signature.split(',')
   const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1]
   const v1 = parts.find(p => p.startsWith('v1='))?.split('=')[1]
@@ -38,6 +37,52 @@ async function verifySignature(signature: string, body: string, signingKey: stri
   return expectedSignature === v1
 }
 
+async function getValidToken(supabaseClient: any) {
+  const { data: auth, error } = await supabaseClient
+    .from('calendly_central_auth')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error || !auth) throw new Error('Calendly central account not connected')
+
+  const expiresAt = new Date(auth.expires_at)
+  if (expiresAt > new Date(Date.now() + 5 * 60 * 1000)) {
+    return auth.access_token
+  }
+
+  const clientId = Deno.env.get('CALENDLY_CLIENT_ID')
+  const clientSecret = Deno.env.get('CALENDLY_CLIENT_SECRET')
+
+  const response = await fetch('https://auth.calendly.com/oauth/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: auth.refresh_token,
+    })
+  })
+
+  const data = await response.json()
+  if (!response.ok) throw new Error('Failed to refresh Calendly token')
+
+  await supabaseClient
+    .from('calendly_central_auth')
+    .update({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', auth.id)
+
+  return data.access_token
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -59,8 +104,6 @@ serve(async (req) => {
         console.error('Invalid Calendly signature')
         return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401 })
       }
-    } else {
-      console.warn('Webhook received without signature validation (check signing key)')
     }
 
     const payload = JSON.parse(bodyText)
@@ -86,21 +129,20 @@ serve(async (req) => {
 
       if (sessionError || !session) {
         console.warn('Session not found or already completed:', sessionToken)
-        return new Response(JSON.stringify({ success: true, message: 'Session handled' }))
+        return new Response(JSON.stringify({ success: true, message: 'Session already handled or not found' }))
       }
 
-      const { data: integration } = await supabaseClient
-        .from('consultant_calendar_integrations')
-        .select('access_token_encrypted')
-        .eq('consultant_id', session.consultant_id)
-        .single()
-
-      if (!integration) throw new Error('Consultant integration missing')
+      const accessToken = await getValidToken(supabaseClient)
 
       const eventDetailsResponse = await fetch(eventUri, {
-        headers: { 'Authorization': `Bearer ${integration.access_token_encrypted}` }
+        headers: { 'Authorization': `Bearer ${accessToken}` }
       })
       const eventDetails = await eventDetailsResponse.json()
+      
+      if (!eventDetails.resource) {
+        throw new Error('Could not fetch event details from Calendly')
+      }
+
       const startTime = eventDetails.resource.start_time
       const endTime = eventDetails.resource.end_time
       
@@ -109,15 +151,14 @@ serve(async (req) => {
       const timePart = startDateTime.toLocaleTimeString('pt-BR', { hour12: false, hour: '2-digit', minute: '2-digit' })
       const duration = (new Date(endTime).getTime() - startDateTime.getTime()) / (1000 * 60)
 
+      // Create meeting
       const { data: meeting, error: meetingError } = await supabaseClient
         .from('meetings')
         .insert({
           client_id: session.client_id,
           contract_id: session.contract_id,
-          contract_product_id: session.contract_product_id,
-          contract_product_phase_id: session.contract_phase_id,
-          contract_module_meeting_id: session.contract_module_meeting_id,
           consultant_id: session.consultant_id,
+          contract_module_meeting_id: session.contract_module_meeting_id,
           title: `Reunião Calendly: ${eventDetails.resource.name}`,
           status: 'agendada',
           meeting_date: datePart,
@@ -125,10 +166,11 @@ serve(async (req) => {
           duration: Math.round(duration),
           source: 'calendly',
           external_provider: 'calendly',
-          calendly_event_uri: eventUri,
-          calendly_invitee_uri: inviteeUri,
-          calendly_cancel_url: data.cancel_url,
-          calendly_reschedule_url: data.reschedule_url,
+          external_event_uri: eventUri,
+          external_invitee_uri: inviteeUri,
+          external_event_type_uri: session.calendly_event_type_uri,
+          external_cancel_url: data.cancel_url,
+          external_reschedule_url: data.reschedule_url,
           external_payload: data
         })
         .select()
@@ -136,21 +178,23 @@ serve(async (req) => {
 
       if (meetingError) throw meetingError
 
+      // Update meeting status in module
       await supabaseClient
         .from('contract_module_meetings')
         .update({
           status: 'agendado',
           scheduled_meeting_id: meeting.id,
-          scheduled_at: startTime,
-          consultant_id: session.consultant_id
+          scheduled_at: startTime
         })
         .eq('id', session.contract_module_meeting_id)
 
+      // Mark session as completed
       await supabaseClient
         .from('calendly_booking_sessions')
         .update({ status: 'completed' })
         .eq('id', session.id)
 
+      // Timeline event
       await supabaseClient
         .from('timeline_events')
         .insert({
@@ -171,7 +215,7 @@ serve(async (req) => {
       const { data: meeting, error: findError } = await supabaseClient
         .from('meetings')
         .select('*')
-        .eq('calendly_invitee_uri', inviteeUri)
+        .eq('external_invitee_uri', inviteeUri)
         .single()
 
       if (!findError && meeting) {

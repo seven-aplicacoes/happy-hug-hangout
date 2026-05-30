@@ -20,6 +20,7 @@ import {
   ArrowUpRight, RefreshCw, Settings2, ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ModalMappingCalendly } from '@/components/modals/ModalMappingCalendly';
 
 const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
   agenda: CalendarDays,
@@ -69,7 +70,7 @@ function CardIntegracao({ integ, onSelect }: { integ: Integracao; onSelect: (i: 
   );
 }
 
-function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () => void }) {
+function DetalheIntegracao({ integ, onClose, perfil, onShowMapping }: { integ: Integracao; onClose: () => void; perfil?: string; onShowMapping: () => void }) {
   const ativo = integ.status === 'conectado' || integ.status === 'beta';
   return (
     <Card className="p-6 sticky top-4">
@@ -140,30 +141,41 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 
         {integ.id === 'calendly' ? (
           <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
-             <Button 
-               className={cn(
-                 "bg-primary hover:bg-primary/90",
-                 integ.status === 'conectado' && "bg-emerald-600 hover:bg-emerald-700"
-               )}
-               onClick={() => {
-                 if (integ.status === 'conectado') {
-                    toast({ title: 'Configurações', description: 'O Calendly já está conectado.' });
-                    return;
-                 }
-                 toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
-                 const client_id = 'CALENDLY_CLIENT_ID'; 
-                 const redirect_uri = encodeURIComponent(window.location.origin + (window.location.pathname.includes('/consultor') ? '/consultor/integracoes' : '/admin/integracoes'));
-                 const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
-                 window.location.href = url;
-               }}
-             >
-               <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> 
-               {integ.status === 'conectado' ? 'Calendly Conectado' : 'Conectar Calendly'}
-             </Button>
+             {perfil === 'admin' ? (
+               <>
+                 <Button 
+                   className={cn(
+                     "bg-primary hover:bg-primary/90",
+                     integ.status === 'conectado' && "bg-emerald-600 hover:bg-emerald-700"
+                   )}
+                   onClick={() => {
+                     toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
+                     const client_id = 'CALENDLY_CLIENT_ID'; 
+                     const redirect_uri = encodeURIComponent(window.location.origin + '/admin/integracoes');
+                     const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
+                     window.location.href = url;
+                   }}
+                 >
+                   <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> 
+                   {integ.status === 'conectado' ? 'Reconectar Conta Central' : 'Conectar Conta Central'}
+                 </Button>
+                 {integ.status === 'conectado' && (
+                   <Button variant="outline" onClick={onShowMapping}>
+                     <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Mapear Consultores
+                   </Button>
+                 )}
+               </>
+             ) : (
+               <div className="text-center py-2">
+                 <p className="text-xs text-muted-foreground italic">
+                   A integração com Calendly é gerenciada pela administração.
+                 </p>
+               </div>
+             )}
              <p className="text-[10px] text-muted-foreground text-center px-4">
-               {integ.status === 'conectado' 
-                 ? 'Sua agenda está sincronizada com a Seven.' 
-                 : 'Ao conectar, o Calendly poderá criar e gerenciar eventos na sua agenda sincronizados com a Seven.'}
+               {perfil === 'admin' 
+                 ? 'Conecte a conta central do Calendly para toda a empresa.' 
+                 : 'Sua agenda será vinculada ao link configurado pelo administrador.'}
              </p>
           </div>
         ) : (
@@ -200,38 +212,38 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 export default function IntegracoesPage() {
   const [filtro, setFiltro] = useState<'todas' | CategoriaIntegracao>('todas');
   const [selecionada, setSelecionada] = useState<Integracao | null>(null);
-  const { user } = useAuth();
+  const [showMapping, setShowMapping] = useState(false);
+  const { user, perfil } = useAuth();
   const queryClient = useQueryClient();
 
-  // Load actual connection status
-  const { data: calendlyIntegration, isLoading: loadingIntegration } = useQuery({
-    queryKey: ['calendly-integration', user?.id],
+  // Load actual connection status (central account)
+  const { data: calendlyCentralAuth, isLoading: loadingIntegration } = useQuery({
+    queryKey: ['calendly-central-auth'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('consultant_calendar_integrations')
+        .from('calendly_central_auth')
         .select('*')
-        .eq('consultant_id', user?.id)
-        .eq('provider', 'calendly')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data;
-    },
-    enabled: !!user?.id
+    }
   });
 
   const updatedIntegracoes = useMemo(() => {
     return INTEGRACOES.map(i => {
-      if (i.id === 'calendly' && calendlyIntegration) {
+      if (i.id === 'calendly' && calendlyCentralAuth) {
         return {
           ...i,
           status: 'conectado' as StatusIntegracao,
-          conectadoEm: calendlyIntegration.created_at,
-          contaVinculada: calendlyIntegration.provider_user_uri
+          conectadoEm: calendlyCentralAuth.created_at,
+          contaVinculada: calendlyCentralAuth.provider_user_uri
         };
       }
       return i;
     });
-  }, [calendlyIntegration]);
+  }, [calendlyCentralAuth]);
 
   useEffect(() => {
     // Handle OAuth Callback
@@ -251,8 +263,7 @@ export default function IntegracoesPage() {
       if (error) throw error;
       
       toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
-      queryClient.invalidateQueries({ queryKey: ['calendly-integration'] });
-      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['calendly-central-auth'] });
       
       // Clear URL params
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -357,9 +368,18 @@ export default function IntegracoesPage() {
         </div>
 
         <div>
-          {selecionada && <DetalheIntegracao integ={selecionada} onClose={() => setSelecionada(null)} />}
+          {selecionada && (
+            <DetalheIntegracao 
+              integ={selecionada} 
+              onClose={() => setSelecionada(null)} 
+              perfil={perfil}
+              onShowMapping={() => setShowMapping(true)}
+            />
+          )}
         </div>
       </div>
+
+      {showMapping && <ModalMappingCalendly open={showMapping} onOpenChange={setShowMapping} />}
     </div>
   );
 }

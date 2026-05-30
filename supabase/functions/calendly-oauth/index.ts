@@ -23,9 +23,19 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authError || !user) throw new Error('Unauthorized')
 
+    // Check if user is admin
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin = profile?.role === 'admin'
+
     const { action, code, redirect_uri } = await req.json()
 
     if (action === 'exchange_code') {
+      if (!isAdmin) throw new Error('Only admins can connect the central Calendly account')
       if (!code) throw new Error('Missing code')
 
       const clientId = Deno.env.get('CALENDLY_CLIENT_ID')
@@ -51,77 +61,29 @@ serve(async (req) => {
         throw new Error(data.error_description || data.error || 'Failed to exchange code')
       }
 
-      const accessToken = data.access_token
-
-      // Get user info from Calendly
+      // Get user/org info from Calendly
       const userResponse = await fetch('https://api.calendly.com/users/me', {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 'Authorization': `Bearer ${data.access_token}` }
       })
       const userData = await userResponse.json()
       const userUri = userData.resource.uri
-      const schedulingUrl = userData.resource.scheduling_url
+      const organizationUri = userData.resource.current_organization
 
-      // Fetch Event Types
-      const eventTypesResponse = await fetch(`https://api.calendly.com/event_types?user=${userUri}&active=true`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      })
-      const eventTypesData = await eventTypesResponse.json()
-      const eventTypes = eventTypesData.collection || []
-
-      // Save tokens to DB
+      // Save central tokens
       const { error: dbError } = await supabaseClient
-        .from('consultant_calendar_integrations')
+        .from('calendly_central_auth')
         .upsert({
-          consultant_id: user.id,
-          provider: 'calendly',
-          access_token_encrypted: accessToken,
-          refresh_token_encrypted: data.refresh_token,
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
           expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
-          scope: data.scope,
           provider_user_uri: userUri,
-          status: 'active',
-          last_sync_at: new Date().toISOString()
-        }, { onConflict: 'consultant_id, provider' })
+          organization_uri: organizationUri,
+          updated_at: new Date().toISOString()
+        })
 
       if (dbError) throw dbError
 
-      // Save Event Types
-      if (eventTypes.length > 0) {
-        // Clear existing for this consultant to refresh
-        await supabaseClient.from('consultant_calendly_event_types').delete().eq('consultant_id', user.id)
-
-        const eventTypesToInsert = eventTypes.map((et: any, index: number) => ({
-          consultant_id: user.id,
-          calendly_event_type_uri: et.uri,
-          calendly_scheduling_url: et.scheduling_url,
-          name: et.name,
-          duration: et.duration,
-          active: et.active,
-          is_default: index === 0 // Mark first one as default initially
-        }))
-
-        const { error: etError } = await supabaseClient
-          .from('consultant_calendly_event_types')
-          .insert(eventTypesToInsert)
-
-        if (etError) console.error('Error saving event types:', etError)
-      }
-
-      // Update consultant profile with the default scheduling URL
-      const defaultEt = eventTypes[0]
-      const { error: profileError } = await supabaseClient
-        .from('profiles')
-        .update({
-          calendly_user_uri: userUri,
-          calendly_scheduling_url: defaultEt?.scheduling_url || schedulingUrl,
-          calendly_event_type_uri: defaultEt?.uri || null,
-          calendly_connected: true
-        })
-        .eq('id', user.id)
-
-      if (profileError) throw profileError
-
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ success: true, message: 'Central account connected' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
