@@ -13,7 +13,7 @@ export type StatusContrato =
 export type StatusReuniao = 'agendada' | 'realizada' | 'cancelada' | 'remarcada' | 'reagendada';
 export type StatusTarefa = 'a_fazer' | 'em_andamento' | 'impedida' | 'concluida';
 export type NivelRisco = 'baixo' | 'medio' | 'alto' | 'critico';
-export type NivelEngajamento = 'em_dia' | 'atencao' | 'critico' | 'nao_avaliado';
+export type NivelEngajamento = 'em_dia' | 'atencao' | 'critico';
 export type FaseMetodologica = 'diagnostico' | 'planejamento' | 'estruturacao' | 'monitoramento' | 'encerramento';
 export type TipoDemanda = 'consultoria' | 'chamado' | 'interna';
 export type OrigemDemanda = 'reuniao' | 'gestor' | 'rotina_automatica' | 'chamado';
@@ -73,7 +73,6 @@ export interface Cliente {
   briefing?: string;
   contact_name?: string;
   contact_phone?: string;
-  avatar_url?: string | null;
   updated_at?: string;
   updated_by?: string;
 }

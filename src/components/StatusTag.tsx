@@ -40,7 +40,7 @@ const autoVariant = (label: string): StatusVariant => {
   if (['em risco', 'médio', 'medio', 'em andamento', 'remarcada', 'alerta', 'atenção', 'atencao', 'em renovação', 'em renovacao', 'suspenso'].includes(l)) return 'warning';
   if (['crítico', 'critico', 'alto', 'impedida', 'cancelada', 'pausado', 'bloqueado', 'com impedimento', 'churn'].includes(l)) return 'danger';
   if (['agendada', 'aberto', 'a fazer', 'para fazer', 'onboarding', 'em onboarding'].includes(l)) return 'info';
-  if (['encerrado', 'encerramento', 'cancelado', 'não avaliado', 'nao avaliado', 'não definida', 'nao definida'].includes(l)) return 'neutral';
+  if (['encerrado', 'encerramento', 'cancelado'].includes(l)) return 'neutral';
   return 'neutral';
 };
 

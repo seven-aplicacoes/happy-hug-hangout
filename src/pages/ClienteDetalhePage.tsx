@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { 
   Save, X, Pencil, ArrowLeft, Briefcase, FileText, 
   MapPin, Users, Calendar, DollarSign, Loader2, PlusCircle, MinusCircle,
-  Clock, CheckCircle2, Circle, Camera, Upload, Trash2
+  Clock, CheckCircle2, Circle
 } from 'lucide-react';
 import { formatDuration } from '@/lib/duration';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -23,9 +23,6 @@ import { Accordion } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
@@ -41,8 +38,6 @@ export default function ClienteDetalhePage() {
   const { toast } = useToast();
   
   const { cliente, isLoading: loadingClientes, updateCliente } = useClienteFicha(id);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const { contratos: contratosCliente = [], isLoading: loadingContratos } = useClienteContratos(id);
   const { consultores, isLoading: loadingConsultores } = useConsultores();
 
@@ -126,61 +121,8 @@ export default function ClienteDetalhePage() {
         success_factors: fichaSuccessFactors,
       });
       setIsEditing(false);
-      toast({ title: "Sucesso", description: "Ficha do cliente atualizada com sucesso." });
     } catch (err) {
       console.error("Error saving ficha:", err);
-      toast({ title: "Erro ao salvar", description: "Ocorreu um erro ao salvar as alterações.", variant: "destructive" });
-    }
-  };
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !id) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast({ title: "Arquivo inválido", description: "Por favor, selecione uma imagem.", variant: "destructive" });
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande", description: "O tamanho máximo é 2MB.", variant: "destructive" });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('client-avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('client-avatars')
-        .getPublicUrl(filePath);
-
-      await updateCliente.mutateAsync({ avatar_url: publicUrl } as any);
-      toast({ title: "Sucesso", description: "Imagem de perfil atualizada." });
-    } catch (error: any) {
-      console.error('Error uploading avatar:', error);
-      toast({ title: "Erro no upload", description: error.message || "Erro ao enviar imagem.", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    if (!id) return;
-    try {
-      await updateCliente.mutateAsync({ avatar_url: null } as any);
-      toast({ title: "Sucesso", description: "Imagem de perfil removida." });
-    } catch (error: any) {
-      console.error('Error removing avatar:', error);
-      toast({ title: "Erro ao remover", description: "Não foi possível remover a imagem.", variant: "destructive" });
     }
   };
 
@@ -238,44 +180,8 @@ export default function ClienteDetalhePage() {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b">
           <div className="flex items-center gap-5">
-            <div className="relative group">
-              <Avatar className="h-24 w-24 rounded-2xl shadow-xl border-4 border-white">
-                <AvatarImage src={cliente.avatar_url} className="object-cover" />
-                <AvatarFallback className="bg-primary text-white text-3xl font-black rounded-none">
-                  {cliente.nomeFantasia.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              
-              {(isAdmin || can('ficha_cliente', 'edit')) && (
-                <div className="absolute -bottom-2 -right-2 flex gap-1">
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleAvatarUpload} 
-                    className="hidden" 
-                    accept="image/*" 
-                  />
-                  <Button 
-                    size="icon" 
-                    variant="secondary" 
-                    className="h-8 w-8 rounded-full shadow-md hover:bg-white transition-all"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                  </Button>
-                  {cliente.avatar_url && (
-                    <Button 
-                      size="icon" 
-                      variant="destructive" 
-                      className="h-8 w-8 rounded-full shadow-md"
-                      onClick={handleRemoveAvatar}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              )}
+            <div className="h-20 w-20 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white text-3xl font-black">
+              {cliente.nomeFantasia.charAt(0).toUpperCase()}
             </div>
             <div className="space-y-1">
               <h1 className="text-3xl font-black text-foreground tracking-tight">{cliente.nomeFantasia}</h1>
@@ -435,13 +341,9 @@ export default function ClienteDetalhePage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ativo">Ativo</SelectItem>
-                          <SelectItem value="em_onboarding">Em Onboarding</SelectItem>
-                          <SelectItem value="em_renovacao">Em Renovação</SelectItem>
-                          <SelectItem value="bloqueado">Bloqueado</SelectItem>
-                          <SelectItem value="suspenso">Suspenso</SelectItem>
+                          <SelectItem value="pausado">Pausado</SelectItem>
                           <SelectItem value="cancelado">Cancelado</SelectItem>
                           <SelectItem value="churn">Churn</SelectItem>
-                          <SelectItem value="encerrado">Encerrado</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

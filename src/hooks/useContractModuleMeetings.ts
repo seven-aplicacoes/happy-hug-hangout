@@ -15,44 +15,29 @@ export function useContractModuleMeetings(moduleId?: string) {
         .from('contract_module_meetings')
         .select(`
           *,
-          consultant:profiles!consultant_id (full_name),
-          module:contract_product_phases!module_id (
-            responsible_consultant_id,
-            contract_product:client_products!contract_product_id (
-              consultant_id,
-              client:clients!client_id (consultant_id)
-            )
-          )
+          consultant:profiles!consultant_id (full_name)
         `)
         .eq('module_id', moduleId)
         .order('order_index');
 
       if (error) throw error;
 
-      return (data || []).map((m: any) => {
-        const inheritedConsultantId = 
-          m.consultant_id || 
-          m.module?.responsible_consultant_id || 
-          m.module?.contract_product?.consultant_id || 
-          m.module?.contract_product?.client?.consultant_id;
-
-        return {
-          id: m.id,
-          contractId: m.contract_id,
-          clientId: m.client_id,
-          productId: m.product_id,
-          moduleId: m.module_id,
-          meetingNumber: m.meeting_number,
-          title: m.title,
-          status: m.status,
-          scheduledMeetingId: m.scheduled_meeting_id,
-          consultantId: inheritedConsultantId,
-          scheduledAt: m.scheduled_at,
-          completedAt: m.completed_at,
-          orderIndex: m.order_index,
-          consultantName: m.consultant?.full_name || 'Herdeiro', // Ideally fetch name for inherited
-        };
-      }) as ContractModuleMeeting[];
+      return (data || []).map((m: any) => ({
+        id: m.id,
+        contractId: m.contract_id,
+        clientId: m.client_id,
+        productId: m.product_id,
+        moduleId: m.module_id,
+        meetingNumber: m.meeting_number,
+        title: m.title,
+        status: m.status,
+        scheduledMeetingId: m.scheduled_meeting_id,
+        consultantId: m.consultant_id,
+        scheduledAt: m.scheduled_at,
+        completedAt: m.completed_at,
+        orderIndex: m.order_index,
+        consultantName: m.consultant?.full_name,
+      })) as ContractModuleMeeting[];
     },
     enabled: !!moduleId,
   });

@@ -30,8 +30,7 @@ export function getClienteScores(clienteId: string): ClienteScores {
   }
 
   // Engajamento: inverso de dias sem reunião + status do contrato
-  const diasRaw = diasDesdeUltimaReuniao(clienteId);
-  const dias = (typeof diasRaw === 'number' ? diasRaw : 0);
+  const dias = diasDesdeUltimaReuniao(clienteId);
   const baseEng = Math.max(0, 100 - dias * 4);
   const ajusteStatus = cl.status === 'ativo' ? 0 : cl.status === 'em_renovacao' || cl.status === 'em_onboarding' ? -5 : -25;
   const engajamento = Math.max(0, Math.min(100, baseEng + ajusteStatus));
@@ -67,7 +66,7 @@ export function getClienteScores(clienteId: string): ClienteScores {
     csatMedio: Math.round(csatMedio),
     csatTaxaResposta: Math.round(csatTaxaResposta),
     classRisco,
-    engajamentoNivel: calcularEngajamento(clienteId) as NivelEngajamento,
+    engajamentoNivel: calcularEngajamento(clienteId),
   };
 }
 

@@ -18,7 +18,7 @@ export function useClienteContratos(clientId?: string) {
         .from('contracts')
         .select(`
           *,
-          clients (trade_name, consultant_id),
+          clients (trade_name),
           profiles (full_name),
           products (name)
         `)
@@ -40,9 +40,7 @@ export function useClienteContratos(clientId?: string) {
         consultorId: c.consultant_id,
         consultorNome: c.profiles?.full_name || 'Desconhecido',
         productId: c.product_id,
-        consultantId: c.consultant_id || c.clients?.consultant_id,
-        consultantName: c.profiles?.full_name || 'Desconhecido',
-      })) as (Contrato & { consultantName: string })[];
+      })) as Contrato[];
     },
     enabled: !!clientId,
   });
