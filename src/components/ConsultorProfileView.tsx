@@ -27,6 +27,7 @@ import {
   Clock, Ban, AlertCircle, Flame, ArrowUpRight, Download, Mail, Phone, MapPin,
   Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit,
 } from 'lucide-react';
+import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 
 interface ConsultorProfileViewProps {
   consultorId: string;
