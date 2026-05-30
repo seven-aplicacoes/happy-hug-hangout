@@ -90,7 +90,7 @@ export function useContractProducts(contractId?: string) {
         };
         
         if (item.id && typeof item.id === 'string' && item.id.length > 10) {
-          payload.id = item.id;
+          p.id = item.id;
         }
         
         return p;
