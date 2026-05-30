@@ -278,9 +278,53 @@ export default function ClienteDetalhePage() {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b">
           <div className="flex items-center gap-5">
-            <div className="h-20 w-20 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white text-3xl font-black">
-              {cliente.nomeFantasia.charAt(0).toUpperCase()}
+            <div className="relative group">
+              <div className="h-20 w-20 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white text-3xl font-black overflow-hidden border-2 border-white">
+                {cliente.avatar_url ? (
+                  <img src={cliente.avatar_url} alt={cliente.nomeFantasia} className="h-full w-full object-cover" />
+                ) : (
+                  cliente.nomeFantasia.charAt(0).toUpperCase()
+                )}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {(isAdmin || can('ficha_cliente', 'edit')) && (
+                <div className="absolute -bottom-2 -right-2 flex gap-1">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleAvatarUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8 rounded-full shadow-md hover:scale-105 transition-transform"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Alterar imagem"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                  {cliente.avatar_url && (
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="h-8 w-8 rounded-full shadow-md hover:scale-105 transition-transform"
+                      onClick={handleRemoveAvatar}
+                      title="Remover imagem"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
+
             <div className="space-y-1">
               <h1 className="text-3xl font-black text-foreground tracking-tight">{cliente.nomeFantasia}</h1>
               <p className="text-muted-foreground font-medium">{cliente.razaoSocial}</p>
