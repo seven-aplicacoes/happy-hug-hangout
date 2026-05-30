@@ -1,17 +1,19 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { 
   Save, X, Pencil, ArrowLeft, Briefcase, FileText, 
   MapPin, Users, Calendar, DollarSign, Loader2, PlusCircle, MinusCircle,
-  Clock, CheckCircle2, Circle
+  Clock, CheckCircle2, Circle, Camera, Trash2, Upload
 } from 'lucide-react';
 import { formatDuration } from '@/lib/duration';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
 import { useClienteContratos } from '@/hooks/useClienteContratos';
 import { useConsultores } from '@/hooks/useConsultores';
+import { supabase } from '@/integrations/supabase/client';
 import { labelStatus, labelRegiao } from '@/data/mockData';
+
 import { StatusTag } from '@/components/StatusTag';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +49,102 @@ export default function ClienteDetalhePage() {
   const [fichaSuccessFactors, setFichaSuccessFactors] = useState<string[]>([]);
   const [fichaNewPain, setFichaNewPain] = useState('');
   const [fichaNewSuccessFactor, setFichaNewSuccessFactor] = useState('');
+  const [isUploadingAvatar, setIsSubmittingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !id) return;
+
+    // Validate size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo permitido é 2MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate type
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast({
+        title: "Formato inválido",
+        description: "Use JPG, PNG ou WEBP.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmittingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${id}-${Date.now()}.${fileExt}`;
+      const filePath = `${id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('client-avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('client-avatars')
+        .getPublicUrl(filePath);
+
+      // Remove old avatar if exists
+      if (cliente?.avatar_path) {
+        await supabase.storage
+          .from('client-avatars')
+          .remove([cliente.avatar_path]);
+      }
+
+      await updateCliente.mutateAsync({
+        avatar_url: publicUrl,
+        avatar_path: filePath
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Imagem de perfil atualizada com sucesso."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro no upload",
+        description: error.message || "Não foi possível enviar a imagem.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!id || !cliente?.avatar_path) return;
+
+    try {
+      await supabase.storage
+        .from('client-avatars')
+        .remove([cliente.avatar_path]);
+
+      await updateCliente.mutateAsync({
+        avatar_url: '',
+        avatar_path: ''
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Imagem removida com sucesso."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao remover",
+        description: error.message || "Não foi possível remover a imagem.",
+        variant: "destructive"
+      });
+    }
+  };
+
 
   useEffect(() => {
     if (cliente) {
@@ -180,9 +278,53 @@ export default function ClienteDetalhePage() {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b">
           <div className="flex items-center gap-5">
-            <div className="h-20 w-20 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white text-3xl font-black">
-              {cliente.nomeFantasia.charAt(0).toUpperCase()}
+            <div className="relative group">
+              <div className="h-20 w-20 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-white text-3xl font-black overflow-hidden border-2 border-white">
+                {cliente.avatar_url ? (
+                  <img src={cliente.avatar_url} alt={cliente.nomeFantasia} className="h-full w-full object-cover" />
+                ) : (
+                  cliente.nomeFantasia.charAt(0).toUpperCase()
+                )}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {(isAdmin || can('ficha_cliente', 'edit')) && (
+                <div className="absolute -bottom-2 -right-2 flex gap-1">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleAvatarUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8 rounded-full shadow-md hover:scale-105 transition-transform"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Alterar imagem"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                  {cliente.avatar_url && (
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="h-8 w-8 rounded-full shadow-md hover:scale-105 transition-transform"
+                      onClick={handleRemoveAvatar}
+                      title="Remover imagem"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
+
             <div className="space-y-1">
               <h1 className="text-3xl font-black text-foreground tracking-tight">{cliente.nomeFantasia}</h1>
               <p className="text-muted-foreground font-medium">{cliente.razaoSocial}</p>

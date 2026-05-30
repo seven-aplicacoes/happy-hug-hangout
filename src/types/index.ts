@@ -75,7 +75,10 @@ export interface Cliente {
   contact_phone?: string;
   updated_at?: string;
   updated_by?: string;
+  avatar_url?: string;
+  avatar_path?: string;
 }
+
 
 export interface MethodologyPhase {
   id: string;

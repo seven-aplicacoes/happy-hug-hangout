@@ -163,11 +163,21 @@ export default function ConsultorClientesPage() {
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div>
-                <p className="font-medium">{c.nomeFantasia}</p>
-                <p className="text-[11px] text-muted-foreground truncate max-w-[260px]">{ctx.objetivoAtual}</p>
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+                  {c.avatar_url ? (
+                    <img src={c.avatar_url} alt={c.nomeFantasia} className="h-full w-full object-cover" />
+                  ) : (
+                    (c.nomeFantasia || 'C').charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{c.nomeFantasia}</p>
+                  <p className="text-[11px] text-muted-foreground truncate max-w-[260px]">{ctx.objetivoAtual}</p>
+                </div>
               </div>
             </TooltipTrigger>
+
             <TooltipContent side="right" className="max-w-[340px] text-xs space-y-2">
               <div>
                 <p className="ui-overline">Briefing</p>

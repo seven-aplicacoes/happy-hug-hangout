@@ -116,11 +116,21 @@ export default function AdminClientesPage() {
       key: 'nome', 
       header: 'Cliente', 
       render: (c) => (
-        <div>
-          <p className="font-medium">{c.nomeFantasia || c.razaoSocial}</p>
-          <p className="text-[11px] text-muted-foreground">{c.cnpj}</p>
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+            {c.avatar_url ? (
+              <img src={c.avatar_url} alt={c.nomeFantasia} className="h-full w-full object-cover" />
+            ) : (
+              (c.nomeFantasia || 'C').charAt(0).toUpperCase()
+            )}
+          </div>
+          <div>
+            <p className="font-medium">{c.nomeFantasia || c.razaoSocial}</p>
+            <p className="text-[11px] text-muted-foreground">{c.cnpj}</p>
+          </div>
         </div>
       )
+
     },
     { 
       key: 'porte', 
