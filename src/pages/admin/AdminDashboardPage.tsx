@@ -35,6 +35,7 @@ function calcularPriorizacao(clientes: Cliente[], contratos: Contrato[], reunioe
   const hoje = new Date();
   const hojeStr = hoje.toISOString().slice(0, 10);
 
+
   return (clientes || [])
     .map((c) => {
       let pontuacao = 0;
