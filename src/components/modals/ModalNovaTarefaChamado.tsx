@@ -118,6 +118,9 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
       setDescricao('');
       setPrazo('');
       setSubtarefas([]);
+      setContractId('');
+      setContractProductId('');
+      setContractProductPhaseId('');
       setErrors({});
       
       onClose();
