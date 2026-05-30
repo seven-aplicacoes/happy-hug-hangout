@@ -84,6 +84,7 @@ export function useReunioes() {
         contract_module_meeting_id: reuniao.contractModuleMeetingId,
       };
 
+
       // Filter out undefined values to avoid overwriting with null if not intended
       const cleanPayload = Object.fromEntries(
         Object.entries(payload).filter(([_, v]) => v !== undefined)
