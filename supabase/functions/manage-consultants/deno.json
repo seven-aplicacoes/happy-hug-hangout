@@ -1,3 +1,5 @@
 {
-  "importMap": "../import_map.json"
+  "imports": {
+    "supabase": "https://esm.sh/@supabase/supabase-js@2"
+  }
 }

@@ -14,124 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      calendly_booking_sessions: {
-        Row: {
-          client_id: string | null
-          consultant_id: string | null
-          contract_id: string | null
-          contract_module_meeting_id: string | null
-          contract_phase_id: string | null
-          contract_product_id: string | null
-          created_at: string
-          expires_at: string
-          id: string
-          session_token: string
-          status: string
-        }
-        Insert: {
-          client_id?: string | null
-          consultant_id?: string | null
-          contract_id?: string | null
-          contract_module_meeting_id?: string | null
-          contract_phase_id?: string | null
-          contract_product_id?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          session_token: string
-          status?: string
-        }
-        Update: {
-          client_id?: string | null
-          consultant_id?: string | null
-          contract_id?: string | null
-          contract_module_meeting_id?: string | null
-          contract_phase_id?: string | null
-          contract_product_id?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          session_token?: string
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "calendly_booking_sessions_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendly_booking_sessions_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendly_booking_sessions_contract_id_fkey"
-            columns: ["contract_id"]
-            isOneToOne: false
-            referencedRelation: "contracts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendly_booking_sessions_contract_module_meeting_id_fkey"
-            columns: ["contract_module_meeting_id"]
-            isOneToOne: false
-            referencedRelation: "contract_module_meetings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendly_booking_sessions_contract_phase_id_fkey"
-            columns: ["contract_phase_id"]
-            isOneToOne: false
-            referencedRelation: "contract_product_phases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendly_booking_sessions_contract_product_id_fkey"
-            columns: ["contract_product_id"]
-            isOneToOne: false
-            referencedRelation: "contract_products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      calendly_central_auth: {
-        Row: {
-          access_token: string
-          created_at: string | null
-          expires_at: string
-          id: string
-          organization_uri: string | null
-          provider_user_uri: string | null
-          refresh_token: string
-          updated_at: string | null
-        }
-        Insert: {
-          access_token: string
-          created_at?: string | null
-          expires_at: string
-          id?: string
-          organization_uri?: string | null
-          provider_user_uri?: string | null
-          refresh_token: string
-          updated_at?: string | null
-        }
-        Update: {
-          access_token?: string
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          organization_uri?: string | null
-          provider_user_uri?: string | null
-          refresh_token?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       client_alerts: {
         Row: {
           client_id: string | null
@@ -753,142 +635,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      consultant_calendar_integrations: {
-        Row: {
-          access_token_encrypted: string | null
-          consultant_id: string
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          last_sync_at: string | null
-          provider: string
-          provider_user_uri: string | null
-          refresh_token_encrypted: string | null
-          scope: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          access_token_encrypted?: string | null
-          consultant_id: string
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          last_sync_at?: string | null
-          provider?: string
-          provider_user_uri?: string | null
-          refresh_token_encrypted?: string | null
-          scope?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          access_token_encrypted?: string | null
-          consultant_id?: string
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          last_sync_at?: string | null
-          provider?: string
-          provider_user_uri?: string | null
-          refresh_token_encrypted?: string | null
-          scope?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "consultant_calendar_integrations_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      consultant_calendly_event_types: {
-        Row: {
-          active: boolean | null
-          calendly_event_type_uri: string
-          calendly_scheduling_url: string
-          consultant_id: string | null
-          created_at: string
-          duration: number | null
-          id: string
-          is_default: boolean | null
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean | null
-          calendly_event_type_uri: string
-          calendly_scheduling_url: string
-          consultant_id?: string | null
-          created_at?: string
-          duration?: number | null
-          id?: string
-          is_default?: boolean | null
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean | null
-          calendly_event_type_uri?: string
-          calendly_scheduling_url?: string
-          consultant_id?: string | null
-          created_at?: string
-          duration?: number | null
-          id?: string
-          is_default?: boolean | null
-          name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "consultant_calendly_event_types_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      consultant_calendly_settings: {
-        Row: {
-          calendly_event_type_uri: string | null
-          calendly_scheduling_url: string
-          consultant_id: string
-          created_at: string | null
-          duration_minutes: number | null
-          event_type_name: string | null
-          id: string
-          is_active: boolean | null
-          updated_at: string | null
-        }
-        Insert: {
-          calendly_event_type_uri?: string | null
-          calendly_scheduling_url: string
-          consultant_id: string
-          created_at?: string | null
-          duration_minutes?: number | null
-          event_type_name?: string | null
-          id?: string
-          is_active?: boolean | null
-          updated_at?: string | null
-        }
-        Update: {
-          calendly_event_type_uri?: string | null
-          calendly_scheduling_url?: string
-          consultant_id?: string
-          created_at?: string | null
-          duration_minutes?: number | null
-          event_type_name?: string | null
-          id?: string
-          is_active?: boolean | null
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       consultant_indicator_goals: {
         Row: {
@@ -2188,109 +1934,6 @@ export type Database = {
           },
         ]
       }
-      meeting_csat: {
-        Row: {
-          client_id: string
-          comment: string | null
-          consultant_id: string
-          contract_id: string
-          contract_module_meeting_id: string | null
-          contract_product_id: string | null
-          created_at: string | null
-          id: string
-          meeting_id: string
-          nps_score: number | null
-          rating_clarity: number | null
-          rating_consultant: number | null
-          rating_meeting: number | null
-          released_at: string | null
-          status: string | null
-          submitted_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          client_id: string
-          comment?: string | null
-          consultant_id: string
-          contract_id: string
-          contract_module_meeting_id?: string | null
-          contract_product_id?: string | null
-          created_at?: string | null
-          id?: string
-          meeting_id: string
-          nps_score?: number | null
-          rating_clarity?: number | null
-          rating_consultant?: number | null
-          rating_meeting?: number | null
-          released_at?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          client_id?: string
-          comment?: string | null
-          consultant_id?: string
-          contract_id?: string
-          contract_module_meeting_id?: string | null
-          contract_product_id?: string | null
-          created_at?: string | null
-          id?: string
-          meeting_id?: string
-          nps_score?: number | null
-          rating_clarity?: number | null
-          rating_consultant?: number | null
-          rating_meeting?: number | null
-          released_at?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meeting_csat_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meeting_csat_consultant_id_fkey"
-            columns: ["consultant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meeting_csat_contract_id_fkey"
-            columns: ["contract_id"]
-            isOneToOne: false
-            referencedRelation: "contracts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meeting_csat_contract_module_meeting_id_fkey"
-            columns: ["contract_module_meeting_id"]
-            isOneToOne: false
-            referencedRelation: "contract_module_meetings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meeting_csat_contract_product_id_fkey"
-            columns: ["contract_product_id"]
-            isOneToOne: false
-            referencedRelation: "contract_products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meeting_csat_meeting_id_fkey"
-            columns: ["meeting_id"]
-            isOneToOne: true
-            referencedRelation: "meetings"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       meeting_csat_responses: {
         Row: {
           client_id: string
@@ -2367,14 +2010,6 @@ export type Database = {
       }
       meetings: {
         Row: {
-          calendly_cancel_url: string | null
-          calendly_event_type_uri: string | null
-          calendly_event_uri: string | null
-          calendly_invitee_uri: string | null
-          calendly_reschedule_url: string | null
-          cancel_reason: string | null
-          canceled_at: string | null
-          canceled_by: string | null
           client_id: string | null
           consultant_id: string | null
           contract_id: string | null
@@ -2388,14 +2023,7 @@ export type Database = {
           csat_submitted_at: string | null
           description: string | null
           duration: number | null
-          external_cancel_url: string | null
-          external_event_type_uri: string | null
-          external_event_uri: string | null
           external_id: string | null
-          external_invitee_uri: string | null
-          external_payload: Json | null
-          external_provider: string | null
-          external_reschedule_url: string | null
           id: string
           location: string | null
           meeting_date: string
@@ -2413,14 +2041,6 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          calendly_cancel_url?: string | null
-          calendly_event_type_uri?: string | null
-          calendly_event_uri?: string | null
-          calendly_invitee_uri?: string | null
-          calendly_reschedule_url?: string | null
-          cancel_reason?: string | null
-          canceled_at?: string | null
-          canceled_by?: string | null
           client_id?: string | null
           consultant_id?: string | null
           contract_id?: string | null
@@ -2434,14 +2054,7 @@ export type Database = {
           csat_submitted_at?: string | null
           description?: string | null
           duration?: number | null
-          external_cancel_url?: string | null
-          external_event_type_uri?: string | null
-          external_event_uri?: string | null
           external_id?: string | null
-          external_invitee_uri?: string | null
-          external_payload?: Json | null
-          external_provider?: string | null
-          external_reschedule_url?: string | null
           id?: string
           location?: string | null
           meeting_date: string
@@ -2459,14 +2072,6 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          calendly_cancel_url?: string | null
-          calendly_event_type_uri?: string | null
-          calendly_event_uri?: string | null
-          calendly_invitee_uri?: string | null
-          calendly_reschedule_url?: string | null
-          cancel_reason?: string | null
-          canceled_at?: string | null
-          canceled_by?: string | null
           client_id?: string | null
           consultant_id?: string | null
           contract_id?: string | null
@@ -2480,14 +2085,7 @@ export type Database = {
           csat_submitted_at?: string | null
           description?: string | null
           duration?: number | null
-          external_cancel_url?: string | null
-          external_event_type_uri?: string | null
-          external_event_uri?: string | null
           external_id?: string | null
-          external_invitee_uri?: string | null
-          external_payload?: Json | null
-          external_provider?: string | null
-          external_reschedule_url?: string | null
           id?: string
           location?: string | null
           meeting_date?: string
@@ -2505,13 +2103,6 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "meetings_canceled_by_fkey"
-            columns: ["canceled_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "meetings_client_id_fkey"
             columns: ["client_id"]
@@ -3379,10 +2970,6 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          calendly_connected: boolean | null
-          calendly_event_type_uri: string | null
-          calendly_scheduling_url: string | null
-          calendly_user_uri: string | null
           city: string | null
           created_at: string | null
           email: string
@@ -3400,10 +2987,6 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          calendly_connected?: boolean | null
-          calendly_event_type_uri?: string | null
-          calendly_scheduling_url?: string | null
-          calendly_user_uri?: string | null
           city?: string | null
           created_at?: string | null
           email: string
@@ -3421,10 +3004,6 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          calendly_connected?: boolean | null
-          calendly_event_type_uri?: string | null
-          calendly_scheduling_url?: string | null
-          calendly_user_uri?: string | null
           city?: string | null
           created_at?: string | null
           email?: string

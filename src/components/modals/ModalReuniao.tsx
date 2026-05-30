@@ -162,27 +162,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!validate()) return;
     setIsSubmitting(true);
     try {
-      // Regra de reagendamento: 2 horas antes
-      if (reuniao?.meetingDate && reuniao?.startTime) {
-        const now = new Date();
-        const scheduledDate = new Date(`${reuniao.meetingDate}T${reuniao.startTime}`);
-        const diffInHours = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-        
-        if (diffInHours < 2 && diffInHours > 0) {
-          toast({
-            title: "Reagendamento bloqueado",
-            description: "Este encontro só pode ser reagendado até 2 horas antes do horário marcado.",
-            variant: "destructive"
-          });
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      // 1. Availability validation (only if module/meeting is linked AND not manual source)
-      const isCalendlyMeeting = reuniao?.source === 'calendly' || (reuniao as any)?.external_provider === 'calendly';
-      
-      if (!isCalendlyMeeting && contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
+      // 1. Availability validation (only if module/meeting is linked)
+      if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
+        // Use local timezone parsing for meetingDate
         const [year, month, day] = meetingDate.split('-').map(Number);
         const selectedDate = new Date(year, month - 1, day);
         const dayOfWeek = selectedDate.getDay(); 
@@ -190,13 +172,14 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         const matchingAvailability = availabilities.find(av => {
           const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
           const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
-          const start = new Date(sYear, sMonth - 1, sDay);
-          const end = new Date(eYear, eMonth - 1, eDay);
+          const startDate = new Date(sYear, sMonth - 1, sDay);
+          const endDate = new Date(eYear, eMonth - 1, eDay);
           
-          const dateMatch = selectedDate >= start && selectedDate <= end;
+          const dateMatch = selectedDate >= startDate && selectedDate <= endDate;
           const weekdayMatch = av.weekday === dayOfWeek;
           
           if (dateMatch && weekdayMatch) {
+            // Check if startTime is within the availability window
             const timeMatch = startTime >= av.start_time && startTime <= av.end_time;
             return timeMatch;
           }
@@ -212,28 +195,34 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           setIsSubmitting(false);
           return;
         }
+      } else if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability) {
+        toast({ 
+          title: "Nenhuma Disponibilidade", 
+          description: "Nenhuma disponibilidade configurada para este encontro. Entre em contato com o consultor responsável.", 
+          variant: "destructive" 
+        });
+        setIsSubmitting(false);
+        return;
       }
 
-      // 2. Conflict validation (only for manual meetings)
-      if (!isCalendlyMeeting) {
-        const endTime = calculateEndTime(startTime, duracao);
-        const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
-          consultantId: consultorId,
-          date: meetingDate,
-          startTime,
-          endTime,
-          ignoreMeetingId: reuniao?.id
-        });
+      // 2. Conflict validation
+      const endTime = calculateEndTime(startTime, duracao);
+      const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
+        consultantId: consultorId,
+        date: meetingDate,
+        startTime,
+        endTime,
+        ignoreMeetingId: reuniao?.id
+      });
 
-        if (hasConflict) {
-          toast({ 
-            title: "Conflito de Agenda", 
-            description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}). Escolha outro horário disponível.`, 
-            variant: "destructive" 
-          });
-          setIsSubmitting(false);
-          return;
-        }
+      if (hasConflict) {
+        toast({ 
+          title: "Conflito de Agenda", 
+          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}). Escolha outro horário disponível.`, 
+          variant: "destructive" 
+        });
+        setIsSubmitting(false);
+        return;
       }
 
       const payload: Partial<Reuniao> = {
@@ -351,7 +340,6 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                   onChange={e => { setMeetingUrl(e.target.value); setLocation(e.target.value); }} 
                   className="h-11 pl-10" 
                   placeholder="Meet, Zoom ou Endereço" 
-                  disabled={reuniao?.source === 'calendly'}
                 />
                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
@@ -364,7 +352,6 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                 onChange={e => setDescription(e.target.value)} 
                 placeholder="Descreva os tópicos principais..." 
                 className="min-h-[120px] resize-none" 
-                disabled={reuniao?.source === 'calendly'}
               />
             </div>
           </div>

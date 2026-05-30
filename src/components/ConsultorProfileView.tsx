@@ -25,11 +25,9 @@ import {
   Users, AlertTriangle, UserCheck, UserX, FileText,
   CalendarCheck, CalendarDays, TrendingUp, CheckCircle2,
   Clock, Ban, AlertCircle, Flame, ArrowUpRight, Download, Mail, Phone, MapPin,
-  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit, Plug, Calendar, ExternalLink, RefreshCw, Settings2
+  Briefcase, DollarSign, Banknote, Activity, XCircle, UserMinus, Edit,
 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { cn } from '@/lib/utils';
 
 interface ConsultorProfileViewProps {
   consultorId: string;
@@ -54,22 +52,6 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { contratos, isLoading: loadingContratos } = useContratos();
-  const queryClient = useQueryClient();
-
-  // Calendly Mapping State (Central Integration)
-  const { data: calendlyMapping, isLoading: loadingMapping } = useQuery({
-    queryKey: ['consultant-calendly-mapping', consultorId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('consultant_calendly_settings')
-        .select('*')
-        .eq('consultant_id', consultorId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!consultorId
-  });
   
   // Clientes are already filtered in useClientes hook for non-admins if profile is consultor
   const meusClientes = useMemo(() => {
@@ -329,71 +311,6 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
                 </Button>
               )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 1.1 Integração Calendly Central */}
-      <Card className="overflow-hidden border-blue-100 bg-blue-50/10">
-        <CardHeader className="border-b border-blue-50 bg-blue-50/30 py-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
-              <Calendar className="h-5 w-5 text-blue-600" /> Integração Calendly
-            </CardTitle>
-            {calendlyMapping ? (
-              <StatusTag label="Configurado" variant="success" />
-            ) : (
-              <StatusTag label="Não Configurado" variant="neutral" />
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <p className="text-sm text-blue-800/80 leading-relaxed">
-                A agenda deste consultor está vinculada à conta central do Calendly. O link abaixo é utilizado no Portal do Cliente para agendamentos automáticos.
-              </p>
-              {calendlyMapping && (
-                <div className="flex flex-wrap gap-4 mt-4">
-                  <div className="bg-white/80 border border-blue-100 rounded-lg p-3 flex flex-col min-w-[200px]">
-                    <span className="text-[10px] font-black uppercase text-blue-600/60 tracking-wider">Event Type Vinculado</span>
-                    <span className="text-sm font-bold text-blue-900 truncate">{calendlyMapping.event_type_name || 'Personalizado'}</span>
-                  </div>
-                  <div className="bg-white/80 border border-blue-100 rounded-lg p-3 flex flex-col min-w-[150px]">
-                    <span className="text-[10px] font-black uppercase text-blue-600/60 tracking-wider">Duração</span>
-                    <span className="text-sm font-bold text-blue-900">{calendlyMapping.duration_minutes} min</span>
-                  </div>
-                  <div className="w-full bg-white/80 border border-blue-100 rounded-lg p-3 flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-blue-600/60 tracking-wider">Link de Agendamento</span>
-                    <div className="flex items-center justify-between gap-2 mt-1">
-                      <span className="text-xs font-medium text-blue-900 truncate">{calendlyMapping.calendly_scheduling_url}</span>
-                      <a href={calendlyMapping.calendly_scheduling_url} target="_blank" rel="noreferrer">
-                        <ExternalLink className="h-3.5 w-3.5 text-blue-600 hover:text-blue-800" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {!calendlyMapping && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 rounded-lg border border-amber-100 text-amber-700 text-xs font-medium mt-2">
-                  <AlertCircle className="h-4 w-4" />
-                  Este consultor ainda não possui um link do Calendly vinculado. 
-                  {modo === 'admin' ? ' Vincule um evento na página de Integrações.' : ' Entre em contato com o administrador.'}
-                </div>
-              )}
-            </div>
-
-            {modo === 'admin' && (
-              <div className="shrink-0">
-                <Button 
-                  variant="outline" 
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50 h-11 px-6 font-bold"
-                  onClick={() => navigate('/admin/integracoes')}
-                >
-                  <Settings2 className="h-4 w-4 mr-2" /> Gerenciar Integrações
-                </Button>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>

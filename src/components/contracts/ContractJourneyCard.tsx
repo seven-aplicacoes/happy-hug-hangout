@@ -89,21 +89,17 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                   </Button>
                 )}
 
-                {meeting.status === 'realizada' ? (
-                  <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
+                {meeting.status === 'pendente' ? (
+                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" onClick={() => onSchedule(meeting)}>
+                    <Calendar className="h-3.5 w-3.5" /> Agendar
+                  </Button>
+                ) : meeting.status === 'agendado' ? (
+                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
+                    Reagendar
                   </Button>
                 ) : (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className={cn(
-                      "h-8 gap-1.5 px-3",
-                      meeting.status === 'pendente' ? "border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" : ""
-                    )} 
-                    onClick={() => onSchedule(meeting)}
-                  >
-                    <Calendar className="h-3.5 w-3.5" /> {meeting.status === 'agendado' ? 'Reagendar' : 'Agendar'}
+                  <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
                   </Button>
                 )}
               </div>

@@ -101,12 +101,8 @@ export function useReunioes() {
       // Se estiver vinculada a um encontro da jornada, atualiza o status desse encontro
       if (reuniao.contractModuleMeetingId) {
         const meetingId = data[0].id;
-        
-        // Define o status do encontro
-        let status = 'agendado';
-        if (reuniao.status === 'realizada') status = 'realizada';
-        if (reuniao.status === 'cancelada') status = 'pendente';
-        
+        // Se a reunião estiver cancelada, o encontro volta para pendente
+        const status = reuniao.status === 'realizada' ? 'realizada' : (reuniao.status === 'cancelada' ? 'pendente' : 'agendado');
         const scheduledAt = (reuniao.meetingDate && reuniao.startTime && reuniao.status !== 'cancelada')
           ? `${reuniao.meetingDate}T${reuniao.startTime}` 
           : null;
@@ -115,36 +111,12 @@ export function useReunioes() {
           .from('contract_module_meetings')
           .update({
             status,
-            scheduled_meeting_id: (reuniao.status === 'cancelada') ? null : meetingId,
+            scheduled_meeting_id: reuniao.status === 'cancelada' ? null : meetingId,
             scheduled_at: scheduledAt,
             consultant_id: reuniao.consultorId,
-            completed_at: (reuniao.status === 'realizada') ? new Date().toISOString() : null
+            completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null
           })
           .eq('id', reuniao.contractModuleMeetingId);
-
-        // Se marcada como realizada, libera CSAT automático
-        if (reuniao.status === 'realizada') {
-          await supabase
-            .from('meeting_csat')
-            .upsert({
-              meeting_id: meetingId,
-              client_id: reuniao.clienteId,
-              contract_id: reuniao.contractId,
-              contract_product_id: reuniao.contractProductId,
-              contract_module_meeting_id: reuniao.contractModuleMeetingId,
-              consultant_id: reuniao.consultorId,
-              status: 'pending'
-            }, { onConflict: 'meeting_id' });
-        }
-        
-        // Se cancelada, limpa o CSAT pendente se houver
-        if (reuniao.status === 'cancelada') {
-          await supabase
-            .from('meeting_csat')
-            .delete()
-            .eq('meeting_id', meetingId)
-            .eq('status', 'pending');
-        }
       }
 
 

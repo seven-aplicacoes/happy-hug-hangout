@@ -1,11 +1,8 @@
-import { useMemo, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   INTEGRACOES,
   EVENTOS_INTEGRACAO,
@@ -19,8 +16,6 @@ import {
   CalendarDays, Video, MessageCircle, BookOpen, Plug, CheckCircle2, Clock,
   ArrowUpRight, RefreshCw, Settings2, ExternalLink,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ModalMappingCalendly } from '@/components/modals/ModalMappingCalendly';
 
 const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
   agenda: CalendarDays,
@@ -70,7 +65,7 @@ function CardIntegracao({ integ, onSelect }: { integ: Integracao; onSelect: (i: 
   );
 }
 
-function DetalheIntegracao({ integ, onClose, perfil, onShowMapping }: { integ: Integracao; onClose: () => void; perfil?: string; onShowMapping: () => void }) {
+function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () => void }) {
   const ativo = integ.status === 'conectado' || integ.status === 'beta';
   return (
     <Card className="p-6 sticky top-4">
@@ -139,148 +134,47 @@ function DetalheIntegracao({ integ, onClose, perfil, onShowMapping }: { integ: I
         </div>
       </div>
 
-        {integ.id === 'calendly' ? (
-          <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
-             {perfil === 'admin' ? (
-               <>
-                 <Button 
-                   className={cn(
-                     "bg-primary hover:bg-primary/90",
-                     integ.status === 'conectado' && "bg-emerald-600 hover:bg-emerald-700"
-                   )}
-                   onClick={() => {
-                     toast({ title: 'OAuth Calendly', description: 'Redirecionando para autorização...' });
-                     const client_id = 'CALENDLY_CLIENT_ID'; 
-                     const redirect_uri = encodeURIComponent(window.location.origin + '/admin/integracoes');
-                     const url = `https://auth.calendly.com/oauth/authorize?client_id=${client_id}&response_type=code&redirect_uri=${redirect_uri}`;
-                     window.location.href = url;
-                   }}
-                 >
-                   <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> 
-                   {integ.status === 'conectado' ? 'Reconectar Conta Central' : 'Conectar Conta Central'}
-                 </Button>
-                 {integ.status === 'conectado' && (
-                   <Button variant="outline" onClick={onShowMapping}>
-                     <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Mapear Consultores
-                   </Button>
-                 )}
-               </>
-             ) : (
-               <div className="text-center py-2">
-                 <p className="text-xs text-muted-foreground italic">
-                   A integração com Calendly é gerenciada pela administração.
-                 </p>
-               </div>
-             )}
-             <p className="text-[10px] text-muted-foreground text-center px-4">
-               {perfil === 'admin' 
-                 ? 'Conecte a conta central do Calendly para toda a empresa.' 
-                 : 'Sua agenda será vinculada ao link configurado pelo administrador.'}
-             </p>
-          </div>
+      <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
+        {integ.status === 'conectado' || integ.status === 'beta' ? (
+          <>
+            <Button onClick={() => toast({ title: 'Sincronização iniciada', description: `${integ.nome} está sincronizando.` })}>
+              <RefreshCw className="h-4 w-4 mr-2" strokeWidth={1.5} /> Sincronizar agora
+            </Button>
+            <Button variant="outline" onClick={() => toast({ title: 'Configurações abertas', description: 'Edite escopos e preferências.' })}>
+              <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Configurações
+            </Button>
+          </>
+        ) : integ.status === 'disponivel' ? (
+          <Button onClick={() => toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` })}>
+            <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar {integ.nome}
+          </Button>
         ) : (
-          <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
-            {integ.status === 'conectado' || integ.status === 'beta' ? (
-              <>
-                <Button onClick={() => toast({ title: 'Sincronização iniciada', description: `${integ.nome} está sincronizando.` })}>
-                  <RefreshCw className="h-4 w-4 mr-2" strokeWidth={1.5} /> Sincronizar agora
-                </Button>
-                <Button variant="outline" onClick={() => toast({ title: 'Configurações abertas', description: 'Edite escopos e preferências.' })}>
-                  <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Configurações
-                </Button>
-              </>
-            ) : integ.status === 'disponivel' ? (
-              <Button onClick={() => toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` })}>
-                <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar {integ.nome}
-              </Button>
-            ) : (
-              <Button variant="outline" disabled>
-                <Clock className="h-4 w-4 mr-2" strokeWidth={1.5} /> Em breve
-              </Button>
-            )}
-            {integ.documentacaoUrl && (
-              <a href={integ.documentacaoUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 self-start">
-                Documentação <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
-              </a>
-            )}
-          </div>
+          <Button variant="outline" disabled>
+            <Clock className="h-4 w-4 mr-2" strokeWidth={1.5} /> Em breve
+          </Button>
         )}
+        {integ.documentacaoUrl && (
+          <a href={integ.documentacaoUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 self-start">
+            Documentação <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
+          </a>
+        )}
+      </div>
     </Card>
   );
 }
 
 export default function IntegracoesPage() {
   const [filtro, setFiltro] = useState<'todas' | CategoriaIntegracao>('todas');
-  const [selecionada, setSelecionada] = useState<Integracao | null>(null);
-  const [showMapping, setShowMapping] = useState(false);
-  const { user, perfil } = useAuth();
-  const queryClient = useQueryClient();
-
-  // Load actual connection status (central account)
-  const { data: calendlyCentralAuth, isLoading: loadingIntegration } = useQuery({
-    queryKey: ['calendly-central-auth'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('calendly_central_auth')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const updatedIntegracoes = useMemo(() => {
-    return INTEGRACOES.map(i => {
-      if (i.id === 'calendly' && calendlyCentralAuth) {
-        return {
-          ...i,
-          status: 'conectado' as StatusIntegracao,
-          conectadoEm: calendlyCentralAuth.created_at,
-          contaVinculada: calendlyCentralAuth.provider_user_uri
-        };
-      }
-      return i;
-    });
-  }, [calendlyCentralAuth]);
-
-  useEffect(() => {
-    // Handle OAuth Callback
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code) {
-      handleExchangeCode(code);
-    }
-  }, []);
-
-  const handleExchangeCode = async (code: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('calendly-oauth', {
-        body: { action: 'exchange_code', code }
-      });
-
-      if (error) throw error;
-      
-      toast({ title: 'Sucesso!', description: 'Calendly conectado com sucesso.' });
-      queryClient.invalidateQueries({ queryKey: ['calendly-central-auth'] });
-      
-      // Clear URL params
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } catch (error: any) {
-      console.error('Error exchanging code:', error);
-      toast({ title: 'Erro ao conectar', description: error.message, variant: 'destructive' });
-    }
-  };
+  const [selecionada, setSelecionada] = useState<Integracao | null>(INTEGRACOES[0]);
 
   const lista = useMemo(
-    () => filtro === 'todas' ? updatedIntegracoes : updatedIntegracoes.filter(i => i.categoria === filtro),
-    [filtro, updatedIntegracoes],
+    () => filtro === 'todas' ? INTEGRACOES : INTEGRACOES.filter(i => i.categoria === filtro),
+    [filtro],
   );
 
-  const conectadas = updatedIntegracoes.filter(i => i.status === 'conectado' || i.status === 'beta').length;
-  const disponiveis = updatedIntegracoes.filter(i => i.status === 'disponivel').length;
-  const futuras = updatedIntegracoes.filter(i => i.status === 'em_breve').length;
+  const conectadas = INTEGRACOES.filter(i => i.status === 'conectado' || i.status === 'beta').length;
+  const disponiveis = INTEGRACOES.filter(i => i.status === 'disponivel').length;
+  const futuras = INTEGRACOES.filter(i => i.status === 'em_breve').length;
 
   const filtros: Array<{ id: 'todas' | CategoriaIntegracao; label: string }> = [
     { id: 'todas', label: 'Todas' },
@@ -368,18 +262,9 @@ export default function IntegracoesPage() {
         </div>
 
         <div>
-          {selecionada && (
-            <DetalheIntegracao 
-              integ={selecionada} 
-              onClose={() => setSelecionada(null)} 
-              perfil={perfil}
-              onShowMapping={() => setShowMapping(true)}
-            />
-          )}
+          {selecionada && <DetalheIntegracao integ={selecionada} onClose={() => setSelecionada(null)} />}
         </div>
       </div>
-
-      {showMapping && <ModalMappingCalendly open={showMapping} onOpenChange={setShowMapping} />}
     </div>
   );
 }
