@@ -1,9 +1,41 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+async function verifySignature(signature: string, body: string, signingKey: string) {
+  // Calendly signature format: t=<timestamp>,v1=<signature>
+  const parts = signature.split(',')
+  const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1]
+  const v1 = parts.find(p => p.startsWith('v1='))?.split('=')[1]
+
+  if (!timestamp || !v1) return false
+
+  const signedPayload = `${timestamp}.${body}`
+  
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(signingKey),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  )
+
+  const sigBuffer = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(signedPayload)
+  )
+
+  const expectedSignature = Array.from(new Uint8Array(sigBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+
+  return expectedSignature === v1
 }
 
 serve(async (req) => {
@@ -21,23 +53,30 @@ serve(async (req) => {
     const signingKey = Deno.env.get('CALENDLY_WEBHOOK_SIGNING_KEY')
     const bodyText = await req.text()
 
-    // Signature verification would go here (omitted for brevity but recommended for production)
+    if (signature && signingKey) {
+      const isValid = await verifySignature(signature, bodyText, signingKey)
+      if (!isValid) {
+        console.error('Invalid Calendly signature')
+        return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401 })
+      }
+    } else {
+      console.warn('Webhook received without signature validation (check signing key)')
+    }
 
     const payload = JSON.parse(bodyText)
     const event = payload.event
     const data = payload.payload
 
-    console.log(`Processing Calendly Event: ${event}`)
+    console.log(`Calendly Webhook Event: ${event}`)
 
     if (event === 'invitee.created') {
       const eventUri = data.event
       const inviteeUri = data.uri
       const tracking = data.tracking || {}
-      const sessionToken = tracking.utm_term || tracking.salesforce_uuid // We'll pass session_token here
+      const sessionToken = tracking.utm_term || tracking.salesforce_uuid
       
-      console.log(`Invite created. Session Token: ${sessionToken}`)
+      console.log(`Processing booking. Session: ${sessionToken}`)
 
-      // 1. Find the session
       const { data: session, error: sessionError } = await supabaseClient
         .from('calendly_booking_sessions')
         .select('*')
@@ -46,19 +85,17 @@ serve(async (req) => {
         .single()
 
       if (sessionError || !session) {
-        console.error('Session not found or already processed:', sessionError)
-        return new Response(JSON.stringify({ error: 'Session not found' }), { status: 200 })
+        console.warn('Session not found or already completed:', sessionToken)
+        return new Response(JSON.stringify({ success: true, message: 'Session handled' }))
       }
 
-      // 2. Fetch event details to get date/time
-      // We need consultant's access token
       const { data: integration } = await supabaseClient
         .from('consultant_calendar_integrations')
         .select('access_token_encrypted')
         .eq('consultant_id', session.consultant_id)
         .single()
 
-      if (!integration) throw new Error('Consultant integration not found')
+      if (!integration) throw new Error('Consultant integration missing')
 
       const eventDetailsResponse = await fetch(eventUri, {
         headers: { 'Authorization': `Bearer ${integration.access_token_encrypted}` }
@@ -72,7 +109,6 @@ serve(async (req) => {
       const timePart = startDateTime.toLocaleTimeString('pt-BR', { hour12: false, hour: '2-digit', minute: '2-digit' })
       const duration = (new Date(endTime).getTime() - startDateTime.getTime()) / (1000 * 60)
 
-      // 3. Create the meeting
       const { data: meeting, error: meetingError } = await supabaseClient
         .from('meetings')
         .insert({
@@ -82,7 +118,7 @@ serve(async (req) => {
           contract_product_phase_id: session.contract_phase_id,
           contract_module_meeting_id: session.contract_module_meeting_id,
           consultant_id: session.consultant_id,
-          title: `Reunião Calendly - ${eventDetails.resource.name}`,
+          title: `Reunião Calendly: ${eventDetails.resource.name}`,
           status: 'agendada',
           meeting_date: datePart,
           start_time: timePart,
@@ -100,7 +136,6 @@ serve(async (req) => {
 
       if (meetingError) throw meetingError
 
-      // 4. Update the encounter (contract_module_meetings)
       await supabaseClient
         .from('contract_module_meetings')
         .update({
@@ -111,61 +146,54 @@ serve(async (req) => {
         })
         .eq('id', session.contract_module_meeting_id)
 
-      // 5. Update session
       await supabaseClient
         .from('calendly_booking_sessions')
         .update({ status: 'completed' })
         .eq('id', session.id)
 
-      // 6. Record in timeline
       await supabaseClient
         .from('timeline_events')
         .insert({
           client_id: session.client_id,
           type: 'reuniao',
-          title: 'Reunião Agendada (Calendly)',
-          description: `O encontro "${meeting.title}" foi agendado para o dia ${datePart} às ${timePart}.`,
+          title: 'Encontro Agendado',
+          description: `O encontro foi agendado via Calendly para ${datePart} às ${timePart}.`,
           date: new Date().toISOString()
         })
 
-      console.log('Meeting created and encounter updated successfully')
+      console.log('Successfully processed invitee.created')
     }
 
     if (event === 'invitee.canceled') {
       const inviteeUri = data.uri
+      console.log(`Processing cancellation: ${inviteeUri}`)
       
-      // 1. Find the meeting
       const { data: meeting, error: findError } = await supabaseClient
         .from('meetings')
         .select('*')
         .eq('calendly_invitee_uri', inviteeUri)
         .single()
 
-      if (findError || !meeting) {
-        console.error('Meeting not found for cancellation:', findError)
-        return new Response(JSON.stringify({ success: true }))
+      if (!findError && meeting) {
+        await supabaseClient
+          .from('meetings')
+          .update({ 
+            status: 'cancelada',
+            external_payload: { ...meeting.external_payload, cancellation: data }
+          })
+          .eq('id', meeting.id)
+
+        await supabaseClient
+          .from('contract_module_meetings')
+          .update({
+            status: 'liberado',
+            scheduled_meeting_id: null,
+            scheduled_at: null
+          })
+          .eq('id', meeting.contract_module_meeting_id)
+
+        console.log('Successfully processed invitee.canceled')
       }
-
-      // 2. Update meeting
-      await supabaseClient
-        .from('meetings')
-        .update({ 
-          status: 'cancelada',
-          external_payload: { ...meeting.external_payload, cancellation: data }
-        })
-        .eq('id', meeting.id)
-
-      // 3. Update encounter
-      await supabaseClient
-        .from('contract_module_meetings')
-        .update({
-          status: 'liberado', // Back to released so they can book again
-          scheduled_meeting_id: null,
-          scheduled_at: null
-        })
-        .eq('id', meeting.contract_module_meeting_id)
-
-      console.log('Meeting canceled successfully')
     }
 
     return new Response(JSON.stringify({ success: true }), {
@@ -173,7 +201,7 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error('Webhook processing error:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
