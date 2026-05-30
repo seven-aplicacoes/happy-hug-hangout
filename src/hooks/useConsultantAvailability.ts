@@ -19,18 +19,21 @@ export function useConsultantAvailability(filters: {
     queryFn: async () => {
       let query = supabase.from('consultant_availability').select('*');
       
-      if (filters.clientId) query = query.eq('client_id', filters.clientId);
-      if (filters.contractId) query = query.eq('contract_id', filters.contractId);
-      if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
-      if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
-      if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
-      if (filters.contractModuleMeetingId) query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
+      if (filters.contractModuleMeetingId) {
+        query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
+      } else {
+        if (filters.clientId) query = query.eq('client_id', filters.clientId);
+        if (filters.contractId) query = query.eq('contract_id', filters.contractId);
+        if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
+        if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
+        if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
+      }
 
       const { data, error } = await query;
       if (error) throw error;
       return data as ConsultantAvailability[];
     },
-    enabled: !!(filters.consultantId || filters.contractPhaseId),
+    enabled: !!(filters.consultantId || filters.contractPhaseId || filters.contractModuleMeetingId),
   });
 
   const { data: slots, isLoading: isLoadingSlots } = useQuery({
@@ -38,18 +41,21 @@ export function useConsultantAvailability(filters: {
     queryFn: async () => {
       let query = supabase.from('consultant_available_slots').select('*');
       
-      if (filters.clientId) query = query.eq('client_id', filters.clientId);
-      if (filters.contractId) query = query.eq('contract_id', filters.contractId);
-      if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
-      if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
-      if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
-      if (filters.contractModuleMeetingId) query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
+      if (filters.contractModuleMeetingId) {
+        query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
+      } else {
+        if (filters.clientId) query = query.eq('client_id', filters.clientId);
+        if (filters.contractId) query = query.eq('contract_id', filters.contractId);
+        if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
+        if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
+        if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
+      }
 
       const { data, error } = await query.order('available_date').order('start_time');
       if (error) throw error;
       return data as ConsultantAvailableSlot[];
     },
-    enabled: !!(filters.consultantId || filters.contractPhaseId),
+    enabled: !!(filters.consultantId || filters.contractPhaseId || filters.contractModuleMeetingId),
   });
 
   const upsertAvailability = useMutation({
@@ -63,6 +69,7 @@ export function useConsultantAvailability(filters: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['consultant-availability'] });
+      queryClient.invalidateQueries({ queryKey: ['consultant-slots'] });
       toast({ title: 'Sucesso', description: 'Disponibilidade salva com sucesso.' });
     },
   });
@@ -74,6 +81,7 @@ export function useConsultantAvailability(filters: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['consultant-availability'] });
+      queryClient.invalidateQueries({ queryKey: ['consultant-slots'] });
       toast({ title: 'Sucesso', description: 'Disponibilidade removida.' });
     },
   });
