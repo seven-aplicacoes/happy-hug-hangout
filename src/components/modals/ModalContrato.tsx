@@ -782,7 +782,6 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
         </div>
       </div>
 
-      
       <div className="flex justify-between items-center w-full pt-6 mt-6 border-t shrink-0">
         <Button variant="ghost" onClick={onClose} disabled={isLoading}>Cancelar</Button>
         <Button onClick={handleSave} disabled={isLoading} className="min-w-[140px] shadow-lg shadow-primary/20">
