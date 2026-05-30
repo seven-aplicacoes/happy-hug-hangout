@@ -617,9 +617,11 @@ export function ContractJourneyCard({
         </AccordionContent>
       </Card>
 
-      <ModalReuniao 
+      <ModalAgendarReuniao 
         open={meetingModalOpen} 
         onClose={() => setMeetingModalOpen(false)} 
+        clienteId={contrato.clienteId}
+        clienteNome={contrato.clienteNome}
         initialData={initialMeetingData || undefined} 
       />
     </AccordionItem>
