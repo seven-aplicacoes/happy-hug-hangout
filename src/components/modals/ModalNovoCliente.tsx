@@ -138,16 +138,18 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
         <p className="text-xs font-semibold text-muted-foreground ">Dados Básicos</p>
         <div className="space-y-0.5">
-          <Label>Razão Social *</Label>
-          <Input value={form.razaoSocial} onChange={e => set('razaoSocial', e.target.value)} placeholder="Razão social completa" />
+          <Label className={cn(errors.razaoSocial && "text-destructive")}>Razão Social *</Label>
+          <Input value={form.razaoSocial} onChange={e => set('razaoSocial', e.target.value)} placeholder="Razão social completa" className={cn(errors.razaoSocial && "border-destructive")} />
+          {errors.razaoSocial && <p className="text-[10px] text-destructive font-medium">{errors.razaoSocial}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <Label>Nome Fantasia *</Label>
-            <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" />
+            <Label className={cn(errors.nomeFantasia && "text-destructive")}>Nome Fantasia *</Label>
+            <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" className={cn(errors.nomeFantasia && "border-destructive")} />
+            {errors.nomeFantasia && <p className="text-[10px] text-destructive font-medium">{errors.nomeFantasia}</p>}
           </div>
           <div className="space-y-0.5">
-            <Label>CNPJ *</Label>
+            <Label className={cn(errors.cnpj && "text-destructive")}>CNPJ *</Label>
             <Input 
               value={form.cnpj} 
               onChange={e => {
@@ -160,7 +162,9 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
                 set('cnpj', masked);
               }} 
               placeholder="00.000.000/0001-00" 
+              className={cn(errors.cnpj && "border-destructive")}
             />
+            {errors.cnpj && <p className="text-[10px] text-destructive font-medium">{errors.cnpj}</p>}
           </div>
         </div>
 
