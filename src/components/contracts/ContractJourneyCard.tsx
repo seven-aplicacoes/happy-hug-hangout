@@ -1,7 +1,7 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, CalendarClock, AlertCircle
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, CalendarClock, AlertCircle, RefreshCw, XCircle
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 
@@ -27,7 +27,9 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCalendlyLink } from '@/hooks/useCalendlyLink';
 import { CalendlyModal } from '@/components/modals/CalendlyModal';
+import { ModalDetalheEncontro } from '@/components/modals/ModalDetalheEncontro';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
+
 
 
 
@@ -57,7 +59,9 @@ function MeetingRow({
 }) {
   const isCompleted = ['realizada', 'concluida', 'concluído', 'concluída', 'resolvido', 'completed', 'done'].includes(meeting.status.toLowerCase());
   const [calendlyModalOpen, setCalendlyModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const { user } = useAuth();
+
   
   const { data: calendlyUrl } = useCalendlyLink({
     consultantId: meeting.consultantId || '',
@@ -87,10 +91,13 @@ function MeetingRow({
 
   return (
     <div className="space-y-2">
-      <div className={cn(
-        "group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white transition-all gap-4",
-        isLocked ? "opacity-60 grayscale-[0.5] border-dashed" : "hover:border-primary/40 hover:shadow-sm"
-      )}>
+      <div 
+        className={cn(
+          "group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white transition-all gap-4 cursor-pointer",
+          isLocked ? "opacity-60 grayscale-[0.5] border-dashed" : "hover:border-primary/40 hover:shadow-sm"
+        )}
+        onClick={() => !isLocked && setDetailsModalOpen(true)}
+      >
         <div className="flex items-center gap-4">
           <div className={cn(
             "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
@@ -115,13 +122,15 @@ function MeetingRow({
             </div>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
           <div className="text-right mr-3 hidden md:block">
             <p className="text-[10px] font-bold text-muted-foreground uppercase">Consultor</p>
             <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+
             {(mode === 'consultor' || mode === 'admin') && !calendlyUrl && (
               <Button 
                 size="sm" 
@@ -186,6 +195,15 @@ function MeetingRow({
         </div>
       </div>
 
+      <ModalDetalheEncontro
+        open={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        meeting={meeting}
+        mode={mode as any}
+        onSchedule={handleAgendarClick}
+      />
+
+
       <CalendlyModal 
         open={calendlyModalOpen}
         onClose={() => setCalendlyModalOpen(false)}
@@ -206,6 +224,7 @@ function MeetingRow({
         }}
       />
     </div>
+
   );
 }
 
