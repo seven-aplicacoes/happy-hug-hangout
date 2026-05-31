@@ -48,7 +48,14 @@ export const CalendlyModal = ({ open, onClose, url, prefill, context }: Calendly
     utm_campaign: 'module_meeting',
     utm_content: context?.meetingId,
     utm_term: context?.clientId,
+    clientId: context?.clientId,
+    contractId: context?.contractId,
+    productId: context?.productId,
+    moduleId: context?.moduleId,
+    meetingId: context?.meetingId,
+    consultantId: context?.consultantId,
   });
+
 
 
   const handleConfirmScheduling = async () => {
