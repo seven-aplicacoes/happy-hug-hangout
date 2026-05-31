@@ -636,6 +636,69 @@ export type Database = {
           },
         ]
       }
+      consultant_calendly_event_types: {
+        Row: {
+          calendly_url: string
+          consultant_id: string
+          created_at: string | null
+          description: string | null
+          event_category: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          meeting_template_id: string | null
+          module_id: string | null
+          name: string
+          product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendly_url: string
+          consultant_id: string
+          created_at?: string | null
+          description?: string | null
+          event_category?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          meeting_template_id?: string | null
+          module_id?: string | null
+          name: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendly_url?: string
+          consultant_id?: string
+          created_at?: string | null
+          description?: string | null
+          event_category?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          meeting_template_id?: string | null
+          module_id?: string | null
+          name?: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_calendly_event_types_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_calendly_event_types_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultant_indicator_goals: {
         Row: {
           comparison_operator: string
@@ -1038,6 +1101,8 @@ export type Database = {
       }
       contract_module_meetings: {
         Row: {
+          available_from: string | null
+          available_until: string | null
           client_id: string
           completed_at: string | null
           consultant_id: string | null
@@ -1055,6 +1120,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available_from?: string | null
+          available_until?: string | null
           client_id: string
           completed_at?: string | null
           consultant_id?: string | null
@@ -1072,6 +1139,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available_from?: string | null
+          available_until?: string | null
           client_id?: string
           completed_at?: string | null
           consultant_id?: string | null
@@ -2107,6 +2176,122 @@ export type Database = {
             columns: ["meeting_id"]
             isOneToOne: false
             referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_scheduling_events: {
+        Row: {
+          calendly_event_uri: string | null
+          calendly_event_uuid: string | null
+          calendly_invitee_uri: string | null
+          calendly_invitee_uuid: string | null
+          cancel_url: string | null
+          canceled_at: string | null
+          cancellation_reason: string | null
+          client_id: string
+          consultant_id: string
+          contract_id: string | null
+          created_at: string | null
+          event_name: string | null
+          id: string
+          invitee_email: string | null
+          invitee_name: string | null
+          meeting_id: string
+          module_id: string | null
+          product_id: string | null
+          provider: string
+          raw_payload: Json | null
+          reschedule_url: string | null
+          scheduled_end_time: string | null
+          scheduled_start_time: string | null
+          status: string
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendly_event_uri?: string | null
+          calendly_event_uuid?: string | null
+          calendly_invitee_uri?: string | null
+          calendly_invitee_uuid?: string | null
+          cancel_url?: string | null
+          canceled_at?: string | null
+          cancellation_reason?: string | null
+          client_id: string
+          consultant_id: string
+          contract_id?: string | null
+          created_at?: string | null
+          event_name?: string | null
+          id?: string
+          invitee_email?: string | null
+          invitee_name?: string | null
+          meeting_id: string
+          module_id?: string | null
+          product_id?: string | null
+          provider?: string
+          raw_payload?: Json | null
+          reschedule_url?: string | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendly_event_uri?: string | null
+          calendly_event_uuid?: string | null
+          calendly_invitee_uri?: string | null
+          calendly_invitee_uuid?: string | null
+          cancel_url?: string | null
+          canceled_at?: string | null
+          cancellation_reason?: string | null
+          client_id?: string
+          consultant_id?: string
+          contract_id?: string | null
+          created_at?: string | null
+          event_name?: string | null
+          id?: string
+          invitee_email?: string | null
+          invitee_name?: string | null
+          meeting_id?: string
+          module_id?: string | null
+          product_id?: string | null
+          provider?: string
+          raw_payload?: Json | null
+          reschedule_url?: string | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_scheduling_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_scheduling_events_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_scheduling_events_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_scheduling_events_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
             referencedColumns: ["id"]
           },
         ]
