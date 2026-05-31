@@ -772,6 +772,7 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
                 }}
                 onDelete={() => removeLocalPhase(idx)}
                 onSchedule={onSchedule}
+                onScheduleCalendly={onScheduleCalendly}
                 mode={mode}
               />
             ))}
@@ -802,13 +803,15 @@ export function ContractJourneyCard({
   isEditing = false,
   expanded = false,
   mode = 'admin',
-  onAddProduct
+  onAddProduct,
+  onScheduleCalendly
 }: { 
   contrato: any, 
   isEditing?: boolean,
   expanded?: boolean,
   mode?: 'admin' | 'client' | 'consultor',
-  onAddProduct?: () => void
+  onAddProduct?: () => void,
+  onScheduleCalendly?: (meeting: ContractModuleMeeting) => void
 }) {
 
 
