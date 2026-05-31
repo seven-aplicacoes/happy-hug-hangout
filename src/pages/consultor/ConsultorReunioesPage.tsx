@@ -9,10 +9,12 @@ import { labelStatus } from '@/data/mockData';
 import { useReunioes } from '@/hooks/useReunioes';
 import { useConsultantMeetingIndicators } from '@/hooks/useConsultantMeetingIndicators';
 import { useClientes } from '@/hooks/useClientes';
+import { Badge } from '@/components/ui/badge';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, CalendarClock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, CalendarClock, RefreshCw, XCircle, Clock } from 'lucide-react';
 import { ModalVerDetalhesReuniao } from '@/components/modals/ModalVerDetalhesReuniao';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { ModalRegistrarReuniao } from '@/components/modals/ModalRegistrarReuniao';
@@ -243,7 +245,10 @@ export default function ConsultorReunioesPage() {
                     <span className="text-base font-mono font-semibold text-primary tabular-nums shrink-0">{r.startTime}</span>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{r.clienteNome} — {r.tipo}</p>
-                      <p className="text-xs text-muted-foreground truncate">{r.title}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-muted-foreground truncate">{r.title}</p>
+                        {r.source === 'calendly' && <Badge variant="outline" className="text-[8px] h-3 px-1 uppercase font-black">Calendly</Badge>}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -273,7 +278,19 @@ export default function ConsultorReunioesPage() {
                         >
                           <CalendarClock className="h-3 w-3" /> Remarcar
                         </Button>
-
+                        {r.cancelUrl && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 text-[10px] gap-1 px-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              window.open(r.cancelUrl, '_blank');
+                            }}
+                          >
+                            <XCircle className="h-3 w-3" /> Cancelar
+                          </Button>
+                        )}
                       </div>
                     )}
                     <StatusTag label={labelStatus[r.status]} />
@@ -281,6 +298,7 @@ export default function ConsultorReunioesPage() {
                   </div>
                 </div>
               ))}
+
             </div>
           </div>
         ))}
