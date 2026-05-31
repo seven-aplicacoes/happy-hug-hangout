@@ -80,6 +80,7 @@ export function useTarefas() {
         };
       }) as (Tarefa & { isAtrasada?: boolean })[];
     },
+    enabled: !!perfil,
   });
 
   const upsertTarefa = useMutation({
