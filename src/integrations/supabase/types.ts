@@ -2199,10 +2199,12 @@ export type Database = {
           invitee_name: string | null
           meeting_id: string
           module_id: string | null
+          previous_event_uri: string | null
           product_id: string | null
           provider: string
           raw_payload: Json | null
           reschedule_url: string | null
+          rescheduled: boolean | null
           scheduled_end_time: string | null
           scheduled_start_time: string | null
           status: string
@@ -2227,10 +2229,12 @@ export type Database = {
           invitee_name?: string | null
           meeting_id: string
           module_id?: string | null
+          previous_event_uri?: string | null
           product_id?: string | null
           provider?: string
           raw_payload?: Json | null
           reschedule_url?: string | null
+          rescheduled?: boolean | null
           scheduled_end_time?: string | null
           scheduled_start_time?: string | null
           status?: string
@@ -2255,10 +2259,12 @@ export type Database = {
           invitee_name?: string | null
           meeting_id?: string
           module_id?: string | null
+          previous_event_uri?: string | null
           product_id?: string | null
           provider?: string
           raw_payload?: Json | null
           reschedule_url?: string | null
+          rescheduled?: boolean | null
           scheduled_end_time?: string | null
           scheduled_start_time?: string | null
           status?: string
