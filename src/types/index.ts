@@ -77,6 +77,13 @@ export interface Cliente {
   updated_by?: string;
   avatar_url?: string;
   avatar_path?: string;
+  consultant?: {
+    id: string;
+    full_name: string;
+    email: string;
+    phone: string;
+    calendly_url: string | null;
+  };
 }
 
 
