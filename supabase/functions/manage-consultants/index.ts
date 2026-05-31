@@ -20,7 +20,7 @@ serve(async (req) => {
     const { action, userData } = await req.json()
 
     if (action === 'create') {
-      const { email, password, full_name, role, specialty, phone, city, state, max_clients, hours_available, status } = userData
+      const { email, password, full_name, role, specialty, phone, city, state, max_clients, hours_available, status, calendly_url } = userData
 
       // 1. Create user in Auth
       const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
@@ -46,7 +46,8 @@ serve(async (req) => {
           state,
           status: status || 'ativo',
           max_clients: max_clients || 10,
-          hours_available: hours_available || 160
+          hours_available: hours_available || 160,
+          calendly_url: calendly_url || null
         }, { onConflict: 'id' })
 
 
@@ -71,11 +72,11 @@ serve(async (req) => {
     }
 
     if (action === 'update') {
-      const { id, full_name, specialty, phone, city, state, status, role, max_clients, hours_available } = userData
+      const { id, full_name, specialty, phone, city, state, status, role, max_clients, hours_available, calendly_url } = userData
 
       const { error } = await supabaseClient
         .from('profiles')
-        .update({ full_name, specialty, phone, city, state, status, role, max_clients, hours_available })
+        .update({ full_name, specialty, phone, city, state, status, role, max_clients, hours_available, calendly_url })
         .eq('id', id)
 
       if (error) throw error

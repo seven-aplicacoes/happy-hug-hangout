@@ -53,6 +53,8 @@ import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard'
 import { StatusTag } from '@/components/StatusTag';
 import { labelStatus } from '@/data/mockData';
 import { Accordion } from '@/components/ui/accordion';
+import { CalendlyModal } from '@/components/modals/CalendlyModal';
+import { DEFAULT_CALENDLY_URL } from '@/lib/calendly';
 
 
 export default function PortalClientePage() {
@@ -60,6 +62,7 @@ export default function PortalClientePage() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
   
   const [isCsatOpen, setIsCsatOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
@@ -117,8 +120,8 @@ export default function PortalClientePage() {
   };
 
   const handleContactConsultant = () => {
-    const phone = "5511999999999"; 
-    window.open(`https://wa.me/${phone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
+    const phone = cliente?.consultant?.phone || "5511999999999"; 
+    window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
   };
 
   if (!clienteSession) {
@@ -188,6 +191,9 @@ export default function PortalClientePage() {
 
           </div>
           <div className="flex items-center gap-4">
+            <Button size="sm" className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20" onClick={() => setIsCalendlyOpen(true)}>
+              <Calendar className="h-4 w-4 mr-2" /> Agendar reunião
+            </Button>
             <Button size="sm" className="hidden md:flex bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20" onClick={handleContactConsultant}>
               <MessageCircle className="h-4 w-4 mr-2" /> Falar com consultor
             </Button>
@@ -280,6 +286,16 @@ export default function PortalClientePage() {
           <DialogFooter><Button onClick={handleSubmitCsat} disabled={csatRatings.meeting === 0}>Enviar Feedback</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CalendlyModal
+        open={isCalendlyOpen}
+        onClose={() => setIsCalendlyOpen(false)}
+        url={cliente?.consultant?.calendly_url || DEFAULT_CALENDLY_URL}
+        prefill={{
+          name: cliente?.contact_name,
+          email: cliente?.email,
+        }}
+      />
     </div>
   );
 }
