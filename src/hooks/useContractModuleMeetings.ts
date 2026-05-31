@@ -39,6 +39,9 @@ export function useContractModuleMeetings(moduleId?: string) {
         availableFrom: m.available_from,
         availableUntil: m.available_until,
         consultantName: m.consultant?.full_name,
+        cancelUrl: m.cancel_url,
+        rescheduleUrl: m.reschedule_url,
+
 
       })) as ContractModuleMeeting[];
     },
