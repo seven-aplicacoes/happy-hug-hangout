@@ -33,20 +33,24 @@ export function useClienteHistorico(clientId?: string) {
       if (meetingsError) throw meetingsError;
 
       const { data: schedulingEvents, error: schedulingError } = await supabase
-        .from('meeting_scheduling_events' as any)
+        .from('meeting_scheduling_events')
         .select('*')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
 
-      if (schedulingError) throw schedulingError;
+      if (schedulingError) {
+        console.warn('Error loading scheduling events (possibly no access):', schedulingError);
+      }
 
       const { data: historyEvents, error: historyError } = await supabase
-        .from('meeting_history_events' as any)
+        .from('meeting_history_events')
         .select('*')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
 
-      if (historyError) throw historyError;
+      if (historyError) {
+        console.warn('Error loading history events (possibly no access):', historyError);
+      }
 
       const meetingEvents = meetings.map((m: any) => ({
         id: m.id,
