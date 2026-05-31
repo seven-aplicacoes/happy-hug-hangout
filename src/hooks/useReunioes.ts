@@ -81,7 +81,8 @@ export function useReunioes() {
       }));
 
       const moduleMeetings = (moduleMeetingsData || []).map((m: any) => {
-        // Skip if already in meetings table (to avoid duplicates if webhook already created a row)
+        // Se a reunião estiver vinculada à tabela 'meetings', usamos a versão de 'meetings'
+        // Mas se for um encontro de módulo que só existe aqui, exibimos.
         if (meetings.some(mTable => mTable.contractModuleMeetingId === m.id)) {
           return null;
         }
@@ -108,7 +109,7 @@ export function useReunioes() {
           tipo: 'Encontro de Módulo',
           title: m.title || `Encontro #${m.meeting_number}`,
           pauta: m.title || `Encontro #${m.meeting_number}`,
-          status: m.status === 'agendado' ? 'agendada' : (m.status === 'realizada' ? 'realizada' : m.status),
+          status: m.status === 'agendado' ? 'agendada' : (m.status === 'cancelada' ? 'cancelada' : (m.status === 'realizada' ? 'realizada' : m.status)),
           participantes: [],
           source: 'module_meeting',
           contractModuleMeetingId: m.id,
