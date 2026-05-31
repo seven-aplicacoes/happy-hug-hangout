@@ -911,7 +911,6 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, mode = 'ad
                 onDelete={() => removeLocalPhase(idx)}
                 mode={mode}
 
-                mode={mode}
               />
             ))}
 
