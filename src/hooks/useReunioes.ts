@@ -119,8 +119,8 @@ export function useReunioes() {
       }).filter(Boolean);
 
       return [...meetings, ...moduleMeetings] as Reuniao[];
-
     },
+    enabled: !!perfil,
   });
 
   const upsertReuniao = useMutation({
