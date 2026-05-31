@@ -199,9 +199,10 @@ function MeetingRow({
         open={detailsModalOpen}
         onClose={() => setDetailsModalOpen(false)}
         meeting={meeting}
-        mode={mode}
+        mode={mode as any}
         onSchedule={handleAgendarClick}
       />
+
 
       <CalendlyModal 
         open={calendlyModalOpen}
