@@ -255,7 +255,10 @@ export interface ContractModuleMeeting {
   availableFrom?: string;
   availableUntil?: string;
   consultantName?: string;
+  cancelUrl?: string;
+  rescheduleUrl?: string;
 }
+
 
 
 export interface ContractModuleDocument {
