@@ -126,12 +126,14 @@ export function useMyPermissions() {
       const user = authUser;
 
       // Check if user is admin
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
+      if (profileError) console.error('Error fetching profile in useMyPermissions:', profileError);
+
       const { data: permissionData, error: permError } = await supabase
         .from('consultant_permissions')
         .select('*')
