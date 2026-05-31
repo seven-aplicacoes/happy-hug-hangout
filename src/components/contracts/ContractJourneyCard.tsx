@@ -39,7 +39,166 @@ interface MeetingListProps {
   mode?: 'admin' | 'client' | 'consultor';
 }
 
-function MeetingList({ phase, contrato, onSchedule, onScheduleCalendly, mode = 'admin' }: MeetingListProps) {
+function MeetingRow({ 
+  meeting, 
+  isLocked, 
+  mode, 
+  onSchedule, 
+  onCancel, 
+  onToggleAvailability, 
+  showAvailability 
+}: { 
+  meeting: ContractModuleMeeting, 
+  isLocked: boolean, 
+  mode: string, 
+  onSchedule: (m: ContractModuleMeeting) => void,
+  onCancel: (id: string) => void,
+  onToggleAvailability: (id: string) => void,
+  showAvailability: boolean
+}) {
+  const isCompleted = ['realizada', 'concluida', 'concluído', 'concluída', 'resolvido', 'completed', 'done'].includes(meeting.status.toLowerCase());
+  const [calendlyModalOpen, setCalendlyModalOpen] = useState(false);
+  const { user } = useAuth();
+  
+  const { data: calendlyUrl } = useCalendlyLink({
+    consultantId: meeting.consultantId || '',
+    moduleId: meeting.moduleId,
+    productId: meeting.productId,
+  });
+
+  const now = new Date();
+  const isOutsideWindow = (meeting.availableFrom && now < new Date(meeting.availableFrom)) || 
+                          (meeting.availableUntil && now > new Date(meeting.availableUntil));
+
+  const handleAgendarClick = () => {
+    if (isLocked && mode === 'client') {
+      return;
+    }
+    
+    if (isOutsideWindow && mode === 'client') {
+      return;
+    }
+
+    if (mode === 'client' && calendlyUrl) {
+      setCalendlyModalOpen(true);
+    } else {
+      onSchedule(meeting);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className={cn(
+        "group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white transition-all gap-4",
+        isLocked ? "opacity-60 grayscale-[0.5] border-dashed" : "hover:border-primary/40 hover:shadow-sm"
+      )}>
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+            isCompleted ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
+          )}>
+            #{meeting.meetingNumber}
+          </div>
+          <div>
+            <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{meeting.title}</p>
+            <div className="flex items-center gap-3 mt-1">
+              <StatusTag label={meeting.status} variant={isCompleted ? 'success' : meeting.status === 'agendado' ? 'info' : 'neutral'} />
+              {meeting.scheduledAt && (
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> {new Date(meeting.scheduledAt).toLocaleDateString('pt-BR')} às {new Date(meeting.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+              {isOutsideWindow && !isCompleted && meeting.status !== 'agendado' && (
+                <span className="text-[10px] text-amber-600 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded">
+                  <AlertCircle className="h-3 w-3" /> Fora do período
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="text-right mr-3 hidden md:block">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase">Consultor</p>
+            <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
+          </div>
+          
+          <div className="flex gap-2">
+            {(mode === 'consultor' || mode === 'admin') && (
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className={cn(
+                  "h-8 gap-1.5 px-3 text-[10px] font-black uppercase",
+                  showAvailability ? "bg-primary text-white hover:bg-primary/90" : "text-primary hover:bg-primary/5"
+                )}
+                onClick={() => onToggleAvailability(meeting.id)}
+              >
+                <Settings className="h-3.5 w-3.5" /> Disponibilidade
+              </Button>
+            )}
+
+            {isLocked && mode === 'client' ? (
+              <Button size="sm" variant="ghost" disabled className="h-8 gap-1.5 px-3 text-muted-foreground border-neutral-100 bg-neutral-50" title="Conclua o encontro anterior para liberar este agendamento.">
+                <Clock className="h-3.5 w-3.5" /> Bloqueado
+              </Button>
+            ) : isOutsideWindow && mode === 'client' && !isCompleted && meeting.status !== 'agendado' ? (
+              <Button size="sm" variant="ghost" disabled className="h-8 gap-1.5 px-3 text-amber-600 border-amber-100 bg-amber-50">
+                <CalendarClock className="h-3.5 w-3.5" /> Indisponível
+              </Button>
+            ) : isCompleted ? (
+              <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
+              </Button>
+            ) : meeting.status === 'agendado' ? (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={handleAgendarClick}>
+                  Reagendar
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => onCancel(meeting.id)}>
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                size="sm" 
+                className={cn(
+                  "h-8 gap-1.5 px-3",
+                  mode === 'client' ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-primary text-white"
+                )} 
+                onClick={handleAgendarClick}
+                disabled={isLocked && mode !== 'admin'}
+              >
+                <Calendar className="h-3.5 w-3.5" /> Agendar
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <CalendlyModal 
+        open={calendlyModalOpen}
+        onClose={() => setCalendlyModalOpen(false)}
+        url={calendlyUrl}
+        prefill={{
+          name: user?.nome,
+          email: user?.email
+        }}
+        context={{
+          clientId: meeting.clientId,
+          contractId: meeting.contractId,
+          productId: meeting.productId,
+          moduleId: meeting.moduleId,
+          meetingId: meeting.id,
+          meetingTitle: meeting.title,
+          consultantId: meeting.consultantId,
+          consultantName: meeting.consultantName
+        }}
+      />
+    </div>
+  );
+}
+
+function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
   const { meetings, isLoading, updateMeeting } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   const { toast } = useToast();
@@ -72,90 +231,21 @@ function MeetingList({ phase, contrato, onSchedule, onScheduleCalendly, mode = '
       {meetings.map((meeting, index) => {
         const previousMeeting = index > 0 ? meetings[index - 1] : null;
         const isLocked = previousMeeting && !isCompleted(previousMeeting.status);
-        const meetingIsCompleted = isCompleted(meeting.status);
 
         return (
-          <div key={meeting.id} className="space-y-2">
-            <div className={cn(
-              "group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white transition-all gap-4",
-              isLocked ? "opacity-60 grayscale-[0.5] border-dashed" : "hover:border-primary/40 hover:shadow-sm"
-            )}>
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-                  meetingIsCompleted ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
-                )}>
-                  #{meeting.meetingNumber}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{meeting.title}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <StatusTag label={meeting.status} variant={meetingIsCompleted ? 'success' : meeting.status === 'agendado' ? 'info' : 'neutral'} />
-                    {meeting.scheduledAt && (
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> {new Date(meeting.scheduledAt).toLocaleDateString('pt-BR')} às {new Date(meeting.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-right mr-3 hidden md:block">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">Consultor</p>
-                  <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
-                </div>
-                
-                <div className="flex gap-2">
-                  {(mode === 'consultor' || mode === 'admin') && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className={cn(
-                        "h-8 gap-1.5 px-3 text-[10px] font-black uppercase",
-                        meetingForAvailability === meeting.id ? "bg-primary text-white hover:bg-primary/90" : "text-primary hover:bg-primary/5"
-                      )}
-                      onClick={() => setMeetingForAvailability(meetingForAvailability === meeting.id ? null : meeting.id)}
-                    >
-                      <Settings className="h-3.5 w-3.5" /> Disponibilidade
-                    </Button>
-                  )}
-
-                  {isLocked && mode === 'client' ? (
-                    <Button size="sm" variant="ghost" disabled className="h-8 gap-1.5 px-3 text-muted-foreground border-neutral-100 bg-neutral-50" title="Conclua o encontro anterior para liberar este agendamento.">
-                      <Clock className="h-3.5 w-3.5" /> Bloqueado
-                    </Button>
-                  ) : meetingIsCompleted ? (
-                    <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
-                    </Button>
-                  ) : meeting.status === 'agendado' ? (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => mode === 'client' && onScheduleCalendly ? onScheduleCalendly(meeting) : onSchedule(meeting)}>
-                        Reagendar
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => handleCancelMeeting(meeting.id)}>
-                        Cancelar
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button 
-                      size="sm" 
-                      className={cn(
-                        "h-8 gap-1.5 px-3",
-                        mode === 'client' ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-primary text-white"
-                      )} 
-                      onClick={() => mode === 'client' && onScheduleCalendly ? onScheduleCalendly(meeting) : onSchedule(meeting)}
-                      disabled={isLocked && mode !== 'admin'}
-                    >
-                      <Calendar className="h-3.5 w-3.5" /> Agendar
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
+          <div key={meeting.id}>
+            <MeetingRow 
+              meeting={meeting}
+              isLocked={!!isLocked}
+              mode={mode}
+              onSchedule={onSchedule}
+              onCancel={handleCancelMeeting}
+              onToggleAvailability={(id) => setMeetingForAvailability(meetingForAvailability === id ? null : id)}
+              showAvailability={meetingForAvailability === meeting.id}
+            />
             
             {meetingForAvailability === meeting.id && (
-              <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200">
+              <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200 mt-2">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
                     <Calendar className="h-4 w-4" /> Configurar Disponibilidade: {meeting.title}
@@ -180,6 +270,7 @@ function MeetingList({ phase, contrato, onSchedule, onScheduleCalendly, mode = '
     </div>
   );
 }
+
 
 function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, contrato: any, type: 'internal' | 'client', mode?: 'admin' | 'client' | 'consultor' }) {
   const { perfil, user } = useAuth();
