@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { buildCalendlyUrl, CalendlyContext } from '@/lib/calendly';
 import { Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+
 
 export type { CalendlyContext };
 
