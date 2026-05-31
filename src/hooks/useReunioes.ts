@@ -54,6 +54,9 @@ export function useReunioes() {
         location: r.location,
         scheduledBy: r.scheduled_by,
         contractModuleMeetingId: r.contract_module_meeting_id,
+        cancelUrl: r.cancel_url,
+        rescheduleUrl: r.reschedule_url,
+
       })) as Reuniao[];
     },
   });
