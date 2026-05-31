@@ -19,7 +19,10 @@ export function useClienteFicha(clientId?: string) {
         .select(`
           *,
           consultant:profiles!clients_consultant_id_fkey (
-            full_name
+            full_name,
+            email,
+            phone,
+            calendly_url
           )
         `)
         .eq('id', clientId)
@@ -38,6 +41,7 @@ export function useClienteFicha(clientId?: string) {
         consultorId: data.consultant_id,
         porte: data.company_size as any,
         consultorNome: data.consultant?.full_name || 'Não atribuído',
+        consultant: data.consultant,
         especialidade: 'gestao',
         faseMetodologica: data.methodology_phase as FaseMetodologica,
         indiceSeven: data.seven_index || 0,

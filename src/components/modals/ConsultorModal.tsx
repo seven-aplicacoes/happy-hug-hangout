@@ -77,6 +77,7 @@ export const ConsultorModal = ({
     role: "consultor",
     max_clients: 10,
     hours_available: 160,
+    calendly_url: "",
   });
 
   const { consultantGoals } = useConsultantGoals(consultor?.id);
@@ -160,6 +161,16 @@ export const ConsultorModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate Calendly URL if provided
+    if (formData.calendly_url && !formData.calendly_url.startsWith('https://calendly.com/')) {
+       toast({
+        title: "Link do Calendly inválido",
+        description: "Informe uma URL válida do Calendly (ex: https://calendly.com/seu-usuario/reuniao).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Final check for mandatory fields
     if (!formData.full_name || !formData.email || (!consultor && !formData.password) || !formData.role || !formData.status) {
       toast({
@@ -248,6 +259,17 @@ export const ConsultorModal = ({
                 }}
               />
             </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="calendly_url">Link do Calendly</Label>
+              <Input
+                id="calendly_url"
+                type="url"
+                placeholder="https://calendly.com/seu-usuario/reuniao"
+                value={formData.calendly_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, calendly_url: e.target.value })
+                }
+              />
             <div className="space-y-2">
               <Label htmlFor="role">Tipo de Acesso *</Label>
               <Select
