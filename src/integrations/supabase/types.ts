@@ -2316,6 +2316,7 @@ export type Database = {
           calendly_invitee_uri: string | null
           calendly_reschedule_url: string | null
           cancel_reason: string | null
+          cancel_url: string | null
           canceled_at: string | null
           canceled_by: string | null
           client_id: string | null
@@ -2346,6 +2347,7 @@ export type Database = {
           meeting_url: string | null
           methodology_phase_id: string | null
           participants: Json | null
+          reschedule_url: string | null
           scheduled_by: string | null
           source: string | null
           start_time: string
@@ -2362,6 +2364,7 @@ export type Database = {
           calendly_invitee_uri?: string | null
           calendly_reschedule_url?: string | null
           cancel_reason?: string | null
+          cancel_url?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
           client_id?: string | null
@@ -2392,6 +2395,7 @@ export type Database = {
           meeting_url?: string | null
           methodology_phase_id?: string | null
           participants?: Json | null
+          reschedule_url?: string | null
           scheduled_by?: string | null
           source?: string | null
           start_time: string
@@ -2408,6 +2412,7 @@ export type Database = {
           calendly_invitee_uri?: string | null
           calendly_reschedule_url?: string | null
           cancel_reason?: string | null
+          cancel_url?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
           client_id?: string | null
@@ -2438,6 +2443,7 @@ export type Database = {
           meeting_url?: string | null
           methodology_phase_id?: string | null
           participants?: Json | null
+          reschedule_url?: string | null
           scheduled_by?: string | null
           source?: string | null
           start_time?: string
