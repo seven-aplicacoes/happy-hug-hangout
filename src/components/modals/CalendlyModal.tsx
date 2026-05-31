@@ -3,6 +3,21 @@ import { BaseModal } from '@/components/BaseModal';
 import { buildCalendlyUrl } from '@/lib/calendly';
 import { Loader2 } from 'lucide-react';
 
+export type CalendlyContext = {
+  clientId?: string;
+  clientName?: string;
+  contractId?: string;
+  contractName?: string;
+  productId?: string;
+  productName?: string;
+  moduleId?: string;
+  moduleName?: string;
+  meetingId?: string;
+  meetingTitle?: string;
+  consultantId?: string;
+  consultantName?: string;
+};
+
 type CalendlyModalProps = {
   open: boolean;
   onClose: () => void;
@@ -11,6 +26,7 @@ type CalendlyModalProps = {
     name?: string;
     email?: string;
   };
+  context?: CalendlyContext;
 };
 
 export const CalendlyModal = ({ open, onClose, url, prefill }: CalendlyModalProps) => {

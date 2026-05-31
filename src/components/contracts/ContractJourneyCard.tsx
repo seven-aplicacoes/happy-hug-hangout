@@ -31,10 +31,11 @@ interface MeetingListProps {
   phase: any;
   contrato: any;
   onSchedule: (meeting: ContractModuleMeeting) => void;
+  onScheduleCalendly?: (meeting: ContractModuleMeeting) => void;
   mode?: 'admin' | 'client' | 'consultor';
 }
 
-function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
+function MeetingList({ phase, contrato, onSchedule, onScheduleCalendly, mode = 'admin' }: MeetingListProps) {
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   
@@ -90,13 +91,27 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                 )}
 
                 {meeting.status === 'pendente' ? (
-                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" onClick={() => onSchedule(meeting)}>
-                    <Calendar className="h-3.5 w-3.5" /> Agendar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" onClick={() => onSchedule(meeting)}>
+                      <Calendar className="h-3.5 w-3.5" /> Agendar
+                    </Button>
+                    {mode === 'client' && onScheduleCalendly && (
+                      <Button size="sm" className="h-8 gap-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white" onClick={() => onScheduleCalendly(meeting)}>
+                        <Calendar className="h-3.5 w-3.5" /> Calendly
+                      </Button>
+                    )}
+                  </div>
                 ) : meeting.status === 'agendado' ? (
-                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
-                    Reagendar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
+                      Reagendar
+                    </Button>
+                    {mode === 'client' && onScheduleCalendly && (
+                      <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-blue-600/20 text-blue-600 hover:bg-blue-50" onClick={() => onScheduleCalendly(meeting)}>
+                        Calendly
+                      </Button>
+                    )}
+                  </div>
                 ) : (
                   <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
                     <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
@@ -224,7 +239,7 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
   );
 }
 
-function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor' }) {
+function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, onScheduleCalendly, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, onScheduleCalendly?: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor' }) {
   const [expanded, setExpanded] = useState(false);
   const { consultores } = useConsultores();
   
@@ -368,7 +383,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
             </div>
             
             <TabsContent value="encontros" className="mt-0">
-              <MeetingList phase={phase} contrato={contrato} onSchedule={onSchedule} mode={mode} />
+              <MeetingList phase={phase} contrato={contrato} onSchedule={onSchedule} onScheduleCalendly={onScheduleCalendly} mode={mode} />
             </TabsContent>
             {mode === 'admin' && (
               <TabsContent value="internos" className="mt-0">
@@ -531,7 +546,7 @@ function ConsultantAvailabilityConfig({
   );
 }
 
-function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, mode = 'admin', onUpdateProduct, onDeleteProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void>, onDeleteProduct?: () => Promise<void> }) {
+function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, onScheduleCalendly, mode = 'admin', onUpdateProduct, onDeleteProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, onScheduleCalendly?: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void>, onDeleteProduct?: () => Promise<void> }) {
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
@@ -757,6 +772,7 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
                 }}
                 onDelete={() => removeLocalPhase(idx)}
                 onSchedule={onSchedule}
+                onScheduleCalendly={onScheduleCalendly}
                 mode={mode}
               />
             ))}
@@ -787,13 +803,15 @@ export function ContractJourneyCard({
   isEditing = false,
   expanded = false,
   mode = 'admin',
-  onAddProduct
+  onAddProduct,
+  onScheduleCalendly
 }: { 
   contrato: any, 
   isEditing?: boolean,
   expanded?: boolean,
   mode?: 'admin' | 'client' | 'consultor',
-  onAddProduct?: () => void
+  onAddProduct?: () => void,
+  onScheduleCalendly?: (meeting: ContractModuleMeeting) => void
 }) {
 
 
@@ -903,6 +921,7 @@ export function ContractJourneyCard({
                   contrato={contrato} 
                   isEditing={isEditing}
                   onSchedule={handleScheduleMeeting}
+                  onScheduleCalendly={onScheduleCalendly}
                   mode={mode}
                   onUpdateProduct={async (data) => {
                     await upsertContractProducts.mutateAsync([data]);
