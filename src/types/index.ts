@@ -252,8 +252,11 @@ export interface ContractModuleMeeting {
   scheduledAt?: string;
   completedAt?: string;
   orderIndex: number;
+  availableFrom?: string;
+  availableUntil?: string;
   consultantName?: string;
 }
+
 
 export interface ContractModuleDocument {
   id: string;
