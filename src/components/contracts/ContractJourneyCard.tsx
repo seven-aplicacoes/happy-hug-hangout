@@ -520,8 +520,9 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
             </div>
             
             <TabsContent value="encontros" className="mt-0">
-              <MeetingList phase={phase} contrato={contrato} onSchedule={onSchedule} onScheduleCalendly={onScheduleCalendly} mode={mode} />
+              <MeetingList phase={phase} contrato={contrato} mode={mode} />
             </TabsContent>
+
             {mode === 'admin' && (
               <TabsContent value="internos" className="mt-0">
                 <DocumentList phase={phase} contrato={contrato} type="internal" mode={mode} />
