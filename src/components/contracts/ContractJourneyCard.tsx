@@ -937,11 +937,10 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, mode = 'ad
 
 export function ContractJourneyCard({ 
   contrato, 
-  isEditing = false,
+  isEditing: isParentEditing = false,
   expanded = false,
   mode = 'admin',
-  onAddProduct,
-  onScheduleCalendly
+  onAddProduct
 }: { 
   contrato: any, 
   isEditing?: boolean,
@@ -954,6 +953,7 @@ export function ContractJourneyCard({
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
+
 
 
   if (isLoadingProducts) {
