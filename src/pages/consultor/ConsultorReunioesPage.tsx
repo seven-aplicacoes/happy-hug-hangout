@@ -261,10 +261,19 @@ export default function ConsultorReunioesPage() {
                           variant="ghost" 
                           size="sm" 
                           className="h-8 text-[10px] gap-1 px-2"
-                          onClick={(e) => { e.stopPropagation(); setSelectedReuniao(r); setModalAgendamentoOpen(true); }}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (r.rescheduleUrl) {
+                              window.open(r.rescheduleUrl, '_blank');
+                            } else {
+                              setSelectedReuniao(r); 
+                              setModalAgendamentoOpen(true);
+                            }
+                          }}
                         >
                           <CalendarClock className="h-3 w-3" /> Remarcar
                         </Button>
+
                       </div>
                     )}
                     <StatusTag label={labelStatus[r.status]} />
