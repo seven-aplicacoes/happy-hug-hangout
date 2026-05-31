@@ -57,9 +57,10 @@ export default function ConsultorDashboardPage() {
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { csatSurveys, npsSurveys, isLoading: loadingSurveys } = useSurveys(consultorId);
+  const { mergedGoals: targets, isLoading: loadingTargets } = useConsultantGoals(consultorId);
 
-  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions || loadingSurveys;
-  
+  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions || loadingSurveys || loadingTargets;
+
   if (isLoading) {
     console.log('ConsultorDashboardPage: isLoading flags:', {
       loadingClientes,
@@ -75,7 +76,6 @@ export default function ConsultorDashboardPage() {
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
   const [periodo, setPeriodo] = useState(() => getPeriodo('mes_atual'));
-  const { mergedGoals: targets, isLoading: loadingTargets } = useConsultantGoals(consultorId);
   const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
     isOpen: false, title: '', type: null 
   });
