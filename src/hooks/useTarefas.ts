@@ -29,7 +29,12 @@ export function useTarefas() {
         `);
 
       if (perfil === 'consultor' && user?.consultorId) {
-        const { data: myClients } = await supabase.from('clients').select('id').eq('consultant_id', user.consultorId);
+        const { data: myClients } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('consultant_id', user.consultorId)
+          .is('deleted_at', null);
+          
         const clientIds = myClients?.map(c => c.id) || [];
         
         if (clientIds.length > 0) {
