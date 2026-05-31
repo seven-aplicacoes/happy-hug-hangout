@@ -1,7 +1,7 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, CalendarClock, AlertCircle
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, CalendarClock, AlertCircle, RefreshCw, XCircle
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 
@@ -27,7 +27,9 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCalendlyLink } from '@/hooks/useCalendlyLink';
 import { CalendlyModal } from '@/components/modals/CalendlyModal';
+import { ModalDetalheEncontro } from '@/components/modals/ModalDetalheEncontro';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
+
 
 
 
