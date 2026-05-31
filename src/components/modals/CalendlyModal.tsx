@@ -1,23 +1,11 @@
 import { useState } from 'react';
 import { BaseModal } from '@/components/BaseModal';
-import { buildCalendlyUrl } from '@/lib/calendly';
+import { buildCalendlyUrl, CalendlyContext } from '@/lib/calendly';
 import { Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export type CalendlyContext = {
-  clientId?: string;
-  clientName?: string;
-  contractId?: string;
-  contractName?: string;
-  productId?: string;
-  productName?: string;
-  moduleId?: string;
-  moduleName?: string;
-  meetingId?: string;
-  meetingTitle?: string;
-  consultantId?: string;
-  consultantName?: string;
-};
+export type { CalendlyContext };
+
 
 type CalendlyModalProps = {
   open: boolean;
