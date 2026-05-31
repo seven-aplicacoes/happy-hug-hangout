@@ -16,6 +16,7 @@ serve(async (req) => {
     const token = Deno.env.get('CALENDLY_PERSONAL_ACCESS_TOKEN')
 
     if (!token) {
+      console.warn('CALENDLY_PERSONAL_ACCESS_TOKEN not configured');
       return new Response(JSON.stringify({ error: 'CALENDLY_PERSONAL_ACCESS_TOKEN not configured' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -51,12 +52,12 @@ serve(async (req) => {
             eventData = evJson.resource
           }
         }
+      } else {
+        console.error(`Error fetching invitee from Calendly: ${resp.status} ${resp.statusText}`);
       }
     }
 
     if (!inviteeData || !eventData) {
-      // Fallback: search for recent invitees if email provided
-      // This is more complex, for now we assume we got the URI from the frontend listener
       return new Response(JSON.stringify({ error: 'Could not fetch data from Calendly' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 404,
@@ -67,11 +68,25 @@ serve(async (req) => {
     // 1. Fetch meeting
     const { data: meeting } = await supabaseClient
       .from('contract_module_meetings')
-      .select('*')
+      .select(`
+        *,
+        consultant:profiles!consultant_id (full_name)
+      `)
       .eq('id', meeting_id)
       .single()
 
     if (meeting) {
+      const isCanceled = inviteeData.status === 'canceled';
+      
+      // Before UPSERT, if it's NOT a cancel, mark others as superseded
+      if (!isCanceled) {
+        await supabaseClient
+          .from('meeting_scheduling_events')
+          .update({ status: 'superseded', updated_at: new Date().toISOString() })
+          .eq('meeting_id', meeting_id)
+          .eq('status', 'scheduled');
+      }
+
       // 2. Upsert Scheduling Event
       const schedulingEvent = {
         client_id: meeting.client_id,
@@ -92,15 +107,36 @@ serve(async (req) => {
         status: inviteeData.status || 'scheduled',
         cancel_url: inviteeData.cancel_url,
         reschedule_url: inviteeData.reschedule_url,
+        raw_payload: { invitee: inviteeData, event: eventData },
         updated_at: new Date().toISOString()
       }
 
-      await supabaseClient
+      const { data: insertedEvent } = await supabaseClient
         .from('meeting_scheduling_events')
         .upsert(schedulingEvent, { onConflict: 'calendly_invitee_uri' })
+        .select()
+        .single()
 
-      // 3. Update meeting
-      if (inviteeData.status !== 'canceled') {
+      // 3. Create History Entry
+      await supabaseClient
+        .from('meeting_history_events')
+        .insert({
+          meeting_id: meeting_id,
+          scheduling_event_id: insertedEvent?.id,
+          client_id: meeting.client_id,
+          consultant_id: meeting.consultant_id,
+          event_type: isCanceled ? 'canceled' : 'scheduled',
+          title: isCanceled ? 'Encontro cancelado (Sinc)' : 'Encontro agendado (Sinc)',
+          description: isCanceled 
+            ? `Cancelamento sincronizado manualmente.` 
+            : `Agendamento sincronizado manualmente com ${meeting.consultant?.full_name || 'consultor'} para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`,
+          new_start_time: isCanceled ? null : eventData.start_time,
+          previous_start_time: isCanceled ? eventData.start_time : null,
+          metadata: { sync_source: 'manual_fallback', invitee_uri }
+        });
+
+      // 4. Update meeting core status
+      if (!isCanceled) {
         await supabaseClient
           .from('contract_module_meetings')
           .update({
@@ -108,6 +144,16 @@ serve(async (req) => {
             scheduled_at: eventData.start_time,
             cancel_url: inviteeData.cancel_url,
             reschedule_url: inviteeData.reschedule_url,
+          })
+          .eq('id', meeting_id)
+      } else {
+        await supabaseClient
+          .from('contract_module_meetings')
+          .update({
+            status: 'pendente',
+            scheduled_at: null,
+            cancel_url: null,
+            reschedule_url: null,
           })
           .eq('id', meeting_id)
       }
@@ -119,6 +165,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error('Sync error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
