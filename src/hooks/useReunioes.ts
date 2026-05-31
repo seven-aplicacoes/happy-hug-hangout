@@ -46,11 +46,7 @@ export function useReunioes() {
       }
 
       const { data: moduleMeetingsData, error: moduleMeetingsError } = await moduleMeetingsQuery;
-      if (moduleMeetingsError) {
-        console.error('useReunioes: Error fetching moduleMeetingsData', moduleMeetingsError);
-        throw moduleMeetingsError;
-      }
-      console.log('useReunioes: moduleMeetingsData count:', (moduleMeetingsData || []).length);
+      if (moduleMeetingsError) throw moduleMeetingsError;
 
       // 3. Merge and normalize
       const meetings = (meetingsData || []).map((r: any) => ({
