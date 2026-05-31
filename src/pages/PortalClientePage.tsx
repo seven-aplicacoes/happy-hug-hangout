@@ -275,25 +275,63 @@ export default function PortalClientePage() {
             <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico de Reuniões</h2>
           </div>
           <div className="space-y-4">
-            {historico?.map(event => (
-              <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex gap-6">
-                <div className="md:w-32 shrink-0 border-r border-neutral-100 pr-6">
-                  <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">{event.tipo}</p>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
-                  <p className="text-sm text-neutral-500 leading-relaxed">{event.descricao}</p>
-                </div>
-              </Card>
-            ))}
+            {historico?.map(event => {
+              const type = (event as any).eventType;
+              const isScheduling = !!type;
+              
+              const icons: Record<string, any> = {
+                scheduled: <Calendar className="h-5 w-5 text-blue-500" />,
+                rescheduled: <RefreshCw className="h-5 w-5 text-amber-500" />,
+                canceled: <XCircle className="h-5 w-5 text-red-500" />,
+                completed: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+              };
+
+              const colors: Record<string, string> = {
+                scheduled: "bg-blue-50 border-blue-100",
+                rescheduled: "bg-amber-50 border-amber-100",
+                canceled: "bg-red-50 border-red-100",
+                completed: "bg-green-50 border-green-100",
+              };
+
+              return (
+                <Card key={event.id} className={cn("p-5 border shadow-sm flex gap-6 transition-all hover:shadow-md", isScheduling ? colors[type] : "bg-white border-neutral-100")}>
+                  <div className="md:w-32 shrink-0 border-r border-neutral-200/50 pr-6 flex flex-col justify-center">
+                    <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-1">
+                      {format(new Date(event.data), "HH:mm")}
+                    </p>
+                  </div>
+                  <div className="flex-1 flex gap-4 items-start">
+                    <div className="mt-1 shrink-0">
+                      {isScheduling ? icons[type] : <History className="h-5 w-5 text-neutral-400" />}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-neutral-900">{event.titulo}</h4>
+                        {isScheduling && <Badge variant="outline" className="text-[9px] uppercase font-black">{type}</Badge>}
+                      </div>
+                      <p className="text-sm text-neutral-600 leading-relaxed">{event.descricao}</p>
+                      
+                      {(event as any).newStartTime && (
+                        <p className="text-[10px] font-medium text-neutral-500 flex items-center gap-1.5 pt-1">
+                          <Clock className="h-3 w-3" /> 
+                          Horário: {format(new Date((event as any).newStartTime), "dd/MM/yy 'às' HH:mm")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
             {historico?.length === 0 && (
               <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
-                <p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p>
+                <History className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
+                <p className="text-neutral-400 text-sm">Você ainda não possui histórico de reuniões.</p>
               </div>
             )}
           </div>
         </section>
+
 
       </div>
 
