@@ -45,6 +45,7 @@ export function useContratos() {
         contractNumber: c.contract_number,
       })) as Contrato[];
     },
+    enabled: !!perfil,
   });
 
   const upsertContrato = useMutation({
