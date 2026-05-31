@@ -140,6 +140,7 @@ export const ConsultorModal = ({
         role: (consultor as any).role || "consultor",
         max_clients: consultor.max_clients || 10,
         hours_available: consultor.hours_available || 160,
+        calendly_url: consultor.calendly_url || "",
       });
     } else {
       setFormData({
@@ -154,6 +155,7 @@ export const ConsultorModal = ({
         role: "consultor",
         max_clients: 10,
         hours_available: 160,
+        calendly_url: "",
       });
     }
   }, [consultor, isOpen]);
@@ -270,6 +272,7 @@ export const ConsultorModal = ({
                   setFormData({ ...formData, calendly_url: e.target.value })
                 }
               />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="role">Tipo de Acesso *</Label>
               <Select
