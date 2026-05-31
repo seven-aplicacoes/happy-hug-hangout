@@ -105,7 +105,7 @@ export default function LoginPage() {
 
         <div className="space-y-8 max-w-lg relative z-10">
           <p className="ui-overline text-background/50">Plataforma Seven Gestão</p>
-          <h2 className="font-editorial text-5xl xl:text-6xl leading-[1.05] tracking-tight">
+          <h2 className="font-editorial text-4xl xl:text-5xl leading-[1.05] tracking-tight">
             Método, governança<br />
             e clareza <span className="font-editorial-italic text-primary">em cada decisão.</span>
           </h2>
