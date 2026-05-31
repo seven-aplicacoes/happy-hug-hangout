@@ -947,36 +947,14 @@ export function ContractJourneyCard({
   isEditing?: boolean,
   expanded?: boolean,
   mode?: 'admin' | 'client' | 'consultor',
-  onAddProduct?: () => void,
-  onScheduleCalendly?: (meeting: ContractModuleMeeting) => void
+  onAddProduct?: () => void
 }) {
-
-
   const { products, isLoading: isLoadingProducts, upsertContractProducts, deleteContractProduct } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
-  const [clientScheduleModalOpen, setClientScheduleModalOpen] = useState(false);
-  const [selectedModuleMeeting, setSelectedModuleMeeting] = useState<ContractModuleMeeting | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const handleScheduleMeeting = (meeting: ContractModuleMeeting) => {
-    if (mode === 'client') {
-      setSelectedModuleMeeting(meeting);
-      setClientScheduleModalOpen(true);
-    } else {
-      setInitialMeetingData({
-        clienteId: meeting.clientId,
-        contractId: meeting.contractId,
-        contractProductId: meeting.productId,
-        contractProductPhaseId: meeting.moduleId,
-        contractModuleMeetingId: meeting.id,
-        title: meeting.title,
-        consultorId: meeting.consultantId || '',
-        status: 'agendada'
-      });
-      setMeetingModalOpen(true);
-    }
-  };
 
   if (isLoadingProducts) {
     return (
