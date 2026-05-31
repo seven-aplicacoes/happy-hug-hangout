@@ -1,9 +1,8 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, CalendarClock, AlertCircle
 } from 'lucide-react';
-import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,7 +24,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCalendlyLink } from '@/hooks/useCalendlyLink';
+import { CalendlyModal } from '@/components/modals/CalendlyModal';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
+
 
 interface MeetingListProps {
   phase: any;
