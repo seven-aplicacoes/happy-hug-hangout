@@ -103,6 +103,15 @@ serve(async (req) => {
       }
 
       const isReschedule = !!data.old_invitee;
+      
+      // Before UPSERT, if it's NOT an explicit reschedule but we are creating a NEW scheduled event for this meeting,
+      // we must mark any existing 'scheduled' events for this meeting as 'superseded' to avoid unique constraint violations
+      // and maintain only one active event.
+      await supabaseClient
+        .from('meeting_scheduling_events')
+        .update({ status: 'superseded', updated_at: new Date().toISOString() })
+        .eq('meeting_id', meetingId)
+        .eq('status', 'scheduled');
 
       // 1. Upsert Scheduling Event
       const schedulingEvent = {
@@ -136,7 +145,16 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (upsertError) console.error('Error upserting scheduling event:', upsertError);
+      if (upsertError) {
+        console.error('Error upserting scheduling event:', upsertError);
+        // Fallback for unique constraint if race condition happened
+        if (upsertError.code === '23505') {
+           await supabaseClient
+            .from('meeting_scheduling_events')
+            .update(schedulingEvent)
+            .eq('calendly_invitee_uri', data.uri);
+        }
+      }
 
       // 2. Create Meeting History Event
       await supabaseClient
@@ -152,7 +170,11 @@ serve(async (req) => {
             ? `Reunião reagendada via Calendly para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`
             : `Reunião agendada via Calendly com ${meeting.consultant?.full_name || 'consultor'} para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`,
           new_start_time: eventData.start_time,
-          metadata: { calendly_event_uri: data.event, is_reschedule: isReschedule }
+          metadata: { 
+            calendly_event_uri: data.event, 
+            is_reschedule: isReschedule,
+            previous_event_uri: data.old_invitee
+          }
         });
 
       // 3. Update core meeting status in contract_module_meetings
@@ -225,7 +247,11 @@ serve(async (req) => {
               ? `Processo de remarcação iniciado no Calendly.` 
               : `Agendamento cancelado no Calendly. Motivo: ${invitee.cancellation_reason || 'Não informado'}.`,
             previous_start_time: schedulingEvent.scheduled_start_time,
-            metadata: { canceled_at: invitee.canceled_at, is_rescheduled: isRescheduled }
+            metadata: { 
+              canceled_at: invitee.canceled_at, 
+              is_rescheduled: isRescheduled,
+              cancellation_reason: invitee.cancellation_reason
+            }
           });
 
         if (!isRescheduled) {
