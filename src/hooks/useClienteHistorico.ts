@@ -86,8 +86,9 @@ export function useClienteHistorico(clientId?: string) {
           evidencias: e.evidence_urls || [],
         })),
         ...meetingEvents,
-        ...schedulingHistory
+        ...timelineHistory
       ];
+
 
 
       return allEvents.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
