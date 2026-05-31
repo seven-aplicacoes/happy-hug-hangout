@@ -376,7 +376,7 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
   );
 }
 
-function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, onScheduleCalendly, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, onScheduleCalendly?: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor' }) {
+function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, mode?: 'admin' | 'client' | 'consultor' }) {
   const [expanded, setExpanded] = useState(false);
   const { consultores } = useConsultores();
   
