@@ -246,13 +246,17 @@ export default function ConsultorReunioesPage() {
                   <div className="flex items-center gap-4 min-w-0" onClick={() => setSelectedReuniao(r)}>
                     <span className="text-base font-mono font-semibold text-primary tabular-nums shrink-0">{r.startTime}</span>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{r.clienteNome} — {r.tipo}</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs text-muted-foreground truncate">{r.title}</p>
+                      <p className="text-sm font-bold truncate">
+                        {r.clienteNome} {r.contratoNome ? `(${r.contratoNome})` : ''}
+                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-xs font-medium text-foreground truncate">{r.title}</p>
+                        <span className="text-[10px] text-muted-foreground">• {r.produtoNome || r.tipo}</span>
                         {r.source === 'calendly' && <Badge variant="outline" className="text-[8px] h-3 px-1 uppercase font-black">Calendly</Badge>}
                       </div>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-2 shrink-0">
                     {r.status === 'agendada' && (
                       <div className="hidden group-hover:flex items-center gap-1 mr-2">
