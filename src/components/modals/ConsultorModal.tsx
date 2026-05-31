@@ -21,7 +21,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useConsultantGoals, IndicatorGoal } from "@/hooks/useConsultantGoals";
 import { useConsultantCalendlyEventTypes } from "@/hooks/useConsultantCalendlyEventTypes";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, CalendarClock, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, CalendarClock, ExternalLink, Loader2 } from "lucide-react";
+
 import type { ConsultantCalendlyEventType } from "@/types";
 
 
