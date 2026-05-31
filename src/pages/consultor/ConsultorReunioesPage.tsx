@@ -12,7 +12,7 @@ import { useClientes } from '@/hooks/useClientes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, CalendarClock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, CalendarClock, RefreshCw, XCircle, Clock } from 'lucide-react';
 import { ModalVerDetalhesReuniao } from '@/components/modals/ModalVerDetalhesReuniao';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { ModalRegistrarReuniao } from '@/components/modals/ModalRegistrarReuniao';
