@@ -129,7 +129,8 @@ function MeetingRow({
             <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+
             {(mode === 'consultor' || mode === 'admin') && !calendlyUrl && (
               <Button 
                 size="sm" 
