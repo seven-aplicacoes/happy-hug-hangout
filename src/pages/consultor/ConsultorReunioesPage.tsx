@@ -9,6 +9,8 @@ import { labelStatus } from '@/data/mockData';
 import { useReunioes } from '@/hooks/useReunioes';
 import { useConsultantMeetingIndicators } from '@/hooks/useConsultantMeetingIndicators';
 import { useClientes } from '@/hooks/useClientes';
+import { Badge } from '@/components/ui/badge';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
