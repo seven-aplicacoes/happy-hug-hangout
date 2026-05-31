@@ -12,7 +12,8 @@ export function useReunioes() {
   const { data: reunioes, isLoading, error } = useQuery({
     queryKey: ['reunioes', perfil, user?.consultorId],
     queryFn: async () => {
-      let query = supabase
+      // 1. Fetch manual meetings from 'meetings' table
+      let meetingsQuery = supabase
         .from('meetings')
         .select(`
           *,
@@ -21,13 +22,33 @@ export function useReunioes() {
         `);
 
       if (perfil === 'consultor' && user?.consultorId) {
-        query = query.eq('consultant_id', user.consultorId);
+        meetingsQuery = meetingsQuery.eq('consultant_id', user.consultorId);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      const { data: meetingsData, error: meetingsError } = await meetingsQuery;
+      if (meetingsError) throw meetingsError;
 
-      return data.map((r: any) => ({
+      // 2. Fetch scheduled meetings from 'contract_module_meetings' table
+      let moduleMeetingsQuery = supabase
+        .from('contract_module_meetings')
+        .select(`
+          *,
+          client:client_id (trade_name, corporate_name),
+          profile:consultant_id (full_name),
+          contract:contract_id (tipo),
+          product:product_id (name)
+        `)
+        .not('scheduled_at', 'is', null);
+
+      if (perfil === 'consultor' && user?.consultorId) {
+        moduleMeetingsQuery = moduleMeetingsQuery.eq('consultant_id', user.consultorId);
+      }
+
+      const { data: moduleMeetingsData, error: moduleMeetingsError } = await moduleMeetingsQuery;
+      if (moduleMeetingsError) throw moduleMeetingsError;
+
+      // 3. Merge and normalize
+      const meetings = (meetingsData || []).map((r: any) => ({
         id: r.id,
         clienteId: r.client_id,
         clienteNome: r.client?.trade_name || r.client?.corporate_name || 'Desconhecido',
@@ -41,14 +62,14 @@ export function useReunioes() {
         startTime: r.start_time,
         hora: r.start_time,
         duracao: r.duration,
-        tipo: r.type,
+        tipo: r.type || 'Reunião',
         title: r.title,
         pauta: r.title,
         description: r.description,
         status: r.status,
         ata: r.meeting_minutes,
         participantes: Array.isArray(r.participants) ? r.participants : [],
-        source: r.source,
+        source: r.source || 'manual',
         externalId: r.external_id,
         meetingUrl: r.meeting_url,
         location: r.location,
@@ -56,8 +77,47 @@ export function useReunioes() {
         contractModuleMeetingId: r.contract_module_meeting_id,
         cancelUrl: r.cancel_url,
         rescheduleUrl: r.reschedule_url,
+      }));
 
-      })) as Reuniao[];
+      const moduleMeetings = (moduleMeetingsData || []).map((m: any) => {
+        // Skip if already in meetings table (to avoid duplicates if webhook already created a row)
+        if (meetings.some(mTable => mTable.contractModuleMeetingId === m.id)) {
+          return null;
+        }
+
+        const scheduledDate = m.scheduled_at ? m.scheduled_at.split('T')[0] : '';
+        const scheduledTime = m.scheduled_at ? new Date(m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+
+        return {
+          id: m.id,
+          clienteId: m.client_id,
+          clienteNome: m.client?.trade_name || m.client?.corporate_name || 'Desconhecido',
+          contratoId: m.contract_id,
+          contratoNome: m.contract?.tipo,
+          productId: m.product_id,
+          produtoNome: m.product?.name,
+          moduleId: m.module_id,
+          consultorId: m.consultant_id,
+          consultorNome: m.profile?.full_name || 'Desconhecido',
+          meetingDate: scheduledDate,
+          data: scheduledDate,
+          startTime: scheduledTime,
+          hora: scheduledTime,
+          duracao: 60,
+          tipo: 'Encontro de Módulo',
+          title: m.title || `Encontro #${m.meeting_number}`,
+          pauta: m.title || `Encontro #${m.meeting_number}`,
+          status: m.status === 'agendado' ? 'agendada' : (m.status === 'realizada' ? 'realizada' : m.status),
+          participantes: [],
+          source: 'module_meeting',
+          contractModuleMeetingId: m.id,
+          cancelUrl: m.cancel_url,
+          rescheduleUrl: m.reschedule_url,
+        };
+      }).filter(Boolean);
+
+      return [...meetings, ...moduleMeetings] as Reuniao[];
+
     },
   });
 
