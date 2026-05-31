@@ -77,8 +77,10 @@ export function useClienteHistorico(clientId?: string) {
           fase: e.phase,
           evidencias: e.evidence_urls || [],
         })),
-        ...meetingEvents
+        ...meetingEvents,
+        ...schedulingHistory
       ];
+
 
       return allEvents.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
     },
