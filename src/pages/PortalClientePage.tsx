@@ -24,8 +24,11 @@ import {
   Users,
   Loader2,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  RefreshCw,
+  XCircle
 } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
