@@ -26,7 +26,8 @@ import {
   ChevronUp,
   ChevronDown,
   RefreshCw,
-  XCircle
+  XCircle,
+  ShieldAlert
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
