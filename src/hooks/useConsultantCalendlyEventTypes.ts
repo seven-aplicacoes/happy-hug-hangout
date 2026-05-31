@@ -17,7 +17,7 @@ export function useConsultantCalendlyEventTypes(consultantId?: string) {
         .eq('consultant_id', consultantId);
 
       if (error) throw error;
-      return data as ConsultantCalendlyEventType[];
+      return (data || []) as any as ConsultantCalendlyEventType[];
     },
     enabled: !!consultantId,
   });
