@@ -5,6 +5,7 @@ import { Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 
 export type { CalendlyContext };
@@ -28,24 +29,58 @@ export const CalendlyModal = ({ open, onClose, url, prefill, context }: Calendly
   useEffect(() => {
     if (!open) return;
 
-    const handleCalendlyEvent = (e: MessageEvent) => {
+    const handleCalendlyEvent = async (e: MessageEvent) => {
       if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") {
-        console.log("Calendly event scheduled, refetching data...");
+        console.log("Calendly event scheduled, refetching data...", e.data);
+        const payload = e.data.payload;
+        const inviteeUri = payload?.invitee?.uri;
+        const eventUri = payload?.event?.uri;
+        
         toast({
           title: "Agendamento realizado",
           description: "Sincronizando com o sistema Seven...",
         });
         
-        // Refetch multiple times to catch webhook sync
+        // 1. Initial invalidation
         queryClient.invalidateQueries();
-        setTimeout(() => queryClient.invalidateQueries(), 2000);
-        setTimeout(() => queryClient.invalidateQueries(), 5000);
+
+        // 2. Fallback: call sync function if we have context
+        if (context?.meetingId) {
+          try {
+            await supabase.functions.invoke('calendly-sync-event', {
+              body: {
+                meeting_id: context.meetingId,
+                invitee_uri: inviteeUri,
+                event_uri: eventUri
+              }
+            });
+            console.log("Sync function called successfully");
+          } catch (syncErr) {
+            console.warn("Could not call sync function, relying on webhook:", syncErr);
+          }
+        }
+        
+        // 3. Polling for up to 60 seconds
+        let attempts = 0;
+        const maxAttempts = 15; // 15 * 4s = 60s
+        const interval = setInterval(() => {
+          attempts++;
+          console.log(`Polling for sync... attempt ${attempts}`);
+          queryClient.invalidateQueries();
+          
+          if (attempts >= maxAttempts) {
+            clearInterval(interval);
+          }
+        }, 4000);
+
+        // Clear interval on unmount
+        return () => clearInterval(interval);
       }
     };
 
     window.addEventListener("message", handleCalendlyEvent);
     return () => window.removeEventListener("message", handleCalendlyEvent);
-  }, [open, queryClient]);
+  }, [open, queryClient, context]);
 
   const finalUrl = buildCalendlyUrl(url, prefill, context || undefined);
 
