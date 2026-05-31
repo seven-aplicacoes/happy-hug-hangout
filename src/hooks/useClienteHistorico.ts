@@ -32,6 +32,14 @@ export function useClienteHistorico(clientId?: string) {
 
       if (meetingsError) throw meetingsError;
 
+      const { data: schedulingEvents, error: schedulingError } = await supabase
+        .from('meeting_scheduling_events' as any)
+        .select('*')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false });
+
+      if (schedulingError) throw schedulingError;
+
       const meetingEvents = meetings.map((m: any) => ({
         id: m.id,
         data: m.scheduled_at,
@@ -41,6 +49,21 @@ export function useClienteHistorico(clientId?: string) {
         fase: m.module_id,
         evidencias: [],
       }));
+
+      const schedulingHistory = (schedulingEvents || []).map((se: any) => ({
+        id: se.id,
+        data: se.canceled_at || se.scheduled_start_time || se.created_at,
+        tipo: 'reuniao' as any,
+        titulo: se.event_name || 'Agendamento Calendly',
+        descricao: se.status === 'canceled' 
+          ? `Agendamento cancelado: ${se.cancellation_reason || 'sem motivo informado'}`
+          : se.status === 'rescheduled'
+          ? `Agendamento reagendado.`
+          : `Reunião agendada para ${new Date(se.scheduled_start_time).toLocaleString('pt-BR')}`,
+        fase: se.module_id,
+        evidencias: [],
+      }));
+
 
       const allEvents = [
         ...timelineEvents.map((e: any) => ({
