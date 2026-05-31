@@ -377,18 +377,41 @@ export const ConsultorModal = ({
                 }}
               />
             </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="calendly_url">Link do Calendly</Label>
-              <Input
-                id="calendly_url"
-                type="url"
-                placeholder="https://calendly.com/seu-usuario/reuniao"
-                value={formData.calendly_url}
-                onChange={(e) =>
-                  setFormData({ ...formData, calendly_url: e.target.value })
-                }
-              />
+            <div className="col-span-2 space-y-4 pt-4">
+              <Separator />
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-tight">Configuração de Agendamento Calendly</h3>
+              </div>
+              
+              <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-dashed">
+                <div className="space-y-2">
+                  <Label htmlFor="calendly_url" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Link padrão do Calendly</Label>
+                  <Input
+                    id="calendly_url"
+                    type="url"
+                    placeholder="https://calendly.com/seu-usuario/reuniao"
+                    value={formData.calendly_url}
+                    onChange={(e) =>
+                      setFormData({ ...formData, calendly_url: e.target.value })
+                    }
+                    className="h-10 bg-white"
+                  />
+                  <p className="text-[10px] text-muted-foreground italic">Usado quando não houver um link específico para o tipo de encontro.</p>
+                </div>
+
+                {consultor && (
+                  <div className="space-y-4 pt-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Links específicos por tipo de encontro</Label>
+                      <p className="text-[10px] text-muted-foreground">Use quando o consultor tiver links diferentes para diagnóstico, kickoff, acompanhamento ou encerramento.</p>
+                    </div>
+                    <CalendlyEventTypesManager consultantId={consultor.id} />
+                  </div>
+                )}
+              </div>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="role">Tipo de Acesso *</Label>
               <Select
@@ -502,19 +525,6 @@ export const ConsultorModal = ({
               </Select>
           </div>
           
-          {consultor && (
-            <div className="space-y-4 pt-4">
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarClock className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-tight">Links de Agendamento por Tipo</h3>
-                </div>
-              </div>
-              
-              <CalendlyEventTypesManager consultantId={consultor.id} />
-            </div>
-          )}
 
 
           </div>

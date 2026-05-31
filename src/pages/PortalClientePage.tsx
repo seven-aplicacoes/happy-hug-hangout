@@ -256,7 +256,7 @@ export default function PortalClientePage() {
                 contrato={contrato} 
                 expanded={contrato.id === activeContract?.id} 
                 mode="client" 
-                onScheduleCalendly={handleOpenCalendly}
+                
               />
             ))}
           </Accordion>

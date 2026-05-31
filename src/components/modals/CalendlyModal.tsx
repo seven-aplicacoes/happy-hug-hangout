@@ -1,23 +1,11 @@
 import { useState } from 'react';
 import { BaseModal } from '@/components/BaseModal';
-import { buildCalendlyUrl } from '@/lib/calendly';
+import { buildCalendlyUrl, CalendlyContext } from '@/lib/calendly';
 import { Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export type CalendlyContext = {
-  clientId?: string;
-  clientName?: string;
-  contractId?: string;
-  contractName?: string;
-  productId?: string;
-  productName?: string;
-  moduleId?: string;
-  moduleName?: string;
-  meetingId?: string;
-  meetingTitle?: string;
-  consultantId?: string;
-  consultantName?: string;
-};
+export type { CalendlyContext };
+
 
 type CalendlyModalProps = {
   open: boolean;
@@ -33,19 +21,8 @@ type CalendlyModalProps = {
 export const CalendlyModal = ({ open, onClose, url, prefill, context }: CalendlyModalProps) => {
   const [isLoading, setIsLoading] = useState(true);
   
-  const finalUrl = buildCalendlyUrl(url, prefill, {
-    utm_source: 'seven',
-    utm_medium: 'portal_cliente',
-    utm_campaign: 'module_meeting',
-    utm_content: context?.meetingId,
-    utm_term: context?.clientId,
-    clientId: context?.clientId,
-    contractId: context?.contractId,
-    productId: context?.productId,
-    moduleId: context?.moduleId,
-    meetingId: context?.meetingId,
-    consultantId: context?.consultantId,
-  });
+  const finalUrl = buildCalendlyUrl(url, prefill, context || undefined);
+
 
   return (
     <BaseModal

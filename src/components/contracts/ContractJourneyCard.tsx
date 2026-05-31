@@ -4,7 +4,7 @@ import {
   Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, CalendarClock, AlertCircle
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
-import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -34,10 +34,9 @@ import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/t
 interface MeetingListProps {
   phase: any;
   contrato: any;
-  onSchedule: (meeting: ContractModuleMeeting) => void;
-  onScheduleCalendly?: (meeting: ContractModuleMeeting) => void;
   mode?: 'admin' | 'client' | 'consultor';
 }
+
 
 function MeetingRow({ 
   meeting, 
@@ -210,7 +209,7 @@ function MeetingRow({
   );
 }
 
-function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
+function MeetingList({ phase, contrato, mode = 'admin' }: MeetingListProps) {
   const { meetings, isLoading, updateMeeting } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   const { toast } = useToast();
@@ -250,11 +249,12 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
               meeting={meeting}
               isLocked={!!isLocked}
               mode={mode}
-              onSchedule={onSchedule}
+              onSchedule={() => {}}
               onCancel={handleCancelMeeting}
               onToggleAvailability={(id) => setMeetingForAvailability(meetingForAvailability === id ? null : id)}
               showAvailability={meetingForAvailability === meeting.id}
             />
+
             
             {meetingForAvailability === meeting.id && (
               <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200 mt-2">
@@ -376,7 +376,7 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
   );
 }
 
-function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, onScheduleCalendly, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, onScheduleCalendly?: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor' }) {
+function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, mode?: 'admin' | 'client' | 'consultor' }) {
   const [expanded, setExpanded] = useState(false);
   const { consultores } = useConsultores();
   
@@ -520,8 +520,9 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
             </div>
             
             <TabsContent value="encontros" className="mt-0">
-              <MeetingList phase={phase} contrato={contrato} onSchedule={onSchedule} onScheduleCalendly={onScheduleCalendly} mode={mode} />
+              <MeetingList phase={phase} contrato={contrato} mode={mode} />
             </TabsContent>
+
             {mode === 'admin' && (
               <TabsContent value="internos" className="mt-0">
                 <DocumentList phase={phase} contrato={contrato} type="internal" mode={mode} />
@@ -683,7 +684,7 @@ function ConsultantAvailabilityConfig({
   );
 }
 
-function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, onScheduleCalendly, mode = 'admin', onUpdateProduct, onDeleteProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, onScheduleCalendly?: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void>, onDeleteProduct?: () => Promise<void> }) {
+function ProductItem({ product, contrato, isEditing: isParentEditing, mode = 'admin', onUpdateProduct, onDeleteProduct }: { product: any, contrato: any, isEditing?: boolean, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void>, onDeleteProduct?: () => Promise<void> }) {
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
@@ -908,9 +909,8 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
                   setLocalPhases(newPhases);
                 }}
                 onDelete={() => removeLocalPhase(idx)}
-                onSchedule={onSchedule}
-                onScheduleCalendly={onScheduleCalendly}
                 mode={mode}
+
               />
             ))}
 
@@ -937,46 +937,24 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
 
 export function ContractJourneyCard({ 
   contrato, 
-  isEditing = false,
+  isEditing: isParentEditing = false,
   expanded = false,
   mode = 'admin',
-  onAddProduct,
-  onScheduleCalendly
+  onAddProduct
 }: { 
   contrato: any, 
   isEditing?: boolean,
   expanded?: boolean,
   mode?: 'admin' | 'client' | 'consultor',
-  onAddProduct?: () => void,
-  onScheduleCalendly?: (meeting: ContractModuleMeeting) => void
+  onAddProduct?: () => void
 }) {
-
-
   const { products, isLoading: isLoadingProducts, upsertContractProducts, deleteContractProduct } = useContractProducts(contrato.id);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [initialMeetingData, setInitialMeetingData] = useState<Partial<Reuniao> | null>(null);
 
-  const [clientScheduleModalOpen, setClientScheduleModalOpen] = useState(false);
-  const [selectedModuleMeeting, setSelectedModuleMeeting] = useState<ContractModuleMeeting | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const handleScheduleMeeting = (meeting: ContractModuleMeeting) => {
-    if (mode === 'client') {
-      setSelectedModuleMeeting(meeting);
-      setClientScheduleModalOpen(true);
-    } else {
-      setInitialMeetingData({
-        clienteId: meeting.clientId,
-        contractId: meeting.contractId,
-        contractProductId: meeting.productId,
-        contractProductPhaseId: meeting.moduleId,
-        contractModuleMeetingId: meeting.id,
-        title: meeting.title,
-        consultorId: meeting.consultantId || '',
-        status: 'agendada'
-      });
-      setMeetingModalOpen(true);
-    }
-  };
+
 
   if (isLoadingProducts) {
     return (
@@ -1057,8 +1035,6 @@ export function ContractJourneyCard({
                   product={product} 
                   contrato={contrato} 
                   isEditing={isEditing}
-                  onSchedule={handleScheduleMeeting}
-                  onScheduleCalendly={onScheduleCalendly}
                   mode={mode}
                   onUpdateProduct={async (data) => {
                     await upsertContractProducts.mutateAsync([data]);
@@ -1070,6 +1046,7 @@ export function ContractJourneyCard({
                   }}
                 />
               ))}
+
 
 
               {(!products || products.length === 0) && (
@@ -1087,15 +1064,8 @@ export function ContractJourneyCard({
         onClose={() => setMeetingModalOpen(false)} 
         initialData={initialMeetingData || undefined} 
       />
-
-      {selectedModuleMeeting && (
-        <ModalAgendamentoCliente
-          open={clientScheduleModalOpen}
-          onClose={() => setClientScheduleModalOpen(false)}
-          moduleMeeting={selectedModuleMeeting}
-        />
-      )}
     </AccordionItem>
+
   );
 }
 
