@@ -1058,8 +1058,6 @@ export function ContractJourneyCard({
                   product={product} 
                   contrato={contrato} 
                   isEditing={isEditing}
-                  onSchedule={handleScheduleMeeting}
-                  onScheduleCalendly={onScheduleCalendly}
                   mode={mode}
                   onUpdateProduct={async (data) => {
                     await upsertContractProducts.mutateAsync([data]);
@@ -1071,6 +1069,7 @@ export function ContractJourneyCard({
                   }}
                 />
               ))}
+
 
 
               {(!products || products.length === 0) && (
