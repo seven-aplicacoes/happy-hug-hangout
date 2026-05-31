@@ -63,20 +63,21 @@ serve(async (req) => {
 
   try {
     const payload = JSON.parse(rawBody);
-    const event = payload.event;
+    const eventType = payload.event;
     const data = payload.payload;
 
-    console.log(`Received Calendly webhook: ${event}`, JSON.stringify(data));
+    console.log(`Received Calendly webhook: ${eventType}`, JSON.stringify(data));
 
-    if (event === 'invitee.created') {
-      const invitee = data.invitee;
-      const eventData = data.event;
+    if (eventType === 'invitee.created') {
+      const invitee = data.invitee || data;
+      const eventData = data.event || {};
       
       const tracking = data.tracking || {};
-      const meetingId = tracking.utm_content;
+      const meetingId = tracking.utm_content || data.seven_meeting_id;
+      const clientId = tracking.utm_term || data.seven_client_id;
       
       if (!meetingId) {
-        console.warn('Meeting ID not found in Calendly tracking params');
+        console.warn('Meeting ID not found in Calendly payload');
         return new Response(JSON.stringify({ success: false, message: 'Meeting ID missing' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -101,9 +102,11 @@ serve(async (req) => {
         });
       }
 
-      // 1. Create Scheduling Event
+      const isReschedule = !!data.old_invitee;
+
+      // 1. Upsert Scheduling Event
       const schedulingEvent = {
-        client_id: meeting.client_id,
+        client_id: clientId || meeting.client_id,
         contract_id: meeting.contract_id,
         product_id: meeting.product_id,
         module_id: meeting.module_id,
@@ -121,7 +124,10 @@ serve(async (req) => {
         status: 'scheduled',
         cancel_url: invitee.cancel_url,
         reschedule_url: invitee.reschedule_url,
+        rescheduled: isReschedule,
+        previous_event_uri: data.old_invitee || null,
         raw_payload: payload,
+        updated_at: new Date().toISOString()
       };
 
       const { data: insertedEvent, error: upsertError } = await supabaseClient
@@ -133,28 +139,38 @@ serve(async (req) => {
       if (upsertError) console.error('Error upserting scheduling event:', upsertError);
 
       // 2. Create Meeting History Event
-      const isNew = !data.old_invitee;
       await supabaseClient
         .from('meeting_history_events')
         .insert({
           meeting_id: meetingId,
           scheduling_event_id: insertedEvent?.id,
-          client_id: meeting.client_id,
+          client_id: clientId || meeting.client_id,
           consultant_id: meeting.consultant_id,
-          event_type: isNew ? 'scheduled' : 'rescheduled',
-          title: isNew ? 'Encontro agendado' : 'Encontro reagendado',
-          description: isNew 
-            ? `Reunião agendada com ${meeting.consultant?.full_name || 'consultor'} para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`
-            : `Reunião reagendada para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`,
+          event_type: isReschedule ? 'rescheduled' : 'scheduled',
+          title: isReschedule ? 'Encontro remarcado' : 'Encontro agendado',
+          description: isReschedule 
+            ? `Reunião reagendada via Calendly para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`
+            : `Reunião agendada via Calendly com ${meeting.consultant?.full_name || 'consultor'} para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`,
           new_start_time: eventData.start_time,
-          metadata: { calendly_event_uri: data.event }
+          metadata: { calendly_event_uri: data.event, is_reschedule: isReschedule }
         });
 
-      // 3. Create/Update 'meetings' table for visibility
-      const { data: newMeetingRow } = await supabaseClient
+      // 3. Update core meeting status in contract_module_meetings
+      await supabaseClient
+        .from('contract_module_meetings')
+        .update({
+          status: 'agendado',
+          scheduled_at: eventData.start_time,
+          cancel_url: invitee.cancel_url,
+          reschedule_url: invitee.reschedule_url,
+        })
+        .eq('id', meetingId);
+
+      // 4. Update the 'meetings' table (legacy support or extra visibility)
+      await supabaseClient
         .from('meetings')
         .upsert({
-          client_id: meeting.client_id,
+          client_id: clientId || meeting.client_id,
           contract_id: meeting.contract_id,
           consultant_id: meeting.consultant_id,
           meeting_date: eventData.start_time.split('T')[0],
@@ -167,24 +183,10 @@ serve(async (req) => {
           contract_module_meeting_id: meetingId,
           cancel_url: invitee.cancel_url,
           reschedule_url: invitee.reschedule_url,
-        }, { onConflict: 'external_id' })
-        .select()
-        .single();
+        }, { onConflict: 'external_id' });
 
-      // 4. Update core meeting status
-      await supabaseClient
-        .from('contract_module_meetings')
-        .update({
-          status: 'agendado',
-          scheduled_at: eventData.start_time,
-          scheduled_meeting_id: newMeetingRow?.id || null,
-          cancel_url: invitee.cancel_url,
-          reschedule_url: invitee.reschedule_url,
-        })
-        .eq('id', meetingId);
-
-    } else if (event === 'invitee.canceled') {
-      const invitee = data.invitee;
+    } else if (eventType === 'invitee.canceled') {
+      const invitee = data.invitee || data;
       
       const { data: schedulingEvent, error: fetchError } = await supabaseClient
         .from('meeting_scheduling_events')
@@ -193,7 +195,7 @@ serve(async (req) => {
         .single();
 
       if (fetchError || !schedulingEvent) {
-        console.error('Scheduling event not found for cancellation:', fetchError);
+        console.warn('Scheduling event not found for cancellation:', data.uri);
       } else {
         const isRescheduled = invitee.rescheduled === true;
         
@@ -205,6 +207,7 @@ serve(async (req) => {
             canceled_at: invitee.canceled_at || new Date().toISOString(),
             cancellation_reason: invitee.cancellation_reason,
             rescheduled: isRescheduled,
+            updated_at: new Date().toISOString()
           })
           .eq('id', schedulingEvent.id);
 
@@ -217,16 +220,16 @@ serve(async (req) => {
             client_id: schedulingEvent.client_id,
             consultant_id: schedulingEvent.consultant_id,
             event_type: isRescheduled ? 'rescheduled' : 'canceled',
-            title: isRescheduled ? 'Encontro remarcado' : 'Encontro cancelado',
+            title: isRescheduled ? 'Encontro sendo remarcado' : 'Encontro cancelado',
             description: isRescheduled 
-              ? `Iniciado processo de reagendamento no Calendly.` 
-              : `Agendamento cancelado no Calendly: ${invitee.cancellation_reason || 'sem motivo informado'}.`,
+              ? `Processo de remarcação iniciado no Calendly.` 
+              : `Agendamento cancelado no Calendly. Motivo: ${invitee.cancellation_reason || 'Não informado'}.`,
             previous_start_time: schedulingEvent.scheduled_start_time,
-            metadata: { canceled_at: invitee.canceled_at }
+            metadata: { canceled_at: invitee.canceled_at, is_rescheduled: isRescheduled }
           });
 
         if (!isRescheduled) {
-          // 3. Reset internal meeting only if REAL cancel
+          // 3. Reset internal meeting only if NOT a reschedule (real cancel)
           await supabaseClient
             .from('contract_module_meetings')
             .update({
