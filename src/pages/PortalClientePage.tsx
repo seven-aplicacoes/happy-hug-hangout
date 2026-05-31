@@ -66,6 +66,7 @@ export default function PortalClientePage() {
   
   const [isCsatOpen, setIsCsatOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
+  const [calendlyContext, setCalendlyContext] = useState<any>(null);
   const [csatRatings, setCsatRatings] = useState({
     meeting: 0,
     consultant: 0,
@@ -191,7 +192,7 @@ export default function PortalClientePage() {
 
           </div>
           <div className="flex items-center gap-4">
-            <Button size="sm" className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20" onClick={() => setIsCalendlyOpen(true)}>
+            <Button size="sm" className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20" onClick={() => handleOpenCalendly()}>
               <Calendar className="h-4 w-4 mr-2" /> Agendar reunião
             </Button>
             <Button size="sm" className="hidden md:flex bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20" onClick={handleContactConsultant}>
@@ -227,6 +228,7 @@ export default function PortalClientePage() {
                 contrato={contrato} 
                 expanded={contrato.id === activeContract?.id} 
                 mode="client" 
+                onScheduleCalendly={handleOpenCalendly}
               />
             ))}
           </Accordion>
@@ -292,9 +294,10 @@ export default function PortalClientePage() {
         onClose={() => setIsCalendlyOpen(false)}
         url={cliente?.consultant?.calendly_url || DEFAULT_CALENDLY_URL}
         prefill={{
-          name: cliente?.contact_name,
-          email: cliente?.email,
+          name: cliente?.contact_name || cliente?.nomeFantasia,
+          email: cliente?.email || cliente?.institutional_email,
         }}
+        context={calendlyContext}
       />
     </div>
   );
