@@ -106,8 +106,8 @@ export default function LoginPage() {
         <div className="space-y-8 max-w-lg relative z-10">
           <p className="ui-overline text-background/50">Plataforma Seven Gestão</p>
           <h2 className="font-editorial text-5xl xl:text-6xl leading-[1.05] tracking-tight">
-            Método, governança e clareza
-            <span className="font-editorial-italic text-primary"> em cada decisão.</span>
+            Método, governança<br />
+            e clareza <span className="font-editorial-italic text-primary">em cada decisão.</span>
           </h2>
           <p className="text-sm text-background/60 leading-relaxed max-w-md">
             Visão executiva consolidada para administradores e consultores. Acesso restrito.
