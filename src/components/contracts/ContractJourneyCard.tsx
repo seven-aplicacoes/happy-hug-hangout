@@ -59,7 +59,9 @@ function MeetingRow({
 }) {
   const isCompleted = ['realizada', 'concluida', 'concluído', 'concluída', 'resolvido', 'completed', 'done'].includes(meeting.status.toLowerCase());
   const [calendlyModalOpen, setCalendlyModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const { user } = useAuth();
+
   
   const { data: calendlyUrl } = useCalendlyLink({
     consultantId: meeting.consultantId || '',
