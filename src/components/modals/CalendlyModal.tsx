@@ -77,7 +77,7 @@ export const CalendlyModal = ({ open, onClose, url, prefill, context }: Calendly
       onClose={onClose}
       titulo={context?.meetingTitle ? `Agendar: ${context.meetingTitle}` : "Agendar reunião"}
       descricao="1. Agende no calendário abaixo. 2. Confirme a data/hora escolhida ao lado."
-      size="5xl"
+      size="2xl"
     >
       <div className="flex flex-col lg:flex-row gap-6 h-[80vh]">
         <div className="flex-1 relative bg-neutral-50 rounded-lg overflow-hidden flex flex-col items-center justify-center border">

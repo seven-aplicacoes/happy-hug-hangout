@@ -14,25 +14,50 @@ export function useClienteHistorico(clientId?: string) {
     queryFn: async () => {
       if (!clientId) return [];
       
-      const { data, error } = await supabase
+      const { data: timelineEvents, error: timelineError } = await supabase
         .from('timeline_events')
         .select('*')
+        .eq('client_id', clientId);
+
+      if (timelineError) throw timelineError;
+
+      const { data: meetings, error: meetingsError } = await supabase
+        .from('contract_module_meetings')
+        .select(`
+          *,
+          consultant:profiles!consultant_id (full_name)
+        `)
         .eq('client_id', clientId)
-        .order('date', { ascending: false });
+        .not('scheduled_at', 'is', null);
 
-      if (error) throw error;
+      if (meetingsError) throw meetingsError;
 
-      return data.map((e: any) => ({
-        id: e.id,
-        data: e.date,
-        tipo: e.type as any,
-        titulo: e.title,
-        descricao: e.description,
-        ia_summary: e.ia_summary,
-        ia_status: e.ia_status,
-        fase: e.phase,
-        evidencias: e.evidence_urls || [],
+      const meetingEvents = meetings.map((m: any) => ({
+        id: m.id,
+        data: m.scheduled_at,
+        tipo: 'reuniao' as any,
+        titulo: m.title,
+        descricao: `Encontro agendado com ${m.consultant?.full_name || 'consultor'}. Status: ${m.status}`,
+        fase: m.module_id,
+        evidencias: [],
       }));
+
+      const allEvents = [
+        ...timelineEvents.map((e: any) => ({
+          id: e.id,
+          data: e.date,
+          tipo: e.type as any,
+          titulo: e.title,
+          descricao: e.description,
+          ia_summary: e.ia_summary,
+          ia_status: e.ia_status,
+          fase: e.phase,
+          evidencias: e.evidence_urls || [],
+        })),
+        ...meetingEvents
+      ];
+
+      return allEvents.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
     },
     enabled: !!clientId,
   });
