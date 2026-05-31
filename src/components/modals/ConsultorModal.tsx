@@ -388,7 +388,22 @@ export const ConsultorModal = ({
                   ))}
                 </SelectContent>
               </Select>
+          </div>
+          
+          {consultor && (
+            <div className="space-y-4 pt-4">
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-tight">Links de Agendamento por Tipo</h3>
+                </div>
+              </div>
+              
+              <CalendlyEventTypesManager consultantId={consultor.id} />
             </div>
+          )}
+
 
           </div>
           
