@@ -23,8 +23,32 @@ type CalendlyModalProps = {
 
 export const CalendlyModal = ({ open, onClose, url, prefill, context }: CalendlyModalProps) => {
   const [isLoading, setIsLoading] = useState(true);
-  
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleCalendlyEvent = (e: MessageEvent) => {
+      if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") {
+        console.log("Calendly event scheduled, refetching data...");
+        toast({
+          title: "Agendamento realizado",
+          description: "Sincronizando com o sistema Seven...",
+        });
+        
+        // Refetch multiple times to catch webhook sync
+        queryClient.invalidateQueries();
+        setTimeout(() => queryClient.invalidateQueries(), 2000);
+        setTimeout(() => queryClient.invalidateQueries(), 5000);
+      }
+    };
+
+    window.addEventListener("message", handleCalendlyEvent);
+    return () => window.removeEventListener("message", handleCalendlyEvent);
+  }, [open, queryClient]);
+
   const finalUrl = buildCalendlyUrl(url, prefill, context || undefined);
+
 
 
   return (
