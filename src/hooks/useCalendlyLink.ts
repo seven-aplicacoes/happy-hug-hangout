@@ -36,33 +36,35 @@ export function useCalendlyLink({
         console.error('Error fetching Calendly event types:', error);
       }
 
-      if (eventTypes && eventTypes.length > 0) {
+      if (eventTypes && (eventTypes as any).length > 0) {
+        const types = eventTypes as any[];
         // Hierarchy resolution
         
         // 1. Link specific to meeting_template_id
         if (meetingTemplateId) {
-          const match = eventTypes.find(et => et.meeting_template_id === meetingTemplateId);
+          const match = types.find(et => et.meeting_template_id === meetingTemplateId);
           if (match) return match.calendly_url;
         }
 
         // 2. Link specific to module_id
         if (moduleId) {
-          const match = eventTypes.find(et => et.module_id === moduleId);
+          const match = types.find(et => et.module_id === moduleId);
           if (match) return match.calendly_url;
         }
 
         // 3. Link specific to product_id
         if (productId) {
-          const match = eventTypes.find(et => et.product_id === productId);
+          const match = types.find(et => et.product_id === productId);
           if (match) return match.calendly_url;
         }
 
         // 4. Default link for event_category
         if (eventCategory) {
-          const match = eventTypes.find(et => et.event_category === eventCategory && et.is_default);
+          const match = types.find(et => et.event_category === eventCategory && et.is_default);
           if (match) return match.calendly_url;
         }
       }
+
 
       // 5. Fallback to consultant's general calendly_url in profiles
       const { data: profile, error: profileError } = await supabase
