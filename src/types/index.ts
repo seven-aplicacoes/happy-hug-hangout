@@ -238,6 +238,9 @@ export interface Reuniao {
   contractModuleMeetingId?: string;
   cancelUrl?: string;
   rescheduleUrl?: string;
+  contratoNome?: string;
+  produtoNome?: string;
+
 
 }
 
