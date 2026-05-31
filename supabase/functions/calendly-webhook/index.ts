@@ -27,26 +27,18 @@ serve(async (req) => {
       const invitee = data.invitee
       const eventData = data.event
       
-      // Extract tracking params from UTMs or custom answers
-      // Calendly passes UTMs in payload.tracking
       const tracking = data.tracking || {}
-      
-      // Use meeting_id from utm_content as suggested
       const meetingId = tracking.utm_content
       const clientId = tracking.utm_term
-      
-      // If we don't have meetingId from UTMs, we might have it in custom answers if configured
-      // invitee.questions_and_answers is an array of {question, answer}
       
       if (!meetingId) {
         console.warn('Meeting ID not found in Calendly tracking params')
         return new Response(JSON.stringify({ success: false, message: 'Meeting ID missing' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200, // Return 200 to Calendly to avoid retries
+          status: 200,
         })
       }
 
-      // Fetch internal meeting details to get contract, product, consultant context
       const { data: meeting, error: meetingError } = await supabaseClient
         .from('contract_module_meetings')
         .select('*')
@@ -70,8 +62,8 @@ serve(async (req) => {
         meeting_id: meetingId,
         consultant_id: meeting.consultant_id,
         provider: 'calendly',
-        calendly_event_uri: data.event, // link to event details
-        calendly_invitee_uri: data.uri, // link to invitee details
+        calendly_event_uri: data.event,
+        calendly_invitee_uri: data.uri,
         calendly_event_uuid: data.event.split('/').pop(),
         calendly_invitee_uuid: data.uri.split('/').pop(),
         event_name: eventData.name,
@@ -86,30 +78,12 @@ serve(async (req) => {
         raw_payload: payload,
       }
 
-      const { error: upsertError } = await supabaseClient
+      await supabaseClient
         .from('meeting_scheduling_events')
         .upsert(schedulingEvent, { onConflict: 'calendly_invitee_uri' })
 
-      if (upsertError) {
-        console.error('Error upserting scheduling event:', upsertError)
-      }
-
-      // Update internal meeting status
-      const { error: updateError } = await supabaseClient
-        .from('contract_module_meetings')
-        .update({
-          status: 'agendado',
-          scheduled_at: eventData.start_time,
-          scheduled_meeting_id: null, // We could link to a 'meetings' table row here if we wanted
-        })
-        .eq('id', meetingId)
-
-      if (updateError) {
-        console.error('Error updating meeting status:', updateError)
-      }
-
-      // Also create a record in 'meetings' table to show in calendars/history
-      const { error: meetingTableError } = await supabaseClient
+      // Create/Update record in 'meetings' table
+      const { data: newMeetingRow, error: meetingTableError } = await supabaseClient
         .from('meetings')
         .upsert({
           client_id: meeting.client_id,
@@ -122,16 +96,28 @@ serve(async (req) => {
           status: 'agendada',
           source: 'calendly',
           external_id: data.uri,
-        })
+          contract_module_meeting_id: meetingId,
+        }, { onConflict: 'external_id' })
+        .select()
+        .single()
 
       if (meetingTableError) {
         console.error('Error creating meeting record:', meetingTableError)
       }
 
+      // Update internal meeting status
+      await supabaseClient
+        .from('contract_module_meetings')
+        .update({
+          status: 'agendado',
+          scheduled_at: eventData.start_time,
+          scheduled_meeting_id: newMeetingRow?.id || null,
+        })
+        .eq('id', meetingId)
+
     } else if (event === 'invitee.canceled') {
       const invitee = data.invitee
       
-      // Find the scheduling event by invitee uri
       const { data: schedulingEvent, error: fetchError } = await supabaseClient
         .from('meeting_scheduling_events')
         .select('*')
@@ -152,7 +138,6 @@ serve(async (req) => {
           })
           .eq('id', schedulingEvent.id)
 
-        // Update internal meeting if not rescheduling (rescheduling will trigger a new created event)
         if (!isRescheduled) {
           await supabaseClient
             .from('contract_module_meetings')
@@ -162,7 +147,6 @@ serve(async (req) => {
             })
             .eq('id', schedulingEvent.meeting_id)
             
-          // Update meeting table
           await supabaseClient
             .from('meetings')
             .update({ status: 'cancelada' })
