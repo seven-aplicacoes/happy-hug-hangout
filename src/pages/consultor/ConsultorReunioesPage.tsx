@@ -81,6 +81,7 @@ export default function ConsultorReunioesPage() {
 
   const reunioesMes = useMemo(() => {
     return reunioes.filter(r => {
+      if (!r.meetingDate) return false;
       const [y, m] = r.meetingDate.split('-').map(Number);
       return y === mesAtual.year && m === mesAtual.month + 1;
     });
