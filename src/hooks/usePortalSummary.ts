@@ -16,10 +16,11 @@ export function usePortalSummary(clientId?: string) {
       if (mError) throw mError;
       
       const total = meetings.length;
-      const realized = meetings.filter(m => m.status === 'realizada').length;
+      const realized = meetings.filter(m => m.status === 'realizada' || m.status === 'concluída' || m.status === 'concluído').length;
       
+      const now = new Date();
       const nextMeeting = meetings
-        .filter(m => m.status === 'agendado' && m.scheduled_at && new Date(m.scheduled_at) > new Date())
+        .filter(m => m.status === 'agendado' && m.scheduled_at && new Date(m.scheduled_at) > now)
         .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime())[0];
 
       return {
