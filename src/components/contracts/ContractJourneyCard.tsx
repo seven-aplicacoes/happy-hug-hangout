@@ -195,6 +195,14 @@ function MeetingRow({
         </div>
       </div>
 
+      <ModalDetalheEncontro
+        open={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        meeting={meeting}
+        mode={mode}
+        onSchedule={handleAgendarClick}
+      />
+
       <CalendlyModal 
         open={calendlyModalOpen}
         onClose={() => setCalendlyModalOpen(false)}
@@ -215,6 +223,7 @@ function MeetingRow({
         }}
       />
     </div>
+
   );
 }
 
