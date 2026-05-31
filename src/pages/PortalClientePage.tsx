@@ -26,7 +26,8 @@ import {
   ChevronUp,
   ChevronDown,
   RefreshCw,
-  XCircle
+  XCircle,
+  ShieldAlert
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -191,9 +192,30 @@ export default function PortalClientePage() {
       <div className="min-h-screen bg-neutral-50 p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           <Skeleton className="h-16 w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+          </div>
           <Skeleton className="h-[600px] w-full" />
         </div>
+      </div>
+    );
+  }
+
+  if (!cliente && !loadingFicha) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-8 text-center">
+        <ShieldAlert className="h-12 w-12 text-amber-500 mb-4" />
+        <h2 className="text-xl font-bold text-neutral-900 mb-2">Sem acesso disponível</h2>
+        <p className="text-neutral-500 max-w-md">
+          Não conseguimos carregar os dados do seu perfil de cliente. 
+          Por favor, verifique se o seu usuário está corretamente vinculado a um cliente ou entre em contato com o suporte.
+        </p>
+        <Button variant="outline" className="mt-6" onClick={logoutCliente}>
+          Sair do Portal
+        </Button>
       </div>
     );
   }
