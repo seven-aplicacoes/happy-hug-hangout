@@ -65,8 +65,8 @@ export function useClientes() {
         avatar_url: c.avatar_url,
         avatar_path: c.avatar_path,
       })) as Cliente[];
-
     },
+    enabled: !!perfil,
   });
 
   const upsertCliente = useMutation({
