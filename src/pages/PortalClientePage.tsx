@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { SevenLogo } from '@/components/SevenLogo';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -58,6 +59,7 @@ import { DEFAULT_CALENDLY_URL } from '@/lib/calendly';
 
 
 export default function PortalClientePage() {
+  const { toast } = useToast();
   const { clienteSession, loginCliente, logoutCliente } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
