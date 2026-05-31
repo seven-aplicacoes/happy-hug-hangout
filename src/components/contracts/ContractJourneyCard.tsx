@@ -209,7 +209,7 @@ function MeetingRow({
   );
 }
 
-function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
+function MeetingList({ phase, contrato, mode = 'admin' }: MeetingListProps) {
   const { meetings, isLoading, updateMeeting } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   const { toast } = useToast();
