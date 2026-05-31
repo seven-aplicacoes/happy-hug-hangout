@@ -34,10 +34,9 @@ import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/t
 interface MeetingListProps {
   phase: any;
   contrato: any;
-  onSchedule: (meeting: ContractModuleMeeting) => void;
-  onScheduleCalendly?: (meeting: ContractModuleMeeting) => void;
   mode?: 'admin' | 'client' | 'consultor';
 }
+
 
 function MeetingRow({ 
   meeting, 
