@@ -1,9 +1,40 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
+import * as crypto from "https://deno.land/std@0.177.0/node/crypto.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, calendly-webhook-signature',
+}
+
+async function verifyCalendlySignature(rawBody: string, signatureHeader: string | null, signingKey: string | undefined): Promise<boolean> {
+  if (!signatureHeader || !signingKey) {
+    console.warn("Calendly signature header or signing key missing");
+    return false;
+  }
+
+  try {
+    const parts = signatureHeader.split(',');
+    const timestampPart = parts.find(p => p.startsWith('t='));
+    const signaturePart = parts.find(p => p.startsWith('v1='));
+
+    if (!timestampPart || !signaturePart) return false;
+
+    const timestamp = timestampPart.split('=')[1];
+    const signature = signaturePart.split('=')[1];
+
+    const signedPayload = `${timestamp}.${rawBody}`;
+    
+    // Using Node's crypto compatible layer in Deno
+    const hmac = crypto.createHmac('sha256', signingKey);
+    hmac.update(signedPayload);
+    const expectedSignature = hmac.digest('hex');
+
+    return expectedSignature === signature;
+  } catch (error) {
+    console.error("Error verifying Calendly signature:", error);
+    return false;
+  }
 }
 
 serve(async (req) => {
@@ -11,46 +42,64 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
+
+  // Read raw body for signature verification
+  const rawBody = await req.text();
+  const signatureHeader = req.headers.get('Calendly-Webhook-Signature');
+  const signingKey = Deno.env.get('CALENDLY_WEBHOOK_SIGNING_KEY');
+
+  // Skip verification in development if no signing key is set, but log it
+  if (signingKey) {
+    const isValid = await verifyCalendlySignature(rawBody, signatureHeader, signingKey);
+    if (!isValid) {
+      console.error("Invalid Calendly signature");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+  } else {
+    console.warn("CALENDLY_WEBHOOK_SIGNING_KEY not set. Skipping signature verification (SECURITY WARNING).");
+  }
+
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const payload = JSON.parse(rawBody);
+    const event = payload.event;
+    const data = payload.payload;
 
-    const payload = await req.json()
-    const event = payload.event
-    const data = payload.payload
-
-    console.log(`Received Calendly webhook: ${event}`, JSON.stringify(data))
+    console.log(`Received Calendly webhook: ${event}`, JSON.stringify(data));
 
     if (event === 'invitee.created') {
-      const invitee = data.invitee
-      const eventData = data.event
+      const invitee = data.invitee;
+      const eventData = data.event;
       
-      const tracking = data.tracking || {}
-      const meetingId = tracking.utm_content
-      const clientId = tracking.utm_term
+      const tracking = data.tracking || {};
+      const meetingId = tracking.utm_content;
       
       if (!meetingId) {
-        console.warn('Meeting ID not found in Calendly tracking params')
+        console.warn('Meeting ID not found in Calendly tracking params');
         return new Response(JSON.stringify({ success: false, message: 'Meeting ID missing' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
-        })
+        });
       }
 
       const { data: meeting, error: meetingError } = await supabaseClient
         .from('contract_module_meetings')
         .select('*')
         .eq('id', meetingId)
-        .single()
+        .single();
 
       if (meetingError || !meeting) {
-        console.error('Error fetching internal meeting:', meetingError)
+        console.error('Error fetching internal meeting:', meetingError);
         return new Response(JSON.stringify({ success: false, error: 'Meeting not found' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
-        })
+        });
       }
 
       // Create or update scheduling event
@@ -76,11 +125,11 @@ serve(async (req) => {
         cancel_url: invitee.cancel_url,
         reschedule_url: invitee.reschedule_url,
         raw_payload: payload,
-      }
+      };
 
       await supabaseClient
         .from('meeting_scheduling_events')
-        .upsert(schedulingEvent, { onConflict: 'calendly_invitee_uri' })
+        .upsert(schedulingEvent, { onConflict: 'calendly_invitee_uri' });
 
       // Create/Update record in 'meetings' table
       const { data: newMeetingRow, error: meetingTableError } = await supabaseClient
@@ -99,10 +148,10 @@ serve(async (req) => {
           contract_module_meeting_id: meetingId,
         }, { onConflict: 'external_id' })
         .select()
-        .single()
+        .single();
 
       if (meetingTableError) {
-        console.error('Error creating meeting record:', meetingTableError)
+        console.error('Error creating meeting record:', meetingTableError);
       }
 
       // Update internal meeting status
@@ -113,21 +162,21 @@ serve(async (req) => {
           scheduled_at: eventData.start_time,
           scheduled_meeting_id: newMeetingRow?.id || null,
         })
-        .eq('id', meetingId)
+        .eq('id', meetingId);
 
     } else if (event === 'invitee.canceled') {
-      const invitee = data.invitee
+      const invitee = data.invitee;
       
       const { data: schedulingEvent, error: fetchError } = await supabaseClient
         .from('meeting_scheduling_events')
         .select('*')
         .eq('calendly_invitee_uri', data.uri)
-        .single()
+        .single();
 
       if (fetchError || !schedulingEvent) {
-        console.error('Scheduling event not found for cancellation:', fetchError)
+        console.error('Scheduling event not found for cancellation:', fetchError);
       } else {
-        const isRescheduled = invitee.rescheduled === true
+        const isRescheduled = invitee.rescheduled === true;
         
         await supabaseClient
           .from('meeting_scheduling_events')
@@ -136,7 +185,7 @@ serve(async (req) => {
             canceled_at: invitee.canceled_at || new Date().toISOString(),
             cancellation_reason: invitee.cancellation_reason,
           })
-          .eq('id', schedulingEvent.id)
+          .eq('id', schedulingEvent.id);
 
         if (!isRescheduled) {
           await supabaseClient
@@ -145,12 +194,12 @@ serve(async (req) => {
               status: 'pendente',
               scheduled_at: null,
             })
-            .eq('id', schedulingEvent.meeting_id)
+            .eq('id', schedulingEvent.meeting_id);
             
           await supabaseClient
             .from('meetings')
             .update({ status: 'cancelada' })
-            .eq('external_id', data.uri)
+            .eq('external_id', data.uri);
         }
       }
     }
@@ -158,13 +207,13 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
-    })
+    });
 
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error('Webhook error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
-    })
+    });
   }
 })
