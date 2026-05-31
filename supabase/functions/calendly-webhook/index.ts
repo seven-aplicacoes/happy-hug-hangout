@@ -83,9 +83,13 @@ serve(async (req) => {
         });
       }
 
+      // Fetch meeting context
       const { data: meeting, error: meetingError } = await supabaseClient
         .from('contract_module_meetings')
-        .select('*')
+        .select(`
+          *,
+          consultant:profiles!consultant_id (full_name)
+        `)
         .eq('id', meetingId)
         .single();
 
@@ -97,7 +101,7 @@ serve(async (req) => {
         });
       }
 
-      // Create or update scheduling event
+      // 1. Create Scheduling Event
       const schedulingEvent = {
         client_id: meeting.client_id,
         contract_id: meeting.contract_id,
@@ -108,8 +112,6 @@ serve(async (req) => {
         provider: 'calendly',
         calendly_event_uri: data.event,
         calendly_invitee_uri: data.uri,
-        calendly_event_uuid: data.event.split('/').pop(),
-        calendly_invitee_uuid: data.uri.split('/').pop(),
         event_name: eventData.name,
         invitee_name: invitee.name,
         invitee_email: invitee.email,
@@ -122,12 +124,34 @@ serve(async (req) => {
         raw_payload: payload,
       };
 
-      await supabaseClient
+      const { data: insertedEvent, error: upsertError } = await supabaseClient
         .from('meeting_scheduling_events')
-        .upsert(schedulingEvent, { onConflict: 'calendly_invitee_uri' });
+        .upsert(schedulingEvent, { onConflict: 'calendly_invitee_uri' })
+        .select()
+        .single();
 
-      // Create/Update record in 'meetings' table
-      const { data: newMeetingRow, error: meetingTableError } = await supabaseClient
+      if (upsertError) console.error('Error upserting scheduling event:', upsertError);
+
+      // 2. Create Meeting History Event
+      const isNew = !data.old_invitee;
+      await supabaseClient
+        .from('meeting_history_events')
+        .insert({
+          meeting_id: meetingId,
+          scheduling_event_id: insertedEvent?.id,
+          client_id: meeting.client_id,
+          consultant_id: meeting.consultant_id,
+          event_type: isNew ? 'scheduled' : 'rescheduled',
+          title: isNew ? 'Encontro agendado' : 'Encontro reagendado',
+          description: isNew 
+            ? `Reunião agendada com ${meeting.consultant?.full_name || 'consultor'} para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`
+            : `Reunião reagendada para ${new Date(eventData.start_time).toLocaleString('pt-BR')}.`,
+          new_start_time: eventData.start_time,
+          metadata: { calendly_event_uri: data.event }
+        });
+
+      // 3. Create/Update 'meetings' table for visibility
+      const { data: newMeetingRow } = await supabaseClient
         .from('meetings')
         .upsert({
           client_id: meeting.client_id,
@@ -147,11 +171,7 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (meetingTableError) {
-        console.error('Error creating meeting record:', meetingTableError);
-      }
-
-      // Update internal meeting status
+      // 4. Update core meeting status
       await supabaseClient
         .from('contract_module_meetings')
         .update({
@@ -177,6 +197,7 @@ serve(async (req) => {
       } else {
         const isRescheduled = invitee.rescheduled === true;
         
+        // 1. Update Scheduling Event
         await supabaseClient
           .from('meeting_scheduling_events')
           .update({
@@ -187,7 +208,25 @@ serve(async (req) => {
           })
           .eq('id', schedulingEvent.id);
 
+        // 2. Create History Entry
+        await supabaseClient
+          .from('meeting_history_events')
+          .insert({
+            meeting_id: schedulingEvent.meeting_id,
+            scheduling_event_id: schedulingEvent.id,
+            client_id: schedulingEvent.client_id,
+            consultant_id: schedulingEvent.consultant_id,
+            event_type: isRescheduled ? 'rescheduled' : 'canceled',
+            title: isRescheduled ? 'Encontro remarcado' : 'Encontro cancelado',
+            description: isRescheduled 
+              ? `Iniciado processo de reagendamento no Calendly.` 
+              : `Agendamento cancelado no Calendly: ${invitee.cancellation_reason || 'sem motivo informado'}.`,
+            previous_start_time: schedulingEvent.scheduled_start_time,
+            metadata: { canceled_at: invitee.canceled_at }
+          });
+
         if (!isRescheduled) {
+          // 3. Reset internal meeting only if REAL cancel
           await supabaseClient
             .from('contract_module_meetings')
             .update({
@@ -198,6 +237,7 @@ serve(async (req) => {
             })
             .eq('id', schedulingEvent.meeting_id);
             
+          // 4. Update 'meetings' row
           await supabaseClient
             .from('meetings')
             .update({ 

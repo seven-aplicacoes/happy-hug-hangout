@@ -2186,6 +2186,80 @@ export type Database = {
           },
         ]
       }
+      meeting_history_events: {
+        Row: {
+          client_id: string | null
+          consultant_id: string | null
+          created_at: string | null
+          description: string | null
+          event_type: string
+          id: string
+          meeting_id: string
+          metadata: Json | null
+          new_start_time: string | null
+          previous_start_time: string | null
+          scheduling_event_id: string | null
+          title: string
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          meeting_id: string
+          metadata?: Json | null
+          new_start_time?: string | null
+          previous_start_time?: string | null
+          scheduling_event_id?: string | null
+          title: string
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          meeting_id?: string
+          metadata?: Json | null
+          new_start_time?: string | null
+          previous_start_time?: string | null
+          scheduling_event_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_history_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_history_events_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_history_events_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_history_events_scheduling_event_id_fkey"
+            columns: ["scheduling_event_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_scheduling_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_scheduling_events: {
         Row: {
           calendly_event_uri: string | null
@@ -2200,12 +2274,15 @@ export type Database = {
           contract_id: string | null
           created_at: string | null
           event_name: string | null
+          event_uuid: string | null
           id: string
           invitee_email: string | null
           invitee_name: string | null
+          invitee_uuid: string | null
           meeting_id: string
           module_id: string | null
           previous_event_uri: string | null
+          previous_event_uuid: string | null
           product_id: string | null
           provider: string
           raw_payload: Json | null
@@ -2230,12 +2307,15 @@ export type Database = {
           contract_id?: string | null
           created_at?: string | null
           event_name?: string | null
+          event_uuid?: string | null
           id?: string
           invitee_email?: string | null
           invitee_name?: string | null
+          invitee_uuid?: string | null
           meeting_id: string
           module_id?: string | null
           previous_event_uri?: string | null
+          previous_event_uuid?: string | null
           product_id?: string | null
           provider?: string
           raw_payload?: Json | null
@@ -2260,12 +2340,15 @@ export type Database = {
           contract_id?: string | null
           created_at?: string | null
           event_name?: string | null
+          event_uuid?: string | null
           id?: string
           invitee_email?: string | null
           invitee_name?: string | null
+          invitee_uuid?: string | null
           meeting_id?: string
           module_id?: string | null
           previous_event_uri?: string | null
+          previous_event_uuid?: string | null
           product_id?: string | null
           provider?: string
           raw_payload?: Json | null
