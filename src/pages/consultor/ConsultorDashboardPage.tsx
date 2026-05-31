@@ -59,6 +59,18 @@ export default function ConsultorDashboardPage() {
   const { csatSurveys, npsSurveys, isLoading: loadingSurveys } = useSurveys(consultorId);
 
   const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions || loadingSurveys;
+  
+  if (isLoading) {
+    console.log('ConsultorDashboardPage: isLoading flags:', {
+      loadingClientes,
+      loadingContratos,
+      loadingReunioes,
+      loadingTarefas,
+      loadingPermissions,
+      loadingSurveys,
+      loadingTargets
+    });
+  }
 
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
