@@ -684,7 +684,7 @@ function ConsultantAvailabilityConfig({
   );
 }
 
-function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule, onScheduleCalendly, mode = 'admin', onUpdateProduct, onDeleteProduct }: { product: any, contrato: any, isEditing?: boolean, onSchedule: (meeting: ContractModuleMeeting) => void, onScheduleCalendly?: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void>, onDeleteProduct?: () => Promise<void> }) {
+function ProductItem({ product, contrato, isEditing: isParentEditing, mode = 'admin', onUpdateProduct, onDeleteProduct }: { product: any, contrato: any, isEditing?: boolean, mode?: 'admin' | 'client' | 'consultor', onUpdateProduct?: (data: any) => Promise<void>, onDeleteProduct?: () => Promise<void> }) {
   const { toast } = useToast();
   const { phases: remotePhases, isLoading: isLoadingPhases, upsertPhases, deletePhase } = useContractProductPhases(product.id);
   const [localPhases, setLocalPhases] = useState<any[]>([]);
