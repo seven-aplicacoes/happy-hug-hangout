@@ -918,6 +918,7 @@ export function ContractJourneyCard({
                   contrato={contrato} 
                   isEditing={isEditing}
                   onSchedule={handleScheduleMeeting}
+                  onScheduleCalendly={onScheduleCalendly}
                   mode={mode}
                   onUpdateProduct={async (data) => {
                     await upsertContractProducts.mutateAsync([data]);
