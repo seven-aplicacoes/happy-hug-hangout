@@ -125,11 +125,12 @@ export default function ConsultorDashboardPage() {
 
     const proximasReunioes = reunioes
       .filter(r => {
+        if (!r.meetingDate || !r.startTime) return false;
         const isFuture = r.meetingDate > hojeStr;
         const isTodayPending = r.meetingDate === hojeStr && r.startTime >= new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
         return (isFuture || isTodayPending) && r.status === 'agendada';
       })
-      .sort((a, b) => a.meetingDate.localeCompare(b.meetingDate) || a.startTime.localeCompare(b.startTime))
+      .sort((a, b) => (a.meetingDate || '').localeCompare(b.meetingDate || '') || (a.startTime || '').localeCompare(b.startTime || ''))
       .slice(0, 5);
 
     // Métricas do consultor
