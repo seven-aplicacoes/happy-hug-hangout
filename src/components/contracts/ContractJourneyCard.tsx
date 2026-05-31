@@ -4,7 +4,7 @@ import {
   Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, CalendarClock, AlertCircle
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
-import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
