@@ -38,7 +38,8 @@ export function useReunioes() {
           contract:contract_id (tipo),
           product:product_id (name)
         `)
-        .not('scheduled_at', 'is', null);
+        .neq('status', 'pendente') // Carregar agendadas, canceladas e concluídas
+        .order('scheduled_at', { ascending: false });
 
       if (perfil === 'consultor' && user?.consultorId) {
         moduleMeetingsQuery = moduleMeetingsQuery.eq('consultant_id', user.consultorId);
