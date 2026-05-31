@@ -249,11 +249,12 @@ function MeetingList({ phase, contrato, mode = 'admin' }: MeetingListProps) {
               meeting={meeting}
               isLocked={!!isLocked}
               mode={mode}
-              onSchedule={onSchedule}
+              onSchedule={() => {}}
               onCancel={handleCancelMeeting}
               onToggleAvailability={(id) => setMeetingForAvailability(meetingForAvailability === id ? null : id)}
               showAvailability={meetingForAvailability === meeting.id}
             />
+
             
             {meetingForAvailability === meeting.id && (
               <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200 mt-2">
