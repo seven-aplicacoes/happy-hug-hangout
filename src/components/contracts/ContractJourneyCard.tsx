@@ -909,8 +909,8 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, mode = 'ad
                   setLocalPhases(newPhases);
                 }}
                 onDelete={() => removeLocalPhase(idx)}
-                onSchedule={onSchedule}
-                onScheduleCalendly={onScheduleCalendly}
+                mode={mode}
+
                 mode={mode}
               />
             ))}
