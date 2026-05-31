@@ -123,7 +123,7 @@ function MeetingRow({
           </div>
           
           <div className="flex gap-2">
-            {(mode === 'consultor' || mode === 'admin') && (
+            {(mode === 'consultor' || mode === 'admin') && !calendlyUrl && (
               <Button 
                 size="sm" 
                 variant="ghost" 
@@ -136,6 +136,7 @@ function MeetingRow({
                 <Settings className="h-3.5 w-3.5" /> Disponibilidade
               </Button>
             )}
+
 
             {isLocked && mode === 'client' ? (
               <Button size="sm" variant="ghost" disabled className="h-8 gap-1.5 px-3 text-muted-foreground border-neutral-100 bg-neutral-50" title="Conclua o encontro anterior para liberar este agendamento.">
