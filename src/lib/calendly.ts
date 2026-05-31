@@ -21,6 +21,12 @@ export const buildCalendlyUrl = (
     utm_campaign?: string;
     utm_content?: string;
     utm_term?: string;
+    clientId?: string;
+    contractId?: string;
+    productId?: string;
+    moduleId?: string;
+    meetingId?: string;
+    consultantId?: string;
   }
 ): string | null => {
   if (!isValidCalendlyUrl(url)) return null;
@@ -42,6 +48,14 @@ export const buildCalendlyUrl = (
     if (tracking?.utm_content) finalUrl.searchParams.set('utm_content', tracking.utm_content);
     if (tracking?.utm_term) finalUrl.searchParams.set('utm_term', tracking.utm_term);
     
+    // Custom context params for additional tracking if Calendly passes them through
+    if (tracking?.clientId) finalUrl.searchParams.set('seven_client_id', tracking.clientId);
+    if (tracking?.contractId) finalUrl.searchParams.set('seven_contract_id', tracking.contractId);
+    if (tracking?.productId) finalUrl.searchParams.set('seven_product_id', tracking.productId);
+    if (tracking?.moduleId) finalUrl.searchParams.set('seven_module_id', tracking.moduleId);
+    if (tracking?.meetingId) finalUrl.searchParams.set('seven_meeting_id', tracking.meetingId);
+    if (tracking?.consultantId) finalUrl.searchParams.set('seven_consultant_id', tracking.consultantId);
+    
     finalUrl.searchParams.set('hide_gdpr_banner', '1');
     
     return finalUrl.toString();
@@ -49,4 +63,5 @@ export const buildCalendlyUrl = (
     return null;
   }
 };
+
 
