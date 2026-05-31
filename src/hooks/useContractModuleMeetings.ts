@@ -36,7 +36,10 @@ export function useContractModuleMeetings(moduleId?: string) {
         scheduledAt: m.scheduled_at,
         completedAt: m.completed_at,
         orderIndex: m.order_index,
+        availableFrom: m.available_from,
+        availableUntil: m.available_until,
         consultantName: m.consultant?.full_name,
+
       })) as ContractModuleMeeting[];
     },
     enabled: !!moduleId,
