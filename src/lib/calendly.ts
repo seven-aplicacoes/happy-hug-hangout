@@ -14,7 +14,14 @@ export const DEFAULT_CALENDLY_URL = import.meta.env.VITE_CALENDLY_DEFAULT_URL ||
 
 export const buildCalendlyUrl = (
   url: string | null | undefined,
-  prefill?: { name?: string; email?: string }
+  prefill?: { name?: string; email?: string },
+  tracking?: { 
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+  }
 ): string | null => {
   if (!isValidCalendlyUrl(url)) return null;
 
@@ -28,6 +35,12 @@ export const buildCalendlyUrl = (
     if (prefill?.email) {
       finalUrl.searchParams.set('email', prefill.email);
     }
+
+    if (tracking?.utm_source) finalUrl.searchParams.set('utm_source', tracking.utm_source);
+    if (tracking?.utm_medium) finalUrl.searchParams.set('utm_medium', tracking.utm_medium);
+    if (tracking?.utm_campaign) finalUrl.searchParams.set('utm_campaign', tracking.utm_campaign);
+    if (tracking?.utm_content) finalUrl.searchParams.set('utm_content', tracking.utm_content);
+    if (tracking?.utm_term) finalUrl.searchParams.set('utm_term', tracking.utm_term);
     
     finalUrl.searchParams.set('hide_gdpr_banner', '1');
     
@@ -36,3 +49,4 @@ export const buildCalendlyUrl = (
     return null;
   }
 };
+
