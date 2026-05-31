@@ -12,7 +12,6 @@ export function useReunioes() {
   const { data: reunioes, isLoading, error } = useQuery({
     queryKey: ['reunioes', perfil, user?.consultorId],
     queryFn: async () => {
-      console.log('useReunioes: Fetching meetings for', perfil, user?.consultorId);
       // 1. Fetch manual meetings from 'meetings' table
       let meetingsQuery = supabase
         .from('meetings')
