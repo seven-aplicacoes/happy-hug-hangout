@@ -31,6 +31,7 @@ export function useCalendlyLink({
         .eq('consultant_id', consultantId)
         .eq('is_active', true);
 
+
       if (error) {
         console.error('Error fetching Calendly event types:', error);
       }
