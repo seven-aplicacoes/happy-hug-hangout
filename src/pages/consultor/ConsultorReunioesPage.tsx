@@ -100,6 +100,7 @@ export default function ConsultorReunioesPage() {
 
   const reunioesFiltradas = useMemo(() => {
     let d = [...reunioesMes];
+    console.log('ConsultorReunioesPage: reunioesMes count:', d.length);
     const q = normalize(search);
     if (q) d = d.filter(r => normalize(r.clienteNome).includes(q) || normalize(r.title).includes(q));
     if (filters.status && filters.status !== 'todos') d = d.filter(r => r.status === filters.status);

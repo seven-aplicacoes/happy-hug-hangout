@@ -12,6 +12,7 @@ export function useReunioes() {
   const { data: reunioes, isLoading, error } = useQuery({
     queryKey: ['reunioes', perfil, user?.consultorId],
     queryFn: async () => {
+      console.log('useReunioes: Fetching meetings for', perfil, user?.consultorId);
       // 1. Fetch manual meetings from 'meetings' table
       let meetingsQuery = supabase
         .from('meetings')
@@ -26,7 +27,11 @@ export function useReunioes() {
       }
 
       const { data: meetingsData, error: meetingsError } = await meetingsQuery;
-      if (meetingsError) throw meetingsError;
+      if (meetingsError) {
+        console.error('useReunioes: Error fetching meetingsData', meetingsError);
+        throw meetingsError;
+      }
+      console.log('useReunioes: meetingsData count:', (meetingsData || []).length);
 
       // 2. Fetch scheduled meetings from 'contract_module_meetings' table
       let moduleMeetingsQuery = supabase
@@ -46,7 +51,11 @@ export function useReunioes() {
       }
 
       const { data: moduleMeetingsData, error: moduleMeetingsError } = await moduleMeetingsQuery;
-      if (moduleMeetingsError) throw moduleMeetingsError;
+      if (moduleMeetingsError) {
+        console.error('useReunioes: Error fetching moduleMeetingsData', moduleMeetingsError);
+        throw moduleMeetingsError;
+      }
+      console.log('useReunioes: moduleMeetingsData count:', (moduleMeetingsData || []).length);
 
       // 3. Merge and normalize
       const meetings = (meetingsData || []).map((r: any) => ({
