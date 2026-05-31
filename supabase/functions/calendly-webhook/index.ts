@@ -141,6 +141,8 @@ serve(async (req) => {
           source: 'calendly',
           external_id: data.uri,
           contract_module_meeting_id: meetingId,
+          cancel_url: invitee.cancel_url,
+          reschedule_url: invitee.reschedule_url,
         }, { onConflict: 'external_id' })
         .select()
         .single();
@@ -198,7 +200,11 @@ serve(async (req) => {
             
           await supabaseClient
             .from('meetings')
-            .update({ status: 'cancelada' })
+            .update({ 
+              status: 'cancelada',
+              cancel_url: null,
+              reschedule_url: null,
+            })
             .eq('external_id', data.uri);
         }
       }
