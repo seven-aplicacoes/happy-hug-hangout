@@ -18,7 +18,7 @@ export function usePortalCSAT(clientId?: string) {
           status
         `)
         .eq('client_id', clientId)
-        .eq('status', 'realizada');
+        .in('status', ['realizada', 'concluída', 'concluído', 'concluída']);
 
       if (meetingsError) throw meetingsError;
 

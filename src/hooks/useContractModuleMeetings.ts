@@ -63,6 +63,8 @@ export function useContractModuleMeetings(moduleId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-meetings', moduleId] });
       queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['cliente-historico'] });
     },
   });
 

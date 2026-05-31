@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { SevenLogo } from '@/components/SevenLogo';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -58,6 +59,7 @@ import { DEFAULT_CALENDLY_URL } from '@/lib/calendly';
 
 
 export default function PortalClientePage() {
+  const { toast } = useToast();
   const { clienteSession, loginCliente, logoutCliente } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -143,7 +145,11 @@ export default function PortalClientePage() {
   };
 
   const handleContactConsultant = () => {
-    const phone = cliente?.consultant?.phone || "5511999999999"; 
+    const phone = cliente?.consultant?.phone || cliente?.contact_phone || ""; 
+    if (!phone) {
+      toast({ title: 'Aviso', description: 'Telefone do consultor não configurado.' });
+      return;
+    }
     window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
   };
 
@@ -214,9 +220,6 @@ export default function PortalClientePage() {
 
           </div>
           <div className="flex items-center gap-4">
-            <Button size="sm" className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20" onClick={() => handleOpenCalendly()}>
-              <Calendar className="h-4 w-4 mr-2" /> Agendar reunião
-            </Button>
             <Button size="sm" className="hidden md:flex bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20" onClick={handleContactConsultant}>
               <MessageCircle className="h-4 w-4 mr-2" /> Falar com consultor
             </Button>
