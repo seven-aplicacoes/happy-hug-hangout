@@ -120,6 +120,28 @@ export default function PortalClientePage() {
     setIsCsatOpen(false);
   };
 
+  const handleOpenCalendly = (meeting?: any) => {
+    if (meeting) {
+      setCalendlyContext({
+        clientId: clientId,
+        clientName: cliente?.nomeFantasia,
+        contractId: activeContract?.id,
+        contractName: activeContract?.tipo,
+        productId: meeting.productId,
+        productName: meeting.productName,
+        moduleId: meeting.moduleId,
+        moduleName: meeting.moduleName,
+        meetingId: meeting.id,
+        meetingTitle: meeting.title,
+        consultantId: meeting.consultantId || activeContract?.consultorId,
+        consultantName: meeting.consultantName || activeContract?.consultorNome
+      });
+    } else {
+      setCalendlyContext(null);
+    }
+    setIsCalendlyOpen(true);
+  };
+
   const handleContactConsultant = () => {
     const phone = cliente?.consultant?.phone || "5511999999999"; 
     window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
