@@ -42,7 +42,14 @@ export const CalendlyModal = ({ open, onClose, url, prefill, context }: Calendly
   const { updateMeeting } = useContractModuleMeetings(context?.moduleId);
   const { toast } = useToast();
 
-  const finalUrl = buildCalendlyUrl(url, prefill);
+  const finalUrl = buildCalendlyUrl(url, prefill, {
+    utm_source: 'seven',
+    utm_medium: 'portal_cliente',
+    utm_campaign: 'module_meeting',
+    utm_content: context?.meetingId,
+    utm_term: context?.clientId,
+  });
+
 
   const handleConfirmScheduling = async () => {
     if (!context?.meetingId || !scheduledDate || !scheduledTime) {
