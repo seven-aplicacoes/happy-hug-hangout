@@ -1064,15 +1064,8 @@ export function ContractJourneyCard({
         onClose={() => setMeetingModalOpen(false)} 
         initialData={initialMeetingData || undefined} 
       />
-
-      {selectedModuleMeeting && (
-        <ModalAgendamentoCliente
-          open={clientScheduleModalOpen}
-          onClose={() => setClientScheduleModalOpen(false)}
-          moduleMeeting={selectedModuleMeeting}
-        />
-      )}
     </AccordionItem>
+
   );
 }
 
