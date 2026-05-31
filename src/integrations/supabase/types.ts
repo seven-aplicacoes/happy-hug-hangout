@@ -1103,6 +1103,7 @@ export type Database = {
         Row: {
           available_from: string | null
           available_until: string | null
+          cancel_url: string | null
           client_id: string
           completed_at: string | null
           consultant_id: string | null
@@ -1113,6 +1114,7 @@ export type Database = {
           module_id: string
           order_index: number
           product_id: string
+          reschedule_url: string | null
           scheduled_at: string | null
           scheduled_meeting_id: string | null
           status: string
@@ -1122,6 +1124,7 @@ export type Database = {
         Insert: {
           available_from?: string | null
           available_until?: string | null
+          cancel_url?: string | null
           client_id: string
           completed_at?: string | null
           consultant_id?: string | null
@@ -1132,6 +1135,7 @@ export type Database = {
           module_id: string
           order_index?: number
           product_id: string
+          reschedule_url?: string | null
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string
@@ -1141,6 +1145,7 @@ export type Database = {
         Update: {
           available_from?: string | null
           available_until?: string | null
+          cancel_url?: string | null
           client_id?: string
           completed_at?: string | null
           consultant_id?: string | null
@@ -1151,6 +1156,7 @@ export type Database = {
           module_id?: string
           order_index?: number
           product_id?: string
+          reschedule_url?: string | null
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string

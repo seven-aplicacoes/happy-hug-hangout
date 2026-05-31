@@ -25,7 +25,6 @@ async function verifyCalendlySignature(rawBody: string, signatureHeader: string 
 
     const signedPayload = `${timestamp}.${rawBody}`;
     
-    // Using Node's crypto compatible layer in Deno
     const hmac = crypto.createHmac('sha256', signingKey);
     hmac.update(signedPayload);
     const expectedSignature = hmac.digest('hex');
@@ -47,12 +46,10 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
 
-  // Read raw body for signature verification
   const rawBody = await req.text();
   const signatureHeader = req.headers.get('Calendly-Webhook-Signature');
   const signingKey = Deno.env.get('CALENDLY_WEBHOOK_SIGNING_KEY');
 
-  // Skip verification in development if no signing key is set, but log it
   if (signingKey) {
     const isValid = await verifyCalendlySignature(rawBody, signatureHeader, signingKey);
     if (!isValid) {
@@ -62,8 +59,6 @@ serve(async (req) => {
         status: 401,
       });
     }
-  } else {
-    console.warn("CALENDLY_WEBHOOK_SIGNING_KEY not set. Skipping signature verification (SECURITY WARNING).");
   }
 
   try {
@@ -161,6 +156,8 @@ serve(async (req) => {
           status: 'agendado',
           scheduled_at: eventData.start_time,
           scheduled_meeting_id: newMeetingRow?.id || null,
+          cancel_url: invitee.cancel_url,
+          reschedule_url: invitee.reschedule_url,
         })
         .eq('id', meetingId);
 
@@ -184,6 +181,7 @@ serve(async (req) => {
             status: isRescheduled ? 'rescheduled' : 'canceled',
             canceled_at: invitee.canceled_at || new Date().toISOString(),
             cancellation_reason: invitee.cancellation_reason,
+            rescheduled: isRescheduled,
           })
           .eq('id', schedulingEvent.id);
 
@@ -193,6 +191,8 @@ serve(async (req) => {
             .update({
               status: 'pendente',
               scheduled_at: null,
+              cancel_url: null,
+              reschedule_url: null,
             })
             .eq('id', schedulingEvent.meeting_id);
             

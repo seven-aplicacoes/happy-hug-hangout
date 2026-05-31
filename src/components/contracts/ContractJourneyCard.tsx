@@ -151,13 +151,24 @@ function MeetingRow({
               </Button>
             ) : meeting.status === 'agendado' ? (
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={handleAgendarClick}>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-8 gap-1.5 px-3" 
+                  onClick={() => meeting.rescheduleUrl ? window.open(meeting.rescheduleUrl, '_blank') : handleAgendarClick()}
+                >
                   Reagendar
                 </Button>
-                <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => onCancel(meeting.id)}>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 gap-1.5 px-3 text-red-500 hover:bg-red-50 hover:text-red-600" 
+                  onClick={() => meeting.cancelUrl ? window.open(meeting.cancelUrl, '_blank') : onCancel(meeting.id)}
+                >
                   Cancelar
                 </Button>
               </div>
+
             ) : (
               <Button 
                 size="sm" 
