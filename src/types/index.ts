@@ -236,6 +236,9 @@ export interface Reuniao {
   location?: string;
   scheduledBy?: string;
   contractModuleMeetingId?: string;
+  cancelUrl?: string;
+  rescheduleUrl?: string;
+
 }
 
 export interface ContractModuleMeeting {
