@@ -26,11 +26,7 @@ export function useReunioes() {
       }
 
       const { data: meetingsData, error: meetingsError } = await meetingsQuery;
-      if (meetingsError) {
-        console.error('useReunioes: Error fetching meetingsData', meetingsError);
-        throw meetingsError;
-      }
-      console.log('useReunioes: meetingsData count:', (meetingsData || []).length);
+      if (meetingsError) throw meetingsError;
 
       // 2. Fetch scheduled meetings from 'contract_module_meetings' table
       let moduleMeetingsQuery = supabase
