@@ -111,11 +111,13 @@ export default function ConsultorReunioesPage() {
   const grouped = useMemo(() => {
     const g: Record<string, Reuniao[]> = {};
     reunioesFiltradas.forEach(r => {
+      if (!r.meetingDate) return;
       if (!g[r.meetingDate]) g[r.meetingDate] = [];
       g[r.meetingDate].push(r);
     });
-    return Object.entries(g).sort(([a], [b]) => a.localeCompare(b));
+    return Object.entries(g).sort(([a], [b]) => b.localeCompare(a));
   }, [reunioesFiltradas]);
+
 
   const totalPaginas = Math.ceil(grouped.length / DIAS_POR_PAGINA);
   const diasPaginados = grouped.slice(paginaDia * DIAS_POR_PAGINA, (paginaDia + 1) * DIAS_POR_PAGINA);
