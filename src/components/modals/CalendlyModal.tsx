@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { buildCalendlyUrl } from '@/lib/calendly';
-import { Loader2, Calendar, Clock, Check } from 'lucide-react';
+import { Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
-import { useToast } from '@/hooks/use-toast';
 
 export type CalendlyContext = {
   clientId?: string;
@@ -36,12 +32,7 @@ type CalendlyModalProps = {
 
 export const CalendlyModal = ({ open, onClose, url, prefill, context }: CalendlyModalProps) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const { updateMeeting } = useContractModuleMeetings(context?.moduleId);
-  const { toast } = useToast();
-
+  
   const finalUrl = buildCalendlyUrl(url, prefill, {
     utm_source: 'seven',
     utm_medium: 'portal_cliente',
@@ -56,41 +47,12 @@ export const CalendlyModal = ({ open, onClose, url, prefill, context }: Calendly
     consultantId: context?.consultantId,
   });
 
-
-
-  const handleConfirmScheduling = async () => {
-    if (!context?.meetingId || !scheduledDate || !scheduledTime) {
-      toast({ 
-        title: 'Campos obrigatórios', 
-        description: 'Por favor, informe a data e hora que você agendou no Calendly.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
-      await updateMeeting.mutateAsync({
-        id: context.meetingId,
-        status: 'agendado',
-        scheduledAt: scheduledAt
-      });
-      toast({ title: 'Sucesso', description: 'Agendamento confirmado no sistema.' });
-      onClose();
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível confirmar o agendamento.', variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <BaseModal
       open={open}
       onClose={onClose}
       titulo={context?.meetingTitle ? `Agendar: ${context.meetingTitle}` : "Agendar reunião"}
-      descricao="1. Agende no calendário abaixo. 2. Confirme a data/hora escolhida ao lado."
+      descricao="Escolha o melhor horário disponível no Calendly. A confirmação será sincronizada automaticamente."
       size="2xl"
     >
       <div className="flex flex-col lg:flex-row gap-6 h-[80vh]">
@@ -126,58 +88,35 @@ export const CalendlyModal = ({ open, onClose, url, prefill, context }: Calendly
         <div className="w-full lg:w-80 shrink-0 space-y-6 p-1">
           <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-4">
             <div className="flex items-center gap-2">
-              <Check className="h-5 w-5 text-primary" />
-              <h4 className="font-bold text-sm text-primary">Confirmar Agendamento</h4>
+              <Clock className="h-5 w-5 text-primary" />
+              <h4 className="font-bold text-sm text-primary">Sincronização Automática</h4>
             </div>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Após escolher o horário no Calendly, informe-o aqui para que possamos sincronizar sua jornada.
+              Após concluir o agendamento no Calendly, o sistema será atualizado automaticamente em alguns segundos.
             </p>
             
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Data Agendada</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                  <Input 
-                    type="date" 
-                    value={scheduledDate} 
-                    onChange={e => setScheduledDate(e.target.value)}
-                    className="pl-10 h-11 bg-white border-neutral-200 focus:ring-primary/20"
-                  />
-                </div>
+            <div className="p-4 rounded-xl border border-dashed border-primary/20 bg-white">
+              <h5 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2">Resumo do Contexto</h5>
+              <div className="space-y-2 text-[11px]">
+                <div className="flex justify-between gap-4"><span className="text-neutral-400 shrink-0">Produto:</span> <span className="font-bold text-neutral-700 text-right">{context?.productName || '-'}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-neutral-400 shrink-0">Módulo:</span> <span className="font-bold text-neutral-700 text-right">{context?.moduleName || '-'}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-neutral-400 shrink-0">Consultor:</span> <span className="font-bold text-neutral-700 text-right">{context?.consultantName || '-'}</span></div>
               </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Horário Agendado</Label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                  <Input 
-                    type="time" 
-                    value={scheduledTime} 
-                    onChange={e => setScheduledTime(e.target.value)}
-                    className="pl-10 h-11 bg-white border-neutral-200 focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-
-              <Button 
-                className="w-full h-12 font-bold shadow-lg shadow-primary/20"
-                onClick={handleConfirmScheduling}
-                disabled={isSaving || !scheduledDate || !scheduledTime}
-              >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                Confirmar no Sistema
-              </Button>
             </div>
+
+            <Button 
+              variant="outline"
+              className="w-full h-11 font-bold"
+              onClick={onClose}
+            >
+              Fechar Modal
+            </Button>
           </div>
 
-          <div className="p-4 rounded-xl border border-dashed border-neutral-200 bg-neutral-50/50">
-            <h5 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2">Resumo do Contexto</h5>
-            <div className="space-y-2 text-[11px]">
-              <div className="flex justify-between"><span className="text-neutral-400">Produto:</span> <span className="font-bold text-neutral-700">{context?.productName || '-'}</span></div>
-              <div className="flex justify-between"><span className="text-neutral-400">Módulo:</span> <span className="font-bold text-neutral-700">{context?.moduleName || '-'}</span></div>
-              <div className="flex justify-between"><span className="text-neutral-400">Consultor:</span> <span className="font-bold text-neutral-700">{context?.consultantName || '-'}</span></div>
-            </div>
+          <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50">
+            <p className="text-[10px] text-blue-600 leading-tight">
+              <strong>Dica:</strong> Se você já agendou e a tela não atualizou, tente recarregar a página em alguns instantes.
+            </p>
           </div>
         </div>
       </div>
