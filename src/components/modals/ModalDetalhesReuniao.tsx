@@ -35,6 +35,7 @@ interface Props {
 
 export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefresh }: Props) => {
   const { user, perfil } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [reuniao, setReuniao] = useState<Reuniao | null>(null);
   const [history, setHistory] = useState<MeetingStatusHistory[]>([]);
