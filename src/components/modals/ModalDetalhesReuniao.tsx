@@ -852,7 +852,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white border rounded-2xl p-4 space-y-4">
+            <div className={cn("bg-white border rounded-2xl p-4 space-y-4", isClient && "hidden")}>
               <h3 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                 <History className="h-4 w-4" /> Histórico
               </h3>
