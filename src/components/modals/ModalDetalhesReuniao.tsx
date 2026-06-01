@@ -193,9 +193,9 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       };
 
       // Ensure status is normalized for local UI
-      if (mappedReuniao.status === 'realizado') (mappedReuniao as any).status = 'realizada';
-      if (mappedReuniao.status === 'cancelado') (mappedReuniao as any).status = 'cancelada';
-      if (mappedReuniao.status === 'agendado') (mappedReuniao as any).status = 'agendada';
+      if (r.status === 'realizado') (mappedReuniao as any).status = 'realizada';
+      if (r.status === 'cancelado') (mappedReuniao as any).status = 'cancelada';
+      if (r.status === 'agendado') (mappedReuniao as any).status = 'agendada';
 
       setReuniao(mappedReuniao);
       setHistory(h.map((item: any) => ({
