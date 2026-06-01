@@ -27,7 +27,7 @@ export const INTEGRACOES: Integracao[] = [
     nome: 'Google Calendar / Meet',
     fornecedor: 'Google',
     categoria: 'agenda',
-    status: 'disponivel',
+    status: 'configuracao',
     descricao: 'Sincronização de calendário e criação automática de reuniões Google Meet.',
     beneficios: [
       'Criação automática de links Google Meet',
@@ -43,7 +43,7 @@ export const INTEGRACOES: Integracao[] = [
     nome: 'Calendly',
     fornecedor: 'Calendly',
     categoria: 'agenda',
-    status: 'beta',
+    status: 'configuracao',
     descricao: 'Permite que clientes agendem reuniões diretamente na agenda do consultor.',
     beneficios: [
       'Autoatendimento de agendamento',
@@ -58,9 +58,7 @@ export const INTEGRACOES: Integracao[] = [
 
 export const labelStatus: Record<StatusIntegracao, string> = {
   conectado: 'Conectado',
-  disponivel: 'Configuração',
-  em_breve: 'Configuração',
-  beta: 'Configuração',
+  configuracao: 'Configuração',
 };
 
 export const labelCategoria: Record<CategoriaIntegracao, string> = {
