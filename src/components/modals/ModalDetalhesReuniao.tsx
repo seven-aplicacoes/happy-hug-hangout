@@ -192,6 +192,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         teams_creation_error: r.teams_creation_error
       };
 
+      // Ensure status is normalized for local UI
+      if (mappedReuniao.status === 'realizado') (mappedReuniao as any).status = 'realizada';
+      if (mappedReuniao.status === 'cancelado') (mappedReuniao as any).status = 'cancelada';
+      if (mappedReuniao.status === 'agendado') (mappedReuniao as any).status = 'agendada';
+
       setReuniao(mappedReuniao);
       setHistory(h.map((item: any) => ({
         id: item.id,
