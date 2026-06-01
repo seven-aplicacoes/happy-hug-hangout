@@ -244,5 +244,19 @@ export function useReunioes() {
     },
   });
 
-  return { reunioes, isLoading, error, upsertReuniao, deleteReuniao };
+  const syncMicrosoft = useMutation({
+    mutationFn: async ({ meetingId, action }: MicrosoftSyncParams) => {
+      const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
+        body: { meetingId, action }
+      });
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Erro na sincronização Microsoft');
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reunioes'] });
+    }
+  });
+
+  return { reunioes, isLoading, error, upsertReuniao, deleteReuniao, syncMicrosoft };
 }
