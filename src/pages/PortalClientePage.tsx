@@ -64,6 +64,7 @@ export default function PortalClientePage() {
   const [erro, setErro] = useState('');
   
   const [isCsatOpen, setIsCsatOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
   const [csatRatings, setCsatRatings] = useState({
     meeting: 0,
