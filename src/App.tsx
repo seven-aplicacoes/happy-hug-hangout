@@ -90,8 +90,9 @@ const ClienteRedirect = () => {
   return <Navigate to={target} replace />;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const AppContent = () => {
+  useAutoMeetingStatus();
+  return (
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
@@ -156,6 +157,12 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AppContent />
   </QueryClientProvider>
 );
 
