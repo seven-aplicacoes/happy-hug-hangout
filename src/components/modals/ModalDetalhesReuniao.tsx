@@ -15,7 +15,7 @@ import {
   Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon, Save
 } from 'lucide-react';
 
-
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Reuniao, MeetingStatusHistory, MeetingMinutes } from '@/types';
@@ -35,6 +35,7 @@ interface Props {
 
 export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefresh }: Props) => {
   const { user, perfil } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [reuniao, setReuniao] = useState<Reuniao | null>(null);
   const [history, setHistory] = useState<MeetingStatusHistory[]>([]);
@@ -53,11 +54,22 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [newDescription, setNewDescription] = useState('');
 
-
-
   const isAdmin = perfil === 'admin';
   const isConsultant = perfil === 'consultor';
   const isClient = perfil === 'cliente';
+
+  const canManageMeeting = isAdmin || isConsultant;
+
+  const canRegisterMinutes = canManageMeeting;
+  const canMarkAsCompleted = canManageMeeting;
+  const canReschedule = canManageMeeting;
+  const canCancel = canManageMeeting;
+  const canEditAgenda = canManageMeeting;
+  const canEditLink = canManageMeeting;
+
+  console.log('[Meeting Modal] userRole:', perfil);
+  console.log('[Meeting Modal] isClient:', isClient);
+  console.log('[Meeting Modal] canManageMeeting:', canManageMeeting);
 
   const fetchDetails = async () => {
     if (!reuniaoId) {
@@ -239,7 +251,13 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
   const updateStatus = async (newStatus: Reuniao['status'], reason?: string) => {
     if (!reuniao) return;
+    if (!canManageMeeting) {
+      toast({ title: 'Acesso negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+      return;
+    }
     setSubmitting(true);
+    console.log(`[Meeting Action] Update status to: ${newStatus}`, { meetingId: reuniao.id, reason });
+
     try {
       const payload: any = { status: newStatus, updated_at: new Date().toISOString() };
       
@@ -282,6 +300,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         } as any);
       }
 
+      console.log('[Meeting Status Update] Payload:', payload);
       const { error } = await supabase
         .from('meetings')
         .update(payload)
@@ -314,10 +333,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       }
 
       toast({ title: 'Sucesso', description: `Status atualizado para ${newStatus}.` });
+      
+      // Invalidations
+      queryClient.invalidateQueries({ queryKey: ['reunioes'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-summary', reuniao.clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['cliente-historico', reuniao.clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err) {
-      console.error('Error updating status:', err);
+      console.error('[Meeting Status Update] Error:', err);
       toast({ title: 'Erro', description: 'Não foi possível atualizar o status.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
@@ -564,7 +591,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     switch (status) {
       case 'agendada': return <Badge className="bg-blue-500 text-white">Agendado</Badge>;
       case 'em_andamento': return <Badge className="bg-amber-500 text-white animate-pulse">Em Andamento</Badge>;
-      case 'realizada': return <Badge className="bg-green-500 text-white">Realizado</Badge>;
+      case 'realizada': return <Badge className="bg-green-500 text-white">Concluído</Badge>;
       case 'cancelada': return <Badge className="bg-red-500 text-white">Cancelado</Badge>;
       case 'aguardando_confirmacao': return <Badge className="bg-purple-500 text-white">Aguardando Confirmação</Badge>;
       case 'no_show': return <Badge className="bg-gray-500 text-white">No-Show</Badge>;
@@ -587,15 +614,20 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
   if (!reuniao && !loading) return null;
 
-  const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
-  const canCancel = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
-  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
-  const canRegistrarAta = !isClient && reuniao.status !== 'cancelada';
+  const canEditLocal = canReschedule && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
+  const canCancelLocal = canCancel && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
+  const canMarkAsRealizadaLocal = canMarkAsCompleted && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
+  const canRegistrarAtaLocal = canRegisterMinutes && reuniao.status !== 'cancelada';
 
   const handleMarkAsCompleted = async (withAta = false) => {
+    if (!canMarkAsCompleted) {
+      toast({ title: 'Acesso negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+      return;
+    }
     if (withAta) {
       setRegistrarAtaOpen(true);
     }
+    console.log('[Meeting Action] mark as completed:', reuniao.id);
     await updateStatus('realizada', 'Reunião marcada como realizada pelo consultor');
     setIsConfirmingCompletion(false);
   };
@@ -610,28 +642,24 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
-            {!isClient && (
-              <>
-                {(reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
-                  <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
-                    <Pencil className="h-4 w-4" /> Remarcar
-                  </Button>
-                )}
-                {canCancel && !isCancelling && (
-                  <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
-                    <Trash2 className="h-4 w-4" /> Cancelar
-                  </Button>
-                )}
-              </>
+            {canReschedule && (reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
+              <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
+                <Pencil className="h-4 w-4" /> Remarcar
+              </Button>
+            )}
+            {canCancelLocal && !isCancelling && (
+              <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
+                <Trash2 className="h-4 w-4" /> Cancelar
+              </Button>
             )}
           </div>
           <div className="flex gap-2">
-            {!isClient && canRegistrarAta && (
+            {canRegistrarAtaLocal && (
               <Button variant="outline" onClick={() => setRegistrarAtaOpen(true)} className="gap-2">
                 <FileText className="h-4 w-4" /> {minutes ? 'Editar Ata' : 'Registrar Ata'}
               </Button>
             )}
-            {!isClient && canMarkAsRealizada && (
+            {canMarkAsRealizadaLocal && (
               <Button onClick={() => setIsConfirmingCompletion(true)} className="bg-green-600 hover:bg-green-700 text-white gap-2">
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
@@ -793,7 +821,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                           </span>
                         </div>
                         
-                        {!isClient && (
+                        {canEditLink && (
                           <div className="flex flex-wrap gap-2">
                             <Button 
                               variant="outline" 
@@ -838,7 +866,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
                   <AlignLeft className="h-4 w-4" /> Pauta / Descrição
                 </h3>
-                {!isClient && !isEditingDescription && (
+                {canEditAgenda && !isEditingDescription && (
                   <Button 
                     variant="ghost" 
                     size="sm" 

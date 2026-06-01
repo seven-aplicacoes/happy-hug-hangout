@@ -96,11 +96,13 @@ export default function PortalClientePage() {
   useEffect(() => {
     if (clientId) {
       console.log('[Portal Cliente] session:', clienteSession);
+      console.log('[Portal Cliente] userRole: cliente');
       console.log('[Portal Cliente] client id:', clientId);
       console.log('[Portal Cliente] contracts list:', contratos);
       console.log('[Portal Cliente] active contract:', activeContract);
+      console.log('[Portal Cliente] history count:', historico?.length);
     }
-  }, [clienteSession, clientId, contratos, activeContract]);
+  }, [clienteSession, clientId, contratos, activeContract, historico]);
 
 
   const handleLogin = async () => {
@@ -268,7 +270,7 @@ export default function PortalClientePage() {
             <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico de Reuniões</h2>
           </div>
           <div className="space-y-4">
-            {historico?.filter(e => e.tipo === 'reuniao' || (e as any).visible_to_client !== false).map(event => (
+            {historico?.map(event => (
               <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex flex-col md:flex-row gap-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
                 if (event.tipo === 'reuniao' && event.meeting_id) {
                   setSelectedMeeting({ id: event.meeting_id, title: event.titulo });
@@ -281,10 +283,20 @@ export default function PortalClientePage() {
                 </div>
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
-                    <StatusTag label={event.status || ''} />
+                    <div>
+                      <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                      {event.consultant_name && (
+                        <p className="text-[10px] text-muted-foreground">Consultor: {event.consultant_name}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <StatusTag label={event.status || ''} />
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold text-primary">
+                        Ver detalhes
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-sm text-neutral-500 leading-relaxed">{event.descricao}</p>
+                  <p className="text-sm text-neutral-500 leading-relaxed line-clamp-2">{event.descricao}</p>
                 </div>
               </Card>
             ))}
