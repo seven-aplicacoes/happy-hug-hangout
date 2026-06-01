@@ -76,6 +76,31 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         .eq('meeting_id', reuniaoId)
         .order('created_at', { ascending: false });
 
+      // Fetch minutes
+      const { data: m } = await supabase
+        .from('meeting_minutes')
+        .select('*')
+        .eq('meeting_id', reuniaoId)
+        .maybeSingle();
+
+      const mappedMinutes: MeetingMinutes | null = m ? {
+        id: m.id,
+        meetingId: m.meeting_id,
+        summary: m.summary,
+        discussionPoints: m.discussion_points,
+        decisions: m.decisions,
+        nextSteps: m.next_steps,
+        internalNotes: m.internal_notes,
+        visibleToClient: m.visible_to_client,
+        createdBy: m.created_by,
+        updatedBy: m.updated_by,
+        createdAt: m.created_at,
+        updatedAt: m.updated_at
+      } : null;
+
+      setMinutes(mappedMinutes);
+
+
       const mappedReuniao: Reuniao = {
         id: r.id,
         clienteId: r.client_id,
