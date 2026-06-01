@@ -411,8 +411,12 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                   <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-                          <Video className="h-5 w-5 text-white" />
+                        <div className="h-10 w-10 rounded-xl bg-[#4B53BC] flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" fill="white" fillOpacity="0.2"/>
+                            <path d="M16 16L19 19M16 8L19 5M5 19L8 16M5 5L8 8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                            <rect x="7" y="7" width="10" height="10" rx="2" fill="white"/>
+                          </svg>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
