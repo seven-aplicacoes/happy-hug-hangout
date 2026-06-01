@@ -76,6 +76,14 @@ export function useContractModuleMeetings(moduleId?: string) {
           const normalized = normalizeStatus(prevMeeting.status);
           const isAdvancing = ADVANCING_STATUSES.some(s => normalizeStatus(s) === normalized);
           
+          // Debugging log for development/troubleshooting
+          console.log('[Sequential Scheduling Debug]:', {
+            prevStatus: prevMeeting.status,
+            normalizedStatus: normalized,
+            isAdvancing: isAdvancing,
+            meetingNumber: meeting.meetingNumber
+          });
+
           if (!isAdvancing) {
             throw new Error('O encontro anterior deve estar finalizado para agendar este.');
           }
