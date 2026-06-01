@@ -12,8 +12,8 @@ import { useClientes } from '@/hooks/useClientes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, CalendarClock } from 'lucide-react';
-import { ModalVerDetalhesReuniao } from '@/components/modals/ModalVerDetalhesReuniao';
+import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, CalendarClock, Play } from 'lucide-react';
+import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { ModalRegistrarReuniao } from '@/components/modals/ModalRegistrarReuniao';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
@@ -238,14 +238,19 @@ export default function ConsultorReunioesPage() {
             />
             <div className="rounded-md border overflow-hidden divide-y">
               {items.map(r => (
-                <div key={r.id} className="cursor-pointer hover:bg-muted/50 transition-colors p-4 flex items-center justify-between gap-3 group">
-                  <div className="flex items-center gap-4 min-w-0" onClick={() => setSelectedReuniao(r)}>
+                <div 
+                  key={r.id} 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors p-4 flex items-center justify-between gap-3 group"
+                  onClick={() => setSelectedReuniao(r)}
+                >
+                  <div className="flex items-center gap-4 min-w-0">
                     <span className="text-base font-mono font-semibold text-primary tabular-nums shrink-0">{r.startTime}</span>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{r.clienteNome} — {r.tipo}</p>
                       <p className="text-xs text-muted-foreground truncate">{r.title}</p>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-2 shrink-0">
                     {r.status === 'agendada' && (
                       <div className="hidden group-hover:flex items-center gap-1 mr-2">
@@ -265,8 +270,19 @@ export default function ConsultorReunioesPage() {
                         >
                           <CalendarClock className="h-3 w-3" /> Remarcar
                         </Button>
+                        {(r.teamsJoinUrl || r.meetingUrl) && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 text-[10px] gap-1 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={(e) => { e.stopPropagation(); window.open(r.teamsJoinUrl || r.meetingUrl, '_blank'); }}
+                          >
+                            <Play className="h-3 w-3" /> Entrar
+                          </Button>
+                        )}
                       </div>
                     )}
+
                     <StatusTag label={labelStatus[r.status]} />
                     <ChevronRight className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
                   </div>
@@ -292,7 +308,7 @@ export default function ConsultorReunioesPage() {
       )}
 
       {selectedReuniao && (
-        <ModalVerDetalhesReuniao open={!!selectedReuniao && !registrarOpen} onClose={() => setSelectedReuniao(null)} reuniao={selectedReuniao} />
+        <ModalDetalhesReuniao open={!!selectedReuniao && !registrarOpen} onClose={() => setSelectedReuniao(null)} reuniaoId={selectedReuniao.id} onRefresh={() => {}} />
       )}
 
       {selectedReuniao && (

@@ -9,14 +9,19 @@ import {
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
   History, Info, Pencil, Trash2, Loader2, Play,
-  Copy, Plus
+  Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff,
+  Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon
 } from 'lucide-react';
+
+
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Reuniao, MeetingStatusHistory } from '@/types';
+import { Reuniao, MeetingStatusHistory, MeetingMinutes } from '@/types';
 import { cn } from '@/lib/utils';
 import { formatDuration } from '@/lib/duration';
 import { Textarea } from '@/components/ui/textarea';
+import { ModalRegistrarAta } from './ModalRegistrarAta';
+import { ModalReuniao } from './ModalReuniao';
 
 interface Props {
   open: boolean;
@@ -31,10 +36,15 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const { toast } = useToast();
   const [reuniao, setReuniao] = useState<Reuniao | null>(null);
   const [history, setHistory] = useState<MeetingStatusHistory[]>([]);
+  const [minutes, setMinutes] = useState<MeetingMinutes | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isConfirmingCompletion, setIsConfirmingCompletion] = useState(false);
+  const [registrarAtaOpen, setRegistrarAtaOpen] = useState(false);
+  const [remarcarOpen, setRemarcarOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+
 
   const isAdmin = perfil === 'admin';
   const isConsultant = perfil === 'consultor';
@@ -68,6 +78,31 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         `)
         .eq('meeting_id', reuniaoId)
         .order('created_at', { ascending: false });
+
+      // Fetch minutes
+      const { data: m } = await supabase
+        .from('meeting_minutes')
+        .select('*')
+        .eq('meeting_id', reuniaoId)
+        .maybeSingle();
+
+      const mappedMinutes: MeetingMinutes | null = m ? {
+        id: m.id,
+        meetingId: m.meeting_id,
+        summary: m.summary,
+        discussionPoints: m.discussion_points,
+        decisions: m.decisions,
+        nextSteps: m.next_steps,
+        internalNotes: m.internal_notes,
+        visibleToClient: m.visible_to_client,
+        createdBy: m.created_by,
+        updatedBy: m.updated_by,
+        createdAt: m.created_at,
+        updatedAt: m.updated_at
+      } : null;
+
+      setMinutes(mappedMinutes);
+
 
       const mappedReuniao: Reuniao = {
         id: r.id,
@@ -129,9 +164,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     if (open && reuniaoId) {
       fetchDetails();
       setIsCancelling(false);
+      setIsConfirmingCompletion(false);
       setCancelReason('');
     }
   }, [open, reuniaoId]);
+
+  // Refresh details when sub-modals close
+  useEffect(() => {
+    if (open && reuniaoId && !remarcarOpen && !registrarAtaOpen) {
+      fetchDetails();
+    }
+  }, [remarcarOpen, registrarAtaOpen]);
+
 
   const updateStatus = async (newStatus: Reuniao['status'], reason?: string) => {
     if (!reuniao) return;
@@ -244,7 +288,23 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
   if (!reuniao) return null;
 
+  const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
+  const canCancel = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
+  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
+  const canRegistrarAta = !isClient && reuniao.status !== 'cancelada';
+
+  const handleMarkAsCompleted = async (withAta = false) => {
+    if (withAta) {
+      setRegistrarAtaOpen(true);
+      // We'll mark as completed after ata is saved if desired, 
+      // but for now let's just trigger the status update as well
+    }
+    await updateStatus('realizada', 'Reunião marcada como realizada pelo consultor');
+    setIsConfirmingCompletion(false);
+  };
+
   return (
+    <>
     <BaseModal 
       open={open} 
       onClose={onClose} 
@@ -256,11 +316,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             {!isClient && (
               <>
                 {(reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
-                  <Button variant="outline" onClick={() => onEdit?.(reuniao)} className="gap-2">
-                    <Pencil className="h-4 w-4" /> Reagendar
+                  <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
+                    <Pencil className="h-4 w-4" /> Remarcar
                   </Button>
                 )}
-                {!['realizada', 'cancelada'].includes(reuniao.status) && !isCancelling && (
+                {canCancel && !isCancelling && (
                   <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
                     <Trash2 className="h-4 w-4" /> Cancelar
                   </Button>
@@ -269,13 +329,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             )}
           </div>
           <div className="flex gap-2">
-            {!isClient && reuniao.status === 'aguardando_confirmacao' && (
-              <Button onClick={() => updateStatus('realizada')} className="bg-green-600 hover:bg-green-700 text-white gap-2">
+            {canRegistrarAta && (
+              <Button variant="outline" onClick={() => setRegistrarAtaOpen(true)} className="gap-2">
+                <FileText className="h-4 w-4" /> {minutes ? 'Editar Ata' : 'Registrar Ata'}
+              </Button>
+            )}
+            {canMarkAsRealizada && (
+              <Button onClick={() => setIsConfirmingCompletion(true)} className="bg-green-600 hover:bg-green-700 text-white gap-2">
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
             )}
             {joinLink && reuniao.status !== 'cancelada' && (
-              <Button onClick={() => window.open(joinLink, '_blank')} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+              <Button onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
                 <Play className="h-4 w-4" /> Entrar na Reunião
               </Button>
             )}
@@ -305,6 +370,27 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             </div>
           </div>
         )}
+
+        {isConfirmingCompletion && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-200">
+            <h4 className="text-sm font-bold text-green-800 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" /> Finalizar Reunião
+            </h4>
+            <p className="text-xs text-green-700">Deseja marcar esta reunião como realizada? {!minutes && 'Você também pode registrar a ata agora.'}</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setIsConfirmingCompletion(false)}>Cancelar</Button>
+              {!minutes && (
+                <Button variant="outline" size="sm" onClick={() => handleMarkAsCompleted(true)} className="border-green-200 text-green-700 hover:bg-green-100">
+                  Registrar Ata e Marcar como Realizada
+                </Button>
+              )}
+              <Button className="bg-green-600 hover:bg-green-700" size="sm" onClick={() => handleMarkAsCompleted(false)} disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Marcar como Realizada'}
+              </Button>
+            </div>
+          </div>
+        )}
+
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
@@ -398,10 +484,78 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
                 <AlignLeft className="h-4 w-4" /> Pauta / Descrição
               </h3>
-              <div className="bg-white border rounded-xl p-4 text-xs text-muted-foreground whitespace-pre-wrap min-h-[100px]">
+              <div className="bg-white border rounded-xl p-4 text-xs text-muted-foreground whitespace-pre-wrap min-h-[60px]">
                 {reuniao.description || 'Nenhuma pauta definida para este encontro.'}
               </div>
             </div>
+
+            {minutes && (minutes.visibleToClient || !isClient) && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-green-700 flex items-center gap-2">
+                    <FileText className="h-4 w-4" /> Ata da Reunião
+                  </h3>
+                  {!minutes.visibleToClient && (
+                    <Badge variant="outline" className="text-[10px] gap-1 text-amber-600 border-amber-200 bg-amber-50">
+                      <EyeOff className="h-3 w-3" /> Apenas Interno
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="bg-green-50/30 border border-green-100 rounded-2xl overflow-hidden">
+                  <div className="p-6 space-y-6">
+                    {minutes.summary && (
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                          <Info className="h-3 w-3" /> Resumo
+                        </h4>
+                        <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.summary}</p>
+                      </div>
+                    )}
+                    
+                    {minutes.discussionPoints && (
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                          <UsersIcon className="h-3 w-3" /> Pontos Discutidos
+                        </h4>
+                        <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.discussionPoints}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {minutes.decisions && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                            <CheckCircle2 className="h-3 w-3" /> Decisões
+                          </h4>
+                          <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.decisions}</p>
+                        </div>
+                      )}
+                      
+                      {minutes.nextSteps && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                            <ListChecksIcon className="h-3 w-3" /> Próximos Passos
+                          </h4>
+                          <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.nextSteps}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {!isClient && minutes.internalNotes && (
+                      <div className="mt-4 pt-4 border-t border-green-200/50 space-y-2 bg-amber-50/50 -mx-6 -mb-6 p-6">
+                        <h4 className="text-[10px] font-black uppercase text-amber-800 flex items-center gap-2">
+                          <LockIcon className="h-3 w-3" /> Observações Internas
+                        </h4>
+                        <p className="text-xs text-amber-900 leading-relaxed whitespace-pre-wrap italic">{minutes.internalNotes}</p>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
 
           <div className="space-y-6">
@@ -494,24 +648,21 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         </div>
       </div>
     </BaseModal>
+
+    <ModalRegistrarAta 
+      open={registrarAtaOpen} 
+      onClose={() => setRegistrarAtaOpen(false)} 
+      meetingId={reuniao.id} 
+      meetingTitle={reuniao.title} 
+      onSuccess={fetchDetails} 
+    />
+
+    <ModalReuniao 
+      open={remarcarOpen} 
+      onClose={() => setRemarcarOpen(false)} 
+      reuniao={reuniao} 
+    />
+    </>
   );
 };
 
-const AlignLeft = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <line x1="21" y1="6" x2="3" y2="6"></line>
-    <line x1="15" y1="12" x2="3" y2="12"></line>
-    <line x1="17" y1="18" x2="3" y2="18"></line>
-  </svg>
-);

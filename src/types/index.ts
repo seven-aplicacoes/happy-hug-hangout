@@ -267,6 +267,21 @@ export interface MeetingStatusHistory {
   createdAt: string;
 }
 
+export interface MeetingMinutes {
+  id: string;
+  meetingId: string;
+  summary: string | null;
+  discussionPoints: string | null;
+  decisions: string | null;
+  nextSteps: string | null;
+  internalNotes: string | null;
+  visibleToClient: boolean;
+  createdBy: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ContractModuleMeeting {
   id: string;
   contractId: string;
