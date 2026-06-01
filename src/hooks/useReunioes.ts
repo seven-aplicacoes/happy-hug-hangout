@@ -58,7 +58,10 @@ export function useReunioes() {
         contractModuleMeetingId: r.contract_module_meeting_id,
         microsoftEventId: r.microsoft_event_id,
         teamsJoinUrl: r.teams_join_url,
+        teams_creation_status: r.teams_creation_status,
+        teams_creation_error: r.teams_creation_error,
       })) as Reuniao[];
+
     },
   });
 
