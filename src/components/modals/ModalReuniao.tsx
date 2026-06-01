@@ -315,7 +315,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             payload.meetingLinkProvider = 'teams';
             payload.teams_creation_status = 'created';
             payload.teams_creation_error = null;
+            (payload as any).historyAction = isUpdate ? 'teams_updated' : 'teams_created';
+            (payload as any).historyReason = 'Link do Microsoft Teams gerado com sucesso.';
           } else {
+
             throw new Error(response.data?.error || 'Link not generated');
           }
         } catch (teamsError: any) {
