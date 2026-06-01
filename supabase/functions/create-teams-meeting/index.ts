@@ -33,11 +33,13 @@ serve(async (req) => {
     }
 
     const { meetingId, action: requestedAction } = await req.json();
-    console.log(`[microsoft-sync] Action: ${requestedAction}, MeetingID: ${meetingId}`);
+    console.log(`[microsoft-sync] [TEAMS_LINK_START] Action: ${requestedAction}, MeetingID: ${meetingId}`);
 
     if (!meetingId) {
-      return new Response(JSON.stringify({ success: false, error: 'meetingId é obrigatório.' }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ success: false, error: 'meetingId é obrigatório.', message: 'ID da reunião não fornecido.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    console.log(`[microsoft-sync] [TEAMS_LINK_FETCH_MEETING_START] Fetching meeting data for: ${meetingId}`);
 
     // 1. Fetch meeting data with client and consultant info
     const { data: meeting, error: meetingError } = await supabase
