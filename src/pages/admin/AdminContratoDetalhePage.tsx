@@ -189,18 +189,20 @@ export default function AdminContratoDetalhePage() {
                 </Button>
               </>
             ) : (
-              <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
-                <Pencil className="h-4 w-4" />
-                Editar Contrato
-              </Button>
-              <Button 
-                variant="outline" 
-                className="gap-2 text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Excluir
-              </Button>
+              <>
+                <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
+                  <Pencil className="h-4 w-4" />
+                  Editar Contrato
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir
+                </Button>
+              </>
             )}
           </div>
         </div>
