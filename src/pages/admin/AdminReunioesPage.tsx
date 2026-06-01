@@ -8,7 +8,7 @@ import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, MoreVertical, Edit, Trash2, Clock, Calendar, ExternalLink } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { 
   DropdownMenu, 
