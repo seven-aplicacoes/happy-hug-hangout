@@ -39,27 +39,11 @@ export const INTEGRACOES: Integracao[] = [
     documentacaoUrl: 'https://developers.google.com/calendar/api/v3/reference/events',
   },
   {
-    id: 'microsoft_outlook',
-    nome: 'Outlook / Microsoft 365',
-    fornecedor: 'Microsoft',
-    categoria: 'agenda',
-    status: 'disponivel',
-    descricao: 'Sincronização de calendário e criação automática de reuniões Teams via Outlook.',
-    beneficios: [
-      'Criação automática de links Teams',
-      'Sincronização bidirecional de eventos',
-      'Suporte a contas Pessoais e Business',
-    ],
-    capacidades: ['Criar eventos', 'Atualizar eventos', 'Cancelar reuniões', 'Online Meetings'],
-    escopos: ['Calendars.ReadWrite', 'offline_access', 'User.Read'],
-    documentacaoUrl: 'https://learn.microsoft.com/en-us/graph/api/resources/calendar',
-  },
-  {
     id: 'calendly',
     nome: 'Calendly',
     fornecedor: 'Calendly',
     categoria: 'agenda',
-    status: 'em_breve',
+    status: 'beta',
     descricao: 'Permite que clientes agendem reuniões diretamente na agenda do consultor.',
     beneficios: [
       'Autoatendimento de agendamento',
