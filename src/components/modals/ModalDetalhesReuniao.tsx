@@ -61,7 +61,10 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       // Fetch history
       const { data: h } = await supabase
         .from('meeting_status_history')
-        .select('*')
+        .select(`
+          *,
+          profile:changed_by (full_name)
+        `)
         .eq('meeting_id', reuniaoId)
         .order('created_at', { ascending: false });
 
