@@ -161,6 +161,7 @@ serve(async (req) => {
       body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
     }
 
+    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_PAYLOAD]`, JSON.stringify(body, null, 2));
     console.log(`[microsoft-sync] Calling Graph: ${method} ${graphUrl}`);
     
     // Log the attempt
