@@ -44,6 +44,20 @@ export function useContractModuleMeetings(moduleId?: string) {
 
   const updateMeeting = useMutation({
     mutationFn: async (meeting: Partial<ContractModuleMeeting>) => {
+      // Check sequential scheduling
+      if (meeting.status === 'agendado') {
+        const { data: prevMeeting, error: prevError } = await supabase
+          .from('contract_module_meetings')
+          .select('status')
+          .eq('module_id', meeting.moduleId)
+          .eq('meeting_number', (meeting.meetingNumber || 1) - 1)
+          .single();
+
+        if (prevMeeting && !['realizada', 'concluído', 'cancelado', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status)) {
+          throw new Error('O encontro anterior deve estar finalizado para agendar este.');
+        }
+      }
+
       const { data, error } = await supabase
         .from('contract_module_meetings')
         .update({
@@ -53,6 +67,8 @@ export function useContractModuleMeetings(moduleId?: string) {
           scheduled_at: meeting.scheduledAt,
           completed_at: meeting.completedAt,
           title: meeting.title,
+          teams_join_url: meeting.teamsJoinUrl,
+          microsoft_event_id: meeting.microsoftEventId,
         })
         .eq('id', meeting.id)
         .select();
