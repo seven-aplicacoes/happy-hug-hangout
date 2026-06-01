@@ -17,7 +17,7 @@ import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle, ShieldAlert, CheckCircle2, Info } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle, ShieldAlert, CheckCircle2, Info, Video } from 'lucide-react';
 import { checkConsultantConflict } from '@/lib/conflicts';
 import { cn } from '@/lib/utils';
 import type { Reuniao, StatusReuniao } from '@/types';
