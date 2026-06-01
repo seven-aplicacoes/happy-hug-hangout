@@ -230,11 +230,15 @@ export interface Reuniao {
   meetingUrl?: string;
   location?: string;
   locationUrl?: string;
-  meetingLinkProvider?: 'teams' | 'manual' | 'teams_manual';
+  meetingLinkProvider?: 'teams' | 'manual' | 'teams_manual' | 'google';
   scheduledBy?: string;
   contractModuleMeetingId?: string;
   microsoftEventId?: string;
   teamsJoinUrl?: string;
+  meet_join_url?: string;
+  google_event_id?: string;
+  calendar_sync_status?: string;
+  calendar_sync_error?: string;
   canceledBy?: string;
   canceledAt?: string;
   cancelReason?: string;
@@ -253,6 +257,8 @@ export interface Reuniao {
   microsoft_sync_status?: 'success' | 'error' | null;
   microsoft_sync_error?: string | null;
   microsoft_last_sync_at?: string | null;
+  sync_status?: 'pending' | 'success' | 'error' | null;
+  sync_error?: string | null;
 }
 
 
@@ -302,11 +308,13 @@ export interface ContractModuleMeeting {
   scheduledAt?: string;
   completedAt?: string;
   teamsJoinUrl?: string;
+  meet_join_url?: string;
   location?: string;
   locationUrl?: string;
   meetingUrl?: string;
-  meetingLinkProvider?: 'teams' | 'manual';
+  meetingLinkProvider?: 'teams' | 'manual' | 'google';
   microsoftEventId?: string;
+  google_event_id?: string;
   orderIndex: number;
   consultantName?: string;
 }

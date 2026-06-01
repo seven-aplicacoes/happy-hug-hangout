@@ -17,7 +17,7 @@ import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle, ShieldAlert, CheckCircle2, Info, Video } from 'lucide-react';
+import { Loader2, Calendar, Clock, Link as LinkIcon, Info, Video, AlertTriangle, Users as UsersIcon } from 'lucide-react';
 import { checkConsultantConflict } from '@/lib/conflicts';
 import { cn } from '@/lib/utils';
 import type { Reuniao, StatusReuniao } from '@/types';
@@ -30,12 +30,12 @@ interface Props {
 }
 
 export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => {
-  const { user, perfil } = useAuth();
-  const { upsertReuniao, syncMicrosoft } = useReunioes();
+  const { user } = useAuth();
+  const { upsertReuniao, syncGoogle } = useReunioes();
   const { toast } = useToast();
   const { clientes } = useClientes();
-  const { consultores, isLoading: loadingConsultores } = useConsultores();
-  const { contratos, isLoading: loadingContratos } = useContratos();
+  const { consultores } = useConsultores();
+  const { contratos } = useContratos();
   
   const [title, setTitle] = useState('');
   const [tipo, setTipo] = useState('');
@@ -49,50 +49,55 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [meetingDate, setMeetingDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [duracao, setDuracao] = useState(60);
-  const [meetingUrl, setMeetingUrl] = useState('');
-  const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
-  const [locationUrl, setLocationUrl] = useState('');
   
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
-  const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual' | 'teams_manual'>('teams');
+  const [meetingLinkMode, setMeetingLinkMode] = useState<'google' | 'manual'>('google');
   const [manualMeetingUrl, setManualMeetingUrl] = useState('');
-  const [isGeneratingTeamsLink, setIsGeneratingTeamsLink] = useState(false);
-  const [teamsConnected, setTeamsConnected] = useState(false);
-  const [isLoadingTeamsStatus, setIsLoadingTeamsStatus] = useState(true);
+  const [isGeneratingMeetLink, setIsGeneratingMeetLink] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [isLoadingGoogleStatus, setIsLoadingGoogleStatus] = useState(true);
 
   useEffect(() => {
-    const checkTeamsConnection = async () => {
+    const checkGoogleConnection = async () => {
+      if (!user?.id) return;
       try {
-        const { data, error } = await supabase.functions.invoke('check-teams-connection');
+        const { data, error } = await supabase
+          .from('google_connections')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
         if (error) throw error;
-        setTeamsConnected(data?.isConnected || false);
+        setGoogleConnected(!!data);
       } catch (err) {
-        console.error('Error checking Teams connection:', err);
-        setTeamsConnected(false);
+        console.error('Error checking Google connection:', err);
+        setGoogleConnected(false);
       } finally {
-        setIsLoadingTeamsStatus(false);
+        setIsLoadingGoogleStatus(false);
       }
     };
 
     if (open) {
-      checkTeamsConnection();
+      checkGoogleConnection();
     }
-  }, [open]);
+  }, [open, user?.id]);
 
   useEffect(() => {
-    if (!teamsConnected) {
-      setMeetingLinkMode('manual');
-    } else if (!reuniao && !initialData) {
-      setMeetingLinkMode('teams');
+    if (!isLoadingGoogleStatus) {
+      if (!googleConnected) {
+        setMeetingLinkMode('manual');
+      } else if (!reuniao && !initialData) {
+        setMeetingLinkMode('google');
+      }
     }
-  }, [teamsConnected, reuniao, initialData, isLoadingTeamsStatus]);
+  }, [googleConnected, reuniao, initialData, isLoadingGoogleStatus]);
 
-  const { products: contractProducts, isLoading: loadingProducts } = useContractProducts(contractId);
-  const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
-  const { meetings: moduleMeetings, isLoading: loadingMeetings } = useContractModuleMeetings(contractProductPhaseId);
+  const { products: contractProducts } = useContractProducts(contractId);
+  const { phases: productPhases } = useContractProductPhases(contractProductId);
+  const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
   
   const { availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
     contractModuleMeetingId: contractModuleMeetingId && contractModuleMeetingId !== 'none' ? contractModuleMeetingId : undefined,
@@ -122,11 +127,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setMeetingDate(reuniao.meetingDate || '');
       setStartTime(reuniao.startTime || '');
       setDuracao(reuniao.duracao || 60);
-      setMeetingUrl(reuniao.meetingUrl || '');
-      setLocation(reuniao.location || '');
-      setLocationUrl(reuniao.locationUrl || '');
       setManualMeetingUrl(reuniao.locationUrl || reuniao.location || reuniao.meetingUrl || '');
-      setMeetingLinkMode(reuniao.meetingLinkProvider || (reuniao.teamsJoinUrl ? 'teams' : 'manual'));
+      setMeetingLinkMode(reuniao.meetingLinkProvider === 'google' ? 'google' : 'manual');
       setDescription(reuniao.description || '');
     } else if (initialData) {
       setTitle(initialData.title || '');
@@ -141,11 +143,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setMeetingDate(initialData.meetingDate || '');
       setStartTime(initialData.startTime || '');
       setDuracao(initialData.duracao || 60);
-      setMeetingUrl(initialData.meetingUrl || '');
-      setLocation(initialData.location || '');
-      setLocationUrl(initialData.locationUrl || '');
       setManualMeetingUrl(initialData.locationUrl || initialData.location || initialData.meetingUrl || '');
-      setMeetingLinkMode(initialData.meetingLinkProvider || (initialData.teamsJoinUrl ? 'teams' : 'manual'));
+      setMeetingLinkMode(initialData.meetingLinkProvider === 'google' ? 'google' : 'manual');
       setDescription(initialData.description || '');
     } else {
       setTitle('');
@@ -160,15 +159,12 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setMeetingDate('');
       setStartTime('');
       setDuracao(60);
-      setMeetingUrl('');
-      setLocation('');
-      setLocationUrl('');
       setManualMeetingUrl('');
-      setMeetingLinkMode(teamsConnected ? 'teams' : 'manual');
+      setMeetingLinkMode(googleConnected ? 'google' : 'manual');
       setDescription('');
     }
     setErrors({});
-  }, [reuniao, initialData, open, teamsConnected]);
+  }, [reuniao, initialData, open, googleConnected, isLoadingGoogleStatus]);
 
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
@@ -203,62 +199,19 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     return Object.keys(newErrors).length === 0;
   };
 
+  const calculateEndTime = (start: string, durationMin: number) => {
+    const [h, m] = start.split(':').map(Number);
+    const date = new Date();
+    date.setHours(h, m + durationMin, 0);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  };
+
   const handleSave = async () => {
     if (!validate()) return;
     setIsSubmitting(true);
     
-    console.group('[Meeting Schedule] Início do agendamento');
-    console.log('Dados do formulário:', { title, tipo, clienteId, consultorId, meetingDate, startTime, duracao, meetingLinkMode, manualMeetingUrl });
-    console.log('Teams automático ativo:', meetingLinkMode === 'teams');
-    console.log('Meeting ID existente:', reuniao?.id);
-    console.log('Teams conectado:', teamsConnected);
-    console.groupEnd();
-
     try {
-      // 1. Availability validation (only if module/meeting is linked)
-      if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
-        // Use local timezone parsing for meetingDate
-        const [year, month, day] = meetingDate.split('-').map(Number);
-        const selectedDate = new Date(year, month - 1, day);
-        const dayOfWeek = selectedDate.getDay(); 
-        
-        const matchingAvailability = availabilities.find(av => {
-          const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
-          const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
-          const startDate = new Date(sYear, sMonth - 1, sDay);
-          const endDate = new Date(eYear, eMonth - 1, eDay);
-          
-          const dateMatch = selectedDate >= startDate && selectedDate <= endDate;
-          const weekdayMatch = av.weekday === dayOfWeek;
-          
-          if (dateMatch && weekdayMatch) {
-            // Check if startTime is within the availability window
-            const timeMatch = startTime >= av.start_time && startTime <= av.end_time;
-            return timeMatch;
-          }
-          return false;
-        });
-
-        if (!matchingAvailability) {
-          toast({ 
-            title: "Horário Indisponível", 
-            description: "Este horário não está disponível para este encontro. Escolha uma data e horário configurados pelo consultor.", 
-            variant: "destructive" 
-          });
-          setIsSubmitting(false);
-          return;
-        }
-      } else if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability) {
-        toast({ 
-          title: "Nenhuma Disponibilidade", 
-          description: "Nenhuma disponibilidade configurada para este encontro. Entre em contato com o consultor responsável.", 
-          variant: "destructive" 
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // 2. Conflict validation
+      // 1. Availability and Conflict validation
       const endTime = calculateEndTime(startTime, duracao);
       const { hasConflict, conflictingMeeting } = await checkConsultantConflict({
         consultantId: consultorId,
@@ -271,7 +224,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       if (hasConflict) {
         toast({ 
           title: "Conflito de Agenda", 
-          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}). Escolha outro horário disponível.`, 
+          description: `Este consultor já possui uma reunião agendada (${conflictingMeeting.start_time} - ${conflictingMeeting.title}).`, 
           variant: "destructive" 
         });
         setIsSubmitting(false);
@@ -286,9 +239,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         contractProductPhaseId: (contractProductPhaseId === 'none' || !contractProductPhaseId) ? null : contractProductPhaseId,
         contractModuleMeetingId: (contractModuleMeetingId === 'none' || !contractModuleMeetingId) ? null : contractModuleMeetingId,
         consultorId, status, meetingDate, startTime, duracao, 
-        meetingUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : meetingUrl,
-        location: meetingLinkMode === 'manual' ? manualMeetingUrl : location,
-        locationUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : locationUrl,
+        meetingUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : undefined,
+        location: meetingLinkMode === 'manual' ? manualMeetingUrl : undefined,
+        locationUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : undefined,
         meetingLinkProvider: meetingLinkMode,
         description,
         source: reuniao?.source || 'manual'
@@ -299,32 +252,21 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       const savedMeeting = result?.[0];
       if (!savedMeeting) throw new Error("Falha ao salvar reunião.");
 
-      // 4. Microsoft Teams Sync
-      if (meetingLinkMode === 'teams' && status === 'agendada' && teamsConnected) {
-        setIsGeneratingTeamsLink(true);
-        console.group('[Teams Sync] Chamando sincronização centralizada');
-        
+      // 4. Google Meet Sync
+      if (meetingLinkMode === 'google' && status === 'agendada' && googleConnected) {
+        setIsGeneratingMeetLink(true);
         try {
-          await syncMicrosoft.mutateAsync({ 
+          await supabase.from('meetings').update({ sync_status: 'pending' }).eq('id', savedMeeting.id);
+          await syncGoogle.mutateAsync({ 
             meetingId: savedMeeting.id,
-            action: reuniao?.microsoftEventId ? 'update' : 'create'
+            action: reuniao?.google_event_id ? 'update' : 'create'
           });
-          
-          toast({
-            title: "Agendado!",
-            description: "Encontro agendado e link do Teams gerado com sucesso.",
-          });
-          
-          console.groupEnd();
-        } catch (teamsError: any) {
-          console.error('[Teams Sync] Erro:', teamsError);
-          toast({
-            title: "Aviso",
-            description: "Encontro salvo, mas não foi possível sincronizar com o Microsoft Teams agora.",
-            variant: "warning" as any
-          });
+          toast({ title: "Agendado!", description: "Encontro agendado e link do Google Meet gerado." });
+        } catch (err: any) {
+          console.error('[Google Sync] Erro:', err);
+          toast({ title: "Aviso", description: "Encontro salvo, mas houve erro na sincronização Google Meet.", variant: "warning" as any });
         } finally {
-          setIsGeneratingTeamsLink(false);
+          setIsGeneratingMeetLink(false);
         }
       } else if (meetingLinkMode === 'manual' && manualMeetingUrl) {
         toast({ title: "Sucesso", description: "Encontro salvo com link manual." });
@@ -334,7 +276,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
       onClose();
     } catch (error) {
-      console.error('[Meeting Schedule] Erro geral ao salvar:', error);
+      console.error('[Meeting Schedule] Erro ao salvar:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -353,13 +295,6 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     </div>
   );
 
-  const summaryItem = (label: string, value: string | undefined | null) => (
-    <div className="flex flex-col">
-      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{label}</span>
-      <span className="text-xs font-bold text-foreground truncate">{value || 'Não informado'}</span>
-    </div>
-  );
-
   return (
     <BaseModal 
       open={open} 
@@ -369,21 +304,23 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       footer={footer}
     >
       <div className="space-y-8 py-2">
-        {/* Resumo do Agendamento */}
         <div className="bg-muted/30 rounded-2xl p-6 border border-muted/60 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Info className="h-16 w-16" />
-          </div>
           <h4 className="text-[11px] font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
             <UsersIcon className="h-3 w-3" /> Resumo do Agendamento
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
-            {summaryItem('Cliente', selectedCliente?.nomeFantasia || selectedCliente?.razaoSocial)}
-            {summaryItem('Contrato', selectedContrato ? `${selectedContrato.tipo} (${new Date(selectedContrato.dataInicio).toLocaleDateString()})` : null)}
-            {summaryItem('Produto', selectedProduto?.productNome)}
-            {summaryItem('Módulo', selectedModulo?.name)}
-            {summaryItem('Encontro', selectedEncontro?.title || (selectedEncontro ? `Encontro ${selectedEncontro.meetingNumber}` : null))}
-            {summaryItem('Consultor Responsável', selectedConsultor?.full_name)}
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Cliente</span>
+              <span className="text-xs font-bold text-foreground truncate">{selectedCliente?.nomeFantasia || selectedCliente?.razaoSocial || '—'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Contrato</span>
+              <span className="text-xs font-bold text-foreground truncate">{selectedContrato?.tipo || '—'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Consultor</span>
+              <span className="text-xs font-bold text-foreground truncate">{selectedConsultor?.full_name || '—'}</span>
+            </div>
           </div>
         </div>
 
@@ -391,297 +328,81 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           <div className="space-y-6">
             <div className="space-y-2">
               <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.title && "text-destructive")}>Título da Reunião *</Label>
-              <Input 
-                value={title} 
-                onChange={e => setTitle(e.target.value)} 
-                placeholder="Ex: Alinhamento de Diagnóstico"
-                className={cn("h-11 font-medium", errors.title && "border-destructive")} 
-              />
+              <Input value={title} onChange={e => setTitle(e.target.value)} className={cn("h-11 font-medium bg-white", errors.title && "border-destructive")} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Tipo</Label>
-                <Select value={tipo} onValueChange={setTipo}>
-                  <SelectTrigger className="h-11 font-medium"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Check-in Semanal">Check-in Semanal</SelectItem>
-                    <SelectItem value="Alinhamento Estratégico">Alinhamento Estratégico</SelectItem>
-                    <SelectItem value="Apresentação de Resultados">Apresentação de Resultados</SelectItem>
-                    <SelectItem value="Workshop / Treinamento">Workshop / Treinamento</SelectItem>
-                    <SelectItem value="Outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Status</Label>
-                <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-                  <SelectTrigger className="h-11 font-medium"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="agendada">Agendada</SelectItem>
-                    <SelectItem value="realizada">Realizada</SelectItem>
-                    <SelectItem value="cancelada">Cancelada</SelectItem>
-                    <SelectItem value="remarcada">Remarcada</SelectItem>
-                    <SelectItem value="reagendada">Reagendada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Integração Microsoft Teams / Link Manual */}
             <div className="space-y-4 pt-2">
-              {isLoadingTeamsStatus ? (
-                <div className="bg-muted/30 border border-muted/60 rounded-2xl p-4 flex items-center justify-center h-24">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : teamsConnected ? (
-                meetingLinkMode === 'teams' ? (
-                  <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-[#4B53BC] flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                          <Video className="h-5 w-5 text-white" />
+              {googleConnected ? (
+                meetingLinkMode === 'google' ? (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm border border-blue-100">
+                        <Video className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-blue-900">Google Meet conectado</span>
+                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Conectado</Badge>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-blue-900">Microsoft Teams conectado</span>
-                            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Conectado</Badge>
-                          </div>
-                          <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">
-                            O link da reunião será gerado automaticamente ao salvar.
-                          </p>
-                        </div>
+                        <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">O link será gerado automaticamente.</p>
                       </div>
                     </div>
-                    <button 
-                      type="button"
-                      onClick={() => setMeetingLinkMode('manual')}
-                      className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-4 w-fit transition-colors"
-                    >
-                      Usar link manual
-                    </button>
+                    <button type="button" onClick={() => setMeetingLinkMode('manual')} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-4">Usar link manual</button>
                   </div>
                 ) : (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link Manual</Label>
-                      <div className="relative">
-                        <Input 
-                          value={manualMeetingUrl} 
-                          onChange={e => setManualMeetingUrl(e.target.value)} 
-                          className="h-11 pl-10 bg-white" 
-                          placeholder="Meet, Zoom ou Endereço físico" 
-                        />
-                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      </div>
+                  <div className="space-y-3">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link Manual</Label>
+                    <div className="relative">
+                      <Input value={manualMeetingUrl} onChange={e => setManualMeetingUrl(e.target.value)} className="h-11 pl-10 bg-white" placeholder="Link do Meet ou Zoom" />
+                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
-                    <button 
-                      type="button"
-                      onClick={() => setMeetingLinkMode('teams')}
-                      className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      <Video className="h-3 w-3" /> Gerar automaticamente pelo Teams
+                    <button type="button" onClick={() => setMeetingLinkMode('google')} className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 transition-colors">
+                      <Video className="h-3 w-3" /> Gerar link Google Meet
                     </button>
                   </div>
                 )
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    </div>
+                  <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-amber-900">Microsoft Teams não conectado</p>
-                      <p className="text-[10px] text-amber-700/70 font-medium leading-relaxed">
-                        Conecte o Microsoft Teams no Lovable ou insira um link manual.
-                      </p>
+                      <p className="text-sm font-bold text-amber-900">Google Calendar não conectado</p>
+                      <p className="text-[10px] text-amber-700/70">Conecte sua conta nas configurações ou use link manual.</p>
                     </div>
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link</Label>
-                    <div className="relative">
-                      <Input 
-                        value={manualMeetingUrl} 
-                        onChange={e => setManualMeetingUrl(e.target.value)} 
-                        className="h-11 pl-10 bg-white" 
-                        placeholder="Meet, Zoom ou Endereço" 
-                      />
-                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    </div>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link Manual</Label>
+                    <Input value={manualMeetingUrl} onChange={e => setManualMeetingUrl(e.target.value)} className="h-11 bg-white" placeholder="Link ou Local" />
                   </div>
                 </div>
               )}
             </div>
-            
+
             <div className="space-y-2">
-              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Descrição / Pauta</Label>
-              <Textarea 
-                value={description} 
-                onChange={e => setDescription(e.target.value)} 
-                placeholder="Descreva os tópicos principais..." 
-                className="min-h-[120px] resize-none" 
-              />
+              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Descrição</Label>
+              <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Detalhes da pauta..." className="min-h-[100px]" />
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10 space-y-6">
-              <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5" /> Agenda e Disponibilidade
-              </h4>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.meetingDate && "text-destructive")}>Data Disponível *</Label>
-                  {availabilities && availabilities.length > 0 ? (
-                    <Select value={meetingDate} onValueChange={setMeetingDate}>
-                      <SelectTrigger className={cn("h-11 font-medium bg-white", errors.meetingDate && "border-destructive")}>
-                        <SelectValue placeholder="Selecione uma data" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(() => {
-                          const availableDates: string[] = [];
-                          availabilities.forEach(av => {
-                            const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
-                            const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
-                            const current = new Date(sYear, sMonth - 1, sDay);
-                            const end = new Date(eYear, eMonth - 1, eDay);
-
-                            while (current <= end) {
-                              if (current.getDay() === av.weekday) {
-                                const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
-                                if (!availableDates.includes(dateStr)) {
-                                  availableDates.push(dateStr);
-                                }
-                              }
-                              current.setDate(current.getDate() + 1);
-                            }
-                          });
-
-                          return availableDates.sort().map(date => {
-                            const [y, m, d] = date.split('-').map(Number);
-                            const slotDate = new Date(y, m - 1, d);
-                            return (
-                              <SelectItem key={date} value={date}>
-                                {slotDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
-                              </SelectItem>
-                            );
-                          });
-                        })()}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="relative">
-                       <Input 
-                        type="date" 
-                        value={meetingDate} 
-                        onChange={e => setMeetingDate(e.target.value)} 
-                        className={cn("h-11 pl-10 bg-white", errors.meetingDate && "border-destructive")} 
-                        disabled={contractModuleMeetingId && contractModuleMeetingId !== 'none'}
-                      />
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  )}
-                  {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability && (
-                    <div className="flex items-center gap-2 text-[10px] text-amber-600 font-bold bg-amber-50 p-2 rounded-lg border border-amber-100">
-                      <AlertTriangle className="h-3 w-3" /> Nenhuma disponibilidade configurada.
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.startTime && "text-destructive")}>Horário *</Label>
-                    {availabilities && availabilities.length > 0 && meetingDate ? (
-                      <Select value={startTime} onValueChange={setStartTime}>
-                        <SelectTrigger className={cn("h-11 font-medium bg-white", errors.startTime && "border-destructive")}>
-                          <SelectValue placeholder="Horário" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(() => {
-                            const [y, m, d] = meetingDate.split('-').map(Number);
-                            const selDate = new Date(y, m - 1, d);
-                            const weekday = selDate.getDay();
-                            
-                            const matchingAvails = availabilities.filter(av => {
-                              const [sYear, sMonth, sDay] = av.start_date.split('-').map(Number);
-                              const [eYear, eMonth, eDay] = av.end_date.split('-').map(Number);
-                              const start = new Date(sYear, sMonth - 1, sDay);
-                              const end = new Date(eYear, eMonth - 1, eDay);
-                              return av.weekday === weekday && selDate >= start && selDate <= end;
-                            });
-
-                            const timeSlots: string[] = [];
-                            matchingAvails.forEach(av => {
-                              let current = av.start_time;
-                              const end = av.end_time;
-                              while (current < end) {
-                                timeSlots.push(current);
-                                // Increment by slot duration (assume 60min if not set)
-                                const [h, min] = current.split(':').map(Number);
-                                const next = new Date();
-                                next.setHours(h, min + (av.slot_duration_minutes || 60), 0);
-                                current = `${String(next.getHours()).padStart(2, '0')}:${String(next.getMinutes()).padStart(2, '0')}`;
-                              }
-                            });
-
-                            return [...new Set(timeSlots)].sort().map(time => (
-                              <SelectItem key={time} value={time}>
-                                {time.substring(0, 5)}
-                              </SelectItem>
-                            ));
-                          })()}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <div className="relative">
-                        <Input 
-                          type="time" 
-                          value={startTime} 
-                          onChange={e => setStartTime(e.target.value)} 
-                          className={cn("h-11 pl-10 bg-white", errors.startTime && "border-destructive")} 
-                          disabled={contractModuleMeetingId && contractModuleMeetingId !== 'none'}
-                        />
-                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Duração (min)</Label>
-                    <Input 
-                      type="number" 
-                      value={duracao} 
-                      onChange={e => setDuracao(Number(e.target.value))} 
-                      className="h-11 font-medium bg-white" 
-                    />
-                  </div>
+            <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10 space-y-4">
+              <div className="space-y-2">
+                <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.meetingDate && "text-destructive")}>Data *</Label>
+                <div className="relative">
+                  <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className={cn("h-11 pl-10 bg-white", errors.meetingDate && "border-destructive")} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
-
-              {/* Status da Disponibilidade */}
-              {contractModuleMeetingId && contractModuleMeetingId !== 'none' && (
-                <div className="pt-4 border-t border-primary/10">
-                  {loadingAvailability ? (
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground animate-pulse">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Verificando horários...
-                    </div>
-                  ) : availabilities && availabilities.length > 0 ? (
-                    <div className="flex items-center gap-2 text-[10px] text-emerald-600 font-bold bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                      <CheckCircle2 className="h-4 w-4" /> Horários disponíveis sincronizados.
-                    </div>
-                  ) : (
-                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-2">
-                      <p className="text-[10px] text-amber-800 font-black uppercase flex items-center gap-2">
-                        <AlertTriangle className="h-3.5 w-3.5" /> Atenção
-                      </p>
-                      <p className="text-[11px] text-amber-700 leading-relaxed font-medium">
-                        Nenhuma disponibilidade configurada para este encontro. Entre em contato com o consultor responsável.
-                      </p>
-                    </div>
-                  )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.startTime && "text-destructive")}>Hora *</Label>
+                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={cn("h-11 bg-white", errors.startTime && "border-destructive")} />
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Duração (min)</Label>
+                  <Input type="number" value={duracao} onChange={e => setDuracao(Number(e.target.value))} className="h-11 bg-white" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -689,12 +410,3 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     </BaseModal>
   );
 };
-
-function calculateEndTime(startTime: string, durationMinutes: number): string {
-  if (!startTime) return '';
-  const [hours, minutes] = startTime.split(':').map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes, 0);
-  date.setMinutes(date.getMinutes() + durationMinutes);
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
