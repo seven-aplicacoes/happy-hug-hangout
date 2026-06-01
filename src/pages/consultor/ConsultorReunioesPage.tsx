@@ -292,7 +292,7 @@ export default function ConsultorReunioesPage() {
       )}
 
       {selectedReuniao && (
-        <ModalVerDetalhesReuniao open={!!selectedReuniao && !registrarOpen} onClose={() => setSelectedReuniao(null)} reuniao={selectedReuniao} />
+        <ModalDetalhesReuniao open={!!selectedReuniao && !registrarOpen} onClose={() => setSelectedReuniao(null)} reuniaoId={selectedReuniao.id} onRefresh={() => {}} />
       )}
 
       {selectedReuniao && (
