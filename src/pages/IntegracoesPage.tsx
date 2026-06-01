@@ -242,7 +242,19 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
             </Button>
           </>
         ) : integ.status === 'disponivel' ? (
-          <Button onClick={() => toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` })}>
+          <Button onClick={() => {
+            // Se for Microsoft, vamos usar o mecanismo de reconexão ou sugerir o fluxo correto
+            if (integ.id === 'microsoft_outlook') {
+              toast({ 
+                title: 'Conectando Microsoft', 
+                description: 'Certifique-se de autorizar as permissões de Calendário e Reuniões Online.' 
+              });
+              // Simular abertura do gateway (em produção isso abriria o modal de conexão do Lovable)
+              window.open('https://lovable.dev/projects/' + window.location.pathname.split('/')[2] + '/integrations', '_blank');
+            } else {
+              toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` });
+            }
+          }}>
             <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar {integ.nome}
           </Button>
         ) : (

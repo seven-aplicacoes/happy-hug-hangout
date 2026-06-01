@@ -266,6 +266,12 @@ export function useReunioes() {
         console.error('[useReunioes] Erro retornado pela Edge Function:', data);
         const errorMsg = data?.message || data?.error || 'Erro na sincronização Microsoft';
         const detailMsg = data?.details?.error?.message || data?.details?.message || '';
+        
+        // Handle 403 Access Denied specifically
+        if (detailMsg.includes('Access is denied') || data?.details?.status === 403) {
+          throw new Error(`Permissão Negada: Sua conta Microsoft não permite criar reuniões online ou os escopos de acesso expiraram. Por favor, reconecte sua conta em Configurações > Integrações.`);
+        }
+        
         throw new Error(`${errorMsg}${detailMsg ? `: ${detailMsg}` : ''}`);
       }
       
