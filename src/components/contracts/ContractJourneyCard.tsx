@@ -43,6 +43,7 @@ function normalizeStatus(status: string) {
 }
 
 function canAdvanceToNextMeeting(_previousMeeting?: any) {
+  // Logic updated: now it's always possible to schedule meetings regardless of previous status
   return true;
 }
 

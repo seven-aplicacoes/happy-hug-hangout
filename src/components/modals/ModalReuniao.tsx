@@ -191,8 +191,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!startTime) newErrors.startTime = true;
     
     if (isLocked && !phaseResponsibleId && contractProductPhaseId && contractProductPhaseId !== 'none') {
-      toast({ title: "Responsável ausente", description: "Defina um responsável no módulo antes de salvar.", variant: "destructive" });
-      return false;
+      // toast({ title: "Responsável ausente", description: "Defina um responsável no módulo antes de salvar.", variant: "destructive" });
+      // return false;
     }
 
     setErrors(newErrors);
@@ -287,7 +287,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="h-11 px-6 font-bold">Cancelar</Button>
       <Button 
         onClick={handleSave} 
-        disabled={isSubmitting || (contractModuleMeetingId && contractModuleMeetingId !== 'none' && (!availabilities || availabilities.length === 0) && !loadingAvailability)} 
+        disabled={isSubmitting} 
         className="h-11 px-8 font-bold shadow-lg shadow-primary/20"
       >
         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Salvar Reunião'}
