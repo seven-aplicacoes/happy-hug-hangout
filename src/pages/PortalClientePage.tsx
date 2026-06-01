@@ -23,7 +23,8 @@ import {
   Users,
   Loader2,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Video
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
