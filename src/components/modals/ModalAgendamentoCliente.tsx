@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { checkConsultantConflict } from '@/lib/conflicts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Props {
   open: boolean;
@@ -19,7 +20,8 @@ interface Props {
 
 export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props) => {
   const { toast } = useToast();
-  const { clienteSession } = useAuth();
+  const { clienteSession, user } = useAuth();
+  const queryClient = useQueryClient();
   const filters = {
     contractModuleMeetingId: moduleMeeting.id,
     consultantId: moduleMeeting.consultantId
@@ -87,7 +89,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
         duracao: selectedSlot.duration_minutes,
         status: 'agendada',
         source: 'portal_cliente',
-        scheduledBy: clienteSession?.clienteId, // Importante para RLS
+        scheduledBy: user?.id, // Usar o ID de autenticação do usuário
         meetingLinkProvider: 'teams'
       });
 
