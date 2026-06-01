@@ -128,6 +128,7 @@ export function useReunioes() {
         .select();
 
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("Não foi possível salvar a reunião. Verifique suas permissões.");
 
       const newMeeting = data[0];
 
