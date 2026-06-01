@@ -278,6 +278,14 @@ export function useReunioes() {
     return data;
   };
 
+  const testMicrosoftCalendar = async () => {
+    const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
+      body: { action: 'test_calendar' }
+    });
+    if (error) throw error;
+    return data;
+  };
+
   return { 
     reunioes, 
     isLoading, 
@@ -285,6 +293,7 @@ export function useReunioes() {
     upsertReuniao, 
     deleteReuniao, 
     syncMicrosoft,
-    testMicrosoftConnection 
+    testMicrosoftConnection,
+    testMicrosoftCalendar
   };
 }

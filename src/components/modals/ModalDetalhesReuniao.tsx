@@ -390,19 +390,23 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     }
   };
 
-  const { testMicrosoftConnection } = useReunioes();
+  const { testMicrosoftConnection, testMicrosoftCalendar } = useReunioes();
   const [testingConnection, setTestingConnection] = useState(false);
+  const [testingCalendar, setTestingCalendar] = useState(false);
 
   const handleTestConnection = async () => {
     setTestingConnection(true);
     try {
       const result = await testMicrosoftConnection();
       if (result.success) {
-        toast({ title: "Conexão OK", description: "Conseguimos nos comunicar com o Microsoft Graph." });
+        toast({ 
+          title: "Conexão OK", 
+          description: `Conectado via ${result.connector}. Usuário: ${result.details ? JSON.parse(result.details).displayName : 'OK'}` 
+        });
       } else {
         toast({ 
-          title: "Erro de Conexão", 
-          description: `Status ${result.status}: ${result.details}`,
+          title: result.status === 403 ? "Permissão Negada" : "Erro de Conexão", 
+          description: result.status === 403 ? "O conector está logado, mas não tem permissão de leitura." : `Status ${result.status}: ${result.details}`,
           variant: "destructive",
           duration: 10000
         });
@@ -411,6 +415,30 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       toast({ title: "Erro na Function", description: err.message, variant: "destructive" });
     } finally {
       setTestingConnection(false);
+    }
+  };
+
+  const handleTestCalendar = async () => {
+    setTestingCalendar(true);
+    try {
+      const result = await testMicrosoftCalendar();
+      if (result.success) {
+        toast({ title: "Calendário OK", description: "Permissões de leitura e listagem de eventos confirmadas." });
+      } else {
+        const is403 = result.status === 403;
+        toast({ 
+          title: is403 ? "Falta Permissão Calendars.ReadWrite" : "Erro no Calendário", 
+          description: is403 
+            ? "O login funciona, mas o aplicativo não tem permissão para gerenciar seu calendário. Reconecte o Microsoft Outlook/Calendar com permissão total."
+            : `Erro ao acessar calendário. Status ${result.status}`,
+          variant: "destructive",
+          duration: 10000
+        });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro no teste", description: err.message, variant: "destructive" });
+    } finally {
+      setTestingCalendar(false);
     }
   };
 
@@ -1050,7 +1078,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                       className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
                     >
                       {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
-                      Testar Conexão Graph
+                      1. Testar Conexão Básica
+                    </Button>
+
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleTestCalendar} 
+                      disabled={testingCalendar}
+                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
+                    >
+                      {testingCalendar ? <Loader2 className="h-3 w-3 animate-spin" /> : <Calendar className="h-3 w-3" />}
+                      2. Testar Calendário (POST)
                     </Button>
                     
                     <Button 
@@ -1058,12 +1097,16 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                       size="sm" 
                       onClick={() => generateTeamsLink()} 
                       disabled={generatingTeams}
-                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
+                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100 font-bold"
                     >
                       {generatingTeams ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
-                      Forçar Sincronização
+                      3. Forçar Sincronização
                     </Button>
                     
+                    <div className="bg-amber-100/50 p-2 rounded text-[9px] text-amber-900 border border-amber-200 mt-2 italic">
+                      <strong>Dica:</strong> Se o teste 1 der OK mas o 2 der 403, reconecte o Microsoft Outlook/Calendar com permissão total de Calendário.
+                    </div>
+
                     <Button 
                       variant="ghost" 
                       size="sm" 
