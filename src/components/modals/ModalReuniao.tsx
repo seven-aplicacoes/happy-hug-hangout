@@ -335,10 +335,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-blue-900">Google Meet conectado</span>
-                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Conectado</Badge>
+                          <span className="text-sm font-bold text-blue-900">Google Meet (Conexão Global)</span>
+                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Ativo</Badge>
                         </div>
-                        <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">O link será gerado automaticamente.</p>
+                        <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">O link será gerado usando a conta do sistema.</p>
                       </div>
                     </div>
                     <button type="button" onClick={() => setMeetingLinkMode('manual')} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-4">Usar link manual</button>
