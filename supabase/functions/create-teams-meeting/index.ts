@@ -100,7 +100,7 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     };
 
-    let graphUrl = `${GATEWAY_URL}/v1.0/me/events`;
+    let graphUrl = `${GATEWAY_URL}/me/events`;
     let method = 'POST';
     let body: any = null;
 
@@ -134,7 +134,7 @@ serve(async (req) => {
     if (action === 'create' || action === 'update') {
       method = action === 'create' ? 'POST' : 'PATCH';
       if (action === 'update' && meeting.microsoft_event_id) {
-        graphUrl = `${GATEWAY_URL}/v1.0/me/events/${meeting.microsoft_event_id}`;
+        graphUrl = `${GATEWAY_URL}/me/events/${meeting.microsoft_event_id}`;
       }
 
       body = {
@@ -156,7 +156,7 @@ serve(async (req) => {
       }
       
       // Use cancel endpoint if available, otherwise DELETE
-      graphUrl = `${GATEWAY_URL}/v1.0/me/events/${meeting.microsoft_event_id}/cancel`;
+      graphUrl = `${GATEWAY_URL}/me/events/${meeting.microsoft_event_id}/cancel`;
       method = 'POST';
       body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
     }
