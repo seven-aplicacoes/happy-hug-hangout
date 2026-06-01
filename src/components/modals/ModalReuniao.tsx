@@ -394,30 +394,84 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link</Label>
-              <div className="relative">
-                <Input 
-                  value={meetingUrl || location} 
-                  onChange={e => { setMeetingUrl(e.target.value); setLocation(e.target.value); }} 
-                  className="h-11 pl-10" 
-                  placeholder="Meet, Zoom ou Endereço" 
-                />
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 py-2">
-              <input 
-                type="checkbox" 
-                id="generateTeams" 
-                checked={generateTeamsLink} 
-                onChange={(e) => setGenerateTeamsLink(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <Label htmlFor="generateTeams" className="text-xs font-bold cursor-pointer">
-                Gerar link do Microsoft Teams automaticamente
-              </Label>
+            {/* Integração Microsoft Teams / Link Manual */}
+            <div className="space-y-4 pt-2">
+              {teamsConnected ? (
+                meetingLinkMode === 'teams' ? (
+                  <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                          <Video className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-blue-900">Microsoft Teams conectado</span>
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Conectado</Badge>
+                          </div>
+                          <p className="text-[10px] text-blue-700/70 font-medium">O link da reunião será gerado automaticamente ao salvar.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setMeetingLinkMode('manual')}
+                      className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-4 w-fit transition-colors"
+                    >
+                      Usar link manual
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link Manual</Label>
+                      <div className="relative">
+                        <Input 
+                          value={manualMeetingUrl} 
+                          onChange={e => setManualMeetingUrl(e.target.value)} 
+                          className="h-11 pl-10 bg-white" 
+                          placeholder="Meet, Zoom ou Endereço físico" 
+                        />
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setMeetingLinkMode('teams')}
+                      className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      <Video className="h-3 w-3" /> Gerar automaticamente pelo Teams
+                    </button>
+                  </div>
+                )
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-amber-900">Microsoft Teams não conectado</p>
+                      <p className="text-[10px] text-amber-700/70 font-medium leading-relaxed">
+                        Configure a integração para gerar links automaticamente ou insira um link manual abaixo.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link</Label>
+                    <div className="relative">
+                      <Input 
+                        value={manualMeetingUrl} 
+                        onChange={e => setManualMeetingUrl(e.target.value)} 
+                        className="h-11 pl-10 bg-white" 
+                        placeholder="Meet, Zoom ou Endereço" 
+                      />
+                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="space-y-2">
