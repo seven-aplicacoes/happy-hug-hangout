@@ -379,31 +379,6 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       setGeneratingTeams(false);
     }
   };
-          .eq('id', reuniao.id);
-
-        if (dbError) throw dbError;
-
-        await supabase.from('meeting_status_history').insert({
-          meeting_id: reuniao.id,
-          action: isUpdate ? 'link_updated' : 'link_created',
-          new_status: reuniao.status,
-          changed_by: user?.id,
-          change_reason: 'Link do Microsoft Teams gerado com sucesso'
-        });
-
-        console.log('[Teams Integration] Supabase atualizado com sucesso');
-        toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
-        fetchDetails();
-      } else {
-        throw new Error('Link do Teams não retornado na resposta.');
-      }
-    } catch (err: any) {
-      console.error('[Teams Integration] Erro capturado no frontend:', err);
-      toast({ title: 'Falha ao gerar link do Teams', description: err.message || 'Erro desconhecido ao gerar link.', variant: 'destructive' });
-    } finally {
-      setGeneratingTeams(false);
-    }
-  };
 
   const handleAddManualLink = async () => {
     if (!reuniao) return;
