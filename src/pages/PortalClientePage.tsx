@@ -75,10 +75,11 @@ export default function PortalClientePage() {
   const { cliente, isLoading: loadingFicha } = useClienteFicha(clientId);
   const { contratos, isLoading: loadingContratos } = useClienteContratos(clientId);
   
-  const activeContract = useMemo(() => 
-    contratos?.find(c => c.status === 'ativo' || c.status === 'em_onboarding') || contratos?.[0],
-    [contratos]
-  );
+  const activeContract = useMemo(() => {
+    if (!contratos || contratos.length === 0) return null;
+    const active = contratos.find(c => c.status === 'ativo' || c.status === 'em_onboarding');
+    return active || contratos[0];
+  }, [contratos]);
 
   const { submitCSAT } = useClientCSAT(clientId);
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
