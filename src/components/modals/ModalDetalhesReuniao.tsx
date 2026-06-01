@@ -13,11 +13,10 @@ import {
   User, CheckCircle2, AlertCircle, 
   Info, Pencil, Trash2, Loader2, Play, RefreshCcw,
   Copy, FileText, ShieldCheck, Link as LinkIcon,
-  Users as UsersIcon
+  Users as UsersIcon, XCircle, FileEdit
 } from 'lucide-react';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { Reuniao, MeetingStatusHistory, MeetingMinutes } from '@/types';
 import { cn } from '@/lib/utils';
 import { formatDuration } from '@/lib/duration';
@@ -39,7 +38,6 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const { toast } = useToast();
   const { syncGoogle } = useReunioes();
   const [reuniao, setReuniao] = useState<Reuniao | null>(null);
-  const [history, setHistory] = useState<MeetingStatusHistory[]>([]);
   const [minutes, setMinutes] = useState<MeetingMinutes | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -52,7 +50,8 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const [showManualLinkForm, setShowManualLinkForm] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
 
-  const canManageMeeting = perfil === 'admin' || perfil === 'consultor';
+  const isAdminOrConsultant = perfil === 'admin' || perfil === 'consultor';
+  const isClient = perfil === 'cliente';
 
   const fetchDetails = async () => {
     if (!reuniaoId) return;
@@ -102,6 +101,30 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       };
 
       setReuniao(mappedReuniao);
+      setManualUrl(r.location_url || '');
+
+      // Fetch minutes
+      const { data: mData } = await supabase
+        .from('meeting_minutes')
+        .select('*')
+        .eq('meeting_id', reuniaoId)
+        .maybeSingle();
+      
+      if (mData) setMinutes({
+        id: mData.id,
+        meetingId: mData.meeting_id,
+        summary: mData.summary,
+        discussionPoints: mData.discussion_points,
+        decisions: mData.decisions,
+        nextSteps: mData.next_steps,
+        internalNotes: mData.internal_notes,
+        visibleToClient: mData.visible_to_client,
+        createdBy: mData.created_by,
+        updatedBy: mData.updated_by,
+        createdAt: mData.created_at,
+        updatedAt: mData.updated_at
+      });
+
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
     } finally {
@@ -123,8 +146,6 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const handleGenerateMeetLink = async () => {
     if (!reuniao) return;
     setGeneratingMeet(true);
-    console.log("Iniciando geração de Google Meet", { meetingId: reuniao.id, action: reuniao.google_event_id ? 'update' : 'create' });
-    
     try {
       const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
         body: { 
@@ -133,96 +154,69 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         }
       });
       
-      if (error) {
-        console.error("Erro ao chamar Edge Function create-google-meet-meeting:", error);
-        throw new Error(error.message || "Erro de conexão com a Edge Function");
-      }
-
-      if (data?.success === false) {
-        console.error("Edge Function retornou erro:", data);
-        throw new Error(data.error || "Falha ao processar link no Google");
-      }
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error);
 
       toast({ title: 'Sucesso', description: 'Link do Google Meet processado com sucesso.' });
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      console.error("Erro completo handleGenerateMeetLink:", err);
-      toast({ 
-        title: 'Erro na Sincronização', 
-        description: err.message.includes("Failed to send a request") 
-          ? "Não foi possível alcançar a Edge Function. Verifique se ela foi deployada corretamente no Supabase." 
-          : err.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Erro na Sincronização', description: err.message, variant: 'destructive' });
     } finally {
       setGeneratingMeet(false);
     }
   };
 
-  const handleTestConnection = async () => {
-    setSubmitting(true);
-    console.log("Iniciando diagnóstico de conexão Google");
-    try {
-      const { data, error } = await supabase.functions.invoke('diagnose-google-connection');
-      
-      if (error) {
-        console.error("Erro ao chamar Edge Function diagnose-google-connection:", error);
-        throw new Error(error.message || "Erro de conexão com a Edge Function");
-      }
-
-      if (data?.success === false) {
-        toast({ title: 'Atenção', description: data.error || 'Não conectado', variant: 'warning' as any });
-      } else {
-        toast({ 
-          title: 'Conexão OK', 
-          description: `Conectado como ${data.data?.email}. Token: ${data.data?.tokenStatus}` 
-        });
-      }
-    } catch (err: any) {
-      console.error("Erro completo handleTestConnection:", err);
-      toast({ 
-        title: 'Erro no Diagnóstico', 
-        description: err.message.includes("Failed to send a request")
-          ? "Edge Function 'diagnose-google-connection' não encontrada ou erro de CORS."
-          : err.message, 
-        variant: 'destructive' 
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleTestEdgeFunction = async () => {
+  const handleUpdateStatus = async (newStatus: Reuniao['status'], reason?: string) => {
+    if (!reuniao) return;
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('test-google-edge-function');
+      const { error } = await supabase
+        .from('meetings')
+        .update({ 
+          status: newStatus,
+          canceled_at: newStatus === 'cancelada' ? new Date().toISOString() : null,
+          canceled_by: newStatus === 'cancelada' ? user?.id : null,
+          cancel_reason: reason || null,
+          completed_at: newStatus === 'realizada' ? new Date().toISOString() : null,
+          completed_by: newStatus === 'realizada' ? user?.id : null
+        })
+        .eq('id', reuniao.id);
+
       if (error) throw error;
-      if (data?.success) {
-        toast({ title: 'Teste OK', description: data.message });
+
+      if (newStatus === 'cancelada' && reuniao.google_event_id) {
+          await supabase.functions.invoke('create-google-meet-meeting', {
+              body: { meeting_id: reuniao.id, action: 'cancel' }
+          });
       }
+
+      toast({ title: 'Sucesso', description: `Reunião marcada como ${newStatus}.` });
+      setIsConfirmingCompletion(false);
+      setIsCancelling(false);
+      fetchDetails();
+      if (onRefresh) onRefresh();
     } catch (err: any) {
-      toast({ title: 'Erro no Teste', description: err.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleAddManualLink = async () => {
-    if (!reuniao || !manualUrl) return;
+  const handleSaveManualLink = async () => {
+    if (!reuniao) return;
     setSubmitting(true);
     try {
       const { error } = await supabase
         .from('meetings')
         .update({
           location_url: manualUrl,
-          meeting_link_provider: 'manual',
-          sync_status: 'manual'
+          meeting_link_provider: 'manual'
         })
         .eq('id', reuniao.id);
 
       if (error) throw error;
-      toast({ title: 'Sucesso', description: 'Link manual adicionado.' });
+      toast({ title: 'Sucesso', description: 'Link manual atualizado.' });
       setShowManualLinkForm(false);
       fetchDetails();
     } catch (err: any) {
@@ -249,12 +243,25 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       titulo={reuniao.title} 
       size="full"
       footer={
-        <div className="flex justify-between items-center w-full">
-          <div className="flex gap-2">
-            {canManageMeeting && (
-              <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
-                <Pencil className="h-4 w-4" /> Remarcar
-              </Button>
+        <div className="flex flex-wrap justify-between items-center w-full gap-4">
+          <div className="flex flex-wrap gap-2">
+            {isAdminOrConsultant && (
+              <>
+                <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
+                  <Pencil className="h-4 w-4" /> Reagendar
+                </Button>
+                <Button variant="outline" onClick={() => setIsCancelling(true)} className="gap-2 text-destructive hover:bg-destructive/10">
+                  <XCircle className="h-4 w-4" /> Cancelar
+                </Button>
+                <Button variant="outline" onClick={() => setRegistrarAtaOpen(true)} className="gap-2">
+                  <FileEdit className="h-4 w-4" /> Registrar Ata
+                </Button>
+                {reuniao.status !== 'realizada' && (
+                  <Button variant="default" onClick={() => setIsConfirmingCompletion(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                    <CheckCircle2 className="h-4 w-4" /> Finalizar
+                  </Button>
+                )}
+              </>
             )}
           </div>
           <div className="flex gap-2">
@@ -276,6 +283,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
                   <Info className="h-4 w-4" /> Informações Gerais
                 </h3>
+                <Badge variant={reuniao.status === 'realizada' ? 'default' : 'outline'} className={cn(
+                    reuniao.status === 'realizada' && "bg-emerald-500",
+                    reuniao.status === 'cancelada' && "bg-destructive text-white border-none"
+                )}>
+                  {reuniao.status.toUpperCase()}
+                </Badge>
               </div>
               
               <div className="grid grid-cols-2 gap-y-4 gap-x-8">
@@ -296,9 +309,16 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               </div>
 
               <div className="pt-4 border-t border-muted/60">
-                <span className="text-[10px] font-black uppercase text-muted-foreground/60 flex items-center gap-2 mb-3">
-                  <Video className="h-3 w-3" /> Link da Reunião
-                </span>
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-black uppercase text-muted-foreground/60 flex items-center gap-2">
+                      <Video className="h-3 w-3" /> Link da Reunião
+                    </span>
+                    {isAdminOrConsultant && (
+                        <Button variant="link" size="sm" className="h-auto p-0 text-[10px] uppercase font-bold" onClick={() => setShowManualLinkForm(true)}>
+                            Editar Link
+                        </Button>
+                    )}
+                </div>
                 
                 {joinLink ? (
                   <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between gap-4">
@@ -307,18 +327,20 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                         <Video className="h-5 w-5 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-blue-900 truncate">{reuniao.meet_join_url ? 'Google Meet' : 'Link da Reunião'}</p>
+                        <p className="text-xs font-bold text-blue-900 truncate">
+                            {reuniao.meet_join_url ? 'Google Meet' : 'Link da Reunião'}
+                        </p>
                         <p className="text-[10px] text-blue-700 truncate">{joinLink}</p>
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => {
-                        navigator.clipboard.writeText(joinLink);
+                        navigator.clipboard.writeText(joinLink!);
                         toast({ title: 'Copiado!' });
                       }}>
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => window.open(joinLink, '_blank')}>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => window.open(joinLink!, '_blank')}>
                         Acessar
                       </Button>
                     </div>
@@ -326,25 +348,15 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 ) : (
                   <div className="bg-muted/50 border border-dashed rounded-xl p-6 text-center space-y-4">
                     <p className="text-xs text-muted-foreground italic">Nenhum link gerado para esta reunião.</p>
-                    {canManageMeeting && (
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="flex justify-center gap-3">
-                          <Button variant="outline" size="sm" onClick={handleGenerateMeetLink} disabled={generatingMeet}>
-                            {generatingMeet ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Video className="h-4 w-4 mr-2" />}
-                            Gerar Google Meet
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(true)}>
-                            Adicionar Manual
-                          </Button>
-                        </div>
-                        <div className="flex gap-4">
-                          <Button variant="link" size="sm" className="text-[10px] text-muted-foreground" onClick={handleTestConnection} disabled={submitting}>
-                            {submitting ? 'Testando...' : 'Diagnosticar Conexão Google'}
-                          </Button>
-                          <Button variant="link" size="sm" className="text-[10px] text-muted-foreground" onClick={handleTestEdgeFunction} disabled={submitting}>
-                            Testar Edge Function
-                          </Button>
-                        </div>
+                    {isAdminOrConsultant && (
+                      <div className="flex justify-center gap-3">
+                        <Button variant="outline" size="sm" onClick={handleGenerateMeetLink} disabled={generatingMeet}>
+                          {generatingMeet ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Video className="h-4 w-4 mr-2" />}
+                          Gerar Google Meet
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(true)}>
+                          Adicionar Manual
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -360,6 +372,28 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 {reuniao.description || 'Nenhuma descrição informada.'}
               </p>
             </div>
+
+            {minutes && (
+                <div className="bg-muted/30 rounded-2xl p-6 border border-muted/60 space-y-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                        <FileText className="h-4 w-4" /> Ata da Reunião
+                    </h3>
+                    <div className="space-y-3">
+                        {minutes.summary && (
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-muted-foreground/60">Resumo</p>
+                                <p className="text-xs text-foreground whitespace-pre-wrap">{minutes.summary}</p>
+                            </div>
+                        )}
+                        {minutes.decisions && (
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-muted-foreground/60">Decisões</p>
+                                <p className="text-xs text-foreground whitespace-pre-wrap">{minutes.decisions}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
           </div>
         </div>
       </div>
@@ -367,13 +401,20 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       {remarcarOpen && (
         <ModalReuniao 
           open={remarcarOpen} 
-          onClose={() => setRemarcarOpen(false)} 
+          onClose={() => { setRemarcarOpen(false); fetchDetails(); }} 
           reuniao={reuniao} 
         />
       )}
+
+      <ModalRegistrarAta
+        open={registrarAtaOpen}
+        onClose={() => { setRegistrarAtaOpen(false); fetchDetails(); }}
+        meetingId={reuniao.id}
+        meetingTitle={reuniao.title}
+      />
       
       {showManualLinkForm && (
-        <BaseModal open={showManualLinkForm} onClose={() => setShowManualLinkForm(false)} titulo="Link Manual" size="sm">
+        <BaseModal open={showManualLinkForm} onClose={() => setShowManualLinkForm(false)} titulo="Editar Link da Reunião" size="sm">
           <div className="p-4 space-y-4">
             <div className="space-y-2">
               <Label>URL da Reunião</Label>
@@ -381,9 +422,34 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setShowManualLinkForm(false)}>Cancelar</Button>
-              <Button onClick={handleAddManualLink} disabled={submitting}>Salvar</Button>
+              <Button onClick={handleSaveManualLink} disabled={submitting}>Salvar</Button>
             </div>
           </div>
+        </BaseModal>
+      )}
+
+      {isConfirmingCompletion && (
+        <BaseModal open={isConfirmingCompletion} onClose={() => setIsConfirmingCompletion(false)} titulo="Finalizar Reunião" size="sm">
+            <div className="p-4 space-y-4">
+                <p className="text-sm text-muted-foreground">Deseja marcar esta reunião como realizada? Isso atualizará o progresso do módulo.</p>
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" onClick={() => setIsConfirmingCompletion(false)}>Voltar</Button>
+                    <Button onClick={() => handleUpdateStatus('realizada')} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700">Confirmar</Button>
+                </div>
+            </div>
+        </BaseModal>
+      )}
+
+      {isCancelling && (
+        <BaseModal open={isCancelling} onClose={() => setIsCancelling(false)} titulo="Cancelar Reunião" size="sm">
+            <div className="p-4 space-y-4">
+                <p className="text-sm text-muted-foreground">Informe o motivo do cancelamento:</p>
+                <Textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder="Motivo..." />
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" onClick={() => setIsCancelling(false)}>Voltar</Button>
+                    <Button onClick={() => handleUpdateStatus('cancelada', cancelReason)} disabled={submitting} variant="destructive">Confirmar Cancelamento</Button>
+                </div>
+            </div>
         </BaseModal>
       )}
     </BaseModal>
