@@ -842,7 +842,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               <h3 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                 <History className="h-4 w-4" /> Histórico
               </h3>
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 pr-2">
                 {history.length === 0 ? (
                   <p className="text-[10px] text-muted-foreground text-center py-4">Nenhuma alteração registrada.</p>
                 ) : (
