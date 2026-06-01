@@ -19,14 +19,34 @@ interface Props {
 
 export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props) => {
   const { toast } = useToast();
-  const { slots, isLoading: loadingSlots } = useConsultantAvailability({
+  const { clienteSession } = useAuth();
+  const filters = {
     contractModuleMeetingId: moduleMeeting.id,
     consultantId: moduleMeeting.consultantId
-  });
+  };
+  const { slots, availabilities, isLoading: loadingSlots } = useConsultantAvailability(filters);
   const { upsertReuniao } = useReunioes();
   
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      console.group('[Portal Availability] Debug Agendamento');
+      console.log('Cliente logado ID:', clienteSession?.clienteId);
+      console.log('Módulo Meeting:', moduleMeeting);
+      console.log('Consultor responsável ID:', moduleMeeting.consultantId);
+      console.log('Filtros usados:', filters);
+      console.groupEnd();
+    }
+  }, [open, moduleMeeting, clienteSession]);
+
+  useEffect(() => {
+    if (!loadingSlots && open) {
+      console.log('[Portal Availability] Disponibilidades regras:', availabilities);
+      console.log('[Portal Availability] Slots retornados:', slots);
+    }
+  }, [loadingSlots, slots, availabilities, open]);
 
   const handleConfirm = async () => {
     if (!selectedSlot) return;
