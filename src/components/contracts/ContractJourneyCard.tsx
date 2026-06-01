@@ -181,7 +181,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                               "h-8 gap-1.5 px-3 text-white text-[10px] font-bold uppercase",
                               meeting.meetingLinkProvider === 'teams' ? "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20" : "bg-primary hover:bg-primary/90"
                             )}
-                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl, '_blank', 'noopener,noreferrer')}
+                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl, '_blank', 'noopener,noreferrer')}
                           >
                             {meeting.meetingLinkProvider === 'teams' ? <Video className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />} 
                             Entrar
