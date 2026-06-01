@@ -96,11 +96,13 @@ export default function PortalClientePage() {
   useEffect(() => {
     if (clientId) {
       console.log('[Portal Cliente] session:', clienteSession);
+      console.log('[Portal Cliente] userRole: cliente');
       console.log('[Portal Cliente] client id:', clientId);
       console.log('[Portal Cliente] contracts list:', contratos);
       console.log('[Portal Cliente] active contract:', activeContract);
+      console.log('[Portal Cliente] history count:', historico?.length);
     }
-  }, [clienteSession, clientId, contratos, activeContract]);
+  }, [clienteSession, clientId, contratos, activeContract, historico]);
 
 
   const handleLogin = async () => {
