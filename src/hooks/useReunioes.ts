@@ -185,7 +185,7 @@ export function useReunioes() {
           ? `${reuniao.meetingDate}T${reuniao.startTime}` 
           : null;
 
-        await supabase
+        const { error: updateMeetingError } = await supabase
           .from('contract_module_meetings')
           .update({
             status,
@@ -199,6 +199,11 @@ export function useReunioes() {
             location_url: reuniao.locationUrl
           })
           .eq('id', reuniao.contractModuleMeetingId);
+
+        if (updateMeetingError) {
+          console.error('Erro ao atualizar contrato:', updateMeetingError);
+          throw updateMeetingError;
+        }
       }
 
 
