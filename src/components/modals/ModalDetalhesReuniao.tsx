@@ -385,7 +385,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     );
   }
 
-  if (!reuniao) return null;
+  if (!reuniao && !loading) return null;
 
   const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
   const canCancel = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
