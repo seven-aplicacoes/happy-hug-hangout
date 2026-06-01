@@ -36,6 +36,7 @@ import { usePortalSummary } from '@/hooks/usePortalSummary';
 import { usePortalCSAT } from '@/hooks/usePortalCSAT';
 import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 import { 
   Dialog, 
