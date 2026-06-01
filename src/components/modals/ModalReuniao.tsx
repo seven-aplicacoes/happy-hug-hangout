@@ -305,10 +305,14 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         console.group('[Teams Sync] Chamando sincronização centralizada');
         
         try {
+          // Marcar como pendente antes de sincronizar
+          await supabase.from('meetings').update({ sync_status: 'pending' }).eq('id', savedMeeting.id);
+
           await syncMicrosoft.mutateAsync({ 
             meetingId: savedMeeting.id,
             action: reuniao?.microsoftEventId ? 'update' : 'create'
           });
+
           
           toast({
             title: "Agendado!",

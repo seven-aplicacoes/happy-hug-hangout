@@ -65,7 +65,13 @@ export function useReunioes() {
         teamsJoinUrl: r.teams_join_url,
         teams_creation_status: r.teams_creation_status,
         teams_creation_error: r.teams_creation_error,
+        microsoft_sync_status: r.microsoft_sync_status,
+        microsoft_sync_error: r.microsoft_sync_error,
+        microsoft_last_sync_at: r.microsoft_last_sync_at,
+        sync_status: r.sync_status,
+        sync_error: r.sync_error,
       })) as Reuniao[];
+
 
     },
   });
@@ -256,14 +262,15 @@ export function useReunioes() {
         throw error;
       }
       
-      if (!data.success) {
+      if (!data?.success) {
         console.error('[useReunioes] Erro retornado pela Edge Function:', data);
-        const errorMsg = data.message || data.error || 'Erro na sincronização Microsoft';
-        const detailMsg = data.details?.error?.message || '';
+        const errorMsg = data?.message || data?.error || 'Erro na sincronização Microsoft';
+        const detailMsg = data?.details?.error?.message || data?.details?.message || '';
         throw new Error(`${errorMsg}${detailMsg ? `: ${detailMsg}` : ''}`);
       }
       
       return data;
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reunioes'] });

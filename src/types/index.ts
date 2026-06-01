@@ -253,6 +253,8 @@ export interface Reuniao {
   microsoft_sync_status?: 'success' | 'error' | null;
   microsoft_sync_error?: string | null;
   microsoft_last_sync_at?: string | null;
+  sync_status?: 'pending' | 'success' | 'error' | null;
+  sync_error?: string | null;
 }
 
 
