@@ -110,7 +110,20 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         .eq('meeting_id', reuniaoId)
         .maybeSingle();
       
-      if (mData) setMinutes(mData);
+      if (mData) setMinutes({
+        id: mData.id,
+        meetingId: mData.meeting_id,
+        summary: mData.summary,
+        discussionPoints: mData.discussion_points,
+        decisions: mData.decisions,
+        nextSteps: mData.next_steps,
+        internalNotes: mData.internal_notes,
+        visibleToClient: mData.visible_to_client,
+        createdBy: mData.created_by,
+        updatedBy: mData.updated_by,
+        createdAt: mData.created_at,
+        updatedAt: mData.updated_at
+      });
 
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
