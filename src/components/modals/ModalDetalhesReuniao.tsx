@@ -9,14 +9,16 @@ import {
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
   History, Info, Pencil, Trash2, Loader2, Play,
-  Copy, Plus
+  Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Reuniao, MeetingStatusHistory } from '@/types';
+import { Reuniao, MeetingStatusHistory, MeetingMinutes } from '@/types';
 import { cn } from '@/lib/utils';
 import { formatDuration } from '@/lib/duration';
 import { Textarea } from '@/components/ui/textarea';
+import { ModalRegistrarAta } from './ModalRegistrarAta';
+import { ModalReuniao } from './ModalReuniao';
 
 interface Props {
   open: boolean;
@@ -31,10 +33,15 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const { toast } = useToast();
   const [reuniao, setReuniao] = useState<Reuniao | null>(null);
   const [history, setHistory] = useState<MeetingStatusHistory[]>([]);
+  const [minutes, setMinutes] = useState<MeetingMinutes | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isConfirmingCompletion, setIsConfirmingCompletion] = useState(false);
+  const [registrarAtaOpen, setRegistrarAtaOpen] = useState(false);
+  const [remarcarOpen, setRemarcarOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+
 
   const isAdmin = perfil === 'admin';
   const isConsultant = perfil === 'consultor';
