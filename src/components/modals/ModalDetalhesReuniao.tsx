@@ -773,14 +773,19 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                             Entrar agora
                           </Button>
                         </div>
+                        {reuniao.microsoft_sync_status === 'error' && (
+                          <div className="flex items-center gap-1 text-[9px] text-destructive bg-destructive/5 px-2 py-1 rounded">
+                            <AlertCircle className="h-3 w-3" /> Link pode estar desatualizado. Última sync falhou.
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="flex flex-col gap-2 p-4 bg-muted/50 rounded-xl border border-dashed">
                         <div className="flex items-center gap-2 text-muted-foreground italic mb-2">
                           <AlertCircle className="h-4 w-4" />
                           <span className="text-xs font-medium">
-                            {reuniao.teams_creation_status === 'failed' 
-                              ? "Falha ao gerar link do Teams." 
+                            {reuniao.microsoft_sync_status === 'error' 
+                              ? "Falha ao sincronizar com Microsoft." 
                               : "Link da reunião ainda não disponível."}
                           </span>
                         </div>
@@ -799,7 +804,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                               ) : (
                                 <RefreshCcw className="h-3 w-3" />
                               )}
-                              {reuniao.teams_creation_status === 'failed' ? "Tentar gerar link (Outlook)" : "Gerar link do Teams via Outlook"}
+                              {reuniao.microsoft_sync_status === 'error' ? "Tentar sincronizar novamente" : "Sincronizar com Microsoft Teams"}
                             </Button>
                              <Button 
                               variant="outline" 
@@ -812,13 +817,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                           </div>
                         )}
                         
-                        {!isClient && reuniao.teams_creation_error && (
-                          <p className="text-[9px] text-destructive mt-1 bg-destructive/5 p-2 rounded">
-                            Erro: {reuniao.teams_creation_error}
+                        {!isClient && (reuniao.microsoft_sync_error || reuniao.teams_creation_error) && (
+                          <p className="text-[9px] text-destructive mt-1 bg-destructive/5 p-2 rounded break-words">
+                            Erro: {reuniao.microsoft_sync_error || reuniao.teams_creation_error}
                           </p>
                         )}
                       </div>
                     )}
+
                   </div>
 
                 </div>
