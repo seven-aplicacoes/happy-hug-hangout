@@ -264,6 +264,101 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     updateStatus('cancelada', cancelReason);
   };
 
+  const generateTeamsLink = async () => {
+    if (!reuniao) return;
+    setGeneratingTeams(true);
+    try {
+      const { data: rawData } = await supabase
+        .from('meetings')
+        .select(`
+          *,
+          client:client_id (trade_name, corporate_name, email),
+          profile:consultant_id (full_name, email)
+        `)
+        .eq('id', reuniao.id)
+        .single();
+
+      if (!rawData) throw new Error('Reunião não encontrada');
+
+      const isUpdate = !!reuniao.microsoftEventId;
+      const startDateTime = `${reuniao.meetingDate}T${reuniao.startTime}:00`;
+      
+      // Calculate end time
+      const [hours, minutes] = reuniao.startTime.split(':').map(Number);
+      const endDate = new Date();
+      endDate.setHours(hours, minutes, 0);
+      endDate.setMinutes(endDate.getMinutes() + (reuniao.duracao || 60));
+      const endDateTime = `${reuniao.meetingDate}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
+
+      const response = await supabase.functions.invoke('create-teams-meeting', {
+        body: {
+          action: isUpdate ? 'update' : 'create',
+          microsoftEventId: reuniao.microsoftEventId,
+          title: reuniao.title,
+          description: reuniao.description,
+          startDateTime,
+          endDateTime,
+          attendees: [
+            { email: (rawData.client as any)?.email, name: (rawData.client as any)?.trade_name || (rawData.client as any)?.corporate_name },
+            { email: (rawData.profile as any)?.email, name: (rawData.profile as any)?.full_name }
+          ]
+        }
+      });
+
+      if (response.data?.teamsJoinUrl) {
+        const updatePayload = {
+          teams_join_url: response.data.teamsJoinUrl,
+          location_url: response.data.teamsJoinUrl,
+          meeting_url: response.data.teamsJoinUrl,
+          microsoft_event_id: response.data.microsoftEventId,
+          meeting_link_provider: 'teams',
+          teams_creation_status: 'created',
+          teams_creation_error: null,
+          updated_at: new Date().toISOString(),
+          updated_by: user?.id
+        };
+
+        const { error } = await supabase
+          .from('meetings')
+          .update(updatePayload)
+          .eq('id', reuniao.id);
+
+        if (error) throw error;
+
+        await supabase.from('meeting_status_history').insert({
+          meeting_id: reuniao.id,
+          action: isUpdate ? 'link_updated' : 'link_created',
+          new_status: reuniao.status,
+          changed_by: user?.id,
+          change_reason: 'Link do Microsoft Teams gerado com sucesso'
+        });
+
+        toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
+        fetchDetails();
+      } else {
+        const errorMsg = response.data?.error || 'Não foi possível gerar o link do Teams';
+        
+        await supabase
+          .from('meetings')
+          .update({
+            teams_creation_status: 'failed',
+            teams_creation_error: errorMsg,
+            updated_at: new Date().toISOString(),
+            updated_by: user?.id
+          })
+          .eq('id', reuniao.id);
+
+        throw new Error(errorMsg);
+      }
+    } catch (err: any) {
+      console.error('Error generating Teams link:', err);
+      toast({ title: 'Erro', description: err.message || 'Falha ao gerar link do Teams.', variant: 'destructive' });
+    } finally {
+      setGeneratingTeams(false);
+    }
+  };
+
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'agendada': return <Badge className="bg-blue-500 text-white">Agendado</Badge>;
