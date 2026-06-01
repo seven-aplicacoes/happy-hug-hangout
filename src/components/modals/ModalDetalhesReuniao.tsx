@@ -335,6 +335,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const generateTeamsLink = async () => {
     if (!reuniao) return;
     setGeneratingTeams(true);
+    
+    console.group('[Teams Integration] Tentar gerar link novamente');
+    console.log('Meeting ID:', reuniao.id);
+    console.log('Microsoft Event ID:', reuniao.microsoftEventId);
+    console.groupEnd();
+
     try {
       const { data: rawData } = await supabase
         .from('meetings')
@@ -363,27 +369,39 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       endDate.setMinutes(endDate.getMinutes() + (reuniao.duracao || 60));
       const endDateTime = `${reuniao.meetingDate}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
 
+      const teamsPayload = {
+        action: isUpdate ? 'update' : 'create',
+        microsoftEventId: reuniao.microsoftEventId,
+        title: reuniao.title,
+        description: reuniao.description,
+        startDateTime,
+        endDateTime,
+        attendees: [
+          { email: (rawData.client as any)?.email, name: (rawData.client as any)?.trade_name || (rawData.client as any)?.corporate_name },
+          { email: (rawData.profile as any)?.email, name: (rawData.profile as any)?.full_name }
+        ]
+      };
+
+      console.group('[Teams Integration] Chamando Edge Function');
+      console.log('Payload:', teamsPayload);
+      console.groupEnd();
 
       const { data, error: invokeError } = await supabase.functions.invoke('create-teams-meeting', {
-        body: {
-          action: isUpdate ? 'update' : 'create',
-          microsoftEventId: reuniao.microsoftEventId,
-          title: reuniao.title,
-          description: reuniao.description,
-          startDateTime,
-          endDateTime,
-          attendees: [
-            { email: (rawData.client as any)?.email, name: (rawData.client as any)?.trade_name || (rawData.client as any)?.corporate_name },
-            { email: (rawData.profile as any)?.email, name: (rawData.profile as any)?.full_name }
-          ]
-        }
+        body: teamsPayload
       });
+
+      console.group('[Teams Integration] Resposta da Edge Function');
+      console.log('Data:', data);
+      console.log('Error:', invokeError);
+      console.groupEnd();
 
       // Handle the new structured error format
       if (invokeError || (data && !data.success)) {
         const errorDetails = data?.details || invokeError?.message || 'Erro desconhecido';
         const errorMsg = data?.error || 'Não foi possível gerar o link do Teams';
         
+        console.error('[Teams Integration] Falha na Edge Function:', { errorMsg, errorDetails, data });
+
         await supabase
           .from('meetings')
           .update({
@@ -407,6 +425,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       }
 
       if (data?.teamsJoinUrl) {
+        console.log('[Teams Integration] Sucesso ao obter link:', data.teamsJoinUrl);
         const updatePayload = {
           teams_join_url: data.teamsJoinUrl,
           location_url: data.teamsJoinUrl,
@@ -434,13 +453,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           change_reason: 'Link do Microsoft Teams gerado com sucesso'
         });
 
+        console.log('[Teams Integration] Supabase atualizado com sucesso');
         toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
         fetchDetails();
       } else {
         throw new Error('Link do Teams não retornado na resposta.');
       }
     } catch (err: any) {
-      console.error('[Teams] Falha ao gerar link:', err);
+      console.error('[Teams Integration] Erro capturado no frontend:', err);
       toast({ title: 'Falha ao gerar link do Teams', description: err.message || 'Erro desconhecido ao gerar link.', variant: 'destructive' });
     } finally {
       setGeneratingTeams(false);
