@@ -313,6 +313,14 @@ export default function PortalClientePage() {
           <DialogFooter><Button onClick={handleSubmitCsat} disabled={csatRatings.meeting === 0}>Enviar Feedback</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {selectedMeeting?.id && (
+        <ModalDetalhesReuniao 
+          open={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          reuniaoId={selectedMeeting.id}
+        />
+      )}
     </div>
   );
 }
