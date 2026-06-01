@@ -338,9 +338,13 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
           setIsGeneratingTeamsLink(false);
         }
+      } else if (meetingLinkMode === 'manual' && manualMeetingUrl) {
+        (payload as any).historyAction = 'manual_link';
+        (payload as any).historyReason = 'Link manual adicionado.';
       }
-
+      
       await upsertReuniao.mutateAsync(payload);
+
       onClose();
     } catch (error) {
       console.error(error);
