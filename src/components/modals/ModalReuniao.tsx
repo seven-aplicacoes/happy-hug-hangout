@@ -524,6 +524,5 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         </div>
       </div>
     </BaseModal>
-    </BaseModal>
   );
 };
