@@ -575,7 +575,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     switch (status) {
       case 'agendada': return <Badge className="bg-blue-500 text-white">Agendado</Badge>;
       case 'em_andamento': return <Badge className="bg-amber-500 text-white animate-pulse">Em Andamento</Badge>;
-      case 'realizada': return <Badge className="bg-green-500 text-white">Realizado</Badge>;
+      case 'realizada': return <Badge className="bg-green-500 text-white">Concluído</Badge>;
       case 'cancelada': return <Badge className="bg-red-500 text-white">Cancelado</Badge>;
       case 'aguardando_confirmacao': return <Badge className="bg-purple-500 text-white">Aguardando Confirmação</Badge>;
       case 'no_show': return <Badge className="bg-gray-500 text-white">No-Show</Badge>;
@@ -598,10 +598,10 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
   if (!reuniao && !loading) return null;
 
-  const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
-  const canCancel = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
-  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
-  const canRegistrarAta = !isClient && reuniao.status !== 'cancelada';
+  const canEditLocal = canReschedule && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
+  const canCancelLocal = canCancel && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
+  const canMarkAsRealizadaLocal = canMarkAsCompleted && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
+  const canRegistrarAtaLocal = canRegisterMinutes && reuniao.status !== 'cancelada';
 
   const handleMarkAsCompleted = async (withAta = false) => {
     if (withAta) {
