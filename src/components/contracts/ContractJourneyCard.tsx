@@ -42,10 +42,6 @@ function normalizeStatus(status: string) {
   return s;
 }
 
-function canAdvanceToNextMeeting(_previousMeeting?: any) {
-  // Logic updated: now it's always possible to schedule meetings regardless of previous status
-  return true;
-}
 
 interface MeetingListProps {
   phase: any;
@@ -141,8 +137,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                 )}
 
                 {(() => {
-                  const prevMeeting = meetings.find(m => m.meetingNumber === meeting.meetingNumber - 1);
-                  const isLocked = !canAdvanceToNextMeeting(prevMeeting);
+                  const isLocked = false;
                   const normalizedStatusValue = normalizeStatus(meeting.status);
 
                   if (normalizedStatusValue === 'pendente') {
