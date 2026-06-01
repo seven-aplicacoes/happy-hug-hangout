@@ -37,6 +37,8 @@ export interface Consultor {
   estado: string;
   dataEntrada: string;
   status: StatusUsuario;
+  microsoftTeamsConnected?: boolean;
+  microsoftTeamsAccount?: string;
 }
 
 export interface Cliente {
