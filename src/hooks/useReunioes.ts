@@ -203,11 +203,11 @@ export function useReunioes() {
             consultant_id: reuniao.consultorId,
             completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null,
             teams_join_url: reuniao.teamsJoinUrl,
-            meet_join_url: (reuniao as any).meet_join_url,
+            meet_join_url: (reuniao as any).meet_join_url || newMeeting.meet_join_url,
             microsoft_event_id: reuniao.microsoftEventId,
-            google_event_id: (reuniao as any).google_event_id,
+            google_event_id: (reuniao as any).google_event_id || newMeeting.google_event_id,
             meeting_link_provider: reuniao.meetingLinkProvider as any,
-            location_url: reuniao.locationUrl
+            location_url: reuniao.locationUrl || newMeeting.location_url
           } as any)
           .eq('id', reuniao.contractModuleMeetingId);
       }
