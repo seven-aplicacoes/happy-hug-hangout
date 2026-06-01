@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// O connector_id atual é microsoft_teams, mas para calendário o ideal é microsoft_outlook
-const CONNECTOR_ID = 'microsoft_teams'
+// O connector_id principal para calendário é microsoft_outlook
+const CONNECTOR_ID = 'microsoft_outlook'
 const GATEWAY_URL = `https://connector-gateway.lovable.dev/${CONNECTOR_ID}`
 
 serve(async (req) => {
@@ -22,21 +22,21 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    const teamsApiKey = Deno.env.get('MICROSOFT_TEAMS_API_KEY');
+    const outlookApiKey = Deno.env.get('MICROSOFT_OUTLOOK_API_KEY');
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { meetingId, action: requestedAction } = await req.json();
     console.log(`[TEAMS_SYNC_START]`, { meetingId, action: requestedAction });
 
-    if (!lovableApiKey || !teamsApiKey) {
+    if (!lovableApiKey || !outlookApiKey) {
       console.error('[TEAMS_SYNC_ERROR] Missing API keys');
       return new Response(
         JSON.stringify({ 
           success: false, 
           error_code: 'MICROSOFT_TOKEN_MISSING',
-          message: 'Conector Microsoft não configurado corretamente.',
-          details: 'Verifique se o conector Microsoft Teams está ativo nas configurações do Lovable.'
+          message: 'Conector Microsoft Outlook não configurado corretamente.',
+          details: 'Verifique se o conector Microsoft Outlook está ativo e conectado no Lovable.'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
@@ -44,7 +44,7 @@ serve(async (req) => {
 
     const commonHeaders = {
       'Authorization': `Bearer ${lovableApiKey}`,
-      'X-Connection-Api-Key': teamsApiKey,
+      'X-Connection-Api-Key': outlookApiKey,
       'Content-Type': 'application/json',
     };
 
@@ -215,7 +215,7 @@ serve(async (req) => {
           success: false,
           error_code: "MICROSOFT_PERMISSION_DENIED",
           message: "A conta Microsoft conectada não possui permissão para criar eventos no calendário.",
-          details: "É necessário conectar uma conta Microsoft com permissão Calendars.ReadWrite ou usar o conector Microsoft Outlook/Calendar.",
+          details: "É necessário conectar o Microsoft Outlook com a permissão Calendars.ReadWrite ativa.",
           connector: CONNECTOR_ID,
           status: 403
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 });
