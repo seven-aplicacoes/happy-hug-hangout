@@ -184,9 +184,12 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!meetingDate) newErrors.meetingDate = true;
     if (!startTime) newErrors.startTime = true;
     
-    if (isLocked && !phaseResponsibleId && contractProductPhaseId && contractProductPhaseId !== 'none') {
-      // toast({ title: "Responsável ausente", description: "Defina um responsável no módulo antes de salvar.", variant: "destructive" });
-      // return false;
+    if (Object.keys(newErrors).length > 0) {
+      toast({ 
+        title: "Campos obrigatórios", 
+        description: "Preencha todos os campos marcados com * antes de salvar.", 
+        variant: "destructive" 
+      });
     }
 
     setErrors(newErrors);
@@ -201,7 +204,11 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   };
 
   const handleSave = async () => {
-    if (!validate()) return;
+    console.log("Iniciando salvamento de reunião...");
+    if (!validate()) {
+      console.log("Validação falhou:", errors);
+      return;
+    }
     setIsSubmitting(true);
     
     try {
@@ -269,8 +276,13 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       }
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Meeting Schedule] Erro ao salvar:', error);
+      toast({ 
+        title: "Erro ao salvar", 
+        description: error.message || "Ocorreu um erro inesperado ao salvar a reunião.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsSubmitting(false);
     }
