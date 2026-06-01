@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
-  History, Info, Pencil, Trash2, Loader2, Play,
+  History, Info, Pencil, Trash2, Loader2, Play, RefreshCcw,
   Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff,
   Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon
 } from 'lucide-react';
@@ -39,11 +39,13 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const [minutes, setMinutes] = useState<MeetingMinutes | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [generatingTeams, setGeneratingTeams] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isConfirmingCompletion, setIsConfirmingCompletion] = useState(false);
   const [registrarAtaOpen, setRegistrarAtaOpen] = useState(false);
   const [remarcarOpen, setRemarcarOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+
 
 
   const isAdmin = perfil === 'admin';
@@ -57,8 +59,8 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         .from('meetings')
         .select(`
           *,
-          client:client_id (trade_name, corporate_name),
-          profile:consultant_id (full_name),
+          client:client_id (trade_name, corporate_name, email),
+          profile:consultant_id (full_name, email),
           creator:profiles!created_by (full_name),
           updater:profiles!updated_by (full_name),
           canceler:profiles!canceled_by (full_name),
@@ -66,6 +68,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         `)
         .eq('id', reuniaoId)
         .single();
+
 
       if (error) throw error;
 
@@ -260,6 +263,101 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     }
     updateStatus('cancelada', cancelReason);
   };
+
+  const generateTeamsLink = async () => {
+    if (!reuniao) return;
+    setGeneratingTeams(true);
+    try {
+      const { data: rawData } = await supabase
+        .from('meetings')
+        .select(`
+          *,
+          client:client_id (trade_name, corporate_name, email),
+          profile:consultant_id (full_name, email)
+        `)
+        .eq('id', reuniao.id)
+        .single();
+
+      if (!rawData) throw new Error('Reunião não encontrada');
+
+      const isUpdate = !!reuniao.microsoftEventId;
+      const startDateTime = `${reuniao.meetingDate}T${reuniao.startTime}:00`;
+      
+      // Calculate end time
+      const [hours, minutes] = reuniao.startTime.split(':').map(Number);
+      const endDate = new Date();
+      endDate.setHours(hours, minutes, 0);
+      endDate.setMinutes(endDate.getMinutes() + (reuniao.duracao || 60));
+      const endDateTime = `${reuniao.meetingDate}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
+
+      const response = await supabase.functions.invoke('create-teams-meeting', {
+        body: {
+          action: isUpdate ? 'update' : 'create',
+          microsoftEventId: reuniao.microsoftEventId,
+          title: reuniao.title,
+          description: reuniao.description,
+          startDateTime,
+          endDateTime,
+          attendees: [
+            { email: (rawData.client as any)?.email, name: (rawData.client as any)?.trade_name || (rawData.client as any)?.corporate_name },
+            { email: (rawData.profile as any)?.email, name: (rawData.profile as any)?.full_name }
+          ]
+        }
+      });
+
+      if (response.data?.teamsJoinUrl) {
+        const updatePayload = {
+          teams_join_url: response.data.teamsJoinUrl,
+          location_url: response.data.teamsJoinUrl,
+          meeting_url: response.data.teamsJoinUrl,
+          microsoft_event_id: response.data.microsoftEventId,
+          meeting_link_provider: 'teams',
+          teams_creation_status: 'created',
+          teams_creation_error: null,
+          updated_at: new Date().toISOString(),
+          updated_by: user?.id
+        };
+
+        const { error } = await supabase
+          .from('meetings')
+          .update(updatePayload)
+          .eq('id', reuniao.id);
+
+        if (error) throw error;
+
+        await supabase.from('meeting_status_history').insert({
+          meeting_id: reuniao.id,
+          action: isUpdate ? 'link_updated' : 'link_created',
+          new_status: reuniao.status,
+          changed_by: user?.id,
+          change_reason: 'Link do Microsoft Teams gerado com sucesso'
+        });
+
+        toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
+        fetchDetails();
+      } else {
+        const errorMsg = response.data?.error || 'Não foi possível gerar o link do Teams';
+        
+        await supabase
+          .from('meetings')
+          .update({
+            teams_creation_status: 'failed',
+            teams_creation_error: errorMsg,
+            updated_at: new Date().toISOString(),
+            updated_by: user?.id
+          })
+          .eq('id', reuniao.id);
+
+        throw new Error(errorMsg);
+      }
+    } catch (err: any) {
+      console.error('Error generating Teams link:', err);
+      toast({ title: 'Erro', description: err.message || 'Falha ao gerar link do Teams.', variant: 'destructive' });
+    } finally {
+      setGeneratingTeams(false);
+    }
+  };
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -464,18 +562,52 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs font-medium text-muted-foreground italic">
-                          Nenhum link de reunião cadastrado.
-                        </span>
+                      <div className="flex flex-col gap-2 p-4 bg-muted/50 rounded-xl border border-dashed">
+                        <div className="flex items-center gap-2 text-muted-foreground italic mb-2">
+                          <AlertCircle className="h-4 w-4" />
+                          <span className="text-xs font-medium">
+                            {reuniao.teams_creation_status === 'failed' 
+                              ? "Falha ao gerar link do Teams." 
+                              : "Link da reunião ainda não disponível."}
+                          </span>
+                        </div>
+                        
                         {!isClient && (
-                          <Button variant="outline" size="sm" onClick={() => onEdit?.(reuniao)} className="w-fit text-[10px] h-7 gap-1">
-                            <Plus className="h-3 w-3" /> Adicionar link
-                          </Button>
+                          <div className="flex flex-wrap gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={generateTeamsLink} 
+                              disabled={generatingTeams}
+                              className="text-[10px] h-8 gap-1.5"
+                            >
+                              {generatingTeams ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RefreshCcw className="h-3 w-3" />
+                              )}
+                              {reuniao.teams_creation_status === 'failed' ? "Tentar gerar link novamente" : "Gerar link do Teams"}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setRemarcarOpen(true)} 
+                              className="text-[10px] h-8 gap-1.5"
+                            >
+                              <Plus className="h-3 w-3" /> Adicionar link manual
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {!isClient && reuniao.teams_creation_error && (
+                          <p className="text-[9px] text-destructive mt-1 bg-destructive/5 p-2 rounded">
+                            Erro: {reuniao.teams_creation_error}
+                          </p>
                         )}
                       </div>
                     )}
                   </div>
+
                 </div>
               </div>
             </div>

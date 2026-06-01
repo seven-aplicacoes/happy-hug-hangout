@@ -58,7 +58,10 @@ export function useReunioes() {
         contractModuleMeetingId: r.contract_module_meeting_id,
         microsoftEventId: r.microsoft_event_id,
         teamsJoinUrl: r.teams_join_url,
+        teams_creation_status: r.teams_creation_status,
+        teams_creation_error: r.teams_creation_error,
       })) as Reuniao[];
+
     },
   });
 
@@ -90,7 +93,10 @@ export function useReunioes() {
         contract_module_meeting_id: reuniao.contractModuleMeetingId,
         microsoft_event_id: reuniao.microsoftEventId,
         teams_join_url: reuniao.teamsJoinUrl,
+        teams_creation_status: reuniao.teams_creation_status,
+        teams_creation_error: reuniao.teams_creation_error,
       };
+
 
       // Se o status mudar de cancelada para agendada, limpamos os campos de cancelamento
       if (reuniao.status === 'agendada') {
@@ -128,9 +134,10 @@ export function useReunioes() {
           previous_status: currentMeeting.status,
           new_status: newMeeting.status,
           changed_by: user?.id,
-          action: 'update',
-          change_reason: newMeeting.status === 'cancelada' ? (reuniao as any).cancelReason : 'Alteração via formulário',
+          action: (reuniao as any).historyAction || 'update',
+          change_reason: (reuniao as any).historyReason || (newMeeting.status === 'cancelada' ? (reuniao as any).cancelReason : 'Alteração via formulário'),
         };
+
 
         if (currentMeeting.status !== newMeeting.status) {
           historyPayload.action = newMeeting.status === 'cancelada' ? 'cancel' : 'status_change';

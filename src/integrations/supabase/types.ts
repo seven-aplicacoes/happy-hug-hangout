@@ -2611,6 +2611,8 @@ export type Database = {
           source: string | null
           start_time: string
           status: string | null
+          teams_creation_error: string | null
+          teams_creation_status: string | null
           teams_join_url: string | null
           title: string | null
           type: string | null
@@ -2665,6 +2667,8 @@ export type Database = {
           source?: string | null
           start_time: string
           status?: string | null
+          teams_creation_error?: string | null
+          teams_creation_status?: string | null
           teams_join_url?: string | null
           title?: string | null
           type?: string | null
@@ -2719,6 +2723,8 @@ export type Database = {
           source?: string | null
           start_time?: string
           status?: string | null
+          teams_creation_error?: string | null
+          teams_creation_status?: string | null
           teams_join_url?: string | null
           title?: string | null
           type?: string | null

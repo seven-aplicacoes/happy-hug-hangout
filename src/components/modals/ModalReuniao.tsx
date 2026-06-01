@@ -53,7 +53,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [locationUrl, setLocationUrl] = useState('');
-  const [meetingLinkProvider, setProvider] = useState<'teams' | 'manual'>('manual');
+  
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
@@ -126,7 +126,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setLocation(reuniao.location || '');
       setLocationUrl(reuniao.locationUrl || '');
       setManualMeetingUrl(reuniao.locationUrl || reuniao.location || reuniao.meetingUrl || '');
-      setProvider(reuniao.meetingLinkProvider || (reuniao.teamsJoinUrl ? 'teams' : 'manual'));
+      setMeetingLinkMode(reuniao.meetingLinkProvider || (reuniao.teamsJoinUrl ? 'teams' : 'manual'));
       setDescription(reuniao.description || '');
     } else if (initialData) {
       setTitle(initialData.title || '');
@@ -145,7 +145,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setLocation(initialData.location || '');
       setLocationUrl(initialData.locationUrl || '');
       setManualMeetingUrl(initialData.locationUrl || initialData.location || initialData.meetingUrl || '');
-      setProvider(initialData.meetingLinkProvider || (initialData.teamsJoinUrl ? 'teams' : 'manual'));
+      setMeetingLinkMode(initialData.meetingLinkProvider || (initialData.teamsJoinUrl ? 'teams' : 'manual'));
       setDescription(initialData.description || '');
     } else {
       setTitle('');
@@ -164,7 +164,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setLocation('');
       setLocationUrl('');
       setManualMeetingUrl('');
-      setProvider(teamsConnected ? 'teams' : 'manual');
+      setMeetingLinkMode(teamsConnected ? 'teams' : 'manual');
       setDescription('');
     }
     setErrors({});
@@ -313,23 +313,41 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             payload.teamsJoinUrl = response.data.teamsJoinUrl;
             payload.microsoftEventId = response.data.microsoftEventId;
             payload.meetingLinkProvider = 'teams';
+            payload.teams_creation_status = 'created';
+            payload.teams_creation_error = null;
+            (payload as any).historyAction = isUpdate ? 'teams_updated' : 'teams_created';
+            (payload as any).historyReason = isUpdate 
+              ? 'Evento Microsoft Teams atualizado após reagendamento.' 
+              : 'Link do Microsoft Teams gerado com sucesso.';
+
           } else {
+
             throw new Error(response.data?.error || 'Link not generated');
           }
-        } catch (teamsError) {
+        } catch (teamsError: any) {
           console.error('Teams integration failed:', teamsError);
           toast({
             title: "Aviso",
-            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Adicione o link manualmente.",
+            description: "Encontro salvo, mas não foi possível gerar o link do Teams automaticamente.",
             variant: "warning" as any
           });
-          payload.meetingLinkProvider = 'manual';
+          payload.meetingLinkProvider = 'teams';
+          payload.teams_creation_status = 'failed';
+          payload.teams_creation_error = teamsError.message || String(teamsError);
+          (payload as any).historyAction = 'teams_failed';
+          (payload as any).historyReason = `Falha ao gerar link do Microsoft Teams: ${payload.teams_creation_error}`;
         } finally {
+
+
           setIsGeneratingTeamsLink(false);
         }
+      } else if (meetingLinkMode === 'manual' && manualMeetingUrl) {
+        (payload as any).historyAction = 'manual_link';
+        (payload as any).historyReason = 'Link manual adicionado.';
       }
-
+      
       await upsertReuniao.mutateAsync(payload);
+
       onClose();
     } catch (error) {
       console.error(error);
