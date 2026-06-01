@@ -92,6 +92,13 @@ export function useReunioes() {
         teams_join_url: reuniao.teamsJoinUrl,
       };
 
+      // Se o status mudar de cancelada para agendada, limpamos os campos de cancelamento
+      if (reuniao.status === 'agendada' || reuniao.status === 'agendado') {
+        payload.canceled_at = null;
+        payload.canceled_by = null;
+        payload.cancel_reason = null;
+      }
+
 
       // Filter out undefined values to avoid overwriting with null if not intended
       const cleanPayload = Object.fromEntries(
