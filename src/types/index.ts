@@ -229,8 +229,12 @@ export interface Reuniao {
   externalId?: string;
   meetingUrl?: string;
   location?: string;
+  locationUrl?: string;
+  meetingLinkProvider?: 'teams' | 'manual';
   scheduledBy?: string;
   contractModuleMeetingId?: string;
+  microsoftEventId?: string;
+  teamsJoinUrl?: string;
 }
 
 export interface ContractModuleMeeting {
