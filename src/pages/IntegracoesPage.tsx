@@ -189,8 +189,9 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
     if (integ.id === 'google_calendar') {
       setLoading(true);
       try {
-        const { error } = await supabase.functions.invoke('disconnect-google');
+        const { data, error } = await supabase.functions.invoke('disconnect-google');
         if (error) throw error;
+        if (data?.success === false) throw new Error(data.error);
         toast({ title: 'Desconectado', description: 'Sua conta Google foi desconectada.' });
         queryClient.invalidateQueries({ queryKey: ['google-connection'] });
       } catch (err: any) {
