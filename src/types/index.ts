@@ -248,8 +248,11 @@ export interface Reuniao {
   updatedByName?: string;
   canceledByName?: string;
   completedByName?: string;
-  teams_creation_status?: 'created' | 'failed' | null;
+  teams_creation_status?: 'created' | 'failed' | 'manual' | null;
   teams_creation_error?: string | null;
+  microsoft_sync_status?: 'success' | 'error' | null;
+  microsoft_sync_error?: string | null;
+  microsoft_last_sync_at?: string | null;
 }
 
 
