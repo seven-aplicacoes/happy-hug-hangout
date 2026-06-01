@@ -133,10 +133,10 @@ export default function AdminReunioesPage() {
             clienteId={selectedReuniao.clienteId} 
             clienteNome={selectedReuniao.clienteNome} 
           />
-          <ModalVerDetalhesReuniao 
+          <ModalDetalhesReuniao 
             open={detailsModalOpen} 
             onClose={() => setDetailsModalOpen(false)} 
-            reuniao={selectedReuniao} 
+            reuniaoId={selectedReuniao.id} 
           />
         </>
       )}
