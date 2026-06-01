@@ -150,30 +150,21 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className={cn(
-                            "h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary",
-                            isLocked && "opacity-50 cursor-not-allowed grayscale"
-                          )} 
+                          className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary"
                           onClick={() => {
                             console.log("[SCHEDULE_RULE_CHECK]", {
                               encounterId: meeting.id,
                               encounterTitle: meeting.title,
                               encounterStatus: meeting.status,
                               consultantId: meeting.consultantId || phase.responsibleConsultantId,
-                              hasConsultantAvailability: true, // Se chegou aqui, estamos permitindo
+                              hasConsultantAvailability: true,
                               disabledReason: null
                             });
                             onSchedule(meeting);
                           }}
-                          disabled={isLocked}
                         >
                           <Calendar className="h-3.5 w-3.5" /> Agendar
                         </Button>
-                        {isLocked && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center">
-                            Este encontro só poderá ser agendado após o encontro anterior ser realizado, cancelado ou finalizado.
-                          </div>
-                        )}
                       </div>
                     );
                   } else if (!['cancelada', 'cancelado', 'realizada', 'concluido', 'concluído'].includes(normalizedStatusValue)) {
