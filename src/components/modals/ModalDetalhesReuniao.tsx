@@ -346,7 +346,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       const endDateTime = `${reuniao.meetingDate}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
 
 
-      const response = await supabase.functions.invoke('create-teams-meeting', {
+      const { data, error: invokeError } = await supabase.functions.invoke('create-teams-meeting', {
         body: {
           action: isUpdate ? 'update' : 'create',
           microsoftEventId: reuniao.microsoftEventId,
@@ -361,12 +361,39 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         }
       });
 
-      if (response.data?.teamsJoinUrl) {
+      // Handle the new structured error format
+      if (invokeError || (data && !data.success)) {
+        const errorDetails = data?.details || invokeError?.message || 'Erro desconhecido';
+        const errorMsg = data?.error || 'Não foi possível gerar o link do Teams';
+        
+        await supabase
+          .from('meetings')
+          .update({
+            teams_creation_status: 'failed',
+            teams_creation_error: `${errorMsg} (${errorDetails})`,
+            updated_at: new Date().toISOString(),
+            updated_by: user?.id
+          })
+          .eq('id', reuniao.id);
+
+        await supabase.from('meeting_status_history').insert({
+          meeting_id: reuniao.id,
+          action: 'teams_link_generation_failed',
+          new_status: reuniao.status,
+          changed_by: user?.id,
+          change_reason: `Falha ao gerar link do Teams: ${errorMsg}. Detalhes: ${errorDetails}`,
+          payload: data // Store the full error response for debugging
+        });
+
+        throw new Error(errorMsg);
+      }
+
+      if (data?.teamsJoinUrl) {
         const updatePayload = {
-          teams_join_url: response.data.teamsJoinUrl,
-          location_url: response.data.teamsJoinUrl,
-          meeting_url: response.data.teamsJoinUrl,
-          microsoft_event_id: response.data.microsoftEventId,
+          teams_join_url: data.teamsJoinUrl,
+          location_url: data.teamsJoinUrl,
+          meeting_url: data.teamsJoinUrl,
+          microsoft_event_id: data.microsoftEventId,
           meeting_link_provider: 'teams',
           teams_creation_status: 'created',
           teams_creation_error: null,
@@ -374,12 +401,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           updated_by: user?.id
         };
 
-        const { error } = await supabase
+        const { error: dbError } = await supabase
           .from('meetings')
           .update(updatePayload)
           .eq('id', reuniao.id);
 
-        if (error) throw error;
+        if (dbError) throw dbError;
 
         await supabase.from('meeting_status_history').insert({
           meeting_id: reuniao.id,
@@ -392,27 +419,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
         fetchDetails();
       } else {
-        const errorMsg = response.error || response.data?.error || 'Não foi possível gerar o link do Teams';
-        
-        await supabase
-          .from('meetings')
-          .update({
-            teams_creation_status: 'failed',
-            teams_creation_error: errorMsg,
-            updated_at: new Date().toISOString(),
-            updated_by: user?.id
-          })
-          .eq('id', reuniao.id);
-
-        await supabase.from('meeting_status_history').insert({
-          meeting_id: reuniao.id,
-          action: 'teams_link_generation_failed',
-          new_status: reuniao.status,
-          changed_by: user?.id,
-          change_reason: `Falha ao gerar link do Teams: ${errorMsg}`
-        });
-
-        throw new Error(errorMsg);
+        throw new Error('Link do Teams não retornado na resposta.');
       }
     } catch (err: any) {
       console.error('[Teams] Falha ao gerar link:', err);
