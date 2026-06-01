@@ -21,7 +21,8 @@ serve(async (req) => {
       'openid',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/calendar.events'
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/calendar'
     ];
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');

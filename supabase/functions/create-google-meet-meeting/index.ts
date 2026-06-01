@@ -13,13 +13,36 @@ serve(async (req) => {
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  let meetingId: string | null = null;
+  let action = 'create';
+
   try {
-    const { meetingId, action = 'create' } = await req.json();
+    const body = await req.json();
+    meetingId = body.meetingId;
+    action = body.action || 'create';
+
+    if (action === 'test_connection') {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) throw new Error("Unauthorized");
+      const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+      if (userError || !user) throw new Error("User not found");
+
+      const { data: connection } = await supabase.from('google_connections').select('*').eq('user_id', user.id).single();
+      if (!connection) return new Response(JSON.stringify({ success: false, error: "Google not connected" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        email: connection.google_email,
+        scopes: connection.scopes,
+        hasRefreshToken: !!connection.refresh_token 
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (!meetingId) throw new Error("Missing meetingId");
 
     const { data: meeting, error: meetingError } = await supabase
       .from('meetings')
-      .select('*, client:client_id(trade_name, corporate_name)')
+      .select('*, client:client_id(trade_name, corporate_name, email), profile:consultant_id(full_name, email)')
       .eq('id', meetingId)
       .single();
 
@@ -37,63 +60,83 @@ serve(async (req) => {
 
     if (connError || !connection) throw new Error("Google connection not found for this consultant");
 
-    // Check if token expired
-    if (new Date(connection.expires_at) <= new Date()) {
-      console.log("Token expired, refreshing...");
-      const refreshResp = await fetch(`${supabaseUrl}/functions/v1/refresh-google-token`, {
+    // Check if token expired (or about to expire in 5 min)
+    const expiresAt = new Date(connection.expires_at).getTime();
+    if (expiresAt <= Date.now() + 300000) {
+      console.log("Token expired or expiring soon, refreshing...");
+      const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': req.headers.get('Authorization')!
-        },
-        body: JSON.stringify({ userId }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
+          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+          refresh_token: connection.refresh_token,
+          grant_type: 'refresh_token',
+        }),
       });
-      const refreshData = await refreshResp.json();
-      if (!refreshResp.ok) throw new Error("Failed to refresh Google token: " + refreshData.error);
+
+      const tokens = await refreshResponse.json();
+      if (!refreshResponse.ok) throw new Error("Failed to refresh Google token: " + (tokens.error_description || tokens.error));
       
-      // Get updated connection
-      const { data: newConn } = await supabase
-        .from('google_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      connection = newConn;
+      const updates = {
+        access_token: tokens.access_token,
+        expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      await supabase.from('google_connections').update(updates).eq('user_id', userId);
+      connection.access_token = tokens.access_token;
     }
 
     const accessToken = connection.access_token;
 
     if (action === 'create' || action === 'update') {
+      const startTimeISO = `${meeting.meeting_date}T${meeting.start_time}:00`;
+      const startDate = new Date(startTimeISO);
+      const endDate = new Date(startDate.getTime() + (meeting.duration || 60) * 60000);
+      
+      const attendees = [];
+      if (meeting.client?.email) attendees.push({ email: meeting.client.email });
+      if (meeting.profile?.email) attendees.push({ email: meeting.profile.email });
+      if (Array.isArray(meeting.participants)) {
+        meeting.participants.forEach((p: any) => {
+          const email = typeof p === 'string' ? p : (p.email || p.address);
+          if (email && !attendees.some(a => a.email === email)) attendees.push({ email });
+        });
+      }
+
       const eventBody = {
         summary: meeting.title || 'Reunião SEVEN',
         description: meeting.description || 'Agendado via Sistema SEVEN',
         start: {
-          dateTime: `${meeting.meeting_date}T${meeting.start_time}:00`,
+          dateTime: startTimeISO,
           timeZone: 'America/Fortaleza',
         },
         end: {
-          dateTime: new Date(new Date(`${meeting.meeting_date}T${meeting.start_time}:00`).getTime() + (meeting.duration || 60) * 60000).toISOString(),
+          dateTime: endDate.toISOString().replace(/\.\d+Z$/, '-03:00'), // Ensure correct format for Fortaleza
           timeZone: 'America/Fortaleza',
         },
         conferenceData: {
           createRequest: {
-            requestId: meeting.id,
+            requestId: `meeting-${meeting.id}`,
             conferenceSolutionKey: { type: 'hangoutsMeet' },
           },
         },
-        attendees: Array.isArray(meeting.participants) ? meeting.participants.map((p: any) => {
-          const email = typeof p === 'string' ? p : (p.email || p.address);
-          return { email };
-        }) : [],
+        attendees,
       };
+
+      // Fix start date format too
+      eventBody.start.dateTime = startDate.toISOString().replace(/\.\d+Z$/, '-03:00');
 
       let url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1';
       let method = 'POST';
 
-      if (action === 'update' && meeting.google_event_id) {
+      if (meeting.google_event_id) {
         url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${meeting.google_event_id}?conferenceDataVersion=1`;
-        method = 'PUT';
+        method = 'PATCH'; // Use PATCH for updates to avoid overwriting fields we don't send
       }
 
+      console.log(`Sending ${method} request to Google Calendar for meeting ${meetingId}`);
+      
       const response = await fetch(url, {
         method,
         headers: {
@@ -104,28 +147,33 @@ serve(async (req) => {
       });
 
       const event = await response.json();
-      if (!response.ok) throw new Error(event.error?.message || "Failed to manage Google Calendar event");
+      
+      // Log interaction
+      await supabase.from('meeting_sync_logs').insert({
+        meeting_id: meetingId,
+        action: `google_${action}`,
+        success: response.ok,
+        provider: 'google',
+        request_payload: eventBody,
+        response_payload: event,
+        status_code: response.status
+      });
 
-      const meetUrl = event.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video')?.uri;
+      if (!response.ok) {
+        throw new Error(`Google API Error (${response.status}): ${event.error?.message || JSON.stringify(event)}`);
+      }
+
+      const meetUrl = event.hangoutLink || event.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video')?.uri;
 
       await supabase.from('meetings').update({
         google_event_id: event.id,
         meet_join_url: meetUrl,
         calendar_sync_status: 'success',
         calendar_sync_error: null,
-        // Also update the generic columns for compatibility
         location_url: meetUrl || meeting.location_url,
-        sync_status: 'success'
+        sync_status: 'success',
+        sync_error: null
       }).eq('id', meetingId);
-
-      // Log success
-      await supabase.from('meeting_sync_logs').insert({
-        meeting_id: meetingId,
-        action: `google_${action}`,
-        success: true,
-        provider: 'google',
-        response_payload: event
-      });
 
       return new Response(JSON.stringify({ success: true, eventId: event.id, meetUrl }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -144,9 +192,18 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
+      // Log interaction
+      await supabase.from('meeting_sync_logs').insert({
+        meeting_id: meetingId,
+        action: 'google_cancel',
+        success: response.ok || response.status === 404,
+        provider: 'google',
+        status_code: response.status
+      });
+
       if (!response.ok && response.status !== 404) {
         const error = await response.json();
-        throw new Error(error.error?.message || "Failed to delete Google Calendar event");
+        throw new Error(`Google API Error (${response.status}): ${error.error?.message || "Failed to delete"}`);
       }
 
       await supabase.from('meetings').update({
@@ -162,7 +219,7 @@ serve(async (req) => {
     throw new Error("Invalid action");
 
   } catch (err: any) {
-    console.error("Google Meet creation error:", err);
+    console.error("Google Function Error:", err);
     
     if (meetingId) {
       await supabase.from('meetings').update({
@@ -171,18 +228,10 @@ serve(async (req) => {
         sync_status: 'error',
         sync_error: err.message
       }).eq('id', meetingId);
-
-      await supabase.from('meeting_sync_logs').insert({
-        meeting_id: meetingId,
-        action: 'google_error',
-        success: false,
-        provider: 'google',
-        error_message: err.message
-      });
     }
 
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
+    return new Response(JSON.stringify({ error: err.message, success: false }), {
+      status: 200, // Keep 200 so the client can handle the error object gracefully
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
