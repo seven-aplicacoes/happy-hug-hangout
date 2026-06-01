@@ -173,7 +173,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                   } else if (normalizedStatusValue === 'agendado') {
                     return (
                       <div className="flex gap-2">
-                        {(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl) && (
+                        {(meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl) && (
                           <Button 
                             size="sm" 
                             variant="default" 
