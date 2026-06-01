@@ -164,15 +164,18 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
   const handleConnect = async () => {
     if (integ.id === 'google_calendar') {
       setLoading(true);
+      console.log("Iniciando conexão Google OAuth");
       try {
         const { data, error } = await supabase.functions.invoke('google-oauth-start', {
           body: { redirect_uri: window.location.origin + window.location.pathname }
         });
         if (error) throw error;
+        if (data?.success === false) throw new Error(data.error);
         if (data?.url) {
           window.location.href = data.url;
         }
       } catch (err: any) {
+        console.error("Erro ao conectar Google:", err);
         toast({ title: 'Erro ao iniciar conexão', description: err.message, variant: 'destructive' });
       } finally {
         setLoading(false);
