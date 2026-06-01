@@ -9,8 +9,8 @@ export function usePortalSummary(clientId?: string) {
       if (!clientId) return null;
       
       const { data: meetings, error: mError } = await supabase
-        .from('contract_module_meetings')
-        .select('status, scheduled_at')
+        .from('meetings')
+        .select('status, meeting_date, start_time')
         .eq('client_id', clientId);
         
       if (mError) throw mError;
