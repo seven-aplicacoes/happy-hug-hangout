@@ -30,6 +30,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
+const ADVANCING_STATUSES = [
+  'realizada', 'concluida', 'concluido', 'concluído', 'cancelada', 'cancelado', 
+  'no_show', 'no_show_justificado', 'finalizado', 'completed', 'done', 
+  'cancelled', 'canceled', 'remarcada_concluido'
+];
+
+function normalizeStatus(status: string) {
+  return String(status || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function canAdvanceToNextMeeting(previousMeeting: ContractModuleMeeting | undefined) {
+  if (!previousMeeting) return true;
+  const normalized = normalizeStatus(previousMeeting.status);
+  return ADVANCING_STATUSES.some(s => normalizeStatus(s) === normalized);
+}
+
 interface MeetingListProps {
   phase: any;
   contrato: any;
@@ -42,9 +62,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
-  const [meetingToEdit, setMeetingToEdit] = useState<ContractModuleMeeting | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const { toast } = useToast();
 
   const handleOpenDetail = (meeting: ContractModuleMeeting) => {
@@ -63,7 +81,6 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
 
   const handleEditFromDetail = (reuniao: Reuniao) => {
     setIsDetailOpen(false);
-    // Find the original meeting item
     const original = meetings?.find(m => m.scheduledMeetingId === reuniao.id);
     if (original) {
       onSchedule(original);
@@ -76,25 +93,27 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
   return (
     <div className="space-y-2 mt-4 animate-in slide-in-from-top-2 duration-300">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-black uppercase text-muted-foreground">Progresso: {meetings.filter(m => m.status === 'realizada').length}/{meetings.length} encontros</span>
+        <span className="text-[10px] font-black uppercase text-muted-foreground">
+          Progresso: {meetings.filter(m => ['realizada', 'concluida', 'concluido', 'concluído'].includes(normalizeStatus(m.status))).length}/{meetings.length} encontros
+        </span>
       </div>
       {meetings.map((meeting) => (
         <div key={meeting.id} className="space-y-2">
-            <div 
-              className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4 cursor-pointer"
-              onClick={() => handleOpenDetail(meeting)}
-            >
+          <div 
+            className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4 cursor-pointer"
+            onClick={() => handleOpenDetail(meeting)}
+          >
             <div className="flex items-center gap-4">
               <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-                meeting.status === 'realizada' ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
+                ['realizada', 'concluida', 'concluido', 'concluído'].includes(normalizeStatus(meeting.status)) ? "bg-seven-success text-white" : "bg-muted text-muted-foreground"
               )}>
                 #{meeting.meetingNumber}
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{meeting.title}</p>
                 <div className="flex items-center gap-3 mt-1">
-                  <StatusTag label={meeting.status} variant={meeting.status === 'realizada' ? 'success' : meeting.status === 'agendado' ? 'info' : 'neutral'} />
+                  <StatusTag label={meeting.status} variant={['realizada', 'concluida', 'concluido', 'concluído'].includes(normalizeStatus(meeting.status)) ? 'success' : meeting.status === 'agendado' ? 'info' : meeting.status === 'cancelada' ? 'danger' : 'neutral'} />
                   {meeting.scheduledAt && (
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Calendar className="h-3 w-3" /> {new Date(meeting.scheduledAt).toLocaleDateString('pt-BR')} às {new Date(meeting.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -109,7 +128,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                 <p className="text-[11px] font-medium">{meeting.consultantName || 'Não definido'}</p>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                 {(mode === 'consultor' || mode === 'admin') && (
                   <Button 
                     size="sm" 
@@ -125,12 +144,11 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                 )}
 
                 {(() => {
-                  const isFirst = meeting.meetingNumber === 1;
                   const prevMeeting = meetings.find(m => m.meetingNumber === meeting.meetingNumber - 1);
-                  const isPrevFinished = prevMeeting && ['realizada', 'concluído', 'cancelada', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status);
-                  const isLocked = !isFirst && !isPrevFinished;
+                  const isLocked = !canAdvanceToNextMeeting(prevMeeting);
+                  const normalizedStatusValue = normalizeStatus(meeting.status);
 
-                  if (meeting.status === 'pendente') {
+                  if (normalizedStatusValue === 'pendente') {
                     return (
                       <div className="relative group/tooltip">
                         <Button 
@@ -152,10 +170,10 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                         )}
                       </div>
                     );
-                  } else if (meeting.status === 'agendado') {
+                  } else if (normalizedStatusValue === 'agendado') {
                     return (
-                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                        {(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl) && (
+                      <div className="flex gap-2">
+                        {(meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl) && (
                           <Button 
                             size="sm" 
                             variant="default" 
@@ -163,7 +181,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                               "h-8 gap-1.5 px-3 text-white text-[10px] font-bold uppercase",
                               meeting.meetingLinkProvider === 'teams' ? "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20" : "bg-primary hover:bg-primary/90"
                             )}
-                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl, '_blank')}
+                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl, '_blank', 'noopener,noreferrer')}
                           >
                             {meeting.meetingLinkProvider === 'teams' ? <Video className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />} 
                             Entrar
@@ -174,21 +192,29 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                         </Button>
                       </div>
                     );
-                  } else if (meeting.status === 'cancelada') {
+                  } else if (normalizedStatusValue === 'cancelada' || normalizedStatusValue === 'cancelado') {
                     return (
-                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-2">
                         <Badge variant="outline" className="h-8 bg-red-50 text-red-600 border-red-200 uppercase font-black text-[10px]">
-                          Cancelada
+                          Cancelado
                         </Badge>
-                        <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => onSchedule(meeting)}>
-                          Reagendar
-                        </Button>
+                        {(mode === 'admin' || mode === 'consultor') && (
+                          <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => onSchedule(meeting)}>
+                            Reagendar
+                          </Button>
+                        )}
                       </div>
+                    );
+                  } else if (['realizada', 'concluida', 'concluido', 'concluído'].includes(normalizedStatusValue)) {
+                    return (
+                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5" onClick={() => handleOpenDetail(meeting)}>
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Realizado
+                      </Button>
                     );
                   } else {
                     return (
-                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5" onClick={(e) => { e.stopPropagation(); handleOpenDetail(meeting); }}>
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
+                      <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => handleOpenDetail(meeting)}>
+                        Ver Detalhes
                       </Button>
                     );
                   }
@@ -198,7 +224,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
           </div>
           
           {meetingForAvailability === meeting.id && (
-            <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200">
+            <div className="p-4 border rounded-lg bg-muted/5 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
                   <Calendar className="h-4 w-4" /> Configurar Disponibilidade: {meeting.title}

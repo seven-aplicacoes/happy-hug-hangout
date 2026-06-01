@@ -51,15 +51,34 @@ export function useContractModuleMeetings(moduleId?: string) {
     mutationFn: async (meeting: Partial<ContractModuleMeeting>) => {
       // Check sequential scheduling
       if (meeting.status === 'agendado') {
-        const { data: prevMeeting, error: prevError } = await supabase
+        const { data: prevMeeting } = await supabase
           .from('contract_module_meetings')
           .select('status')
           .eq('module_id', meeting.moduleId)
           .eq('meeting_number', (meeting.meetingNumber || 1) - 1)
           .single();
 
-        if (prevMeeting && !['realizada', 'concluído', 'cancelada', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status)) {
-          throw new Error('O encontro anterior deve estar finalizado para agendar este.');
+        const ADVANCING_STATUSES = [
+          'realizada', 'concluido', 'concluído', 'cancelada', 'cancelado', 
+          'no_show', 'no_show_justificado', 'finalizado', 'completed', 'done', 
+          'cancelled', 'canceled', 'remarcada_concluido'
+        ];
+
+        const normalizeStatus = (status: string) => {
+          return String(status || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+        };
+
+        if (prevMeeting) {
+          const normalized = normalizeStatus(prevMeeting.status);
+          const isAdvancing = ADVANCING_STATUSES.some(s => normalizeStatus(s) === normalized);
+          
+          if (!isAdvancing) {
+            throw new Error('O encontro anterior deve estar finalizado para agendar este.');
+          }
         }
       }
 

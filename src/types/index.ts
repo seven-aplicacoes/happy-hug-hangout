@@ -242,6 +242,12 @@ export interface Reuniao {
   completedBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdByName?: string;
+  updatedByName?: string;
+  canceledByName?: string;
+  completedByName?: string;
 }
 
 export interface MeetingStatusHistory {
@@ -250,7 +256,13 @@ export interface MeetingStatusHistory {
   previousStatus: string | null;
   newStatus: string;
   changedBy: string | null;
+  changedByName?: string;
   changeReason: string | null;
+  action?: string;
+  previousScheduledAt?: string;
+  newScheduledAt?: string;
+  previousLink?: string;
+  newLink?: string;
   payload?: any;
   createdAt: string;
 }
@@ -271,6 +283,7 @@ export interface ContractModuleMeeting {
   teamsJoinUrl?: string;
   location?: string;
   locationUrl?: string;
+  meetingUrl?: string;
   meetingLinkProvider?: 'teams' | 'manual';
   microsoftEventId?: string;
   orderIndex: number;

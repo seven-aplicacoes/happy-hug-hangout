@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
-  History, Info, Pencil, Trash2, Loader2, Play
+  History, Info, Pencil, Trash2, Loader2, Play,
+  Copy, Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -47,7 +48,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         .select(`
           *,
           client:client_id (trade_name, corporate_name),
-          profile:consultant_id (full_name)
+          profile:consultant_id (full_name),
+          creator:profiles!created_by (full_name),
+          updater:profiles!updated_by (full_name),
+          canceler:profiles!canceled_by (full_name),
+          completer:profiles!completed_by (full_name)
         `)
         .eq('id', reuniaoId)
         .single();
@@ -57,7 +62,10 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       // Fetch history
       const { data: h } = await supabase
         .from('meeting_status_history')
-        .select('*')
+        .select(`
+          *,
+          profile:changed_by (full_name)
+        `)
         .eq('meeting_id', reuniaoId)
         .order('created_at', { ascending: false });
 
@@ -90,7 +98,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         canceledBy: r.canceled_by,
         cancelReason: r.cancel_reason,
         completedAt: r.completed_at,
-        completedBy: r.completed_by
+        completedBy: r.completed_by,
+        createdByName: Array.isArray(r.creator) ? r.creator[0]?.full_name : (r.creator as any)?.full_name,
+        updatedByName: Array.isArray(r.updater) ? r.updater[0]?.full_name : (r.updater as any)?.full_name,
+        canceledByName: Array.isArray(r.canceler) ? r.canceler[0]?.full_name : (r.canceler as any)?.full_name,
+        completedByName: Array.isArray(r.completer) ? r.completer[0]?.full_name : (r.completer as any)?.full_name
       };
 
       setReuniao(mappedReuniao);
@@ -100,6 +112,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         previousStatus: item.previous_status,
         newStatus: item.new_status,
         changedBy: item.changed_by,
+        changedByName: item.profile?.full_name,
         changeReason: item.change_reason,
         payload: item.payload,
         createdAt: item.created_at
@@ -216,7 +229,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     }
   };
 
-  const joinLink = reuniao?.teamsJoinUrl || reuniao?.locationUrl || (reuniao?.location?.startsWith('http') ? reuniao.location : null);
+  const joinLink = reuniao?.teamsJoinUrl || reuniao?.meetingUrl || reuniao?.locationUrl || (reuniao?.location?.startsWith('http') ? reuniao.location : null);
 
   if (loading) {
     return (
@@ -240,12 +253,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
-            {!isClient && !['realizada', 'cancelada'].includes(reuniao.status) && (
+            {!isClient && (
               <>
-                <Button variant="outline" onClick={() => onEdit?.(reuniao)} className="gap-2">
-                  <Pencil className="h-4 w-4" /> Reagendar
-                </Button>
-                {!isCancelling && (
+                {(reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
+                  <Button variant="outline" onClick={() => onEdit?.(reuniao)} className="gap-2">
+                    <Pencil className="h-4 w-4" /> Reagendar
+                  </Button>
+                )}
+                {!['realizada', 'cancelada'].includes(reuniao.status) && !isCancelling && (
                   <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
                     <Trash2 className="h-4 w-4" /> Cancelar
                   </Button>
@@ -327,32 +342,54 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                     {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
                     Link da Reunião
                   </span>
-                  {joinLink ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 p-3 rounded-xl">
-                        <div className="bg-blue-600 p-2 rounded-lg">
-                          {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
+                  <div className="flex flex-col gap-2">
+                    {joinLink ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 p-3 rounded-xl">
+                          <div className="bg-blue-600 p-2 rounded-lg shrink-0">
+                            {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-bold text-blue-900">
+                              {reuniao.meetingLinkProvider === 'teams' ? 'Microsoft Teams' : 'Link Manual'}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[10px] text-blue-700 truncate">{joinLink}</p>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-5 w-5 text-blue-600 hover:bg-blue-100"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(joinLink);
+                                  toast({ title: 'Copiado!', description: 'Link copiado para a área de transferência.' });
+                                }}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-8"
+                            onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')}
+                          >
+                            Entrar agora
+                          </Button>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-bold text-blue-900">
-                            {reuniao.meetingLinkProvider === 'teams' ? 'Microsoft Teams' : 'Link Manual'}
-                          </p>
-                          <p className="text-[10px] text-blue-700 truncate">{joinLink}</p>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-8"
-                          onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')}
-                        >
-                          Entrar agora
-                        </Button>
                       </div>
-                    </div>
-                  ) : (
-                    <span className="text-xs font-medium text-muted-foreground italic">
-                      Link da reunião ainda não disponível.
-                    </span>
-                  )}
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs font-medium text-muted-foreground italic">
+                          Nenhum link de reunião cadastrado.
+                        </span>
+                        {!isClient && (
+                          <Button variant="outline" size="sm" onClick={() => onEdit?.(reuniao)} className="w-fit text-[10px] h-7 gap-1">
+                            <Plus className="h-3 w-3" /> Adicionar link
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -379,8 +416,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                   history.map((h, i) => (
                     <div key={h.id} className="relative pl-4 border-l-2 border-muted pb-4 last:pb-0">
                       <div className="absolute -left-[5px] top-0 h-2 w-2 rounded-full bg-primary" />
-                      <p className="text-[10px] font-black text-foreground">{h.newStatus.toUpperCase()}</p>
-                      <p className="text-[9px] text-muted-foreground">{format(new Date(h.createdAt), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                      <div className="flex justify-between items-start">
+                        <p className="text-[10px] font-black text-foreground">{h.newStatus.toUpperCase()}</p>
+                        <p className="text-[9px] text-muted-foreground">{format(new Date(h.createdAt), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                      </div>
+                      {h.changedByName && <p className="text-[9px] text-muted-foreground italic">por {h.changedByName}</p>}
                       {h.changeReason && <p className="text-[10px] mt-1 italic">"{h.changeReason}"</p>}
                     </div>
                   ))
@@ -393,26 +433,59 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 <Info className="h-4 w-4" /> Auditoria
               </h3>
               <div className="space-y-2 text-[10px]">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Criado em:</span>
-                  <span className="font-medium">{reuniao.createdAt ? format(new Date(reuniao.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}</span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Criado em:</span>
+                    <span className="font-medium">{reuniao.createdAt ? format(new Date(reuniao.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}</span>
+                  </div>
+                  {reuniao.createdByName && (
+                    <div className="flex justify-end text-[9px] text-muted-foreground italic">
+                      por {reuniao.createdByName}
+                    </div>
+                  )}
                 </div>
                 {reuniao.updatedAt && format(new Date(reuniao.updatedAt), 'yyyy-MM-dd HH:mm') !== (reuniao.createdAt ? format(new Date(reuniao.createdAt), 'yyyy-MM-dd HH:mm') : '') && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Última att:</span>
-                    <span className="font-medium">{format(new Date(reuniao.updatedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                  <div className="flex flex-col gap-1 border-t border-muted/30 pt-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Última att:</span>
+                      <span className="font-medium">{format(new Date(reuniao.updatedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                    </div>
+                    {reuniao.updatedByName && (
+                      <div className="flex justify-end text-[9px] text-muted-foreground italic">
+                        por {reuniao.updatedByName}
+                      </div>
+                    )}
                   </div>
                 )}
                 {reuniao.canceledAt && (
-                  <div className="flex justify-between text-red-600">
-                    <span>Cancelado em:</span>
-                    <span className="font-bold">{format(new Date(reuniao.canceledAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                  <div className="flex flex-col gap-1 border-t border-red-100 pt-1">
+                    <div className="flex justify-between text-red-600">
+                      <span>Cancelado em:</span>
+                      <span className="font-bold">{format(new Date(reuniao.canceledAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                    </div>
+                    {reuniao.canceledByName && (
+                      <div className="flex justify-end text-[9px] text-red-500 italic">
+                        por {reuniao.canceledByName}
+                      </div>
+                    )}
+                    {reuniao.cancelReason && (
+                      <div className="bg-red-50 p-1.5 rounded text-red-800 mt-1">
+                        Motivo: {reuniao.cancelReason}
+                      </div>
+                    )}
                   </div>
                 )}
                 {reuniao.completedAt && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Finalizado em:</span>
-                    <span className="font-bold">{format(new Date(reuniao.completedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                  <div className="flex flex-col gap-1 border-t border-green-100 pt-1">
+                    <div className="flex justify-between text-green-600">
+                      <span>Finalizado em:</span>
+                      <span className="font-bold">{format(new Date(reuniao.completedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                    </div>
+                    {reuniao.completedByName && (
+                      <div className="flex justify-end text-[9px] text-green-500 italic">
+                        por {reuniao.completedByName}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

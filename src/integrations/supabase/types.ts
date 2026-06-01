@@ -2455,33 +2455,48 @@ export type Database = {
       }
       meeting_status_history: {
         Row: {
+          action: string | null
           change_reason: string | null
           changed_by: string | null
           created_at: string
           id: string
           meeting_id: string
+          new_link: string | null
+          new_scheduled_at: string | null
           new_status: string
           payload: Json | null
+          previous_link: string | null
+          previous_scheduled_at: string | null
           previous_status: string | null
         }
         Insert: {
+          action?: string | null
           change_reason?: string | null
           changed_by?: string | null
           created_at?: string
           id?: string
           meeting_id: string
+          new_link?: string | null
+          new_scheduled_at?: string | null
           new_status: string
           payload?: Json | null
+          previous_link?: string | null
+          previous_scheduled_at?: string | null
           previous_status?: string | null
         }
         Update: {
+          action?: string | null
           change_reason?: string | null
           changed_by?: string | null
           created_at?: string
           id?: string
           meeting_id?: string
+          new_link?: string | null
+          new_scheduled_at?: string | null
           new_status?: string
           payload?: Json | null
+          previous_link?: string | null
+          previous_scheduled_at?: string | null
           previous_status?: string | null
         }
         Relationships: [
