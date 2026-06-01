@@ -248,7 +248,10 @@ export interface Reuniao {
   updatedByName?: string;
   canceledByName?: string;
   completedByName?: string;
+  teams_creation_status?: 'created' | 'failed' | null;
+  teams_creation_error?: string | null;
 }
+
 
 export interface MeetingStatusHistory {
   id: string;
