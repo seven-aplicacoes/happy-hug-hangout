@@ -385,7 +385,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     );
   }
 
-  if (!reuniao) return null;
+  if (!reuniao && !loading) return null;
 
   const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
   const canCancel = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
@@ -782,19 +782,24 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       </div>
     </BaseModal>
 
-    <ModalRegistrarAta 
-      open={registrarAtaOpen} 
-      onClose={() => setRegistrarAtaOpen(false)} 
-      meetingId={reuniao.id} 
-      meetingTitle={reuniao.title} 
-      onSuccess={fetchDetails} 
-    />
+    {reuniao && (
+      <>
+        <ModalRegistrarAta 
+          open={registrarAtaOpen} 
+          onClose={() => setRegistrarAtaOpen(false)} 
+          meetingId={reuniao.id} 
+          meetingTitle={reuniao.title} 
+          onSuccess={fetchDetails} 
+        />
 
-    <ModalReuniao 
-      open={remarcarOpen} 
-      onClose={() => setRemarcarOpen(false)} 
-      reuniao={reuniao} 
-    />
+        <ModalReuniao 
+          open={remarcarOpen} 
+          onClose={() => setRemarcarOpen(false)} 
+          reuniao={reuniao} 
+        />
+      </>
+    )}
+
     </>
   );
 };
