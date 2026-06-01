@@ -363,7 +363,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     if (!reuniao) return;
     setGeneratingTeams(true);
     
-    console.group('[Teams Sync] Tentar gerar link novamente');
+    console.group('[Teams Sync] Tentar gerar link');
     console.log('Meeting ID:', reuniao.id);
     console.groupEnd();
 
@@ -374,9 +374,39 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       if (onRefresh) onRefresh();
     } catch (err: any) {
       console.error('[Teams Sync] Erro:', err);
-      toast({ title: 'Erro', description: err.message || 'Não foi possível gerar o link do Teams.', variant: 'destructive' });
+      // O erro já vem formatado pelo hook useReunioes
+      toast({ 
+        title: 'Falha na Sincronização Microsoft', 
+        description: err.message || 'Não foi possível sincronizar com o Microsoft Graph.', 
+        variant: 'destructive',
+        duration: 10000 // Mostrar por mais tempo se for erro
+      });
     } finally {
       setGeneratingTeams(false);
+    }
+  };
+
+  const { testMicrosoftConnection } = useReunioes();
+  const [testingConnection, setTestingConnection] = useState(false);
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    try {
+      const result = await testMicrosoftConnection();
+      if (result.success) {
+        toast({ title: "Conexão OK", description: "Conseguimos nos comunicar com o Microsoft Graph." });
+      } else {
+        toast({ 
+          title: "Erro de Conexão", 
+          description: `Status ${result.status}: ${result.details}`,
+          variant: "destructive",
+          duration: 10000
+        });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro na Function", description: err.message, variant: "destructive" });
+    } finally {
+      setTestingConnection(false);
     }
   };
 
