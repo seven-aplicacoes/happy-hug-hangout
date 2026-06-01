@@ -52,8 +52,12 @@ export function useReunioes() {
         externalId: r.external_id,
         meetingUrl: r.meeting_url,
         location: r.location,
+        locationUrl: r.location_url,
+        meetingLinkProvider: r.meeting_link_provider,
         scheduledBy: r.scheduled_by,
         contractModuleMeetingId: r.contract_module_meeting_id,
+        microsoftEventId: r.microsoft_event_id,
+        teamsJoinUrl: r.teams_join_url,
       })) as Reuniao[];
     },
   });
