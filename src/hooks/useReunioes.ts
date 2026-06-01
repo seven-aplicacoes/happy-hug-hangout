@@ -93,7 +93,10 @@ export function useReunioes() {
         contract_module_meeting_id: reuniao.contractModuleMeetingId,
         microsoft_event_id: reuniao.microsoftEventId,
         teams_join_url: reuniao.teamsJoinUrl,
+        teams_creation_status: reuniao.teams_creation_status,
+        teams_creation_error: reuniao.teams_creation_error,
       };
+
 
       // Se o status mudar de cancelada para agendada, limpamos os campos de cancelamento
       if (reuniao.status === 'agendada') {
