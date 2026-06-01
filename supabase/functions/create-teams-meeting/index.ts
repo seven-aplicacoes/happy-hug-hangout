@@ -53,8 +53,44 @@ serve(async (req) => {
       .single();
 
     if (meetingError || !meeting) {
-      console.error('[microsoft-sync] Error fetching meeting:', meetingError);
-      return new Response(JSON.stringify({ success: false, error: 'Reunião não encontrada.' }), { status: 404, headers: corsHeaders });
+      console.error('[microsoft-sync] [TEAMS_LINK_ERROR] Meeting not found:', meetingError);
+      return new Response(JSON.stringify({ success: false, error: 'Reunião não encontrada.', message: 'A reunião solicitada não existe no banco de dados.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    console.log(`[microsoft-sync] [TEAMS_LINK_MEETING_DATA]`, {
+      meetingId: meeting.id,
+      clientId: meeting.client_id,
+      consultantId: meeting.consultant_id,
+      startTime: meeting.start_time,
+      endTime: meeting.end_time, // Verificando se existe
+      status: meeting.status,
+      existingMicrosoftEventId: meeting.microsoft_event_id,
+      existingTeamsJoinUrl: meeting.teams_join_url
+    });
+
+    console.log(`[microsoft-sync] [TEAMS_LINK_VALIDATE_DATA]`);
+    
+    if (!meeting.client?.email) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error_code: "CLIENT_EMAIL_MISSING",
+        message: "O cliente não possui e-mail cadastrado. Cadastre um e-mail antes de gerar o link do Teams." 
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!meeting.consultant?.email) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error_code: "CONSULTANT_EMAIL_MISSING",
+        message: "O consultor responsável não possui e-mail cadastrado. Verifique o cadastro do consultor." 
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!meeting.meeting_date || !meeting.start_time) {
+       return new Response(JSON.stringify({ 
+        success: false, 
+        message: "A reunião precisa de data e hora de início para gerar o link." 
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const action = requestedAction || (meeting.microsoft_event_id ? 'update' : 'create');
