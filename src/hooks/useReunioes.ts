@@ -84,8 +84,12 @@ export function useReunioes() {
         external_id: reuniao.externalId,
         meeting_url: reuniao.meetingUrl,
         location: reuniao.location,
+        location_url: reuniao.locationUrl,
+        meeting_link_provider: reuniao.meetingLinkProvider,
         scheduled_by: reuniao.scheduledBy || user?.id,
         contract_module_meeting_id: reuniao.contractModuleMeetingId,
+        microsoft_event_id: reuniao.microsoftEventId,
+        teams_join_url: reuniao.teamsJoinUrl,
       };
 
 
