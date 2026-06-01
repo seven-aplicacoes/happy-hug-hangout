@@ -850,7 +850,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
                   <AlignLeft className="h-4 w-4" /> Pauta / Descrição
                 </h3>
-                {!isClient && !isEditingDescription && (
+                {canEditAgenda && !isEditingDescription && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
