@@ -251,6 +251,11 @@ export interface MeetingStatusHistory {
   newStatus: string;
   changedBy: string | null;
   changeReason: string | null;
+  action?: string;
+  previousScheduledAt?: string;
+  newScheduledAt?: string;
+  previousLink?: string;
+  newLink?: string;
   payload?: any;
   createdAt: string;
 }
