@@ -367,28 +367,36 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     if (!reuniao) return;
     setGeneratingTeams(true);
     
-    console.group('[Teams Sync] Tentar gerar link');
+    console.group('[Teams Sync] Tentar gerar/sincronizar link');
     console.log('Meeting ID:', reuniao.id);
     console.groupEnd();
 
     try {
-      await syncMicrosoft.mutateAsync({ meetingId: reuniao.id, action: 'create' });
-      toast({ title: 'Sucesso', description: 'Link do Teams gerado e sincronizado com sucesso.' });
+      // Forçar status pending no banco antes de chamar a function
+      await supabase.from('meetings').update({ sync_status: 'pending' }).eq('id', reuniao.id);
+      
+      await syncMicrosoft.mutateAsync({ 
+        meetingId: reuniao.id, 
+        action: reuniao.microsoftEventId ? 'update' : 'create' 
+      });
+      
+      toast({ title: 'Sucesso', description: 'Reunião sincronizada com o Microsoft Graph.' });
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err: any) {
       console.error('[Teams Sync] Erro:', err);
-      // O erro já vem formatado pelo hook useReunioes
       toast({ 
         title: 'Falha na Sincronização Microsoft', 
         description: err.message || 'Não foi possível sincronizar com o Microsoft Graph.', 
         variant: 'destructive',
-        duration: 10000 // Mostrar por mais tempo se for erro
+        duration: 10000
       });
+      fetchDetails(); // Recarregar para mostrar o erro salvo no banco
     } finally {
       setGeneratingTeams(false);
     }
   };
+
 
   const { testMicrosoftConnection, testMicrosoftCalendar } = useReunioes();
   const [testingConnection, setTestingConnection] = useState(false);
