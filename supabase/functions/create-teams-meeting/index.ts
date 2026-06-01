@@ -164,53 +164,82 @@ serve(async (req) => {
     const endDateTime = `${meeting.meeting_date}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
 
     const action = requestedAction || (meeting.microsoft_event_id ? 'update' : 'create');
-    let graphUrl = `${GATEWAY_URL}/me/events`;
-    let method = 'POST';
+    let method = action === 'create' ? 'POST' : 'PATCH';
     let body: any = null;
-
-    if (action === 'create' || action === 'update') {
-      method = action === 'create' ? 'POST' : 'PATCH';
-      if (action === 'update' && meeting.microsoft_event_id) {
-        graphUrl = `${GATEWAY_URL}/me/events/${meeting.microsoft_event_id}`;
-      }
-
-      body = {
-        subject: meeting.title || `Reunião - ${clientName}`,
-        body: {
-          contentType: 'HTML',
-          content: meeting.description || meeting.agenda || 'Reunião agendada pelo portal SEVEN.'
-        },
-        start: { dateTime: startDateTime, timeZone: timezone },
-        end: { dateTime: endDateTime, timeZone: timezone },
-        location: { displayName: 'Microsoft Teams' },
-        attendees: [
-          { emailAddress: { address: clientEmail, name: clientName }, type: 'required' },
-          { emailAddress: { address: consultantEmail, name: consultantName }, type: 'required' }
-        ],
-        isOnlineMeeting: true,
-        onlineMeetingProvider: 'teamsForBusiness'
-      };
-    } else if (action === 'cancel' || action === 'delete') {
-      if (!meeting.microsoft_event_id) {
-        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
-      }
-      graphUrl = `${GATEWAY_URL}/me/events/${meeting.microsoft_event_id}/cancel`;
-      method = 'POST';
-      body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
-    }
-
-    const graphResponse = await fetch(graphUrl, {
-      method,
-      headers: commonHeaders,
-      body: body ? JSON.stringify(body) : undefined
-    });
-
-    const responseStatus = graphResponse.status;
-    const responseText = await graphResponse.text();
+    let success = false;
     let responseData: any = {};
-    try { responseData = JSON.parse(responseText); } catch (e) { responseData = { raw: responseText }; }
+    let responseStatus = 0;
+    let responseText = '';
 
-    const success = graphResponse.ok || responseStatus === 204;
+    // Tentamos primeiro com o conector atual (default: outlook)
+    // Se falhar com 403, tentamos com o outro (teams)
+    const connectorsToTry = requestedConnector ? [requestedConnector] : ['microsoft_outlook', 'microsoft_teams'];
+
+    for (const connectorId of connectorsToTry) {
+      const apiKey = connectorId === 'microsoft_teams' ? teamsApiKey : outlookApiKey;
+      if (!apiKey) continue;
+
+      const gatewayUrl = `https://connector-gateway.lovable.dev/${connectorId}`;
+      let graphUrl = `${gatewayUrl}/me/events`;
+      
+      if (action === 'create' || action === 'update') {
+        method = action === 'create' ? 'POST' : 'PATCH';
+        if (action === 'update' && meeting.microsoft_event_id) {
+          graphUrl = `${gatewayUrl}/me/events/${meeting.microsoft_event_id}`;
+        }
+
+        body = {
+          subject: meeting.title || `Reunião - ${clientName}`,
+          body: {
+            contentType: 'HTML',
+            content: meeting.description || meeting.agenda || 'Reunião agendada pelo portal SEVEN.'
+          },
+          start: { dateTime: startDateTime, timeZone: timezone },
+          end: { dateTime: endDateTime, timeZone: timezone },
+          location: { displayName: 'Microsoft Teams' },
+          attendees: [
+            { emailAddress: { address: clientEmail, name: clientName }, type: 'required' },
+            { emailAddress: { address: consultantEmail, name: consultantName }, type: 'required' }
+          ],
+          isOnlineMeeting: true,
+          onlineMeetingProvider: 'teamsForBusiness'
+        };
+      } else if (action === 'cancel' || action === 'delete') {
+        if (!meeting.microsoft_event_id) {
+          return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        }
+        graphUrl = `${gatewayUrl}/me/events/${meeting.microsoft_event_id}/cancel`;
+        method = 'POST';
+        body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
+      }
+
+      console.log(`[TEAMS_SYNC] Trying connector ${connectorId}...`);
+      const graphResponse = await fetch(graphUrl, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
+          'X-Connection-Api-Key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+
+      responseStatus = graphResponse.status;
+      responseText = await graphResponse.text();
+      try { responseData = JSON.parse(responseText); } catch (e) { responseData = { raw: responseText }; }
+
+      if (graphResponse.ok || responseStatus === 204) {
+        success = true;
+        CONNECTOR_ID = connectorId; // Guardamos o que funcionou
+        break;
+      }
+
+      console.warn(`[TEAMS_SYNC] Connector ${connectorId} failed with status ${responseStatus}`);
+      if (responseStatus !== 403 && responseStatus !== 401) {
+        // Se for um erro real (não permissão), não adianta tentar outro? 
+        // Na verdade, 400 pode ser payload, mas vamos tentar o outro de qualquer forma se não for sucesso.
+      }
+    }
 
     const updates: any = {
       microsoft_last_sync_at: new Date().toISOString(),
