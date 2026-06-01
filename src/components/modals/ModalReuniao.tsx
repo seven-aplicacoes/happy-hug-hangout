@@ -313,18 +313,23 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             payload.teamsJoinUrl = response.data.teamsJoinUrl;
             payload.microsoftEventId = response.data.microsoftEventId;
             payload.meetingLinkProvider = 'teams';
+            payload.teams_creation_status = 'created';
+            payload.teams_creation_error = null;
           } else {
             throw new Error(response.data?.error || 'Link not generated');
           }
-        } catch (teamsError) {
+        } catch (teamsError: any) {
           console.error('Teams integration failed:', teamsError);
           toast({
             title: "Aviso",
-            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Adicione o link manualmente.",
+            description: "Encontro salvo, mas não foi possível gerar o link do Teams automaticamente.",
             variant: "warning" as any
           });
-          payload.meetingLinkProvider = 'manual';
+          payload.meetingLinkProvider = 'teams';
+          payload.teams_creation_status = 'failed';
+          payload.teams_creation_error = teamsError.message || String(teamsError);
         } finally {
+
           setIsGeneratingTeamsLink(false);
         }
       }
