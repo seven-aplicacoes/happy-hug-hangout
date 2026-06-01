@@ -9,6 +9,11 @@ export interface MicrosoftSyncParams {
   action?: 'create' | 'update' | 'cancel' | 'delete';
 }
 
+export interface GoogleSyncParams {
+  meetingId: string;
+  action?: 'create' | 'update' | 'cancel' | 'delete';
+}
+
 export function useReunioes() {
   const { user, perfil } = useAuth();
   const { toast } = useToast();
@@ -70,6 +75,10 @@ export function useReunioes() {
         microsoft_last_sync_at: r.microsoft_last_sync_at,
         sync_status: r.sync_status,
         sync_error: r.sync_error,
+        meet_join_url: r.meet_join_url,
+        google_event_id: r.google_event_id,
+        calendar_sync_status: r.calendar_sync_status,
+        calendar_sync_error: r.calendar_sync_error,
       })) as Reuniao[];
 
 
