@@ -268,7 +268,7 @@ export default function PortalClientePage() {
             <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico de Reuniões</h2>
           </div>
           <div className="space-y-4">
-            {historico?.map(event => (
+            {historico?.filter(e => e.tipo === 'reuniao' || (e as any).visible_to_client !== false).map(event => (
               <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex flex-col md:flex-row gap-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
                 if (event.tipo === 'reuniao' && event.meeting_id) {
                   setSelectedMeeting({ id: event.meeting_id, title: event.titulo });
