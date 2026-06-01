@@ -246,11 +246,23 @@ export function useReunioes() {
 
   const syncMicrosoft = useMutation({
     mutationFn: async ({ meetingId, action }: MicrosoftSyncParams) => {
+      console.log(`[useReunioes] Iniciando syncMicrosoft para ID: ${meetingId}, Ação: ${action}`);
       const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
         body: { meetingId, action }
       });
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Erro na sincronização Microsoft');
+      
+      if (error) {
+        console.error('[useReunioes] Erro na chamada da Edge Function:', error);
+        throw error;
+      }
+      
+      if (!data.success) {
+        console.error('[useReunioes] Erro retornado pela Edge Function:', data);
+        const errorMsg = data.message || data.error || 'Erro na sincronização Microsoft';
+        const detailMsg = data.details?.error?.message || '';
+        throw new Error(`${errorMsg}${detailMsg ? `: ${detailMsg}` : ''}`);
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -258,5 +270,21 @@ export function useReunioes() {
     }
   });
 
-  return { reunioes, isLoading, error, upsertReuniao, deleteReuniao, syncMicrosoft };
+  const testMicrosoftConnection = async () => {
+    const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
+      body: { action: 'test_connection' }
+    });
+    if (error) throw error;
+    return data;
+  };
+
+  return { 
+    reunioes, 
+    isLoading, 
+    error, 
+    upsertReuniao, 
+    deleteReuniao, 
+    syncMicrosoft,
+    testMicrosoftConnection 
+  };
 }
