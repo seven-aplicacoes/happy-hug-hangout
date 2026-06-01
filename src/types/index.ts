@@ -230,11 +230,15 @@ export interface Reuniao {
   meetingUrl?: string;
   location?: string;
   locationUrl?: string;
-  meetingLinkProvider?: 'teams' | 'manual' | 'teams_manual';
+  meetingLinkProvider?: 'teams' | 'manual' | 'teams_manual' | 'google';
   scheduledBy?: string;
   contractModuleMeetingId?: string;
   microsoftEventId?: string;
   teamsJoinUrl?: string;
+  meet_join_url?: string;
+  google_event_id?: string;
+  calendar_sync_status?: string;
+  calendar_sync_error?: string;
   canceledBy?: string;
   canceledAt?: string;
   cancelReason?: string;
