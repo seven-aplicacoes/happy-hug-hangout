@@ -125,11 +125,33 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
           </h4>
           
           {loadingSlots ? (
-             <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary opacity-50" /></div>
+             <div className="py-10 text-center">
+               <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary opacity-50" />
+               <p className="text-[10px] text-muted-foreground mt-2 animate-pulse">Buscando horários disponíveis...</p>
+             </div>
+          ) : !moduleMeeting.consultantId ? (
+            <div className="py-10 text-center bg-amber-50 rounded-lg border border-dashed border-amber-200">
+               <AlertCircle className="h-6 w-6 mx-auto text-amber-500 mb-2" />
+               <p className="text-sm text-amber-800 font-bold">Consultor não identificado.</p>
+               <p className="text-[11px] text-amber-700 mt-2">Não foi possível identificar o consultor responsável por este encontro.</p>
+             </div>
           ) : availableSlots.length === 0 ? (
              <div className="py-10 text-center bg-muted/20 rounded-lg border border-dashed">
-               <p className="text-sm text-muted-foreground font-bold">Nenhuma disponibilidade configurada para este encontro.</p>
+               <p className="text-sm text-muted-foreground font-bold">
+                 {availabilities && availabilities.length > 0 
+                   ? "Não há horários livres disponíveis para este período." 
+                   : "O consultor responsável ainda não configurou disponibilidade."}
+               </p>
                <p className="text-[11px] text-muted-foreground mt-2">Entre em contato com o consultor responsável.</p>
+               
+               <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.location.reload()}
+                className="mt-4 text-[10px] uppercase font-bold gap-2"
+               >
+                 <RefreshCcw className="h-3 w-3" /> Atualizar
+               </Button>
              </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[350px] overflow-y-auto pr-2">
