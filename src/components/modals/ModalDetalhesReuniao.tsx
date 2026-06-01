@@ -395,24 +395,24 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               <div className="space-y-2 text-[10px]">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Criado em:</span>
-                  <span className="font-medium">{reuniao.createdAt ? format(new Date(reuniao.createdAt), 'dd/MM/yyyy HH:mm') : '-'}</span>
+                  <span className="font-medium">{reuniao.createdAt ? format(new Date(reuniao.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}</span>
                 </div>
-                {reuniao.updatedAt && (
+                {reuniao.updatedAt && format(new Date(reuniao.updatedAt), 'yyyy-MM-dd HH:mm') !== (reuniao.createdAt ? format(new Date(reuniao.createdAt), 'yyyy-MM-dd HH:mm') : '') && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Última att:</span>
-                    <span className="font-medium">{format(new Date(reuniao.updatedAt), 'dd/MM/yyyy HH:mm')}</span>
+                    <span className="font-medium">{format(new Date(reuniao.updatedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
                   </div>
                 )}
                 {reuniao.canceledAt && (
                   <div className="flex justify-between text-red-600">
                     <span>Cancelado em:</span>
-                    <span className="font-bold">{format(new Date(reuniao.canceledAt), 'dd/MM/yyyy HH:mm')}</span>
+                    <span className="font-bold">{format(new Date(reuniao.canceledAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
                   </div>
                 )}
                 {reuniao.completedAt && (
                   <div className="flex justify-between text-green-600">
                     <span>Finalizado em:</span>
-                    <span className="font-bold">{format(new Date(reuniao.completedAt), 'dd/MM/yyyy HH:mm')}</span>
+                    <span className="font-bold">{format(new Date(reuniao.completedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
                   </div>
                 )}
               </div>
