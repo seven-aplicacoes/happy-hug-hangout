@@ -31,10 +31,10 @@ const adminConfigLinks = [
   { title: 'Usuários', url: '/admin/consultores', icon: Users, module: 'consultores' },
   { title: 'Permissões', url: '/admin/permissoes-consultores', icon: ShieldCheck, module: 'permissoes-consultores' },
   { title: 'Metas dos Consultores', url: '/admin/metas-consultores', icon: TrendingUp, module: 'metas-consultores' },
+  { title: 'Integrações', url: '/admin/integracoes', icon: Plug, module: 'integracoes' },
 ];
 
 const comingSoonLinks = [
-  { title: 'Integrações', url: '/admin/integracoes', icon: Plug, module: 'integracoes' },
   { title: 'Metodologia Seven', url: '/admin/metodologia', icon: BookOpen, module: 'metodologia' },
   { title: 'Inteligência', url: '/admin/inteligencia', icon: TrendingUp, module: 'inteligencia' },
   { title: 'Análise Avançada', url: '/admin/analise-avancada', icon: BarChart3, module: 'analise-avancada' },
