@@ -1821,36 +1821,45 @@ export type Database = {
       google_connections: {
         Row: {
           access_token: string
+          connected_by: string | null
           created_at: string
           expires_at: string | null
           google_email: string | null
           id: string
           refresh_token: string | null
+          scope_type: string | null
           scopes: string[] | null
+          status: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           access_token: string
+          connected_by?: string | null
           created_at?: string
           expires_at?: string | null
           google_email?: string | null
           id?: string
           refresh_token?: string | null
+          scope_type?: string | null
           scopes?: string[] | null
+          status?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           access_token?: string
+          connected_by?: string | null
           created_at?: string
           expires_at?: string | null
           google_email?: string | null
           id?: string
           refresh_token?: string | null
+          scope_type?: string | null
           scopes?: string[] | null
+          status?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
