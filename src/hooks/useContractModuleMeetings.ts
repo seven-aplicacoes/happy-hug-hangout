@@ -39,6 +39,8 @@ export function useContractModuleMeetings(moduleId?: string) {
         consultantName: m.consultant?.full_name,
         teamsJoinUrl: m.teams_join_url,
         location: m.location,
+        locationUrl: m.location_url,
+        meetingLinkProvider: m.meeting_link_provider,
         microsoftEventId: m.microsoft_event_id,
       })) as ContractModuleMeeting[];
     },
@@ -72,6 +74,8 @@ export function useContractModuleMeetings(moduleId?: string) {
           title: meeting.title,
           teams_join_url: meeting.teamsJoinUrl,
           microsoft_event_id: meeting.microsoftEventId,
+          meeting_link_provider: meeting.meetingLinkProvider,
+          location_url: meeting.locationUrl,
         })
         .eq('id', meeting.id)
         .select();

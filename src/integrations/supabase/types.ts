@@ -1110,6 +1110,8 @@ export type Database = {
           contract_id: string
           created_at: string
           id: string
+          location_url: string | null
+          meeting_link_provider: string | null
           meeting_number: number
           microsoft_event_id: string | null
           module_id: string
@@ -1133,6 +1135,8 @@ export type Database = {
           contract_id: string
           created_at?: string
           id?: string
+          location_url?: string | null
+          meeting_link_provider?: string | null
           meeting_number: number
           microsoft_event_id?: string | null
           module_id: string
@@ -1156,6 +1160,8 @@ export type Database = {
           contract_id?: string
           created_at?: string
           id?: string
+          location_url?: string | null
+          meeting_link_provider?: string | null
           meeting_number?: number
           microsoft_event_id?: string | null
           module_id?: string
@@ -2481,7 +2487,9 @@ export type Database = {
           external_reschedule_url: string | null
           id: string
           location: string | null
+          location_url: string | null
           meeting_date: string
+          meeting_link_provider: string | null
           meeting_minutes: string | null
           meeting_url: string | null
           methodology_phase_id: string | null
@@ -2531,7 +2539,9 @@ export type Database = {
           external_reschedule_url?: string | null
           id?: string
           location?: string | null
+          location_url?: string | null
           meeting_date: string
+          meeting_link_provider?: string | null
           meeting_minutes?: string | null
           meeting_url?: string | null
           methodology_phase_id?: string | null
@@ -2581,7 +2591,9 @@ export type Database = {
           external_reschedule_url?: string | null
           id?: string
           location?: string | null
+          location_url?: string | null
           meeting_date?: string
+          meeting_link_provider?: string | null
           meeting_minutes?: string | null
           meeting_url?: string | null
           methodology_phase_id?: string | null
@@ -3482,6 +3494,8 @@ export type Database = {
           hours_available: number | null
           id: string
           max_clients: number | null
+          microsoft_teams_account: string | null
+          microsoft_teams_connected: boolean | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           specialty: string | null
@@ -3500,6 +3514,8 @@ export type Database = {
           hours_available?: number | null
           id: string
           max_clients?: number | null
+          microsoft_teams_account?: string | null
+          microsoft_teams_connected?: boolean | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           specialty?: string | null
@@ -3518,6 +3534,8 @@ export type Database = {
           hours_available?: number | null
           id?: string
           max_clients?: number | null
+          microsoft_teams_account?: string | null
+          microsoft_teams_connected?: boolean | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           specialty?: string | null

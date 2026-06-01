@@ -52,8 +52,12 @@ export function useReunioes() {
         externalId: r.external_id,
         meetingUrl: r.meeting_url,
         location: r.location,
+        locationUrl: r.location_url,
+        meetingLinkProvider: r.meeting_link_provider,
         scheduledBy: r.scheduled_by,
         contractModuleMeetingId: r.contract_module_meeting_id,
+        microsoftEventId: r.microsoft_event_id,
+        teamsJoinUrl: r.teams_join_url,
       })) as Reuniao[];
     },
   });
@@ -80,8 +84,12 @@ export function useReunioes() {
         external_id: reuniao.externalId,
         meeting_url: reuniao.meetingUrl,
         location: reuniao.location,
+        location_url: reuniao.locationUrl,
+        meeting_link_provider: reuniao.meetingLinkProvider,
         scheduled_by: reuniao.scheduledBy || user?.id,
         contract_module_meeting_id: reuniao.contractModuleMeetingId,
+        microsoft_event_id: reuniao.microsoftEventId,
+        teams_join_url: reuniao.teamsJoinUrl,
       };
 
 
@@ -114,7 +122,11 @@ export function useReunioes() {
             scheduled_meeting_id: reuniao.status === 'cancelada' ? null : meetingId,
             scheduled_at: scheduledAt,
             consultant_id: reuniao.consultorId,
-            completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null
+            completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null,
+            teams_join_url: reuniao.teamsJoinUrl,
+            microsoft_event_id: reuniao.microsoftEventId,
+            meeting_link_provider: reuniao.meetingLinkProvider,
+            location_url: reuniao.locationUrl
           })
           .eq('id', reuniao.contractModuleMeetingId);
       }

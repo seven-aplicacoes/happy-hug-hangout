@@ -1,7 +1,7 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, Video
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
@@ -120,14 +120,18 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                   } else if (meeting.status === 'agendado') {
                     return (
                       <div className="flex gap-2">
-                        {(meeting.teamsJoinUrl || meeting.location) && (
+                        {(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl) && (
                           <Button 
                             size="sm" 
                             variant="default" 
-                            className="h-8 gap-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase"
-                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.location, '_blank')}
+                            className={cn(
+                              "h-8 gap-1.5 px-3 text-white text-[10px] font-bold uppercase",
+                              meeting.meetingLinkProvider === 'teams' ? "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20" : "bg-primary hover:bg-primary/90"
+                            )}
+                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl, '_blank')}
                           >
-                            <ExternalLink className="h-3.5 w-3.5" /> Entrar na Reunião
+                            {meeting.meetingLinkProvider === 'teams' ? <Video className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />} 
+                            Entrar na Reunião
                           </Button>
                         )}
                         <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useReunioes } from '@/hooks/useReunioes';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
@@ -16,7 +17,7 @@ import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle, ShieldAlert, CheckCircle2, Info } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Link as LinkIcon, AlignLeft, Users as UsersIcon, AlertTriangle, ShieldAlert, CheckCircle2, Info, Video } from 'lucide-react';
 import { checkConsultantConflict } from '@/lib/conflicts';
 import { cn } from '@/lib/utils';
 import type { Reuniao, StatusReuniao } from '@/types';
@@ -51,10 +52,25 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [meetingUrl, setMeetingUrl] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [locationUrl, setLocationUrl] = useState('');
+  const [meetingLinkProvider, setProvider] = useState<'teams' | 'manual'>('manual');
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
-  const [generateTeamsLink, setGenerateTeamsLink] = useState(true);
+  const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual'>('teams');
+  const [manualMeetingUrl, setManualMeetingUrl] = useState('');
+  const [isGeneratingTeamsLink, setIsGeneratingTeamsLink] = useState(false);
+  
+  const currentUserProfile = (consultores || []).find(c => c.id === user?.id);
+  const teamsConnected = currentUserProfile?.microsoft_teams_connected || false;
+
+  useEffect(() => {
+    if (!teamsConnected) {
+      setMeetingLinkMode('manual');
+    } else if (!reuniao && !initialData) {
+      setMeetingLinkMode('teams');
+    }
+  }, [teamsConnected, reuniao, initialData]);
 
   const { products: contractProducts, isLoading: loadingProducts } = useContractProducts(contractId);
   const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
@@ -90,6 +106,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDuracao(reuniao.duracao || 60);
       setMeetingUrl(reuniao.meetingUrl || '');
       setLocation(reuniao.location || '');
+      setLocationUrl(reuniao.locationUrl || '');
+      setManualMeetingUrl(reuniao.locationUrl || reuniao.location || reuniao.meetingUrl || '');
+      setProvider(reuniao.meetingLinkProvider || (reuniao.teamsJoinUrl ? 'teams' : 'manual'));
       setDescription(reuniao.description || '');
     } else if (initialData) {
       setTitle(initialData.title || '');
@@ -106,6 +125,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDuracao(initialData.duracao || 60);
       setMeetingUrl(initialData.meetingUrl || '');
       setLocation(initialData.location || '');
+      setLocationUrl(initialData.locationUrl || '');
+      setManualMeetingUrl(initialData.locationUrl || initialData.location || initialData.meetingUrl || '');
+      setProvider(initialData.meetingLinkProvider || (initialData.teamsJoinUrl ? 'teams' : 'manual'));
       setDescription(initialData.description || '');
     } else {
       setTitle('');
@@ -122,10 +144,13 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDuracao(60);
       setMeetingUrl('');
       setLocation('');
+      setLocationUrl('');
+      setManualMeetingUrl('');
+      setProvider(teamsConnected ? 'teams' : 'manual');
       setDescription('');
     }
     setErrors({});
-  }, [reuniao, initialData, open]);
+  }, [reuniao, initialData, open, teamsConnected]);
 
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
@@ -234,19 +259,19 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         contractProductId: (contractProductId === 'none' || !contractProductId) ? null : contractProductId,
         contractProductPhaseId: (contractProductPhaseId === 'none' || !contractProductPhaseId) ? null : contractProductPhaseId,
         contractModuleMeetingId: (contractModuleMeetingId === 'none' || !contractModuleMeetingId) ? null : contractModuleMeetingId,
-        consultorId, status, meetingDate, startTime, duracao, meetingUrl, location, description,
+        consultorId, status, meetingDate, startTime, duracao, 
+        meetingUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : meetingUrl,
+        location: meetingLinkMode === 'manual' ? manualMeetingUrl : location,
+        locationUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : locationUrl,
+        meetingLinkProvider: meetingLinkMode,
+        description,
         source: reuniao?.source || 'manual'
       };
 
       // Objective 3: Teams Integration
-      if (generateTeamsLink && status === 'agendada') {
+      if (meetingLinkMode === 'teams' && status === 'agendada' && teamsConnected) {
+        setIsGeneratingTeamsLink(true);
         try {
-          // In a real implementation, we would call an edge function here.
-          // Since I cannot create the actual edge function and secrets without user interaction, 
-          // I will simulate the call or prepare the structure.
-          // For now, I'll update the database with a placeholder if requested, 
-          // but the instructions say to use Microsoft Graph API.
-          
           const response = await supabase.functions.invoke('create-teams-meeting', {
             body: {
               title,
@@ -264,14 +289,21 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           if (response.data?.teamsJoinUrl) {
             payload.meetingUrl = response.data.teamsJoinUrl;
             payload.location = response.data.teamsJoinUrl;
+            payload.locationUrl = response.data.teamsJoinUrl;
+            payload.teamsJoinUrl = response.data.teamsJoinUrl;
+            payload.microsoftEventId = response.data.microsoftEventId;
           }
         } catch (teamsError) {
           console.error('Teams integration failed:', teamsError);
           toast({
             title: "Aviso",
-            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Adicione o link manualmente.",
+            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Você pode adicionar o link manualmente.",
             variant: "warning" as any
           });
+          // Se falhar, muda para manual para que o usuário possa inserir o link
+          payload.meetingLinkProvider = 'manual';
+        } finally {
+          setIsGeneratingTeamsLink(false);
         }
       }
 
@@ -372,30 +404,88 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link</Label>
-              <div className="relative">
-                <Input 
-                  value={meetingUrl || location} 
-                  onChange={e => { setMeetingUrl(e.target.value); setLocation(e.target.value); }} 
-                  className="h-11 pl-10" 
-                  placeholder="Meet, Zoom ou Endereço" 
-                />
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 py-2">
-              <input 
-                type="checkbox" 
-                id="generateTeams" 
-                checked={generateTeamsLink} 
-                onChange={(e) => setGenerateTeamsLink(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <Label htmlFor="generateTeams" className="text-xs font-bold cursor-pointer">
-                Gerar link do Microsoft Teams automaticamente
-              </Label>
+            {/* Integração Microsoft Teams / Link Manual */}
+            <div className="space-y-4 pt-2">
+              {teamsConnected ? (
+                meetingLinkMode === 'teams' ? (
+                  <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-[#4B53BC] flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" fill="white" fillOpacity="0.2"/>
+                            <path d="M16 16L19 19M16 8L19 5M5 19L8 16M5 5L8 8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                            <rect x="7" y="7" width="10" height="10" rx="2" fill="white"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-blue-900">Microsoft Teams conectado</span>
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Conectado</Badge>
+                          </div>
+                          <p className="text-[10px] text-blue-700/70 font-medium">O link da reunião será gerado automaticamente ao salvar.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setMeetingLinkMode('manual')}
+                      className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-4 w-fit transition-colors"
+                    >
+                      Usar link manual
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link Manual</Label>
+                      <div className="relative">
+                        <Input 
+                          value={manualMeetingUrl} 
+                          onChange={e => setManualMeetingUrl(e.target.value)} 
+                          className="h-11 pl-10 bg-white" 
+                          placeholder="Meet, Zoom ou Endereço físico" 
+                        />
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setMeetingLinkMode('teams')}
+                      className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      <Video className="h-3 w-3" /> Gerar automaticamente pelo Teams
+                    </button>
+                  </div>
+                )
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-amber-900">Microsoft Teams não conectado</p>
+                      <p className="text-[10px] text-amber-700/70 font-medium leading-relaxed">
+                        Configure a integração para gerar links automaticamente ou insira um link manual abaixo.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Local / Link</Label>
+                    <div className="relative">
+                      <Input 
+                        value={manualMeetingUrl} 
+                        onChange={e => setManualMeetingUrl(e.target.value)} 
+                        className="h-11 pl-10 bg-white" 
+                        placeholder="Meet, Zoom ou Endereço" 
+                      />
+                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="space-y-2">
