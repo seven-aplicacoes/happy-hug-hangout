@@ -472,10 +472,77 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
                 <AlignLeft className="h-4 w-4" /> Pauta / Descrição
               </h3>
-              <div className="bg-white border rounded-xl p-4 text-xs text-muted-foreground whitespace-pre-wrap min-h-[100px]">
+              <div className="bg-white border rounded-xl p-4 text-xs text-muted-foreground whitespace-pre-wrap min-h-[60px]">
                 {reuniao.description || 'Nenhuma pauta definida para este encontro.'}
               </div>
             </div>
+
+            {minutes && (minutes.visibleToClient || !isClient) && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-green-700 flex items-center gap-2">
+                    <FileText className="h-4 w-4" /> Ata da Reunião
+                  </h3>
+                  {!minutes.visibleToClient && (
+                    <Badge variant="outline" className="text-[10px] gap-1 text-amber-600 border-amber-200 bg-amber-50">
+                      <EyeOff className="h-3 w-3" /> Apenas Interno
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="bg-green-50/30 border border-green-100 rounded-2xl overflow-hidden">
+                  <div className="p-6 space-y-6">
+                    {minutes.summary && (
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                          <Info className="h-3 w-3" /> Resumo
+                        </h4>
+                        <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.summary}</p>
+                      </div>
+                    )}
+                    
+                    {minutes.discussionPoints && (
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                          <Users className="h-3 w-3" /> Pontos Discutidos
+                        </h4>
+                        <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.discussionPoints}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {minutes.decisions && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                            <CheckCircle2 className="h-3 w-3" /> Decisões
+                          </h4>
+                          <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.decisions}</p>
+                        </div>
+                      )}
+                      
+                      {minutes.nextSteps && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
+                            <ListChecks className="h-3 w-3" /> Próximos Passos
+                          </h4>
+                          <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.nextSteps}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {!isClient && minutes.internalNotes && (
+                      <div className="mt-4 pt-4 border-t border-green-200/50 space-y-2 bg-amber-50/50 -mx-6 -mb-6 p-6">
+                        <h4 className="text-[10px] font-black uppercase text-amber-800 flex items-center gap-2">
+                          <Lock className="h-3 w-3" /> Observações Internas
+                        </h4>
+                        <p className="text-xs text-amber-900 leading-relaxed whitespace-pre-wrap italic">{minutes.internalNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
 
           <div className="space-y-6">
