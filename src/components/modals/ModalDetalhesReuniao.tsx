@@ -670,7 +670,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 </div>
                 <div className="flex flex-col col-span-2 space-y-3 pt-2">
                   <span className="text-[10px] font-black uppercase text-muted-foreground/60 flex items-center gap-2">
-                    {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
+                    {reuniao.meetingLinkProvider?.includes('teams') ? <Video className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
                     Link da Reunião
                   </span>
                   <div className="flex flex-col gap-2">
@@ -678,11 +678,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 p-3 rounded-xl">
                           <div className="bg-blue-600 p-2 rounded-lg shrink-0">
-                            {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
+                            {reuniao.meetingLinkProvider?.includes('teams') ? <Video className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[11px] font-bold text-blue-900">
-                              {reuniao.meetingLinkProvider === 'teams' ? 'Microsoft Teams' : 'Link Manual'}
+                              {reuniao.meetingLinkProvider?.includes('teams') ? 'Microsoft Teams' : 'Link Manual'}
                             </p>
                             <div className="flex items-center gap-2">
                               <p className="text-[10px] text-blue-700 truncate">{joinLink}</p>
