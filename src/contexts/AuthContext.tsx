@@ -122,7 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .from('clients')
         .select('email, portal_access_enabled, status')
         .eq('cnpj', cnpjLimpo)
-        .single();
+        .is('deleted_at', null)
+        .maybeSingle();
 
       if (error || !client) return { ok: false, erro: 'Cliente não encontrado com este CNPJ.' };
       if (!client.portal_access_enabled) return { ok: false, erro: 'Acesso ao portal desativado para este cliente.' };
