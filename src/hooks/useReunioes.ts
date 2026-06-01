@@ -107,8 +107,12 @@ export function useReunioes() {
 
 
       // Filter out undefined values to avoid overwriting with null if not intended
+      // Special case: if ID is null, we remove it so it's treated as a new insert
       const cleanPayload = Object.fromEntries(
-        Object.entries(payload).filter(([_, v]) => v !== undefined)
+        Object.entries(payload).filter(([k, v]) => {
+          if (k === 'id' && !v) return false;
+          return v !== undefined;
+        })
       );
 
 
