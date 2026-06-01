@@ -126,7 +126,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setLocation(reuniao.location || '');
       setLocationUrl(reuniao.locationUrl || '');
       setManualMeetingUrl(reuniao.locationUrl || reuniao.location || reuniao.meetingUrl || '');
-      setProvider(reuniao.meetingLinkProvider || (reuniao.teamsJoinUrl ? 'teams' : 'manual'));
+      setMeetingLinkMode(reuniao.meetingLinkProvider || (reuniao.teamsJoinUrl ? 'teams' : 'manual'));
       setDescription(reuniao.description || '');
     } else if (initialData) {
       setTitle(initialData.title || '');
