@@ -1,7 +1,7 @@
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, Video
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
