@@ -100,6 +100,11 @@ export default function PortalClientePage() {
 
   const isLoading = loadingFicha || loadingContratos || loadingHist || loadingSummary;
 
+  useEffect(() => {
+    console.log('[Portal Cliente] session:', clienteSession);
+    console.log('[Portal Cliente] contracts list:', contratos);
+  }, [clienteSession, contratos]);
+
 
   const handleLogin = async () => {
     setErro('');
