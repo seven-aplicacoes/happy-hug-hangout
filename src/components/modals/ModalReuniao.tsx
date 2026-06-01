@@ -53,7 +53,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [locationUrl, setLocationUrl] = useState('');
-  const [meetingLinkProvider, setProvider] = useState<'teams' | 'manual'>('manual');
+  
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
