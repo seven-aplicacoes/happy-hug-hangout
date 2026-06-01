@@ -368,7 +368,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     console.groupEnd();
 
     try {
-      await syncMicrosoft.mutateAsync({ meetingId: reuniao.id });
+      await syncMicrosoft.mutateAsync({ meetingId: reuniao.id, action: 'create' });
       toast({ title: 'Sucesso', description: 'Link do Teams gerado e sincronizado com sucesso.' });
       fetchDetails();
       if (onRefresh) onRefresh();
