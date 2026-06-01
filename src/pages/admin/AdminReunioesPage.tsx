@@ -117,23 +117,7 @@ export default function AdminReunioesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader titulo="Gestão de Reuniões" subtitulo="Agendamento e histórico de reuniões">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 mr-4 bg-muted/30 px-3 py-1.5 rounded-md border">
-            <span className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">Integrações:</span>
-            <Badge variant="outline" className="text-[10px] gap-1 py-0 border-primary/30 text-primary">
-              <Calendar className="h-2.5 w-2.5" /> Google (Beta)
-            </Badge>
-            <Badge variant="outline" className="text-[10px] gap-1 py-0">
-              <ExternalLink className="h-2.5 w-2.5" /> Calendly (Em breve)
-            </Badge>
-          </div>
-          <Button onClick={() => { setSelectedReuniao(null); setModalOpen(true); }} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Reunião
-          </Button>
-        </div>
-      </PageHeader>
+      <PageHeader titulo="Gestão de Reuniões" subtitulo="Agendamento e histórico de reuniões" />
       <FilterBar
         searchValue={search} onSearchChange={setSearch}
         filters={filterConfigs} filterValues={filters}
