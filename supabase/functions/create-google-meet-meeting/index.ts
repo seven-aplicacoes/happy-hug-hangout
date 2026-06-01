@@ -94,10 +94,38 @@ serve(async (req) => {
     const accessToken = connection.access_token;
 
     if (action === 'create' || action === 'update') {
-      const startTimeISO = `${meeting.meeting_date}T${meeting.start_time}:00`;
+      console.log(`[Google Sync] Preparando payload para reunião ${meetingId}`, {
+        date: meeting.meeting_date,
+        time: meeting.start_time,
+        duration: meeting.duration
+      });
+
+      // Secure date parsing
+      let datePart = meeting.meeting_date;
+      if (datePart.includes('/')) {
+        const [d, m, y] = datePart.split('/');
+        datePart = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      }
+
+      let timePart = meeting.start_time;
+      if (timePart.split(':').length === 2) {
+        timePart = `${timePart}:00`;
+      }
+
+      const startTimeISO = `${datePart}T${timePart}`;
       const startDate = new Date(startTimeISO);
-      const endDate = new Date(startDate.getTime() + (meeting.duration || 60) * 60000);
       
+      if (isNaN(startDate.getTime())) {
+        throw new Error(`Data/hora inicial inválida: ${startTimeISO}`);
+      }
+
+      const duration = meeting.duration || 60;
+      const endDate = new Date(startDate.getTime() + duration * 60000);
+      
+      if (isNaN(endDate.getTime())) {
+        throw new Error(`Erro ao calcular data final da reunião`);
+      }
+
       const attendees = [];
       if (meeting.client?.email) attendees.push({ email: meeting.client.email });
       if (meeting.profile?.email) attendees.push({ email: meeting.profile.email });
@@ -112,16 +140,16 @@ serve(async (req) => {
         summary: meeting.title || 'Reunião SEVEN',
         description: meeting.description || 'Agendado via Sistema SEVEN',
         start: {
-          dateTime: startDate.toISOString().replace(/\.\d+Z$/, '-03:00'),
+          dateTime: startDate.toISOString().split('.')[0] + '-03:00',
           timeZone: 'America/Fortaleza',
         },
         end: {
-          dateTime: endDate.toISOString().replace(/\.\d+Z$/, '-03:00'),
+          dateTime: endDate.toISOString().split('.')[0] + '-03:00',
           timeZone: 'America/Fortaleza',
         },
         conferenceData: {
           createRequest: {
-            requestId: `meeting-${meeting.id}`,
+            requestId: `meeting-${meeting.id}-${Date.now()}`,
             conferenceSolutionKey: { type: 'hangoutsMeet' },
           },
         },
