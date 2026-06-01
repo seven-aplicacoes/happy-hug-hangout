@@ -87,7 +87,10 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
     <div className="space-y-2 mt-4 animate-in slide-in-from-top-2 duration-300">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-black uppercase text-muted-foreground">
-          Progresso: {meetings.filter(m => ['realizada', 'concluida', 'concluido', 'concluído'].includes(normalizeStatus(m.status))).length}/{meetings.length} encontros
+          Progresso: {meetings.filter(m => {
+            const s = normalizeStatus(m.status);
+            return ['realizada', 'concluida', 'concluido', 'concluído', 'finalizada', 'finalizado'].includes(s);
+          }).length}/{meetings.length} encontros
         </span>
       </div>
       {meetings.map((meeting) => (

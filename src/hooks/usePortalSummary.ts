@@ -8,25 +8,41 @@ export function usePortalSummary(clientId?: string) {
     queryFn: async () => {
       if (!clientId) return null;
       
-      const { data: meetings, error: mError } = await supabase
-        .from('meetings')
-        .select('status, meeting_date, start_time')
+      // 1. Fetch all meetings linked to this client's contract modules
+      const { data: moduleMeetings, error: mError } = await supabase
+        .from('contract_module_meetings')
+        .select('status, scheduled_at')
         .eq('client_id', clientId);
         
       if (mError) throw mError;
       
-      const total = meetings.length;
-      const realizedStatuses = ['realizada', 'concluido', 'concluído', 'completed', 'done'];
-      const realized = meetings.filter(m => realizedStatuses.includes(m.status)).length;
+      const total = moduleMeetings.length;
       
-      const upcomingMeetings = meetings
-        .filter(m => ['agendada', 'agendado', 'reagendada', 'reagendado', 'confirmado', 'em_andamento'].includes(m.status) && m.meeting_date)
-        .map(m => ({
-          ...m,
-          scheduled_at: `${m.meeting_date}T${m.start_time || '00:00'}:00`
-        }))
-        .filter(m => new Date(m.scheduled_at) > new Date())
-        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+      // Statuses considered for realized meetings
+      const realizedStatuses = ['realizada', 'concluido', 'concluído', 'completed', 'done', 'finalizada', 'finalizado'];
+      
+      // Normalize status helper to handle variations
+      const normalizeStatus = (status: string) => {
+        return String(status || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .trim();
+      };
+
+      const realized = moduleMeetings.filter(m => {
+        const normalized = normalizeStatus(m.status);
+        return realizedStatuses.some(rs => normalizeStatus(rs) === normalized);
+      }).length;
+      
+      // 2. Find the next scheduled meeting (must be in the future and have 'agendado' status)
+      const upcomingMeetings = moduleMeetings
+        .filter(m => {
+          const normalized = normalizeStatus(m.status);
+          return (normalized === 'agendado' || normalized === 'agendada') && m.scheduled_at;
+        })
+        .filter(m => new Date(m.scheduled_at!) > new Date())
+        .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime());
 
       const nextMeeting = upcomingMeetings[0];
 
