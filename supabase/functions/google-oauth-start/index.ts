@@ -18,6 +18,7 @@ serve(async (req) => {
     }
 
     const scopes = [
+      'openid',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/calendar.events'
@@ -30,6 +31,8 @@ serve(async (req) => {
     authUrl.searchParams.set('scope', scopes.join(' '));
     authUrl.searchParams.set('access_type', 'offline');
     authUrl.searchParams.set('prompt', 'consent');
+
+    console.log("Generated Auth URL:", authUrl.toString());
 
     return new Response(JSON.stringify({ url: authUrl.toString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
