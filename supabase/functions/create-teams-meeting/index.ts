@@ -190,13 +190,13 @@ serve(async (req) => {
 
     const success = graphResponse.ok || responseStatus === 204;
 
-    if (success) {
-      const updates: any = {
-        microsoft_last_sync_at: new Date().toISOString(),
-        microsoft_sync_status: 'success',
-        microsoft_sync_error: null,
-      };
+    const updates: any = {
+      microsoft_last_sync_at: new Date().toISOString(),
+      microsoft_sync_status: success ? 'success' : 'error',
+      microsoft_sync_error: success ? null : (responseData.error?.message || responseText || 'Erro desconhecido'),
+    };
 
+    if (success) {
       if (action === 'create' || action === 'update') {
         if (responseData.id) updates.microsoft_event_id = responseData.id;
         const joinUrl = responseData.onlineMeeting?.joinUrl || responseData.onlineMeetingUrl || responseData.joinUrl || responseData.joinWebUrl;
@@ -206,8 +206,13 @@ serve(async (req) => {
           updates.location_url = joinUrl;
         }
       }
+    }
 
+    if (meetingId) {
       await supabase.from('meetings').update(updates).eq('id', meetingId);
+    }
+
+    if (success) {
       return new Response(JSON.stringify({ success: true, teamsJoinUrl: updates.teams_join_url }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     } else {
       if (responseStatus === 403) {
