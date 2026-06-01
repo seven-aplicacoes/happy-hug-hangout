@@ -137,8 +137,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                 )}
 
                 {(() => {
-                  const prevMeeting = meetings.find(m => m.meetingNumber === meeting.meetingNumber - 1);
-                  const isLocked = !canAdvanceToNextMeeting(prevMeeting);
+                  const isLocked = false;
                   const normalizedStatusValue = normalizeStatus(meeting.status);
 
                   if (normalizedStatusValue === 'pendente') {
