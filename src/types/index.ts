@@ -456,6 +456,8 @@ export interface TimelineEvent {
   evidencias?: string[];
   tarefasGeradas?: string[];
   faseRelacionada?: string;
+  meeting_id?: string;
+  consultant_name?: string;
 }
 
 export interface ContractProduct {
