@@ -53,11 +53,22 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [newDescription, setNewDescription] = useState('');
 
-
-
   const isAdmin = perfil === 'admin';
   const isConsultant = perfil === 'consultor';
   const isClient = perfil === 'cliente';
+
+  const canManageMeeting = isAdmin || isConsultant;
+
+  const canRegisterMinutes = canManageMeeting;
+  const canMarkAsCompleted = canManageMeeting;
+  const canReschedule = canManageMeeting;
+  const canCancel = canManageMeeting;
+  const canEditAgenda = canManageMeeting;
+  const canEditLink = canManageMeeting;
+
+  console.log('[Meeting Modal] userRole:', perfil);
+  console.log('[Meeting Modal] isClient:', isClient);
+  console.log('[Meeting Modal] canManageMeeting:', canManageMeeting);
 
   const fetchDetails = async () => {
     if (!reuniaoId) {
