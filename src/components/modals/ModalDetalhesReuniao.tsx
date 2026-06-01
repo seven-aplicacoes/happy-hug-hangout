@@ -562,18 +562,52 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs font-medium text-muted-foreground italic">
-                          Nenhum link de reunião cadastrado.
-                        </span>
+                      <div className="flex flex-col gap-2 p-4 bg-muted/50 rounded-xl border border-dashed">
+                        <div className="flex items-center gap-2 text-muted-foreground italic mb-2">
+                          <AlertCircle className="h-4 w-4" />
+                          <span className="text-xs font-medium">
+                            {reuniao.teams_creation_status === 'failed' 
+                              ? "Falha ao gerar link do Teams." 
+                              : "Link da reunião ainda não disponível."}
+                          </span>
+                        </div>
+                        
                         {!isClient && (
-                          <Button variant="outline" size="sm" onClick={() => onEdit?.(reuniao)} className="w-fit text-[10px] h-7 gap-1">
-                            <Plus className="h-3 w-3" /> Adicionar link
-                          </Button>
+                          <div className="flex flex-wrap gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={generateTeamsLink} 
+                              disabled={generatingTeams}
+                              className="text-[10px] h-8 gap-1.5"
+                            >
+                              {generatingTeams ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RefreshCcw className="h-3 w-3" />
+                              )}
+                              {reuniao.teams_creation_status === 'failed' ? "Tentar gerar link novamente" : "Gerar link do Teams"}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setRemarcarOpen(true)} 
+                              className="text-[10px] h-8 gap-1.5"
+                            >
+                              <Plus className="h-3 w-3" /> Adicionar link manual
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {!isClient && reuniao.teams_creation_error && (
+                          <p className="text-[9px] text-destructive mt-1 bg-destructive/5 p-2 rounded">
+                            Erro: {reuniao.teams_creation_error}
+                          </p>
                         )}
                       </div>
                     )}
                   </div>
+
                 </div>
               </div>
             </div>
