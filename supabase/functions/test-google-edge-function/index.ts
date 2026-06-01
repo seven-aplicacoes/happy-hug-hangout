@@ -11,12 +11,23 @@ serve(async (req) => {
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  return new Response(JSON.stringify({
-    success: true,
-    message: "Edge Function funcionando",
-    timestamp: new Date().toISOString()
-  }), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" }
-  });
+  try {
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Edge Function funcionando",
+      timestamp: new Date().toISOString()
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  } catch (error: any) {
+    console.error("EDGE_FUNCTION_ERROR", error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error?.message || "Erro inesperado",
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
 })
