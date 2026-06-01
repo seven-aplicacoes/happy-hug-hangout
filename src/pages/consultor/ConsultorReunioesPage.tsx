@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, CalendarClock } from 'lucide-react';
-import { ModalVerDetalhesReuniao } from '@/components/modals/ModalVerDetalhesReuniao';
+import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { ModalRegistrarReuniao } from '@/components/modals/ModalRegistrarReuniao';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
