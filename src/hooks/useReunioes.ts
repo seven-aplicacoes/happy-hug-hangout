@@ -107,8 +107,12 @@ export function useReunioes() {
 
 
       // Filter out undefined values to avoid overwriting with null if not intended
+      // Special case: if ID is null, we remove it so it's treated as a new insert
       const cleanPayload = Object.fromEntries(
-        Object.entries(payload).filter(([_, v]) => v !== undefined)
+        Object.entries(payload).filter(([k, v]) => {
+          if (k === 'id' && !v) return false;
+          return v !== undefined;
+        })
       );
 
 
@@ -124,6 +128,7 @@ export function useReunioes() {
         .select();
 
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("Não foi possível salvar a reunião. Verifique suas permissões.");
 
       const newMeeting = data[0];
 
@@ -180,7 +185,7 @@ export function useReunioes() {
           ? `${reuniao.meetingDate}T${reuniao.startTime}` 
           : null;
 
-        await supabase
+        const { error: updateMeetingError } = await supabase
           .from('contract_module_meetings')
           .update({
             status,
@@ -194,6 +199,11 @@ export function useReunioes() {
             location_url: reuniao.locationUrl
           })
           .eq('id', reuniao.contractModuleMeetingId);
+
+        if (updateMeetingError) {
+          console.error('Erro ao atualizar contrato:', updateMeetingError);
+          throw updateMeetingError;
+        }
       }
 
 
