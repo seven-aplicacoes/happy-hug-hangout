@@ -229,7 +229,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     }
   };
 
-  const joinLink = reuniao?.teamsJoinUrl || reuniao?.locationUrl || (reuniao?.location?.startsWith('http') ? reuniao.location : null);
+  const joinLink = reuniao?.teamsJoinUrl || reuniao?.meetingUrl || reuniao?.locationUrl || (reuniao?.location?.startsWith('http') ? reuniao.location : null);
 
   if (loading) {
     return (
