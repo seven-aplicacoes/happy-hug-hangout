@@ -158,7 +158,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDescription('');
     }
     setErrors({});
-  }, [reuniao, initialData, open, googleConnected, isLoadingGoogleStatus]);
+    console.log("[ModalReuniao] Open/Data change", { consultorId, meetingDate, hasSlots: !!slots?.length });
+  }, [reuniao, initialData, open, googleConnected, isLoadingGoogleStatus, consultorId, meetingDate]);
 
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
