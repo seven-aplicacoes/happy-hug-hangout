@@ -247,19 +247,19 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         contractProductId: (contractProductId === 'none' || !contractProductId) ? null : contractProductId,
         contractProductPhaseId: (contractProductPhaseId === 'none' || !contractProductPhaseId) ? null : contractProductPhaseId,
         contractModuleMeetingId: (contractModuleMeetingId === 'none' || !contractModuleMeetingId) ? null : contractModuleMeetingId,
-        consultorId, status, meetingDate, startTime, duracao, meetingUrl, location, description,
+        consultorId, status, meetingDate, startTime, duracao, 
+        meetingUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : meetingUrl,
+        location: meetingLinkMode === 'manual' ? manualMeetingUrl : location,
+        locationUrl: meetingLinkMode === 'manual' ? manualMeetingUrl : locationUrl,
+        meetingLinkProvider: meetingLinkMode,
+        description,
         source: reuniao?.source || 'manual'
       };
 
       // Objective 3: Teams Integration
-      if (generateTeamsLink && status === 'agendada') {
+      if (meetingLinkMode === 'teams' && status === 'agendada' && teamsConnected) {
+        setIsGeneratingTeamsLink(true);
         try {
-          // In a real implementation, we would call an edge function here.
-          // Since I cannot create the actual edge function and secrets without user interaction, 
-          // I will simulate the call or prepare the structure.
-          // For now, I'll update the database with a placeholder if requested, 
-          // but the instructions say to use Microsoft Graph API.
-          
           const response = await supabase.functions.invoke('create-teams-meeting', {
             body: {
               title,
@@ -277,14 +277,21 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           if (response.data?.teamsJoinUrl) {
             payload.meetingUrl = response.data.teamsJoinUrl;
             payload.location = response.data.teamsJoinUrl;
+            payload.locationUrl = response.data.teamsJoinUrl;
+            payload.teamsJoinUrl = response.data.teamsJoinUrl;
+            payload.microsoftEventId = response.data.microsoftEventId;
           }
         } catch (teamsError) {
           console.error('Teams integration failed:', teamsError);
           toast({
             title: "Aviso",
-            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Adicione o link manualmente.",
+            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Você pode adicionar o link manualmente.",
             variant: "warning" as any
           });
+          // Se falhar, muda para manual para que o usuário possa inserir o link
+          payload.meetingLinkProvider = 'manual';
+        } finally {
+          setIsGeneratingTeamsLink(false);
         }
       }
 
