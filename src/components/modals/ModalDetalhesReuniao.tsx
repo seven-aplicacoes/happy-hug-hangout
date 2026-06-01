@@ -604,9 +604,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const canRegistrarAtaLocal = canRegisterMinutes && reuniao.status !== 'cancelada';
 
   const handleMarkAsCompleted = async (withAta = false) => {
+    if (!canMarkAsCompleted) {
+      toast({ title: 'Acesso negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+      return;
+    }
     if (withAta) {
       setRegistrarAtaOpen(true);
     }
+    console.log('[Meeting Action] mark as completed:', reuniao.id);
     await updateStatus('realizada', 'Reunião marcada como realizada pelo consultor');
     setIsConfirmingCompletion(false);
   };
@@ -621,28 +626,24 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
-            {!isClient && (
-              <>
-                {(reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
-                  <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
-                    <Pencil className="h-4 w-4" /> Remarcar
-                  </Button>
-                )}
-                {canCancel && !isCancelling && (
-                  <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
-                    <Trash2 className="h-4 w-4" /> Cancelar
-                  </Button>
-                )}
-              </>
+            {canReschedule && (reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
+              <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
+                <Pencil className="h-4 w-4" /> Remarcar
+              </Button>
+            )}
+            {canCancelLocal && !isCancelling && (
+              <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
+                <Trash2 className="h-4 w-4" /> Cancelar
+              </Button>
             )}
           </div>
           <div className="flex gap-2">
-            {!isClient && canRegistrarAta && (
+            {canRegistrarAtaLocal && (
               <Button variant="outline" onClick={() => setRegistrarAtaOpen(true)} className="gap-2">
                 <FileText className="h-4 w-4" /> {minutes ? 'Editar Ata' : 'Registrar Ata'}
               </Button>
             )}
-            {!isClient && canMarkAsRealizada && (
+            {canMarkAsRealizadaLocal && (
               <Button onClick={() => setIsConfirmingCompletion(true)} className="bg-green-600 hover:bg-green-700 text-white gap-2">
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
