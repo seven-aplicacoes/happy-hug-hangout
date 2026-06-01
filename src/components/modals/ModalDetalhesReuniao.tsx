@@ -174,7 +174,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       if (reuniao.contractModuleMeetingId) {
         let externalStatus = 'agendado';
         if (newStatus === 'realizada') externalStatus = 'realizada';
-        if (newStatus === 'cancelada') externalStatus = 'pendente';
+        if (newStatus === 'cancelada') externalStatus = 'cancelada';
         
         await supabase
           .from('contract_module_meetings')
@@ -322,15 +322,38 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                     <Clock className="h-3 w-3" /> {reuniao.startTime || '--:--'} ({formatDuration(reuniao.duracao)})
                   </span>
                 </div>
-                {reuniao.location && (
-                  <div className="flex flex-col col-span-2">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground/60">Local / Link</span>
-                    <span className="text-xs font-bold flex items-center gap-1">
-                      {joinLink ? <Video className="h-3 w-3 text-blue-500" /> : <MapPin className="h-3 w-3" />} 
-                      {reuniao.location}
+                <div className="flex flex-col col-span-2 space-y-3 pt-2">
+                  <span className="text-[10px] font-black uppercase text-muted-foreground/60 flex items-center gap-2">
+                    {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
+                    Link da Reunião
+                  </span>
+                  {joinLink ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 p-3 rounded-xl">
+                        <div className="bg-blue-600 p-2 rounded-lg">
+                          {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-bold text-blue-900">
+                            {reuniao.meetingLinkProvider === 'teams' ? 'Microsoft Teams' : 'Link Manual'}
+                          </p>
+                          <p className="text-[10px] text-blue-700 truncate">{joinLink}</p>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-8"
+                          onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')}
+                        >
+                          Entrar agora
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-medium text-muted-foreground italic">
+                      Link da reunião ainda não disponível.
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 

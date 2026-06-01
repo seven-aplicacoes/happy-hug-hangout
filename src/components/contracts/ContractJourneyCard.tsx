@@ -124,7 +124,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                 {(() => {
                   const isFirst = meeting.meetingNumber === 1;
                   const prevMeeting = meetings.find(m => m.meetingNumber === meeting.meetingNumber - 1);
-                  const isPrevFinished = prevMeeting && ['realizada', 'concluído', 'cancelado', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status);
+                  const isPrevFinished = prevMeeting && ['realizada', 'concluído', 'cancelada', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status);
                   const isLocked = !isFirst && !isPrevFinished;
 
                   if (meeting.status === 'pendente') {
@@ -171,9 +171,20 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                         </Button>
                       </div>
                     );
+                  } else if (meeting.status === 'cancelada') {
+                    return (
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Badge variant="outline" className="h-8 bg-red-50 text-red-600 border-red-200 uppercase font-black text-[10px]">
+                          Cancelada
+                        </Badge>
+                        <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => onSchedule(meeting)}>
+                          Reagendar
+                        </Button>
+                      </div>
+                    );
                   } else {
                     return (
-                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
+                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5" onClick={(e) => { e.stopPropagation(); handleOpenDetail(meeting); }}>
                         <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
                       </Button>
                     );

@@ -58,7 +58,7 @@ export function useContractModuleMeetings(moduleId?: string) {
           .eq('meeting_number', (meeting.meetingNumber || 1) - 1)
           .single();
 
-        if (prevMeeting && !['realizada', 'concluído', 'cancelado', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status)) {
+        if (prevMeeting && !['realizada', 'concluído', 'cancelada', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status)) {
           throw new Error('O encontro anterior deve estar finalizado para agendar este.');
         }
       }
