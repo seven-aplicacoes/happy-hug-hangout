@@ -7,12 +7,11 @@ import type { TimelineEvent } from '@/types';
 export function useClienteHistorico(clientId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   const { data: historico, isLoading: queryLoading, error } = useQuery({
     queryKey: ['cliente-historico', clientId],
     queryFn: async () => {
-      if (!clientId) return [];
+      if (!clientId) return [] as TimelineEvent[];
       
       // Fetch timeline events
       const { data: timelineData, error: timelineError } = await supabase
@@ -42,26 +41,26 @@ export function useClienteHistorico(clientId?: string) {
 
       if (meetingsError) throw meetingsError;
 
-      const events = timelineData.map((e: any) => ({
+      const events: TimelineEvent[] = timelineData.map((e: any) => ({
         id: e.id,
         data: e.date,
         tipo: e.type as any,
         titulo: e.title,
         descricao: e.description,
-        ia_summary: e.ia_summary,
-        ia_status: e.ia_status,
-        fase: e.phase,
+        resumoIA: e.ia_summary,
+        statusResumo: e.ia_status,
+        faseRelacionada: e.phase,
         evidencias: e.evidence_urls || [],
         meeting_id: e.meeting_id,
         status: e.status,
       }));
 
-      const meetingEvents = meetingsData.map((m: any) => ({
+      const meetingEvents: TimelineEvent[] = (meetingsData || []).map((m: any) => ({
         id: `meeting-${m.id}`,
         data: m.meeting_date,
         tipo: 'reuniao' as const,
         titulo: m.title,
-        descricao: m.description,
+        descricao: m.description || '',
         meeting_id: m.id,
         status: m.status,
         consultant_name: m.profile?.full_name
@@ -75,7 +74,7 @@ export function useClienteHistorico(clientId?: string) {
       // Remove duplicates (if a meeting has both a timeline event and is in meetings query)
       const uniqueEvents = allEvents.filter((event, index, self) =>
         index === self.findIndex((t) => (
-          t.meeting_id && event.meeting_id ? t.meeting_id === event.meeting_id : t.id === event.id
+          (t.meeting_id && event.meeting_id && t.meeting_id === event.meeting_id) || (t.id === event.id)
         ))
       );
 
@@ -94,7 +93,7 @@ export function useClienteHistorico(clientId?: string) {
         date: evento.data || new Date().toISOString(),
         ia_summary: evento.resumoIA,
         ia_status: evento.statusResumo,
-        phase: (evento.faseRelacionada as any) || null,
+        phase: evento.faseRelacionada || null,
         evidence_urls: evento.evidencias,
       };
 
