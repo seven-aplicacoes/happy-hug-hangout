@@ -58,9 +58,9 @@ export const INTEGRACOES: Integracao[] = [
 
 export const labelStatus: Record<StatusIntegracao, string> = {
   conectado: 'Conectado',
-  disponivel: 'Disponível',
-  em_breve: 'Em breve',
-  beta: 'Beta',
+  disponivel: 'Configuração',
+  em_breve: 'Configuração',
+  beta: 'Configuração',
 };
 
 export const labelCategoria: Record<CategoriaIntegracao, string> = {
