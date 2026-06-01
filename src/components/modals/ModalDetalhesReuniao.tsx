@@ -251,7 +251,13 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
   const updateStatus = async (newStatus: Reuniao['status'], reason?: string) => {
     if (!reuniao) return;
+    if (!canManageMeeting) {
+      toast({ title: 'Acesso negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+      return;
+    }
     setSubmitting(true);
+    console.log(`[Meeting Action] Update status to: ${newStatus}`, { meetingId: reuniao.id, reason });
+
     try {
       const payload: any = { status: newStatus, updated_at: new Date().toISOString() };
       
@@ -294,6 +300,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         } as any);
       }
 
+      console.log('[Meeting Status Update] Payload:', payload);
       const { error } = await supabase
         .from('meetings')
         .update(payload)
@@ -326,10 +333,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       }
 
       toast({ title: 'Sucesso', description: `Status atualizado para ${newStatus}.` });
+      
+      // Invalidations
+      queryClient.invalidateQueries({ queryKey: ['reunioes'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-summary', reuniao.clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['cliente-historico', reuniao.clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
+      
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err) {
-      console.error('Error updating status:', err);
+      console.error('[Meeting Status Update] Error:', err);
       toast({ title: 'Erro', description: 'Não foi possível atualizar o status.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
