@@ -96,8 +96,13 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
       toast({ title: "Agendado!", description: "Seu encontro foi agendado com sucesso." });
       onClose();
     } catch (error: any) {
-      console.error(error);
-      toast({ title: "Erro", description: "Não foi possível realizar o agendamento.", variant: "destructive" });
+      console.error('[Portal Agendamento Error]:', error);
+      const errorMessage = error.message || error.details || "Não foi possível realizar o agendamento.";
+      toast({ 
+        title: "Erro ao agendar", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setIsSubmitting(false);
     }
