@@ -2,15 +2,27 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS"
+};
 
 serve(async (req) => {
+  console.log("create-google-meet-meeting chamada");
+  console.log("Method:", req.method);
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
+  const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+
+  if (!supabaseUrl) throw new Error("Variável SUPABASE_URL não configurada");
+  if (!supabaseKey) throw new Error("Variável SUPABASE_SERVICE_ROLE_KEY não configurada");
+  if (!clientId) throw new Error("Variável GOOGLE_CLIENT_ID não configurada");
+  if (!clientSecret) throw new Error("Variável GOOGLE_CLIENT_SECRET não configurada");
+
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   let meetingId: string | null = null;
@@ -18,27 +30,19 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    meetingId = body.meetingId;
+    console.log("Payload recebido:", body);
+    meetingId = body.meetingId || body.meeting_id; // Suporte a ambos os formatos
     action = body.action || 'create';
 
-    if (action === 'test_connection') {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) throw new Error("Unauthorized");
-      const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      if (userError || !user) throw new Error("User not found");
-
-      const { data: connection } = await supabase.from('google_connections').select('*').eq('user_id', user.id).single();
-      if (!connection) return new Response(JSON.stringify({ success: false, error: "Google not connected" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      
-      return new Response(JSON.stringify({ 
-        success: true, 
-        email: connection.google_email,
-        scopes: connection.scopes,
-        hasRefreshToken: !!connection.refresh_token 
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!meetingId) {
+       return new Response(JSON.stringify({
+        success: false,
+        error: "meeting_id é obrigatório"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
-
-    if (!meetingId) throw new Error("Missing meetingId");
 
     const { data: meeting, error: meetingError } = await supabase
       .from('meetings')
@@ -46,10 +50,12 @@ serve(async (req) => {
       .eq('id', meetingId)
       .single();
 
-    if (meetingError || !meeting) throw new Error("Meeting not found");
+    if (meetingError || !meeting) throw new Error(`Reunião ${meetingId} não encontrada`);
+    if (meeting.status === 'cancelada') throw new Error("Não é possível sincronizar uma reunião cancelada");
+    if (!meeting.meeting_date || !meeting.start_time) throw new Error("Reunião não possui data ou hora definida");
 
     const userId = meeting.consultant_id;
-    if (!userId) throw new Error("Meeting has no consultant assigned");
+    if (!userId) throw new Error("Reunião não possui consultor atribuído");
 
     // Get connection
     let { data: connection, error: connError } = await supabase
@@ -58,25 +64,26 @@ serve(async (req) => {
       .eq('user_id', userId)
       .single();
 
-    if (connError || !connection) throw new Error("Google connection not found for this consultant");
+    if (connError || !connection) throw new Error("Conexão Google não encontrada para este consultor");
+    if (!connection.refresh_token) throw new Error("Refresh token ausente. Peça reconexão da conta Google.");
 
     // Check if token expired (or about to expire in 5 min)
     const expiresAt = new Date(connection.expires_at).getTime();
     if (expiresAt <= Date.now() + 300000) {
-      console.log("Token expired or expiring soon, refreshing...");
+      console.log("Token expirado ou expirando em breve, renovando...");
       const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
-          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+          client_id: clientId,
+          client_secret: clientSecret,
           refresh_token: connection.refresh_token,
           grant_type: 'refresh_token',
         }),
       });
 
       const tokens = await refreshResponse.json();
-      if (!refreshResponse.ok) throw new Error("Failed to refresh Google token: " + (tokens.error_description || tokens.error));
+      if (!refreshResponse.ok) throw new Error("Falha ao renovar token Google: " + (tokens.error_description || tokens.error));
       
       const updates = {
         access_token: tokens.access_token,
@@ -85,6 +92,7 @@ serve(async (req) => {
       };
       await supabase.from('google_connections').update(updates).eq('user_id', userId);
       connection.access_token = tokens.access_token;
+      console.log("Token renovado com sucesso");
     }
 
     const accessToken = connection.access_token;
@@ -108,11 +116,11 @@ serve(async (req) => {
         summary: meeting.title || 'Reunião SEVEN',
         description: meeting.description || 'Agendado via Sistema SEVEN',
         start: {
-          dateTime: startTimeISO,
+          dateTime: startDate.toISOString().replace(/\.\d+Z$/, '-03:00'),
           timeZone: 'America/Fortaleza',
         },
         end: {
-          dateTime: endDate.toISOString().replace(/\.\d+Z$/, '-03:00'), // Ensure correct format for Fortaleza
+          dateTime: endDate.toISOString().replace(/\.\d+Z$/, '-03:00'),
           timeZone: 'America/Fortaleza',
         },
         conferenceData: {
@@ -124,18 +132,15 @@ serve(async (req) => {
         attendees,
       };
 
-      // Fix start date format too
-      eventBody.start.dateTime = startDate.toISOString().replace(/\.\d+Z$/, '-03:00');
-
       let url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1';
       let method = 'POST';
 
       if (meeting.google_event_id) {
         url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${meeting.google_event_id}?conferenceDataVersion=1`;
-        method = 'PATCH'; // Use PATCH for updates to avoid overwriting fields we don't send
+        method = 'PATCH';
       }
 
-      console.log(`Sending ${method} request to Google Calendar for meeting ${meetingId}`);
+      console.log(`Enviando ${method} para Google Calendar:`, url);
       
       const response = await fetch(url, {
         method,
@@ -147,6 +152,7 @@ serve(async (req) => {
       });
 
       const event = await response.json();
+      console.log("Resposta Google Calendar:", event);
       
       // Log interaction
       await supabase.from('meeting_sync_logs').insert({
@@ -160,7 +166,7 @@ serve(async (req) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Google API Error (${response.status}): ${event.error?.message || JSON.stringify(event)}`);
+        throw new Error(`Erro API Google (${response.status}): ${event.error?.message || JSON.stringify(event)}`);
       }
 
       const meetUrl = event.hangoutLink || event.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video')?.uri;
@@ -182,7 +188,7 @@ serve(async (req) => {
 
     if (action === 'delete' || action === 'cancel') {
       if (!meeting.google_event_id) {
-         return new Response(JSON.stringify({ success: true, message: "No event to delete" }), {
+         return new Response(JSON.stringify({ success: true, message: "Sem evento para deletar" }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
@@ -192,7 +198,6 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      // Log interaction
       await supabase.from('meeting_sync_logs').insert({
         meeting_id: meetingId,
         action: 'google_cancel',
@@ -203,7 +208,7 @@ serve(async (req) => {
 
       if (!response.ok && response.status !== 404) {
         const error = await response.json();
-        throw new Error(`Google API Error (${response.status}): ${error.error?.message || "Failed to delete"}`);
+        throw new Error(`Erro API Google (${response.status}): ${error.error?.message || "Falha ao deletar"}`);
       }
 
       await supabase.from('meetings').update({
@@ -216,23 +221,27 @@ serve(async (req) => {
       });
     }
 
-    throw new Error("Invalid action");
+    throw new Error("Ação inválida");
 
-  } catch (err: any) {
-    console.error("Google Function Error:", err);
+  } catch (error: any) {
+    console.error("EDGE_FUNCTION_ERROR", error);
     
     if (meetingId) {
       await supabase.from('meetings').update({
         calendar_sync_status: 'error',
-        calendar_sync_error: err.message,
+        calendar_sync_error: error.message,
         sync_status: 'error',
-        sync_error: err.message
+        sync_error: error.message
       }).eq('id', meetingId);
     }
 
-    return new Response(JSON.stringify({ error: err.message, success: false }), {
-      status: 200, // Keep 200 so the client can handle the error object gracefully
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    return new Response(JSON.stringify({
+      success: false,
+      error: error?.message || "Erro desconhecido na Edge Function",
+      stack: error?.stack || null
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 })
