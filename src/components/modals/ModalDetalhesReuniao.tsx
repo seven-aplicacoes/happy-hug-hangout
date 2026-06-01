@@ -390,19 +390,23 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     }
   };
 
-  const { testMicrosoftConnection } = useReunioes();
+  const { testMicrosoftConnection, testMicrosoftCalendar } = useReunioes();
   const [testingConnection, setTestingConnection] = useState(false);
+  const [testingCalendar, setTestingCalendar] = useState(false);
 
   const handleTestConnection = async () => {
     setTestingConnection(true);
     try {
       const result = await testMicrosoftConnection();
       if (result.success) {
-        toast({ title: "Conexão OK", description: "Conseguimos nos comunicar com o Microsoft Graph." });
+        toast({ 
+          title: "Conexão OK", 
+          description: `Conectado via ${result.connector}. Usuário: ${result.details ? JSON.parse(result.details).displayName : 'OK'}` 
+        });
       } else {
         toast({ 
-          title: "Erro de Conexão", 
-          description: `Status ${result.status}: ${result.details}`,
+          title: result.status === 403 ? "Permissão Negada" : "Erro de Conexão", 
+          description: result.status === 403 ? "O conector está logado, mas não tem permissão de leitura." : `Status ${result.status}: ${result.details}`,
           variant: "destructive",
           duration: 10000
         });
@@ -411,6 +415,30 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       toast({ title: "Erro na Function", description: err.message, variant: "destructive" });
     } finally {
       setTestingConnection(false);
+    }
+  };
+
+  const handleTestCalendar = async () => {
+    setTestingCalendar(true);
+    try {
+      const result = await testMicrosoftCalendar();
+      if (result.success) {
+        toast({ title: "Calendário OK", description: "Permissões de leitura e listagem de eventos confirmadas." });
+      } else {
+        const is403 = result.status === 403;
+        toast({ 
+          title: is403 ? "Falta Permissão Calendars.ReadWrite" : "Erro no Calendário", 
+          description: is403 
+            ? "O login funciona, mas o aplicativo não tem permissão para gerenciar seu calendário. Reconecte o Microsoft Outlook/Calendar com permissão total."
+            : `Erro ao acessar calendário. Status ${result.status}`,
+          variant: "destructive",
+          duration: 10000
+        });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro no teste", description: err.message, variant: "destructive" });
+    } finally {
+      setTestingCalendar(false);
     }
   };
 

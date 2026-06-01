@@ -6,7 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const GATEWAY_URL = 'https://connector-gateway.lovable.dev/microsoft_teams'
+// O connector_id atual é microsoft_teams, mas para calendário o ideal é microsoft_outlook
+const CONNECTOR_ID = 'microsoft_teams'
+const GATEWAY_URL = `https://connector-gateway.lovable.dev/${CONNECTOR_ID}`
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -33,28 +35,61 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false, 
           error_code: 'MICROSOFT_TOKEN_MISSING',
-          message: 'Conector Microsoft não configurado corretamente. Verifique se o conector Microsoft Teams está ativo nas configurações do Lovable.' 
+          message: 'Conector Microsoft não configurado corretamente.',
+          details: 'Verifique se o conector Microsoft Teams está ativo nas configurações do Lovable.'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
 
-    // DIAGNOSTIC ACTION
+    const commonHeaders = {
+      'Authorization': `Bearer ${lovableApiKey}`,
+      'X-Connection-Api-Key': teamsApiKey,
+      'Content-Type': 'application/json',
+    };
+
+    // DIAGNOSTIC ACTIONS
     if (requestedAction === 'test_connection') {
       console.log("[TEAMS_SYNC_DIAGNOSTIC] Testing connection...");
-      const testHeaders = {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'X-Connection-Api-Key': teamsApiKey,
-      };
-      
-      const meResponse = await fetch(`${GATEWAY_URL}/me`, { headers: testHeaders });
+      const meResponse = await fetch(`${GATEWAY_URL}/me`, { headers: commonHeaders });
       const meData = await meResponse.text();
-      console.log("[TEAMS_SYNC_DIAGNOSTIC] GET /me status:", meResponse.status);
       
       return new Response(JSON.stringify({ 
         success: meResponse.ok,
         status: meResponse.status,
+        connector: CONNECTOR_ID,
+        endpoint: '/me',
         details: meData
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (requestedAction === 'test_calendar') {
+      console.log("[TEAMS_SYNC_DIAGNOSTIC] Testing calendar permissions...");
+      
+      // 1. Check /me
+      const meResp = await fetch(`${GATEWAY_URL}/me`, { headers: commonHeaders });
+      const meData = await meResp.json().catch(() => ({}));
+      
+      // 2. Check /me/calendar
+      const calResp = await fetch(`${GATEWAY_URL}/me/calendar`, { headers: commonHeaders });
+      const calData = await calResp.json().catch(() => ({}));
+      
+      // 3. Try to list events (top 1)
+      const eventsResp = await fetch(`${GATEWAY_URL}/me/events?$top=1`, { headers: commonHeaders });
+      const eventsData = await eventsResp.json().catch(() => ({}));
+
+      return new Response(JSON.stringify({
+        success: eventsResp.ok,
+        status: eventsResp.status,
+        connector: CONNECTOR_ID,
+        steps: [
+          { name: 'GET /me', status: meResp.status, ok: meResp.ok },
+          { name: 'GET /me/calendar', status: calResp.status, ok: calResp.ok },
+          { name: 'GET /me/events', status: eventsResp.status, ok: eventsResp.ok }
+        ],
+        me: meData,
+        calendar: calData,
+        error_details: eventsResp.status === 403 ? "Falta permissão Calendars.ReadWrite" : null
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -66,7 +101,7 @@ serve(async (req) => {
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // 1. Fetch meeting data
+    // Fetch meeting data
     const { data: meeting, error: meetingError } = await supabase
       .from('meetings')
       .select(`
@@ -78,71 +113,33 @@ serve(async (req) => {
       .single();
 
     if (meetingError || !meeting) {
-      console.error('[TEAMS_SYNC_ERROR] Meeting not found:', meetingError);
       return new Response(JSON.stringify({ 
         success: false, 
         error_code: 'MEETING_NOT_FOUND',
-        message: 'A reunião solicitada não existe no banco de dados.' 
+        message: 'A reunião solicitada não existe.' 
       }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-
-    console.log("[TEAMS_SYNC_MEETING_FOUND]", {
-      meetingId,
-      status: meeting.status,
-      startTime: meeting.start_time,
-      endTime: meeting.end_time,
-      clientId: meeting.client_id,
-      consultantId: meeting.consultant_id,
-      existingEventId: meeting.microsoft_event_id,
-      existingTeamsUrl: meeting.teams_join_url
-    });
 
     const clientEmail = meeting.client?.email;
     const clientName = meeting.client?.trade_name || meeting.client?.corporate_name;
     const consultantEmail = meeting.consultant?.email;
     const consultantName = meeting.consultant?.full_name;
 
-    console.log("[TEAMS_SYNC_CLIENT]", { clientId: meeting.client_id, clientName, hasClientEmail: !!clientEmail });
-    console.log("[TEAMS_SYNC_CONSULTANT]", { consultantId: meeting.consultant_id, consultantName, hasConsultantEmail: !!consultantEmail });
-
-    if (!clientEmail) {
+    if (!clientEmail || !consultantEmail) {
       return new Response(JSON.stringify({ 
         success: false, 
-        error_code: "CLIENT_EMAIL_MISSING",
-        message: "O cliente não possui e-mail cadastrado." 
-      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    if (!consultantEmail) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error_code: "CONSULTANT_EMAIL_MISSING",
-        message: "O consultor responsável não possui e-mail cadastrado." 
-      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    if (!meeting.meeting_date || !meeting.start_time) {
-       return new Response(JSON.stringify({ 
-        success: false, 
-        error_code: "INVALID_START_END_TIME",
-        message: "A reunião precisa de data e hora de início." 
+        error_code: "EMAIL_MISSING",
+        message: "E-mail do cliente ou consultor ausente." 
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Build Payload
     const timezone = meeting.timezone || 'America/Fortaleza';
     const startDateTime = `${meeting.meeting_date}T${meeting.start_time}`;
-    
-    // End time calculation
     const [hours, minutes] = meeting.start_time.split(':').map(Number);
     const endDate = new Date(meeting.meeting_date);
     endDate.setHours(hours, minutes + (meeting.duration || 60));
     const endDateTime = `${meeting.meeting_date}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
-
-    const attendees = [
-      { emailAddress: { address: clientEmail, name: clientName }, type: 'required' },
-      { emailAddress: { address: consultantEmail, name: consultantName }, type: 'required' }
-    ];
 
     const action = requestedAction || (meeting.microsoft_event_id ? 'update' : 'create');
     let graphUrl = `${GATEWAY_URL}/me/events`;
@@ -164,39 +161,25 @@ serve(async (req) => {
         start: { dateTime: startDateTime, timeZone: timezone },
         end: { dateTime: endDateTime, timeZone: timezone },
         location: { displayName: 'Microsoft Teams' },
-        attendees,
+        attendees: [
+          { emailAddress: { address: clientEmail, name: clientName }, type: 'required' },
+          { emailAddress: { address: consultantEmail, name: consultantName }, type: 'required' }
+        ],
         isOnlineMeeting: true,
         onlineMeetingProvider: 'teamsForBusiness'
       };
     } else if (action === 'cancel' || action === 'delete') {
       if (!meeting.microsoft_event_id) {
-        return new Response(JSON.stringify({ success: true, message: 'Nenhum evento Microsoft para cancelar.' }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       }
       graphUrl = `${GATEWAY_URL}/me/events/${meeting.microsoft_event_id}/cancel`;
       method = 'POST';
       body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
     }
 
-    console.log("[TEAMS_SYNC_GRAPH_ENDPOINT]", graphUrl);
-    console.log("[TEAMS_SYNC_GRAPH_PAYLOAD]", JSON.stringify(body, null, 2));
-
-    const headers = {
-      'Authorization': `Bearer ${lovableApiKey}`,
-      'X-Connection-Api-Key': teamsApiKey,
-      'Content-Type': 'application/json',
-    };
-
-    // Log start attempt
-    const { data: logEntry } = await supabase.from('meeting_sync_logs').insert({
-      meeting_id: meetingId,
-      action: action,
-      request_payload: body,
-      provider: 'microsoft_graph'
-    }).select().single();
-
     const graphResponse = await fetch(graphUrl, {
       method,
-      headers,
+      headers: commonHeaders,
       body: body ? JSON.stringify(body) : undefined
     });
 
@@ -205,38 +188,18 @@ serve(async (req) => {
     let responseData: any = {};
     try { responseData = JSON.parse(responseText); } catch (e) { responseData = { raw: responseText }; }
 
-    console.log("[TEAMS_SYNC_GRAPH_STATUS]", responseStatus);
-    console.log("[TEAMS_SYNC_GRAPH_RESPONSE]", JSON.stringify(responseData, null, 2));
-
     const success = graphResponse.ok || responseStatus === 204;
-
-    // Update log
-    if (logEntry) {
-      await supabase.from('meeting_sync_logs').update({
-        response_payload: responseData,
-        status_code: responseStatus,
-        success: success,
-        error_message: success ? null : (responseData.error?.message || responseText)
-      }).eq('id', logEntry.id);
-    }
 
     if (success) {
       const updates: any = {
         microsoft_last_sync_at: new Date().toISOString(),
         microsoft_sync_status: 'success',
         microsoft_sync_error: null,
-        microsoft_graph_response: responseData
       };
 
       if (action === 'create' || action === 'update') {
         if (responseData.id) updates.microsoft_event_id = responseData.id;
-        if (responseData.webLink) updates.microsoft_event_web_link = responseData.webLink;
-        
-        const joinUrl = responseData.onlineMeeting?.joinUrl || 
-                        responseData.onlineMeetingUrl || 
-                        responseData.joinUrl || 
-                        responseData.joinWebUrl;
-        
+        const joinUrl = responseData.onlineMeeting?.joinUrl || responseData.onlineMeetingUrl || responseData.joinUrl || responseData.joinWebUrl;
         if (joinUrl) {
           updates.teams_join_url = joinUrl;
           updates.meeting_url = joinUrl;
@@ -244,42 +207,30 @@ serve(async (req) => {
         }
       }
 
-      const { error: updateError } = await supabase.from('meetings').update(updates).eq('id', meetingId);
-      console.log("[TEAMS_SYNC_SAVE_RESULT]", updateError || "Sucesso");
-
-      return new Response(JSON.stringify({ 
-        success: true, 
-        teamsJoinUrl: updates.teams_join_url, 
-        microsoftEventId: updates.microsoft_event_id 
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      await supabase.from('meetings').update(updates).eq('id', meetingId);
+      return new Response(JSON.stringify({ success: true, teamsJoinUrl: updates.teams_join_url }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     } else {
-      let errorCode = "MICROSOFT_GRAPH_ERROR";
-      if (responseStatus === 403) errorCode = "MICROSOFT_PERMISSION_DENIED";
-      if (responseStatus === 401) errorCode = "MICROSOFT_TOKEN_INVALID";
-
-      await supabase.from('meetings').update({
-        microsoft_sync_status: 'error',
-        microsoft_sync_error: responseData.error?.message || responseText,
-        microsoft_last_sync_at: new Date().toISOString()
-      }).eq('id', meetingId);
+      if (responseStatus === 403) {
+        return new Response(JSON.stringify({
+          success: false,
+          error_code: "MICROSOFT_PERMISSION_DENIED",
+          message: "A conta Microsoft conectada não possui permissão para criar eventos no calendário.",
+          details: "É necessário conectar uma conta Microsoft com permissão Calendars.ReadWrite ou usar o conector Microsoft Outlook/Calendar.",
+          connector: CONNECTOR_ID,
+          status: 403
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 });
+      }
 
       return new Response(JSON.stringify({ 
         success: false, 
-        error_code: errorCode,
-        message: responseData.error?.message || 'Erro na sincronização com Microsoft Graph.',
-        details: responseData
+        error_code: "MICROSOFT_GRAPH_ERROR",
+        message: responseData.error?.message || 'Erro na sincronização.',
+        details: responseData,
+        status: responseStatus
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: responseStatus });
     }
 
   } catch (error) {
-    console.error("[TEAMS_SYNC_ERROR]", {
-      message: error.message,
-      stack: error.stack
-    });
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error_code: "INTERNAL_SERVER_ERROR",
-      message: error.message || 'Erro inesperado na Edge Function.' 
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+    return new Response(JSON.stringify({ success: false, message: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
   }
 })
