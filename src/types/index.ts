@@ -230,7 +230,7 @@ export interface Reuniao {
   meetingUrl?: string;
   location?: string;
   locationUrl?: string;
-  meetingLinkProvider?: 'teams' | 'manual';
+  meetingLinkProvider?: 'teams' | 'manual' | 'teams_manual';
   scheduledBy?: string;
   contractModuleMeetingId?: string;
   microsoftEventId?: string;

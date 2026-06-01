@@ -174,7 +174,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         location: r.location,
         locationUrl: r.location_url,
         teamsJoinUrl: r.teams_join_url,
-        meetingLinkProvider: r.meeting_link_provider as 'manual' | 'teams',
+        meetingLinkProvider: r.meeting_link_provider as 'manual' | 'teams' | 'teams_manual',
         microsoftEventId: r.microsoft_event_id,
         participantes: Array.isArray(r.participants) ? (r.participants as unknown as string[]) : [],
         createdAt: r.created_at,
@@ -346,7 +346,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       const endDateTime = `${reuniao.meetingDate}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
 
 
-      const response = await supabase.functions.invoke('create-teams-meeting', {
+      const { data, error: invokeError } = await supabase.functions.invoke('create-teams-meeting', {
         body: {
           action: isUpdate ? 'update' : 'create',
           microsoftEventId: reuniao.microsoftEventId,
@@ -361,12 +361,39 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         }
       });
 
-      if (response.data?.teamsJoinUrl) {
+      // Handle the new structured error format
+      if (invokeError || (data && !data.success)) {
+        const errorDetails = data?.details || invokeError?.message || 'Erro desconhecido';
+        const errorMsg = data?.error || 'Não foi possível gerar o link do Teams';
+        
+        await supabase
+          .from('meetings')
+          .update({
+            teams_creation_status: 'failed',
+            teams_creation_error: `${errorMsg} (${errorDetails})`,
+            updated_at: new Date().toISOString(),
+            updated_by: user?.id
+          })
+          .eq('id', reuniao.id);
+
+        await supabase.from('meeting_status_history').insert({
+          meeting_id: reuniao.id,
+          action: 'teams_link_generation_failed',
+          new_status: reuniao.status,
+          changed_by: user?.id,
+          change_reason: `Falha ao gerar link do Teams: ${errorMsg}. Detalhes: ${errorDetails}`,
+          payload: data // Store the full error response for debugging
+        });
+
+        throw new Error(errorMsg);
+      }
+
+      if (data?.teamsJoinUrl) {
         const updatePayload = {
-          teams_join_url: response.data.teamsJoinUrl,
-          location_url: response.data.teamsJoinUrl,
-          meeting_url: response.data.teamsJoinUrl,
-          microsoft_event_id: response.data.microsoftEventId,
+          teams_join_url: data.teamsJoinUrl,
+          location_url: data.teamsJoinUrl,
+          meeting_url: data.teamsJoinUrl,
+          microsoft_event_id: data.microsoftEventId,
           meeting_link_provider: 'teams',
           teams_creation_status: 'created',
           teams_creation_error: null,
@@ -374,12 +401,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           updated_by: user?.id
         };
 
-        const { error } = await supabase
+        const { error: dbError } = await supabase
           .from('meetings')
           .update(updatePayload)
           .eq('id', reuniao.id);
 
-        if (error) throw error;
+        if (dbError) throw dbError;
 
         await supabase.from('meeting_status_history').insert({
           meeting_id: reuniao.id,
@@ -392,27 +419,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
         fetchDetails();
       } else {
-        const errorMsg = response.error || response.data?.error || 'Não foi possível gerar o link do Teams';
-        
-        await supabase
-          .from('meetings')
-          .update({
-            teams_creation_status: 'failed',
-            teams_creation_error: errorMsg,
-            updated_at: new Date().toISOString(),
-            updated_by: user?.id
-          })
-          .eq('id', reuniao.id);
-
-        await supabase.from('meeting_status_history').insert({
-          meeting_id: reuniao.id,
-          action: 'teams_link_generation_failed',
-          new_status: reuniao.status,
-          changed_by: user?.id,
-          change_reason: `Falha ao gerar link do Teams: ${errorMsg}`
-        });
-
-        throw new Error(errorMsg);
+        throw new Error('Link do Teams não retornado na resposta.');
       }
     } catch (err: any) {
       console.error('[Teams] Falha ao gerar link:', err);
@@ -437,7 +444,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     setSubmitting(true);
     try {
       const isTeams = manualUrl.toLowerCase().includes('teams.microsoft.com');
-      const provider = isTeams ? 'teams' : 'manual';
+      const provider = isTeams ? 'teams_manual' : 'manual';
 
       const { error } = await supabase
         .from('meetings')
@@ -525,7 +532,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       open={open} 
       onClose={onClose} 
       titulo={reuniao.title} 
-      size="lg"
+      size="2xl"
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
@@ -663,7 +670,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 </div>
                 <div className="flex flex-col col-span-2 space-y-3 pt-2">
                   <span className="text-[10px] font-black uppercase text-muted-foreground/60 flex items-center gap-2">
-                    {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
+                    {reuniao.meetingLinkProvider?.includes('teams') ? <Video className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
                     Link da Reunião
                   </span>
                   <div className="flex flex-col gap-2">
@@ -671,11 +678,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 p-3 rounded-xl">
                           <div className="bg-blue-600 p-2 rounded-lg shrink-0">
-                            {reuniao.meetingLinkProvider === 'teams' ? <Video className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
+                            {reuniao.meetingLinkProvider?.includes('teams') ? <Video className="h-4 w-4 text-white" /> : <ExternalLink className="h-4 w-4 text-white" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[11px] font-bold text-blue-900">
-                              {reuniao.meetingLinkProvider === 'teams' ? 'Microsoft Teams' : 'Link Manual'}
+                              {reuniao.meetingLinkProvider?.includes('teams') ? 'Microsoft Teams' : 'Link Manual'}
                             </p>
                             <div className="flex items-center gap-2">
                               <p className="text-[10px] text-blue-700 truncate">{joinLink}</p>
@@ -835,7 +842,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               <h3 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                 <History className="h-4 w-4" /> Histórico
               </h3>
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 pr-2">
                 {history.length === 0 ? (
                   <p className="text-[10px] text-muted-foreground text-center py-4">Nenhuma alteração registrada.</p>
                 ) : (

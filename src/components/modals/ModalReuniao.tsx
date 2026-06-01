@@ -57,7 +57,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
-  const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual'>('teams');
+  const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual' | 'teams_manual'>('teams');
   const [manualMeetingUrl, setManualMeetingUrl] = useState('');
   const [isGeneratingTeamsLink, setIsGeneratingTeamsLink] = useState(false);
   const [teamsConnected, setTeamsConnected] = useState(false);
@@ -306,7 +306,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             }
           });
 
-          if (response.data?.teamsJoinUrl) {
+          if (response.data?.success && response.data?.teamsJoinUrl) {
             payload.meetingUrl = response.data.teamsJoinUrl;
             payload.location = response.data.teamsJoinUrl;
             payload.locationUrl = response.data.teamsJoinUrl;
@@ -321,8 +321,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               : 'Link do Microsoft Teams gerado com sucesso.';
 
           } else {
-            const errorMsg = response.error || response.data?.error || 'Link not generated';
-            throw new Error(errorMsg);
+            const errorMsg = response.data?.error || response.error || 'Não foi possível gerar o link do Teams';
+            const errorDetails = response.data?.details || '';
+            throw new Error(`${errorMsg}${errorDetails ? ` (${errorDetails})` : ''}`);
           }
         } catch (teamsError: any) {
           console.error('[Teams] Falha ao gerar link:', teamsError);
