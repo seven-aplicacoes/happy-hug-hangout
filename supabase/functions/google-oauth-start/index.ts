@@ -9,8 +9,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    const { redirect_uri } = await req.json().catch(() => ({}));
     const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
-    const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI');
+    const REDIRECT_URI = redirect_uri || Deno.env.get('GOOGLE_REDIRECT_URI');
 
     if (!GOOGLE_CLIENT_ID || !REDIRECT_URI) {
       throw new Error("GOOGLE_CLIENT_ID or GOOGLE_REDIRECT_URI missing");

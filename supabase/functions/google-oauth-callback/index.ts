@@ -10,12 +10,12 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { code } = await req.json();
+    const { code, redirect_uri } = await req.json();
     if (!code) throw new Error("Missing code");
 
     const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
     const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
-    const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI');
+    const REDIRECT_URI = redirect_uri || Deno.env.get('GOOGLE_REDIRECT_URI');
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !REDIRECT_URI) {
       throw new Error("Google OAuth credentials missing");

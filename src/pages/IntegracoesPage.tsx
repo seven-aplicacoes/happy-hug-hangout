@@ -165,7 +165,9 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
     if (integ.id === 'google_calendar') {
       setLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke('google-oauth-start');
+        const { data, error } = await supabase.functions.invoke('google-oauth-start', {
+          body: { redirect_uri: window.location.origin + window.location.pathname }
+        });
         if (error) throw error;
         if (data?.url) {
           window.location.href = data.url;
@@ -279,7 +281,10 @@ export default function IntegracoesPage() {
         toast({ title: 'Processando conexão...', description: 'Aguarde um momento.' });
         try {
           const { error } = await supabase.functions.invoke('google-oauth-callback', {
-            body: { code }
+            body: { 
+              code,
+              redirect_uri: window.location.origin + window.location.pathname
+            }
           });
           if (error) throw error;
           toast({ title: 'Conectado com sucesso!', description: 'Sua conta Google foi vinculada.' });
