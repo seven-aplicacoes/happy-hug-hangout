@@ -520,10 +520,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                 </p>
               )}
             </div>
-            </div>
           </div>
         </div>
       </div>
+    </BaseModal>
     </BaseModal>
   );
 };
