@@ -56,6 +56,7 @@ import { Accordion } from '@/components/ui/accordion';
 
 
 export default function PortalClientePage() {
+  const { toast } = useToast();
   const { clienteSession, loginCliente, logoutCliente } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
