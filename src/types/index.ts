@@ -252,6 +252,8 @@ export interface ContractModuleMeeting {
   completedAt?: string;
   teamsJoinUrl?: string;
   location?: string;
+  locationUrl?: string;
+  meetingLinkProvider?: 'teams' | 'manual';
   microsoftEventId?: string;
   orderIndex: number;
   consultantName?: string;
