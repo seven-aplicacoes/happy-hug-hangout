@@ -86,18 +86,32 @@ serve(async (req) => {
       const eventsResp = await fetch(`${GATEWAY_URL}/me/events?$top=1`, { headers: commonHeaders });
       const eventsData = await eventsResp.json().catch(() => ({}));
 
+      // 4. Check /me/onlineMeetings
+      const omResp = await fetch(`${GATEWAY_URL}/me/onlineMeetings`, { 
+        method: 'POST',
+        headers: commonHeaders,
+        body: JSON.stringify({
+          startDateTime: new Date().toISOString(),
+          endDateTime: new Date(Date.now() + 3600000).toISOString(),
+          subject: 'Test Meeting'
+        })
+      });
+      const omData = await omResp.json().catch(() => ({}));
+
       return new Response(JSON.stringify({
-        success: eventsResp.ok,
+        success: eventsResp.ok || omResp.ok,
         status: eventsResp.status,
         connector: CONNECTOR_ID,
         steps: [
           { name: 'GET /me', status: meResp.status, ok: meResp.ok },
           { name: 'GET /me/calendar', status: calResp.status, ok: calResp.ok },
-          { name: 'GET /me/events', status: eventsResp.status, ok: eventsResp.ok }
+          { name: 'GET /me/events', status: eventsResp.status, ok: eventsResp.ok },
+          { name: 'POST /me/onlineMeetings', status: omResp.status, ok: omResp.ok }
         ],
         me: meData,
         calendar: calData,
-        error_details: eventsResp.status === 403 ? "Falta permissão Calendars.ReadWrite" : null
+        onlineMeeting: omData,
+        error_details: (eventsResp.status === 403 || omResp.status === 403) ? "Falta permissão Calendars.ReadWrite ou OnlineMeetings.ReadWrite" : null
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
