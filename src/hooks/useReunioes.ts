@@ -210,6 +210,11 @@ export function useReunioes() {
             location_url: reuniao.locationUrl || newMeeting.location_url
           } as any)
           .eq('id', reuniao.contractModuleMeetingId);
+
+        // Synchronize meetings count and placeholders after scheduling
+        await supabase.rpc('sync_contract_module_meetings_manual', { 
+          phase_id: reuniao.contractProductPhaseId 
+        });
       }
 
       return data;
