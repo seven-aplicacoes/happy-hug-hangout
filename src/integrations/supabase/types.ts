@@ -1818,6 +1818,42 @@ export type Database = {
           },
         ]
       }
+      google_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string | null
+          google_email: string | null
+          id: string
+          refresh_token: string | null
+          scopes: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at?: string | null
+          google_email?: string | null
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string | null
+          google_email?: string | null
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ia_insights: {
         Row: {
           client_id: string | null
@@ -2620,6 +2656,8 @@ export type Database = {
       meetings: {
         Row: {
           agenda: string | null
+          calendar_sync_error: string | null
+          calendar_sync_status: string | null
           calendly_cancel_url: string | null
           calendly_event_type_uri: string | null
           calendly_event_uri: string | null
@@ -2652,9 +2690,11 @@ export type Database = {
           external_payload: Json | null
           external_provider: string | null
           external_reschedule_url: string | null
+          google_event_id: string | null
           id: string
           location: string | null
           location_url: string | null
+          meet_join_url: string | null
           meeting_date: string
           meeting_link_provider: string | null
           meeting_minutes: string | null
@@ -2687,6 +2727,8 @@ export type Database = {
         }
         Insert: {
           agenda?: string | null
+          calendar_sync_error?: string | null
+          calendar_sync_status?: string | null
           calendly_cancel_url?: string | null
           calendly_event_type_uri?: string | null
           calendly_event_uri?: string | null
@@ -2719,9 +2761,11 @@ export type Database = {
           external_payload?: Json | null
           external_provider?: string | null
           external_reschedule_url?: string | null
+          google_event_id?: string | null
           id?: string
           location?: string | null
           location_url?: string | null
+          meet_join_url?: string | null
           meeting_date: string
           meeting_link_provider?: string | null
           meeting_minutes?: string | null
@@ -2754,6 +2798,8 @@ export type Database = {
         }
         Update: {
           agenda?: string | null
+          calendar_sync_error?: string | null
+          calendar_sync_status?: string | null
           calendly_cancel_url?: string | null
           calendly_event_type_uri?: string | null
           calendly_event_uri?: string | null
@@ -2786,9 +2832,11 @@ export type Database = {
           external_payload?: Json | null
           external_provider?: string | null
           external_reschedule_url?: string | null
+          google_event_id?: string | null
           id?: string
           location?: string | null
           location_url?: string | null
+          meet_join_url?: string | null
           meeting_date?: string
           meeting_link_provider?: string | null
           meeting_minutes?: string | null
