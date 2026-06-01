@@ -80,7 +80,10 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
       </div>
       {meetings.map((meeting) => (
         <div key={meeting.id} className="space-y-2">
-          <div className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4">
+            <div 
+              className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4 cursor-pointer"
+              onClick={() => handleOpenDetail(meeting)}
+            >
             <div className="flex items-center gap-4">
               <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
