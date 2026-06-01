@@ -409,7 +409,8 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       <ModalRegistrarAta
         open={registrarAtaOpen}
         onClose={() => { setRegistrarAtaOpen(false); fetchDetails(); }}
-        reuniaoId={reuniao.id}
+        meetingId={reuniao.id}
+        meetingTitle={reuniao.title}
       />
       
       {showManualLinkForm && (
