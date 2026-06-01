@@ -74,6 +74,8 @@ export function useContractModuleMeetings(moduleId?: string) {
           title: meeting.title,
           teams_join_url: meeting.teamsJoinUrl,
           microsoft_event_id: meeting.microsoftEventId,
+          meeting_link_provider: meeting.meetingLinkProvider,
+          location_url: meeting.locationUrl,
         })
         .eq('id', meeting.id)
         .select();
