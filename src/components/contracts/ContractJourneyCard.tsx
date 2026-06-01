@@ -30,7 +30,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
-// ADVANCING_STATUSES and canAdvanceToNextMeeting were removed to allow scheduling encounters out of order.
+function normalizeStatus(status: string) {
+  return String(status || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+const canAdvanceToNextMeeting = () => true;
 
 interface MeetingListProps {
   phase: any;
