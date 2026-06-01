@@ -245,7 +245,11 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('[microsoft-sync] Global error:', error);
-    return new Response(JSON.stringify({ success: false, error: error.message }), { headers: corsHeaders, status: 500 });
+    console.error('[microsoft-sync] [TEAMS_LINK_ERROR]', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error_code: "INTERNAL_SERVER_ERROR",
+      message: error.message || 'Erro inesperado na Edge Function.' 
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
   }
 })
