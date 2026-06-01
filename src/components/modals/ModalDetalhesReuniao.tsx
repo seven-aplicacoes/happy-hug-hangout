@@ -12,7 +12,7 @@ import {
   User, CheckCircle2, XCircle, AlertCircle, 
   History, Info, Pencil, Trash2, Loader2, Play, RefreshCcw,
   Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff, Link as LinkIcon,
-  Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon
+  Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon, Save
 } from 'lucide-react';
 
 
@@ -50,6 +50,8 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const [showManualLinkForm, setShowManualLinkForm] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const [manualProvider, setManualProvider] = useState<'teams' | 'manual'>('manual');
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [newDescription, setNewDescription] = useState('');
 
 
 
@@ -498,6 +500,44 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     }
   };
 
+  const handleUpdateDescription = async () => {
+    if (!reuniao) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('meetings')
+        .update({
+          description: newDescription,
+          updated_at: new Date().toISOString(),
+          updated_by: user?.id
+        })
+        .eq('id', reuniao.id);
+
+      if (error) throw error;
+
+      await supabase.from('meeting_status_history').insert({
+        meeting_id: reuniao.id,
+        action: 'description_updated',
+        new_status: reuniao.status,
+        changed_by: user?.id,
+        change_reason: 'Pauta/Descrição atualizada',
+        payload: {
+          previous_description: reuniao.description,
+          new_description: newDescription
+        }
+      });
+
+      toast({ title: 'Sucesso', description: 'Pauta atualizada com sucesso.' });
+      setIsEditingDescription(false);
+      fetchDetails();
+    } catch (err: any) {
+      console.error('Error updating description:', err);
+      toast({ title: 'Erro', description: 'Não foi possível atualizar a pauta.', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
 
   const getStatusBadge = (status: string) => {
@@ -774,12 +814,58 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <AlignLeft className="h-4 w-4" /> Pauta / Descrição
-              </h3>
-              <div className="bg-white border rounded-xl p-4 text-xs text-muted-foreground whitespace-pre-wrap min-h-[60px]">
-                {reuniao.description || 'Nenhuma pauta definida para este encontro.'}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                  <AlignLeft className="h-4 w-4" /> Pauta / Descrição
+                </h3>
+                {!isClient && !isEditingDescription && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setNewDescription(reuniao.description || '');
+                      setIsEditingDescription(true);
+                    }}
+                    className="h-7 text-[10px] font-bold uppercase gap-1"
+                  >
+                    <Pencil className="h-3 w-3" /> Editar pauta
+                  </Button>
+                )}
               </div>
+              
+              {isEditingDescription ? (
+                <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                  <Textarea 
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    placeholder="Descreva a pauta da reunião..."
+                    className="min-h-[120px] text-xs"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setIsEditingDescription(false)}
+                      disabled={submitting}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleUpdateDescription}
+                      disabled={submitting}
+                      className="gap-2"
+                    >
+                      {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                      Salvar pauta
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white border rounded-xl p-4 text-xs text-muted-foreground whitespace-pre-wrap min-h-[60px]">
+                  {reuniao.description || 'Nenhuma pauta definida para este encontro.'}
+                </div>
+              )}
             </div>
 
             {minutes && (minutes.visibleToClient || !isClient) && (
