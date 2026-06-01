@@ -15,7 +15,7 @@ import {
   Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon, Save
 } from 'lucide-react';
 
-
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Reuniao, MeetingStatusHistory, MeetingMinutes } from '@/types';
