@@ -158,8 +158,18 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDescription('');
     }
     setErrors({});
-    console.log("[ModalReuniao] Open/Data change", { consultorId, meetingDate, hasSlots: !!slots?.length });
-  }, [reuniao, initialData, open, googleConnected, isLoadingGoogleStatus, consultorId, meetingDate]);
+  }, [reuniao, initialData, open, googleConnected, isLoadingGoogleStatus]);
+
+  useEffect(() => {
+    if (open && slots) {
+      console.log("[ModalReuniao] Slots atualizados:", { 
+        count: slots.length, 
+        consultorId, 
+        meetingDate,
+        availCount: availabilities?.length 
+      });
+    }
+  }, [slots, open, consultorId, meetingDate, availabilities]);
 
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
