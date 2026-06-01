@@ -360,8 +360,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                   <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-amber-900">Google Calendar não conectado</p>
-                      <p className="text-[10px] text-amber-700/70">Conecte sua conta nas configurações ou use link manual.</p>
+                      <p className="text-sm font-bold text-amber-900">Google Calendar não configurado</p>
+                      <p className="text-[10px] text-amber-700/70">A conexão global ainda não foi realizada pelo administrador. Use link manual.</p>
                     </div>
                   </div>
                   <div className="space-y-2">
