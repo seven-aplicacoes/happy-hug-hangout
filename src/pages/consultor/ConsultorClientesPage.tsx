@@ -274,32 +274,6 @@ export default function ConsultorClientesPage() {
         )}
       </PageHeader>
 
-      {/* Visualizações da carteira */}
-      <section className="space-y-3">
-        <SectionHeader
-          overline="Visão geral"
-          titulo="Composição da Carteira"
-          descricao="Distribuição por etapa metodológica"
-        />
-        <div className="grid grid-cols-1 gap-4">
-          <Card>
-            <CardContent className="p-5">
-              <p className="ui-overline mb-3">Por etapa metodológica</p>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={distFases} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={42} paddingAngle={2}>
-                      {distFases.map((_, i) => <Cell key={i} fill={FASE_COLORS[i % FASE_COLORS.length]} />)}
-                    </Pie>
-                    <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
-                    <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: 11 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
 
 
       {/* Ordenação e filtros */}
