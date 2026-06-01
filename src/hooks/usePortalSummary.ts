@@ -16,11 +16,19 @@ export function usePortalSummary(clientId?: string) {
       if (mError) throw mError;
       
       const total = meetings.length;
-      const realized = meetings.filter(m => m.status === 'realizada').length;
+      const realizedStatuses = ['realizada', 'concluido', 'concluído', 'completed', 'done'];
+      const realized = meetings.filter(m => realizedStatuses.includes(m.status)).length;
       
-      const nextMeeting = meetings
-        .filter(m => m.status === 'agendado' && m.scheduled_at && new Date(m.scheduled_at) > new Date())
-        .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime())[0];
+      const upcomingMeetings = meetings
+        .filter(m => ['agendada', 'agendado', 'confirmado', 'em_andamento'].includes(m.status) && m.meeting_date)
+        .map(m => ({
+          ...m,
+          scheduled_at: `${m.meeting_date}T${m.start_time || '00:00'}:00`
+        }))
+        .filter(m => new Date(m.scheduled_at) > new Date())
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+
+      const nextMeeting = upcomingMeetings[0];
 
       return {
         totalMeetings: total,
