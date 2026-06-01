@@ -267,13 +267,21 @@ export default function PortalClientePage() {
           </div>
           <div className="space-y-4">
             {historico?.map(event => (
-              <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex gap-6">
+              <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex flex-col md:flex-row gap-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
+                if (event.tipo === 'reuniao' && event.meeting_id) {
+                  setSelectedMeeting({ id: event.meeting_id, title: event.titulo });
+                  setIsDetailOpen(true);
+                }
+              }}>
                 <div className="md:w-32 shrink-0 border-r border-neutral-100 pr-6">
                   <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">{event.tipo}</p>
                 </div>
                 <div className="flex-1 space-y-2">
-                  <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                    <StatusTag label={event.status || ''} />
+                  </div>
                   <p className="text-sm text-neutral-500 leading-relaxed">{event.descricao}</p>
                 </div>
               </Card>
