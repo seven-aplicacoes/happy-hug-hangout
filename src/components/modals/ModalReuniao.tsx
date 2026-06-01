@@ -206,6 +206,14 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const handleSave = async () => {
     if (!validate()) return;
     setIsSubmitting(true);
+    
+    console.group('[Meeting Schedule] Início do agendamento');
+    console.log('Dados do formulário:', { title, tipo, clienteId, consultorId, meetingDate, startTime, duracao, meetingLinkMode, manualMeetingUrl });
+    console.log('Teams automático ativo:', meetingLinkMode === 'teams');
+    console.log('Meeting ID existente:', reuniao?.id);
+    console.log('Teams conectado:', teamsConnected);
+    console.groupEnd();
+
     try {
       // 1. Availability validation (only if module/meeting is linked)
       if (contractModuleMeetingId && contractModuleMeetingId !== 'none' && availabilities && availabilities.length > 0) {
@@ -289,22 +297,31 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       // Teams Integration
       if (meetingLinkMode === 'teams' && status === 'agendada' && teamsConnected) {
         setIsGeneratingTeamsLink(true);
+        console.group('[Teams Integration] Chamando criação/atualização Teams');
+        const isUpdate = !!reuniao?.microsoftEventId;
+        const teamsPayload = {
+          action: isUpdate ? 'update' : 'create',
+          microsoftEventId: reuniao?.microsoftEventId,
+          title,
+          description,
+          startDateTime: `${meetingDate}T${startTime}:00`,
+          endDateTime: `${meetingDate}T${calculateEndTime(startTime, duracao)}:00`,
+          attendees: [
+            { email: selectedCliente?.email, name: selectedCliente?.nomeFantasia || selectedCliente?.razaoSocial },
+            { email: selectedConsultor?.email, name: selectedConsultor?.full_name }
+          ]
+        };
+        console.log('Payload enviado para Edge Function:', teamsPayload);
+        console.groupEnd();
+
         try {
-          const isUpdate = !!reuniao?.microsoftEventId;
           const response = await supabase.functions.invoke('create-teams-meeting', {
-            body: {
-              action: isUpdate ? 'update' : 'create',
-              microsoftEventId: reuniao?.microsoftEventId,
-              title,
-              description,
-              startDateTime: `${meetingDate}T${startTime}:00`,
-              endDateTime: `${meetingDate}T${calculateEndTime(startTime, duracao)}:00`,
-              attendees: [
-                { email: selectedCliente?.email, name: selectedCliente?.nomeFantasia || selectedCliente?.razaoSocial },
-                { email: selectedConsultor?.email, name: selectedConsultor?.full_name }
-              ]
-            }
+            body: teamsPayload
           });
+
+          console.group('[Teams Integration] Resposta da Edge Function');
+          console.log('Resposta completa:', response);
+          console.groupEnd();
 
           if (response.data?.success && response.data?.teamsJoinUrl) {
             payload.meetingUrl = response.data.teamsJoinUrl;
@@ -320,13 +337,19 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               ? 'Evento Microsoft Teams atualizado após reagendamento.' 
               : 'Link do Microsoft Teams gerado com sucesso.';
 
+            console.group('[Teams Integration] Link gerado com sucesso');
+            console.log('Join URL:', response.data.teamsJoinUrl);
+            console.log('Event ID:', response.data.microsoftEventId);
+            console.groupEnd();
+
           } else {
             const errorMsg = response.data?.error || response.error || 'Não foi possível gerar o link do Teams';
             const errorDetails = response.data?.details || '';
+            console.error('[Teams Integration] Erro ao gerar reunião Teams:', { errorMsg, errorDetails, data: response.data });
             throw new Error(`${errorMsg}${errorDetails ? ` (${errorDetails})` : ''}`);
           }
         } catch (teamsError: any) {
-          console.error('[Teams] Falha ao gerar link:', teamsError);
+          console.error('[Teams Integration] Erro capturado:', teamsError);
           const errorMsg = teamsError.message || String(teamsError);
           
           toast({
@@ -348,11 +371,15 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         (payload as any).historyReason = 'Link manual adicionado.';
       }
       
-      await upsertReuniao.mutateAsync(payload);
+      console.group('[Meeting Schedule] Salvando no Supabase');
+      console.log('Payload final:', payload);
+      const result = await upsertReuniao.mutateAsync(payload);
+      console.log('Resultado do Supabase:', result);
+      console.groupEnd();
 
       onClose();
     } catch (error) {
-      console.error(error);
+      console.error('[Meeting Schedule] Erro geral ao salvar:', error);
     } finally {
       setIsSubmitting(false);
     }
