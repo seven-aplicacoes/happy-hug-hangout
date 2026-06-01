@@ -19,6 +19,7 @@ export function useConsultantAvailability(filters: {
     staleTime: 0,
     refetchOnMount: true,
     queryFn: async () => {
+      console.log("[CLIENT_PORTAL_AVAILABILITY_START]", filters);
       let query = supabase.from('consultant_availability').select('*');
       
       if (filters.clientId) query = query.eq('client_id', filters.clientId);
@@ -35,7 +36,15 @@ export function useConsultantAvailability(filters: {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("[GET_AVAILABILITY_ERROR]", error);
+        throw error;
+      }
+      console.log("[CLIENT_PORTAL_AVAILABILITY_QUERY_RESULT]", {
+        consultantId: filters.consultantId,
+        availabilityCount: data?.length || 0,
+        availability: data
+      });
       return data as ConsultantAvailability[];
     },
     enabled: !!(filters.consultantId || filters.contractPhaseId),
@@ -62,7 +71,14 @@ export function useConsultantAvailability(filters: {
       }
 
       const { data, error } = await query.order('available_date').order('start_time');
-      if (error) throw error;
+      if (error) {
+        console.error("[GET_SLOTS_ERROR]", error);
+        throw error;
+      }
+      console.log("[CLIENT_PORTAL_GENERATED_SLOTS]", {
+        slotsCount: data?.length || 0,
+        slots: data
+      });
       return data as ConsultantAvailableSlot[];
     },
     enabled: !!(filters.consultantId || filters.contractPhaseId),
