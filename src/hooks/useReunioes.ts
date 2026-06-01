@@ -93,7 +93,7 @@ export function useReunioes() {
       };
 
       // Se o status mudar de cancelada para agendada, limpamos os campos de cancelamento
-      if (reuniao.status === 'agendada' || reuniao.status === 'agendado') {
+      if (reuniao.status === 'agendada') {
         payload.canceled_at = null;
         payload.canceled_by = null;
         payload.cancel_reason = null;
