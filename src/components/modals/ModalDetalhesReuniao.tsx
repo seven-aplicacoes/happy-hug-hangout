@@ -164,9 +164,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     if (open && reuniaoId) {
       fetchDetails();
       setIsCancelling(false);
+      setIsConfirmingCompletion(false);
       setCancelReason('');
     }
   }, [open, reuniaoId]);
+
+  // Refresh details when sub-modals close
+  useEffect(() => {
+    if (open && reuniaoId && !remarcarOpen && !registrarAtaOpen) {
+      fetchDetails();
+    }
+  }, [remarcarOpen, registrarAtaOpen]);
+
 
   const updateStatus = async (newStatus: Reuniao['status'], reason?: string) => {
     if (!reuniao) return;
