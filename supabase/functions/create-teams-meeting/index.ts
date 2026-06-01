@@ -19,7 +19,16 @@ serve(async (req) => {
     if (!lovableApiKey) throw new Error('LOVABLE_API_KEY is not configured')
     if (!teamsApiKey) throw new Error('MICROSOFT_TEAMS_API_KEY is not configured (Microsoft Teams connector not linked)')
 
-    const { title, description, startDateTime, endDateTime } = await req.json()
+    const body = await req.json()
+    const { 
+      action, // 'create', 'update', 'cancel'
+      title, 
+      description, 
+      startDateTime, 
+      endDateTime, 
+      attendees,
+      microsoftEventId 
+    } = body
 
     const headers = {
       'Authorization': `Bearer ${lovableApiKey}`,
@@ -27,47 +36,91 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     }
 
-    const response = await fetch(`${GATEWAY_URL}/v1.0/me/onlineMeetings`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        subject: title,
-        startDateTime,
-        endDateTime,
-      })
-    })
+    // Default to America/Fortaleza if not provided in ISO string
+    // Note: Graph API expects ISO strings. We'll pass them directly.
+    
+    let response;
+    let method = 'POST';
+    let url = `${GATEWAY_URL}/v1.0/me/events`;
 
-    const rawText = await response.text()
+    if (action === 'cancel' || action === 'delete') {
+      if (!microsoftEventId) throw new Error('microsoftEventId is required for cancellation');
+      response = await fetch(`${GATEWAY_URL}/v1.0/me/events/${microsoftEventId}`, {
+        method: 'DELETE',
+        headers
+      });
+      
+      if (response.status === 204) {
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    } else if (action === 'update' && microsoftEventId) {
+      method = 'PATCH';
+      url = `${GATEWAY_URL}/v1.0/me/events/${microsoftEventId}`;
+    }
+
+    if (action !== 'cancel' && action !== 'delete') {
+      const eventBody = {
+        subject: title,
+        body: {
+          contentType: 'HTML',
+          content: description,
+        },
+        start: {
+          dateTime: startDateTime,
+          timeZone: 'America/Fortaleza',
+        },
+        end: {
+          dateTime: endDateTime,
+          timeZone: 'America/Fortaleza',
+        },
+        location: {
+          displayName: 'Microsoft Teams Meeting',
+        },
+        attendees: (attendees || [])
+          .filter((a: any) => a.email)
+          .map((a: any) => ({
+            emailAddress: {
+              address: a.email,
+              name: a.name,
+            },
+            type: 'required',
+          })),
+        isOnlineMeeting: true,
+        onlineMeetingProvider: 'teamsForBusiness',
+      };
+
+      response = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(eventBody)
+      });
+    }
+
+    const rawText = await response!.text()
     let data: any = null
     try {
       data = rawText ? JSON.parse(rawText) : null
     } catch {
-      // Non-JSON response (e.g. "Not Found" from gateway)
-      console.error('Non-JSON response from gateway:', response.status, rawText)
-      throw new Error(`Gateway returned ${response.status}: ${rawText.slice(0, 200)}`)
+      console.error('Non-JSON response from gateway:', response!.status, rawText)
+      throw new Error(`Gateway returned ${response!.status}: ${rawText.slice(0, 200)}`)
     }
 
-    if (!response.ok || data?.error) {
-      console.error('Gateway error:', response.status, data)
-      const message = data?.error?.message || data?.message || `Status ${response.status}`
+    if (!response!.ok || data?.error) {
+      console.error('Gateway error:', response!.status, data)
+      const message = data?.error?.message || data?.message || `Status ${response!.status}`
       throw new Error(message)
-    }
-
-    if (!data?.joinWebUrl) {
-      console.error('No joinWebUrl in response:', data)
-      throw new Error('Meeting created but no join URL returned')
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        teamsJoinUrl: data.joinWebUrl,
-        microsoftEventId: data.id,
+        teamsJoinUrl: data?.onlineMeeting?.joinUrl || data?.onlineMeetingUrl,
+        microsoftEventId: data?.id,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error in create-teams-meeting:', error)
+    console.error('Error in teams-meeting function:', error)
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

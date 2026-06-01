@@ -290,12 +290,15 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       if (meetingLinkMode === 'teams' && status === 'agendada' && teamsConnected) {
         setIsGeneratingTeamsLink(true);
         try {
+          const isUpdate = !!reuniao?.microsoftEventId;
           const response = await supabase.functions.invoke('create-teams-meeting', {
             body: {
+              action: isUpdate ? 'update' : 'create',
+              microsoftEventId: reuniao?.microsoftEventId,
               title,
               description,
-              startDateTime: `${meetingDate}T${startTime}`,
-              endDateTime: `${meetingDate}T${calculateEndTime(startTime, duracao)}`,
+              startDateTime: `${meetingDate}T${startTime}:00`,
+              endDateTime: `${meetingDate}T${calculateEndTime(startTime, duracao)}:00`,
               attendees: [
                 { email: selectedCliente?.email, name: selectedCliente?.nomeFantasia || selectedCliente?.razaoSocial },
                 { email: selectedConsultor?.email, name: selectedConsultor?.full_name }

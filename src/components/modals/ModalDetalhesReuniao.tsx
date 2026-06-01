@@ -130,6 +130,25 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         payload.canceled_at = new Date().toISOString();
         payload.canceled_by = user?.id;
         payload.cancel_reason = reason;
+
+        // Microsoft Teams Cancellation
+        if (reuniao.microsoftEventId) {
+          try {
+            await supabase.functions.invoke('create-teams-meeting', {
+              body: {
+                action: 'cancel',
+                microsoftEventId: reuniao.microsoftEventId
+              }
+            });
+          } catch (teamsErr) {
+            console.error('Failed to cancel Teams meeting:', teamsErr);
+            toast({
+              title: "Aviso",
+              description: "Status atualizado, mas não foi possível cancelar o evento no Teams automaticamente.",
+              variant: "warning" as any
+            });
+          }
+        }
       } else if (newStatus === 'realizada') {
         payload.completed_at = new Date().toISOString();
         payload.completed_by = user?.id;
