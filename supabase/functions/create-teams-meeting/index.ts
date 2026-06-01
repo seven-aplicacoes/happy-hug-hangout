@@ -114,11 +114,13 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        teamsJoinUrl: data?.onlineMeeting?.joinUrl || data?.onlineMeetingUrl,
+        teamsJoinUrl: data?.onlineMeeting?.joinUrl || data?.onlineMeetingUrl || data?.webLink || data?.joinUrl,
         microsoftEventId: data?.id,
+        rawResponse: data
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
+
   } catch (error) {
     console.error('Error in teams-meeting function:', error)
     return new Response(
