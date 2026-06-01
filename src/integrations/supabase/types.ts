@@ -2674,8 +2674,6 @@ export type Database = {
           source: string | null
           start_time: string
           status: string | null
-          sync_error: string | null
-          sync_status: string | null
           teams_creation_error: string | null
           teams_creation_status: string | null
           teams_join_url: string | null
@@ -2741,8 +2739,6 @@ export type Database = {
           source?: string | null
           start_time: string
           status?: string | null
-          sync_error?: string | null
-          sync_status?: string | null
           teams_creation_error?: string | null
           teams_creation_status?: string | null
           teams_join_url?: string | null
@@ -2808,8 +2804,6 @@ export type Database = {
           source?: string | null
           start_time?: string
           status?: string | null
-          sync_error?: string | null
-          sync_status?: string | null
           teams_creation_error?: string | null
           teams_creation_status?: string | null
           teams_join_url?: string | null
@@ -3550,45 +3544,6 @@ export type Database = {
           title?: string
           updated_at?: string | null
           uploaded_by?: string | null
-        }
-        Relationships: []
-      }
-      microsoft_connections: {
-        Row: {
-          access_token: string
-          created_at: string | null
-          email: string
-          expires_at: string
-          id: string
-          provider: string | null
-          refresh_token: string | null
-          scopes: string[] | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          access_token: string
-          created_at?: string | null
-          email: string
-          expires_at: string
-          id?: string
-          provider?: string | null
-          refresh_token?: string | null
-          scopes?: string[] | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          access_token?: string
-          created_at?: string | null
-          email?: string
-          expires_at?: string
-          id?: string
-          provider?: string | null
-          refresh_token?: string | null
-          scopes?: string[] | null
-          updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }

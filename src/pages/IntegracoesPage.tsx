@@ -3,8 +3,6 @@ import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import {
   INTEGRACOES,
   EVENTOS_INTEGRACAO,
@@ -16,10 +14,8 @@ import {
 } from '@/data/integracoes';
 import {
   CalendarDays, Video, MessageCircle, BookOpen, Plug, CheckCircle2, Clock,
-  ArrowUpRight, RefreshCw, Settings2, ExternalLink, AlertCircle, ShieldCheck, UserCheck, Activity
+  ArrowUpRight, RefreshCw, Settings2, ExternalLink,
 } from 'lucide-react';
-import { useReunioes } from '@/hooks/useReunioes';
-
 
 const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
   agenda: CalendarDays,
@@ -69,96 +65,6 @@ function CardIntegracao({ integ, onSelect }: { integ: Integracao; onSelect: (i: 
   );
 }
 
-function MicrosoftDiagnostics() {
-  const { testMicrosoftConnection, testMicrosoftCalendar, syncMicrosoft, reunioes } = useReunioes();
-  const [testing, setTesting] = useState(false);
-  
-  const { data: logs } = useQuery({
-    queryKey: ['microsoft-sync-logs'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('meeting_sync_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const lastMeeting = useMemo(() => {
-    return reunioes?.find(r => r.teamsJoinUrl && r.microsoft_sync_status === 'success');
-  }, [reunioes]);
-
-  const handleTest = async () => {
-    setTesting(true);
-    try {
-      const res = await testMicrosoftConnection();
-      if (res.success) {
-        toast({ title: "Conexão OK", description: `Conta: ${res.data?.userPrincipalName || 'Identificada'}` });
-      } else {
-        toast({ title: "Falha na conexão", description: res.error || "Erro desconhecido", variant: "destructive" });
-      }
-    } catch (e: any) {
-      toast({ title: "Erro no teste", description: e.message, variant: "destructive" });
-    } finally {
-      setTesting(false);
-    }
-  };
-
-  return (
-    <div className="mt-6 space-y-4 border-t pt-6">
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-4 flex items-center gap-2">
-        <Activity className="h-3 w-3" /> Diagnóstico Técnico
-      </p>
-      
-      <div className="grid grid-cols-1 gap-2">
-        <div className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
-          <span className="flex items-center gap-2 text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5" /> Permissão Calendars.ReadWrite
-          </span>
-          <span className="text-emerald-500 font-medium">Ativa</span>
-        </div>
-        <div className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
-          <span className="flex items-center gap-2 text-muted-foreground">
-            <UserCheck className="h-3.5 w-3.5" /> Refresh Token (offline_access)
-          </span>
-          <span className="text-emerald-500 font-medium">Disponível</span>
-        </div>
-      </div>
-
-      {lastMeeting && (
-        <div className="p-3 rounded-md bg-muted/50 border border-border/50">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Última reunião sincronizada</p>
-          <p className="text-xs font-medium truncate">{lastMeeting.title}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{fmtData(lastMeeting.microsoft_last_sync_at || undefined)}</p>
-        </div>
-      )}
-
-      {logs && logs.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Logs de Sincronização</p>
-          <div className="space-y-1">
-            {logs.map((log) => (
-              <div key={log.id} className="text-[10px] flex items-center justify-between p-1.5 border-b last:border-0 border-border/40">
-                <span className="truncate max-w-[120px] font-mono text-muted-foreground">{log.action}</span>
-                <span className={log.success ? "text-emerald-500" : "text-destructive"}>
-                  {log.success ? "Sucesso" : "Falha"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <Button variant="outline" size="sm" className="w-full h-8 text-[11px]" onClick={handleTest} disabled={testing}>
-        {testing ? <RefreshCw className="h-3 w-3 mr-2 animate-spin" /> : <ShieldCheck className="h-3 w-3 mr-2" />}
-        Testar Conexão Graph
-      </Button>
-    </div>
-  );
-}
-
 function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () => void }) {
   const ativo = integ.status === 'conectado' || integ.status === 'beta';
   return (
@@ -181,11 +87,11 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
         <div className="grid grid-cols-2 gap-3 p-3 rounded-md bg-muted/40 mb-5">
           <div>
             <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Conta</p>
-            <p className="text-xs font-medium mt-0.5 truncate">{integ.contaVinculada || 'nathansilva12004@outlook.com'}</p>
+            <p className="text-xs font-medium mt-0.5 truncate">{integ.contaVinculada || 'Conta de equipe'}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Conectado em</p>
-            <p className="text-xs font-medium mt-0.5">{integ.conectadoEm ? new Date(integ.conectadoEm).toLocaleDateString('pt-BR') : '01/06/2026'}</p>
+            <p className="text-xs font-medium mt-0.5">{integ.conectadoEm ? new Date(integ.conectadoEm).toLocaleDateString('pt-BR') : '—'}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Última sync</p>
@@ -198,12 +104,9 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
         </div>
       )}
 
-
-        <div className="space-y-4 mb-5">
-          {integ.id === 'microsoft_outlook' && <MicrosoftDiagnostics />}
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Benefícios</p>
-
+      <div className="space-y-4 mb-5">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Benefícios</p>
           <ul className="space-y-1.5">
             {integ.beneficios.map((b, i) => (
               <li key={i} className="flex gap-2 text-sm">
@@ -242,19 +145,7 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
             </Button>
           </>
         ) : integ.status === 'disponivel' ? (
-          <Button onClick={() => {
-            // Se for Microsoft, vamos usar o mecanismo de reconexão ou sugerir o fluxo correto
-            if (integ.id === 'microsoft_outlook') {
-              toast({ 
-                title: 'Conectando Microsoft', 
-                description: 'Certifique-se de autorizar as permissões de Calendário e Reuniões Online.' 
-              });
-              // Simular abertura do gateway (em produção isso abriria o modal de conexão do Lovable)
-              window.open('https://lovable.dev/projects/' + window.location.pathname.split('/')[2] + '/integrations', '_blank');
-            } else {
-              toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` });
-            }
-          }}>
+          <Button onClick={() => toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` })}>
             <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar {integ.nome}
           </Button>
         ) : (
