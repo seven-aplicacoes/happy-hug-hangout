@@ -512,15 +512,13 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   if (!reuniao && !loading) return null;
 
   const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
-  const canCancel = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
-  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
+  const canCancel = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
+  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
   const canRegistrarAta = !isClient && reuniao.status !== 'cancelada';
 
   const handleMarkAsCompleted = async (withAta = false) => {
     if (withAta) {
       setRegistrarAtaOpen(true);
-      // We'll mark as completed after ata is saved if desired, 
-      // but for now let's just trigger the status update as well
     }
     await updateStatus('realizada', 'Reunião marcada como realizada pelo consultor');
     setIsConfirmingCompletion(false);
