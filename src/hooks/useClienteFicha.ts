@@ -64,7 +64,8 @@ export function useClienteFicha(clientId?: string) {
         contact_phone: data.contact_phone,
         avatar_url: data.avatar_url,
         avatar_path: data.avatar_path,
-      } as Cliente;
+        consultant_phone: data.consultant?.phone,
+      } as Cliente & { consultant_phone?: string };
 
     },
     enabled: !!clientId,
