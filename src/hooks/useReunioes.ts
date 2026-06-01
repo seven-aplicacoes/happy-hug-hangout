@@ -102,7 +102,7 @@ export function useReunioes() {
       const { data: currentMeeting } = await supabase
         .from('meetings')
         .select('status, meeting_date, start_time, location_url, teams_join_url, meeting_url')
-        .eq('id', cleanPayload.id)
+        .eq('id', cleanPayload.id as string)
         .maybeSingle();
 
       const { data, error } = await supabase
