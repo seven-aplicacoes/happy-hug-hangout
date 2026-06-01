@@ -32,6 +32,8 @@ export function useClienteHistorico(clientId?: string) {
         ia_status: e.ia_status,
         fase: e.phase,
         evidencias: e.evidence_urls || [],
+        meeting_id: e.meeting_id,
+        status: e.status,
       }));
     },
     enabled: !!clientId,
