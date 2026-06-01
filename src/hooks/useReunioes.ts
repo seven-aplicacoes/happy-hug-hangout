@@ -110,7 +110,7 @@ export function useReunioes() {
       if (reuniao.contractModuleMeetingId) {
         const meetingId = data[0].id;
         // Se a reunião estiver cancelada, o encontro volta para pendente
-        const status = reuniao.status === 'realizada' ? 'realizada' : (reuniao.status === 'cancelada' ? 'pendente' : 'agendado');
+        const status = reuniao.status === 'realizada' ? 'realizada' : (reuniao.status === 'cancelada' ? 'cancelada' : 'agendado');
         const scheduledAt = (reuniao.meetingDate && reuniao.startTime && reuniao.status !== 'cancelada')
           ? `${reuniao.meetingDate}T${reuniao.startTime}` 
           : null;
