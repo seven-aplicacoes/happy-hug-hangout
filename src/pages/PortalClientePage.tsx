@@ -54,6 +54,7 @@ import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard'
 import { StatusTag } from '@/components/StatusTag';
 import { labelStatus } from '@/data/mockData';
 import { Accordion } from '@/components/ui/accordion';
+import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 
 
 export default function PortalClientePage() {
