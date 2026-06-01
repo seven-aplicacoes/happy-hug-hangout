@@ -87,7 +87,8 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
         duracao: selectedSlot.duration_minutes,
         status: 'agendada',
         source: 'portal_cliente',
-        meetingLinkProvider: 'teams' // Sempre tenta Teams primeiro no agendamento pelo cliente
+        scheduledBy: clienteSession?.clienteId, // Importante para RLS
+        meetingLinkProvider: 'teams'
       });
 
       toast({ title: "Agendado!", description: "Seu encontro foi agendado com sucesso." });
