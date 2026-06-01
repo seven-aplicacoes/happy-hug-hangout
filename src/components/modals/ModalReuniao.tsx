@@ -404,64 +404,122 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           <div className="space-y-6">
             <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10 space-y-4">
               <div className="space-y-2">
-                <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.meetingDate && "text-destructive")}>Data *</Label>
+                <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.meetingDate && "text-destructive")}>Data Disponível *</Label>
                 <div className="relative">
-                  <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className={cn("h-11 pl-10 bg-white", errors.meetingDate && "border-destructive")} />
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Select 
+                    value={meetingDate} 
+                    onValueChange={(val) => {
+                      setMeetingDate(val);
+                      setStartTime(''); // Reset time when date changes
+                    }}
+                    disabled={!consultorId || loadingAvailability}
+                  >
+                    <SelectTrigger className={cn("h-11 pl-10 bg-white shadow-sm transition-all focus:ring-2 focus:ring-primary/20", errors.meetingDate && "border-destructive")}>
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder={!consultorId ? "Selecione um consultor primeiro" : "Selecione uma data disponível"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {loadingAvailability ? (
+                        <div className="p-4 flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          <span className="text-xs text-muted-foreground">Buscando datas...</span>
+                        </div>
+                      ) : availabilities && availabilities.length > 0 ? (
+                        // Extract unique dates from slots for the selected consultant
+                        Array.from(new Set(slots?.map(s => s.available_date) || []))
+                          .sort()
+                          .map(dateStr => {
+                            const dateObj = new Date(dateStr + 'T12:00:00');
+                            const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', weekday: 'short' });
+                            return (
+                              <SelectItem key={dateStr} value={dateStr}>
+                                {formattedDate}
+                              </SelectItem>
+                            );
+                          })
+                      ) : (
+                        <div className="p-4 text-center">
+                          <p className="text-xs text-amber-600 font-medium italic">O consultor responsável ainda não cadastrou disponibilidade.</p>
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
+                {!consultorId && (
+                  <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1 mt-1">
+                    <Info className="h-3 w-3" /> Selecione o consultor para ver as datas.
+                  </p>
+                )}
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.startTime && "text-destructive")}>Hora *</Label>
-                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={cn("h-11 bg-white", errors.startTime && "border-destructive")} />
+                  <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.startTime && "text-destructive")}>Horário Disponível *</Label>
+                  <Select 
+                    value={startTime} 
+                    onValueChange={setStartTime}
+                    disabled={!meetingDate || loadingAvailability}
+                  >
+                    <SelectTrigger className={cn("h-11 bg-white shadow-sm transition-all focus:ring-2 focus:ring-primary/20", errors.startTime && "border-destructive")}>
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50" />
+                      <span className="pl-6">
+                        <SelectValue placeholder={!meetingDate ? "Aguardando data..." : "Selecione o horário"} />
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {slots?.filter(s => s.available_date === meetingDate).length === 0 ? (
+                        <div className="p-4 text-center">
+                          <p className="text-xs text-amber-600 font-medium">Não há horários para esta data.</p>
+                        </div>
+                      ) : (
+                        slots
+                          ?.filter(s => s.available_date === meetingDate)
+                          .map(slot => {
+                            const timeStr = slot.start_time.substring(0, 5);
+                            const isBooked = slot.is_booked && (!reuniao || slot.start_time !== reuniao.startTime || meetingDate !== reuniao.meetingDate);
+                            
+                            return (
+                              <SelectItem 
+                                key={slot.id} 
+                                value={timeStr} 
+                                disabled={isBooked}
+                                className={cn(isBooked && "opacity-50 cursor-not-allowed")}
+                              >
+                                {timeStr} {isBooked ? '(Ocupado)' : ''}
+                              </SelectItem>
+                            );
+                          })
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Duração (min)</Label>
-                  <Input type="number" value={duracao} onChange={e => setDuracao(Number(e.target.value))} className="h-11 bg-white" />
+                  <Input 
+                    type="number" 
+                    value={duracao} 
+                    onChange={e => setDuracao(Number(e.target.value))} 
+                    className="h-11 bg-white shadow-sm focus:ring-2 focus:ring-primary/20" 
+                    step={15}
+                    min={15}
+                  />
                 </div>
               </div>
 
-              {consultorId && meetingDate && (
-                <div className="space-y-3 pt-2 border-t border-primary/10">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                    <Clock className="h-3 w-3" /> Horários Disponíveis ({selectedConsultor?.full_name})
-                  </Label>
-                  
-                  {loadingAvailability ? (
-                    <div className="flex items-center gap-2 py-2">
-                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                      <span className="text-[10px] text-muted-foreground italic">Buscando disponibilidade...</span>
-                    </div>
-                  ) : slots?.filter(s => s.available_date === meetingDate && !s.is_booked).length === 0 ? (
-                    <p className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 italic">
-                      {availabilities && availabilities.length > 0 
-                        ? "Nenhum horário livre para esta data." 
-                        : "Consultor sem disponibilidade configurada."}
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {slots?.filter(s => s.available_date === meetingDate && !s.is_booked).map((slot: any) => (
-                        <Button
-                          key={slot.id}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            "h-8 text-[10px] font-bold",
-                            startTime === slot.start_time.substring(0, 5) ? "bg-primary text-white border-primary shadow-sm" : "bg-white"
-                          )}
-                          onClick={() => {
-                            setStartTime(slot.start_time.substring(0, 5));
-                            setDuracao(slot.duration_minutes || 60);
-                          }}
-                        >
-                          {slot.start_time.substring(0, 5)}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              {consultorId && meetingDate && !loadingAvailability && availabilities?.length === 0 && (
+                <p className="text-[10px] text-amber-600 bg-amber-50 p-3 rounded-xl border border-amber-100 italic flex items-start gap-2">
+                  <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+                  O consultor responsável ainda não cadastrou disponibilidade para este período.
+                </p>
               )}
+
+              {meetingDate && slots?.filter(s => s.available_date === meetingDate && !s.is_booked).length === 0 && !loadingAvailability && (
+                <p className="text-[10px] text-amber-600 bg-amber-50 p-3 rounded-xl border border-amber-100 italic flex items-start gap-2">
+                  <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+                  Não há horários livres disponíveis para esta data.
+                </p>
+              )}
+            </div>
             </div>
           </div>
         </div>
