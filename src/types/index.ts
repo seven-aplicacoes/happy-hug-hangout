@@ -242,6 +242,12 @@ export interface Reuniao {
   completedBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdByName?: string;
+  updatedByName?: string;
+  canceledByName?: string;
+  completedByName?: string;
 }
 
 export interface MeetingStatusHistory {
