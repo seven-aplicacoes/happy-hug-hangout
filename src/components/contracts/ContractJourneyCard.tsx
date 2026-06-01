@@ -154,7 +154,17 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                             "h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary",
                             isLocked && "opacity-50 cursor-not-allowed grayscale"
                           )} 
-                          onClick={() => !isLocked && onSchedule(meeting)}
+                          onClick={() => {
+                            console.log("[SCHEDULE_RULE_CHECK]", {
+                              encounterId: meeting.id,
+                              encounterTitle: meeting.title,
+                              encounterStatus: meeting.status,
+                              consultantId: meeting.consultantId || phase.responsibleConsultantId,
+                              hasConsultantAvailability: true, // Se chegou aqui, estamos permitindo
+                              disabledReason: null
+                            });
+                            onSchedule(meeting);
+                          }}
                           disabled={isLocked}
                         >
                           <Calendar className="h-3.5 w-3.5" /> Agendar
