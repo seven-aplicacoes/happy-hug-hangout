@@ -636,6 +636,69 @@ export type Database = {
           },
         ]
       }
+      consultant_calendly_event_types: {
+        Row: {
+          calendly_url: string
+          consultant_id: string
+          created_at: string | null
+          description: string | null
+          event_category: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          meeting_template_id: string | null
+          module_id: string | null
+          name: string
+          product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendly_url: string
+          consultant_id: string
+          created_at?: string | null
+          description?: string | null
+          event_category?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          meeting_template_id?: string | null
+          module_id?: string | null
+          name: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendly_url?: string
+          consultant_id?: string
+          created_at?: string | null
+          description?: string | null
+          event_category?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          meeting_template_id?: string | null
+          module_id?: string | null
+          name?: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_calendly_event_types_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_calendly_event_types_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultant_indicator_goals: {
         Row: {
           comparison_operator: string
@@ -1038,6 +1101,9 @@ export type Database = {
       }
       contract_module_meetings: {
         Row: {
+          available_from: string | null
+          available_until: string | null
+          cancel_url: string | null
           client_id: string
           completed_at: string | null
           consultant_id: string | null
@@ -1048,6 +1114,7 @@ export type Database = {
           module_id: string
           order_index: number
           product_id: string
+          reschedule_url: string | null
           scheduled_at: string | null
           scheduled_meeting_id: string | null
           status: string
@@ -1055,6 +1122,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available_from?: string | null
+          available_until?: string | null
+          cancel_url?: string | null
           client_id: string
           completed_at?: string | null
           consultant_id?: string | null
@@ -1065,6 +1135,7 @@ export type Database = {
           module_id: string
           order_index?: number
           product_id: string
+          reschedule_url?: string | null
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string
@@ -1072,6 +1143,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available_from?: string | null
+          available_until?: string | null
+          cancel_url?: string | null
           client_id?: string
           completed_at?: string | null
           consultant_id?: string | null
@@ -1082,6 +1156,7 @@ export type Database = {
           module_id?: string
           order_index?: number
           product_id?: string
+          reschedule_url?: string | null
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string
@@ -2111,6 +2186,211 @@ export type Database = {
           },
         ]
       }
+      meeting_history_events: {
+        Row: {
+          client_id: string | null
+          consultant_id: string | null
+          created_at: string | null
+          description: string | null
+          event_type: string
+          id: string
+          meeting_id: string
+          metadata: Json | null
+          new_start_time: string | null
+          previous_start_time: string | null
+          scheduling_event_id: string | null
+          title: string
+        }
+        Insert: {
+          client_id?: string | null
+          consultant_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          meeting_id: string
+          metadata?: Json | null
+          new_start_time?: string | null
+          previous_start_time?: string | null
+          scheduling_event_id?: string | null
+          title: string
+        }
+        Update: {
+          client_id?: string | null
+          consultant_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          meeting_id?: string
+          metadata?: Json | null
+          new_start_time?: string | null
+          previous_start_time?: string | null
+          scheduling_event_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_history_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_history_events_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_history_events_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_history_events_scheduling_event_id_fkey"
+            columns: ["scheduling_event_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_scheduling_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_scheduling_events: {
+        Row: {
+          calendly_event_uri: string | null
+          calendly_event_uuid: string | null
+          calendly_invitee_uri: string | null
+          calendly_invitee_uuid: string | null
+          cancel_url: string | null
+          canceled_at: string | null
+          cancellation_reason: string | null
+          client_id: string
+          consultant_id: string
+          contract_id: string | null
+          created_at: string | null
+          event_name: string | null
+          event_uuid: string | null
+          id: string
+          invitee_email: string | null
+          invitee_name: string | null
+          invitee_uuid: string | null
+          meeting_id: string
+          module_id: string | null
+          previous_event_uri: string | null
+          previous_event_uuid: string | null
+          product_id: string | null
+          provider: string
+          raw_payload: Json | null
+          reschedule_url: string | null
+          rescheduled: boolean | null
+          scheduled_end_time: string | null
+          scheduled_start_time: string | null
+          status: string
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendly_event_uri?: string | null
+          calendly_event_uuid?: string | null
+          calendly_invitee_uri?: string | null
+          calendly_invitee_uuid?: string | null
+          cancel_url?: string | null
+          canceled_at?: string | null
+          cancellation_reason?: string | null
+          client_id: string
+          consultant_id: string
+          contract_id?: string | null
+          created_at?: string | null
+          event_name?: string | null
+          event_uuid?: string | null
+          id?: string
+          invitee_email?: string | null
+          invitee_name?: string | null
+          invitee_uuid?: string | null
+          meeting_id: string
+          module_id?: string | null
+          previous_event_uri?: string | null
+          previous_event_uuid?: string | null
+          product_id?: string | null
+          provider?: string
+          raw_payload?: Json | null
+          reschedule_url?: string | null
+          rescheduled?: boolean | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendly_event_uri?: string | null
+          calendly_event_uuid?: string | null
+          calendly_invitee_uri?: string | null
+          calendly_invitee_uuid?: string | null
+          cancel_url?: string | null
+          canceled_at?: string | null
+          cancellation_reason?: string | null
+          client_id?: string
+          consultant_id?: string
+          contract_id?: string | null
+          created_at?: string | null
+          event_name?: string | null
+          event_uuid?: string | null
+          id?: string
+          invitee_email?: string | null
+          invitee_name?: string | null
+          invitee_uuid?: string | null
+          meeting_id?: string
+          module_id?: string | null
+          previous_event_uri?: string | null
+          previous_event_uuid?: string | null
+          product_id?: string | null
+          provider?: string
+          raw_payload?: Json | null
+          reschedule_url?: string | null
+          rescheduled?: boolean | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_scheduling_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_scheduling_events_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_scheduling_events_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_scheduling_events_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "contract_module_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meetings: {
         Row: {
           calendly_cancel_url: string | null
@@ -2119,6 +2399,7 @@ export type Database = {
           calendly_invitee_uri: string | null
           calendly_reschedule_url: string | null
           cancel_reason: string | null
+          cancel_url: string | null
           canceled_at: string | null
           canceled_by: string | null
           client_id: string | null
@@ -2149,6 +2430,7 @@ export type Database = {
           meeting_url: string | null
           methodology_phase_id: string | null
           participants: Json | null
+          reschedule_url: string | null
           scheduled_by: string | null
           source: string | null
           start_time: string
@@ -2165,6 +2447,7 @@ export type Database = {
           calendly_invitee_uri?: string | null
           calendly_reschedule_url?: string | null
           cancel_reason?: string | null
+          cancel_url?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
           client_id?: string | null
@@ -2195,6 +2478,7 @@ export type Database = {
           meeting_url?: string | null
           methodology_phase_id?: string | null
           participants?: Json | null
+          reschedule_url?: string | null
           scheduled_by?: string | null
           source?: string | null
           start_time: string
@@ -2211,6 +2495,7 @@ export type Database = {
           calendly_invitee_uri?: string | null
           calendly_reschedule_url?: string | null
           cancel_reason?: string | null
+          cancel_url?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
           client_id?: string | null
@@ -2241,6 +2526,7 @@ export type Database = {
           meeting_url?: string | null
           methodology_phase_id?: string | null
           participants?: Json | null
+          reschedule_url?: string | null
           scheduled_by?: string | null
           source?: string | null
           start_time?: string
@@ -3125,6 +3411,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          calendly_url: string | null
           city: string | null
           created_at: string | null
           email: string
@@ -3142,6 +3429,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          calendly_url?: string | null
           city?: string | null
           created_at?: string | null
           email: string
@@ -3159,6 +3447,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          calendly_url?: string | null
           city?: string | null
           created_at?: string | null
           email?: string
