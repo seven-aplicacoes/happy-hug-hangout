@@ -308,11 +308,13 @@ export interface ContractModuleMeeting {
   scheduledAt?: string;
   completedAt?: string;
   teamsJoinUrl?: string;
+  meet_join_url?: string;
   location?: string;
   locationUrl?: string;
   meetingUrl?: string;
-  meetingLinkProvider?: 'teams' | 'manual';
+  meetingLinkProvider?: 'teams' | 'manual' | 'google';
   microsoftEventId?: string;
+  google_event_id?: string;
   orderIndex: number;
   consultantName?: string;
 }
