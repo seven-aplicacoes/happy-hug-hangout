@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const GATEWAY_URL = 'https://connector-gateway.lovable.dev/microsoft_teams'
+const GATEWAY_URL = 'https://connector-gateway.lovable.dev/microsoft_teams/v1.0'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
