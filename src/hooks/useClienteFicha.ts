@@ -19,7 +19,8 @@ export function useClienteFicha(clientId?: string) {
         .select(`
           *,
           consultant:profiles!clients_consultant_id_fkey (
-            full_name
+            full_name,
+            phone
           )
         `)
         .eq('id', clientId)
@@ -63,7 +64,8 @@ export function useClienteFicha(clientId?: string) {
         contact_phone: data.contact_phone,
         avatar_url: data.avatar_url,
         avatar_path: data.avatar_path,
-      } as Cliente;
+        consultant_phone: data.consultant?.phone,
+      } as Cliente & { consultant_phone?: string };
 
     },
     enabled: !!clientId,

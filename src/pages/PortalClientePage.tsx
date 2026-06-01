@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,7 @@ import { usePortalSummary } from '@/hooks/usePortalSummary';
 import { usePortalCSAT } from '@/hooks/usePortalCSAT';
 import { useContractModuleMeetings } from '@/hooks/useContractModuleMeetings';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 import { 
   Dialog, 
@@ -56,6 +57,7 @@ import { Accordion } from '@/components/ui/accordion';
 
 
 export default function PortalClientePage() {
+  const { toast } = useToast();
   const { clienteSession, loginCliente, logoutCliente } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -75,13 +77,24 @@ export default function PortalClientePage() {
   const { cliente, isLoading: loadingFicha } = useClienteFicha(clientId);
   const { contratos, isLoading: loadingContratos } = useClienteContratos(clientId);
   
-  const activeContract = useMemo(() => 
-    contratos?.find(c => c.status === 'ativo' || c.status === 'em_onboarding') || contratos?.[0],
-    [contratos]
-  );
+  const activeContract = useMemo(() => {
+    if (!contratos || contratos.length === 0) return null;
+    const active = contratos.find(c => c.status === 'ativo' || c.status === 'em_onboarding');
+    return active || contratos[0];
+  }, [contratos]);
 
   const { submitCSAT } = useClientCSAT(clientId);
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
+  
+  // Debug logs
+  useEffect(() => {
+    if (clientId) {
+      console.log('[Portal Cliente] client id:', clientId);
+      console.log('[Portal Cliente] contracts:', contratos);
+      console.log('[Portal Cliente] active contract:', activeContract);
+    }
+  }, [clientId, contratos, activeContract]);
+
   const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
   const { csatStatus } = usePortalCSAT(clientId);
 
@@ -117,8 +130,19 @@ export default function PortalClientePage() {
   };
 
   const handleContactConsultant = () => {
-    const phone = "5511999999999"; 
-    window.open(`https://wa.me/${phone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
+    if (!activeContract?.consultorId) {
+      toast({ title: 'Aviso', description: 'Consultor não atribuído ao seu contrato ativo.', variant: 'default' });
+      return;
+    }
+
+    const phone = (cliente as any)?.consultant_phone || "";
+    
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      window.open(`https://wa.me/${cleanPhone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
+    } else {
+      toast({ title: 'Aviso', description: 'Telefone do consultor não cadastrado.', variant: 'default' });
+    }
   };
 
   if (!clienteSession) {
