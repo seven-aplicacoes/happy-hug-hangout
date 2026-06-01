@@ -460,6 +460,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         }
       });
 
+      if (reuniao.microsoftEventId) {
+        try {
+          await syncMicrosoft.mutateAsync({ meetingId: reuniao.id, action: 'update' });
+        } catch (syncErr) {
+          console.error('Failed to sync description update to Microsoft:', syncErr);
+        }
+      }
+
       toast({ title: 'Sucesso', description: 'Pauta atualizada com sucesso.' });
       setIsEditingDescription(false);
       fetchDetails();
