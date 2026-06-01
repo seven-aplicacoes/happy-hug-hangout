@@ -10,7 +10,7 @@ export type StatusContrato =
   | 'cancelado'
   | 'churn'
   | 'encerrado';
-export type StatusReuniao = 'agendada' | 'realizada' | 'cancelada' | 'remarcada' | 'reagendada';
+export type StatusReuniao = 'pendente' | 'agendada' | 'em_andamento' | 'aguardando_confirmacao' | 'realizada' | 'cancelada' | 'reagendada' | 'no_show';
 export type StatusTarefa = 'a_fazer' | 'em_andamento' | 'impedida' | 'concluida';
 export type NivelRisco = 'baixo' | 'medio' | 'alto' | 'critico';
 export type NivelEngajamento = 'em_dia' | 'atencao' | 'critico' | 'sem_dados';
@@ -235,6 +235,24 @@ export interface Reuniao {
   contractModuleMeetingId?: string;
   microsoftEventId?: string;
   teamsJoinUrl?: string;
+  canceledBy?: string;
+  canceledAt?: string;
+  cancelReason?: string;
+  completedAt?: string;
+  completedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MeetingStatusHistory {
+  id: string;
+  meetingId: string;
+  previousStatus: string | null;
+  newStatus: string;
+  changedBy: string | null;
+  changeReason: string | null;
+  payload?: any;
+  createdAt: string;
 }
 
 export interface ContractModuleMeeting {

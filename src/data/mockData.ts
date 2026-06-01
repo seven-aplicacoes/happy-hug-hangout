@@ -118,7 +118,7 @@ function gerarReunioesEmEscala(): Reuniao[] {
   ];
   const horas = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'];
   const duracoes = [30, 45, 60, 90, 120];
-  const statusOpcoes: StatusReuniao[] = ['agendada', 'realizada', 'cancelada', 'remarcada'];
+  const statusOpcoes: StatusReuniao[] = ['agendada', 'realizada', 'cancelada'];
   const participantesBase = ['Diretor', 'Gerente', 'Coordenador', 'Analista', 'CEO', 'CFO', 'COO'];
 
   const result: Reuniao[] = [];
@@ -171,7 +171,7 @@ function gerarReunioesEmEscala(): Reuniao[] {
         const cons = consultoresMock[Math.floor(rand() * consultoresMock.length)];
         const status: StatusReuniao = isPast
           ? (rand() > 0.15 ? 'realizada' : 'cancelada')
-          : (rand() > 0.1 ? 'agendada' : 'remarcada');
+          : (rand() > 0.1 ? 'agendada' : 'agendada');
 
         result.push({
           id: `r${idCounter++}`,

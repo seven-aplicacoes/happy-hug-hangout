@@ -2453,6 +2453,47 @@ export type Database = {
           },
         ]
       }
+      meeting_status_history: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          created_at: string
+          id: string
+          meeting_id: string
+          new_status: string
+          payload: Json | null
+          previous_status: string | null
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id: string
+          new_status: string
+          payload?: Json | null
+          previous_status?: string | null
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          new_status?: string
+          payload?: Json | null
+          previous_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_status_history_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meetings: {
         Row: {
           calendly_cancel_url: string | null
@@ -2465,6 +2506,8 @@ export type Database = {
           canceled_at: string | null
           canceled_by: string | null
           client_id: string | null
+          completed_at: string | null
+          completed_by: string | null
           consultant_id: string | null
           contract_id: string | null
           contract_module_meeting_id: string | null
@@ -2517,6 +2560,8 @@ export type Database = {
           canceled_at?: string | null
           canceled_by?: string | null
           client_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
           consultant_id?: string | null
           contract_id?: string | null
           contract_module_meeting_id?: string | null
@@ -2569,6 +2614,8 @@ export type Database = {
           canceled_at?: string | null
           canceled_by?: string | null
           client_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
           consultant_id?: string | null
           contract_id?: string | null
           contract_module_meeting_id?: string | null

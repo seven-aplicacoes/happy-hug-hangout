@@ -1,7 +1,9 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
-  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, Video
+  Download, Eye, ExternalLink, ShieldAlert, FileUp, Settings, Trash, Info, Video,
+  Play, MessageSquare
 } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { ModalAgendamentoCliente } from '@/components/modals/ModalAgendamentoCliente';
@@ -25,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
 interface MeetingListProps {
@@ -35,8 +38,37 @@ interface MeetingListProps {
 }
 
 function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
+  const queryClient = useQueryClient();
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
+  const [meetingToEdit, setMeetingToEdit] = useState<ContractModuleMeeting | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleOpenDetail = (meeting: ContractModuleMeeting) => {
+    if (meeting.status === 'pendente') {
+      onSchedule(meeting);
+      return;
+    }
+    
+    if (meeting.scheduledMeetingId) {
+      setSelectedMeetingId(meeting.scheduledMeetingId);
+      setIsDetailOpen(true);
+    } else {
+      onSchedule(meeting);
+    }
+  };
+
+  const handleEditFromDetail = (reuniao: Reuniao) => {
+    setIsDetailOpen(false);
+    // Find the original meeting item
+    const original = meetings?.find(m => m.scheduledMeetingId === reuniao.id);
+    if (original) {
+      onSchedule(original);
+    }
+  };
   
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>;
   if (!meetings || meetings.length === 0) return <div className="p-8 text-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed my-2">Nenhum encontro configurado para este módulo.</div>;
@@ -119,7 +151,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                     );
                   } else if (meeting.status === 'agendado') {
                     return (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                         {(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl) && (
                           <Button 
                             size="sm" 
@@ -131,11 +163,11 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                             onClick={() => window.open(meeting.teamsJoinUrl || meeting.location || meeting.locationUrl, '_blank')}
                           >
                             {meeting.meetingLinkProvider === 'teams' ? <Video className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />} 
-                            Entrar na Reunião
+                            Entrar
                           </Button>
                         )}
-                        <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
-                          Reagendar
+                        <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => handleOpenDetail(meeting)}>
+                          Detalhes
                         </Button>
                       </div>
                     );
@@ -173,6 +205,15 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
           )}
         </div>
       ))}
+      {selectedMeetingId && (
+        <ModalDetalhesReuniao 
+          open={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          reuniaoId={selectedMeetingId}
+          onEdit={handleEditFromDetail}
+          onRefresh={() => queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] })}
+        />
+      )}
     </div>
   );
 }

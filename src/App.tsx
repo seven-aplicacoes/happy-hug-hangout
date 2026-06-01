@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useAutoMeetingStatus } from "@/hooks/useAutoMeetingStatus";
 
 import LoginPage from "@/pages/LoginPage";
 import SelecionarAmbientePage from "@/pages/SelecionarAmbientePage";
@@ -89,8 +90,9 @@ const ClienteRedirect = () => {
   return <Navigate to={target} replace />;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const AppContent = () => {
+  useAutoMeetingStatus();
+  return (
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
@@ -155,6 +157,12 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AppContent />
   </QueryClientProvider>
 );
 
