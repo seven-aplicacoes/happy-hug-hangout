@@ -171,7 +171,7 @@ export function useMyPermissions() {
 
   const can = (moduleKey: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' = 'view') => {
     if (isLoading) return true; 
-    if (permissions === 'admin' || perfil === 'admin' || permissions === 'client_bypass') return true;
+    if (permissions === 'admin' || perfil === 'admin' || permissions === 'client_bypass' || perfil === 'cliente') return true;
     if (!permissions || !Array.isArray(permissions)) return false;
     
     const permission = permissions.find(p => p.module_key === moduleKey);
