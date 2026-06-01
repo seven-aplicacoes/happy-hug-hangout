@@ -41,11 +41,11 @@ serve(async (req) => {
     
     let response;
     let method = 'POST';
-    let url = `${GATEWAY_URL}/v1.0/me/events`;
+    let url = `${GATEWAY_URL}/me/events`;
 
     if (action === 'cancel' || action === 'delete') {
       if (!microsoftEventId) throw new Error('microsoftEventId is required for cancellation');
-      response = await fetch(`${GATEWAY_URL}/v1.0/me/events/${microsoftEventId}`, {
+      response = await fetch(`${GATEWAY_URL}/me/events/${microsoftEventId}`, {
         method: 'DELETE',
         headers
       });
@@ -55,7 +55,7 @@ serve(async (req) => {
       }
     } else if (action === 'update' && microsoftEventId) {
       method = 'PATCH';
-      url = `${GATEWAY_URL}/v1.0/me/events/${microsoftEventId}`;
+      url = `${GATEWAY_URL}/me/events/${microsoftEventId}`;
     }
 
     if (action !== 'cancel' && action !== 'delete') {
