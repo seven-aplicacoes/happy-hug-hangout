@@ -191,8 +191,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (!startTime) newErrors.startTime = true;
     
     if (isLocked && !phaseResponsibleId && contractProductPhaseId && contractProductPhaseId !== 'none') {
-      toast({ title: "Responsável ausente", description: "Defina um responsável no módulo antes de salvar.", variant: "destructive" });
-      return false;
+      // toast({ title: "Responsável ausente", description: "Defina um responsável no módulo antes de salvar.", variant: "destructive" });
+      // return false;
     }
 
     setErrors(newErrors);
