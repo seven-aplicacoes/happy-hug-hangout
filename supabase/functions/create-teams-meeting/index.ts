@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   const startTimeStr = new Date().toISOString();
-  console.log(`[microsoft-sync] Function started at ${startTimeStr}`);
+  console.log(`[microsoft-sync] [TEAMS_LINK_START] Function started at ${startTimeStr}`);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
