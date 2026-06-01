@@ -20,7 +20,7 @@ export function usePortalSummary(clientId?: string) {
       const realized = meetings.filter(m => realizedStatuses.includes(m.status)).length;
       
       const upcomingMeetings = meetings
-        .filter(m => ['agendada', 'agendado', 'confirmado', 'em_andamento'].includes(m.status) && m.meeting_date)
+        .filter(m => ['agendada', 'agendado', 'reagendada', 'reagendado', 'confirmado', 'em_andamento'].includes(m.status) && m.meeting_date)
         .map(m => ({
           ...m,
           scheduled_at: `${m.meeting_date}T${m.start_time || '00:00'}:00`

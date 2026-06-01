@@ -170,7 +170,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                         )}
                       </div>
                     );
-                  } else if (normalizedStatusValue !== 'cancelada' && normalizedStatusValue !== 'cancelado') {
+                  } else if (!['cancelada', 'cancelado', 'realizada', 'concluido', 'concluído'].includes(normalizedStatusValue)) {
                     const meetingLink = meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl;
                     return (
                       <div className="flex gap-2">
