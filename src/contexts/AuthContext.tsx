@@ -70,7 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .from('clients')
                 .select('id, trade_name')
                 .eq('auth_user_id', session.user.id)
-                .single();
+                .is('deleted_at', null)
+                .maybeSingle();
 
               if (clientData) {
                 setClienteSession({
