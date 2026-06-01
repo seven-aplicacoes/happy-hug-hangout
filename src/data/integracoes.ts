@@ -23,11 +23,27 @@ export interface Integracao {
 
 export const INTEGRACOES: Integracao[] = [
   {
+    id: 'google_calendar',
+    nome: 'Google Calendar / Meet',
+    fornecedor: 'Google',
+    categoria: 'agenda',
+    status: 'disponivel',
+    descricao: 'Sincronização de calendário e criação automática de reuniões Google Meet.',
+    beneficios: [
+      'Criação automática de links Google Meet',
+      'Sincronização de eventos na agenda',
+      'Integração nativa com Google Calendar',
+    ],
+    capacidades: ['Criar eventos', 'Gerar link Meet', 'Atualizar eventos', 'Cancelar reuniões'],
+    escopos: ['openid', 'email', 'profile', 'calendar.events'],
+    documentacaoUrl: 'https://developers.google.com/calendar/api/v3/reference/events',
+  },
+  {
     id: 'microsoft_outlook',
     nome: 'Outlook / Microsoft 365',
     fornecedor: 'Microsoft',
     categoria: 'agenda',
-    status: 'conectado',
+    status: 'disponivel',
     descricao: 'Sincronização de calendário e criação automática de reuniões Teams via Outlook.',
     beneficios: [
       'Criação automática de links Teams',
