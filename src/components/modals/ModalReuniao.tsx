@@ -60,9 +60,27 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual'>('teams');
   const [manualMeetingUrl, setManualMeetingUrl] = useState('');
   const [isGeneratingTeamsLink, setIsGeneratingTeamsLink] = useState(false);
-  
-  const currentUserProfile = (consultores || []).find(c => c.id === user?.id);
-  const teamsConnected = currentUserProfile?.microsoft_teams_connected || false;
+  const [teamsConnected, setTeamsConnected] = useState(false);
+  const [isLoadingTeamsStatus, setIsLoadingTeamsStatus] = useState(true);
+
+  useEffect(() => {
+    const checkTeamsConnection = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('check-teams-connection');
+        if (error) throw error;
+        setTeamsConnected(data?.isConnected || false);
+      } catch (err) {
+        console.error('Error checking Teams connection:', err);
+        setTeamsConnected(false);
+      } finally {
+        setIsLoadingTeamsStatus(false);
+      }
+    };
+
+    if (open) {
+      checkTeamsConnection();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!teamsConnected) {
@@ -70,7 +88,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     } else if (!reuniao && !initialData) {
       setMeetingLinkMode('teams');
     }
-  }, [teamsConnected, reuniao, initialData]);
+  }, [teamsConnected, reuniao, initialData, isLoadingTeamsStatus]);
 
   const { products: contractProducts, isLoading: loadingProducts } = useContractProducts(contractId);
   const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
