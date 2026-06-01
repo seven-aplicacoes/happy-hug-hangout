@@ -39,6 +39,8 @@ export function useContractModuleMeetings(moduleId?: string) {
         consultantName: m.consultant?.full_name,
         teamsJoinUrl: m.teams_join_url,
         location: m.location,
+        locationUrl: m.location_url,
+        meetingLinkProvider: m.meeting_link_provider,
         microsoftEventId: m.microsoft_event_id,
       })) as ContractModuleMeeting[];
     },
