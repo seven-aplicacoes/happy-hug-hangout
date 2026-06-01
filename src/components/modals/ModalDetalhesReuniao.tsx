@@ -97,7 +97,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         canceledBy: r.canceled_by,
         cancelReason: r.cancel_reason,
         completedAt: r.completed_at,
-        completedBy: r.completed_by
+        completedBy: r.completed_by,
+        createdByName: r.creator?.full_name,
+        updatedByName: r.updater?.full_name,
+        canceledByName: r.canceler?.full_name,
+        completedByName: r.completer?.full_name
       };
 
       setReuniao(mappedReuniao);
@@ -107,6 +111,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         previousStatus: item.previous_status,
         newStatus: item.new_status,
         changedBy: item.changed_by,
+        changedByName: item.profile?.full_name,
         changeReason: item.change_reason,
         payload: item.payload,
         createdAt: item.created_at
