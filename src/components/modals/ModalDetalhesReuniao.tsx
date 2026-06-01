@@ -9,8 +9,10 @@ import {
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
   History, Info, Pencil, Trash2, Loader2, Play,
-  Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff
+  Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff,
+  Users, ListChecks, Lock
 } from 'lucide-react';
+
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Reuniao, MeetingStatusHistory, MeetingMinutes } from '@/types';
