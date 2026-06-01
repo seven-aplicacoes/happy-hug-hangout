@@ -223,8 +223,17 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
             disabled={uploadDocument.isPending}
           >
             {uploadDocument.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
-            Upload de {type === 'internal' ? 'Material' : 'Entregável'}
+            Upload de {type === 'internal' ? 'Documento Interno' : 'Entregável'}
           </Button>
+        </div>
+      )}
+
+      {type === 'internal' && (
+        <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center gap-3 mb-4">
+          <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
+          <p className="text-[10px] text-amber-800 font-medium">
+            Esta aba é visível apenas para consultores e administradores. O cliente não tem acesso a esses arquivos.
+          </p>
         </div>
       )}
 
@@ -391,12 +400,12 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
                 >
                   Encontros
                 </TabsTrigger>
-                {mode === 'admin' && (
+                {(mode === 'admin' || mode === 'consultor') && (
                   <TabsTrigger 
                     value="internos" 
                     className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 text-[11px] font-bold uppercase tracking-wider"
                   >
-                    Materiais de Apoio
+                    Documentos Internos
                   </TabsTrigger>
                 )}
                 <TabsTrigger 
@@ -411,7 +420,7 @@ function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, 
             <TabsContent value="encontros" className="mt-0">
               <MeetingList phase={phase} contrato={contrato} onSchedule={onSchedule} mode={mode} />
             </TabsContent>
-            {mode === 'admin' && (
+            {(mode === 'admin' || mode === 'consultor') && (
               <TabsContent value="internos" className="mt-0">
                 <DocumentList phase={phase} contrato={contrato} type="internal" mode={mode} />
               </TabsContent>
