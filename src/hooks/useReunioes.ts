@@ -262,14 +262,15 @@ export function useReunioes() {
         throw error;
       }
       
-      if (!data.success) {
+      if (!data?.success) {
         console.error('[useReunioes] Erro retornado pela Edge Function:', data);
-        const errorMsg = data.message || data.error || 'Erro na sincronização Microsoft';
-        const detailMsg = data.details?.error?.message || '';
+        const errorMsg = data?.message || data?.error || 'Erro na sincronização Microsoft';
+        const detailMsg = data?.details?.error?.message || data?.details?.message || '';
         throw new Error(`${errorMsg}${detailMsg ? `: ${detailMsg}` : ''}`);
       }
       
       return data;
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reunioes'] });
