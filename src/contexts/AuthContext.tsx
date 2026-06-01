@@ -46,15 +46,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log("[AUTH_SESSION_LOADED]", { hasSession: !!session, userId: session?.user?.id });
         
         if (session?.user) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
+          if (profError) {
+            console.error("[PROFILE_LOAD_ERROR]", profError);
+          }
+
           if (profile) {
+            console.log("[PROFILE_LOADED]", { profile });
             setUser({
               id: profile.id,
               email: profile.email,
@@ -62,16 +68,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               role: profile.role,
               consultorId: profile.id,
             });
-            setPerfil(profile.role === 'admin' ? 'admin' : (profile.role === 'consultor' ? 'consultor' : null));
+            
+            // Set initial perfil based on role
+            setPerfil(profile.role === 'admin' ? 'admin' : (profile.role === 'consultor' ? 'consultor' : (profile.role === 'cliente' ? 'cliente' : null)));
 
-            // If it's a client, also set the client session
             if (profile.role === 'cliente') {
-              const { data: clientData } = await supabase
+              const { data: clientData, error: clientError } = await supabase
                 .from('clients')
                 .select('id, trade_name')
                 .eq('auth_user_id', session.user.id)
                 .is('deleted_at', null)
                 .maybeSingle();
+
+              if (clientError) console.error("[CLIENT_LOAD_ERROR]", clientError);
 
               if (clientData) {
                 setClienteSession({

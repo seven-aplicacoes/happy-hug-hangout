@@ -120,31 +120,47 @@ export function useConsultantPermissions(consultantId?: string) {
 export function useMyPermissions() {
   const { user: authUser, perfil } = useAuth();
   const { data: permissions, isLoading } = useQuery({
-    queryKey: ['my-permissions', authUser?.id],
+    queryKey: ['my-permissions', authUser?.id, perfil],
     queryFn: async () => {
+      console.log("[PERMISSIONS_CHECK_START]", { userId: authUser?.id, perfil });
       if (!authUser) return [];
+      
+      // Se for perfil cliente, não precisamos buscar na tabela de permissões de consultores
+      if (perfil === 'cliente' || authUser.role === 'cliente') {
+        console.log("[PERMISSIONS_CLIENT_BYPASS]");
+        return 'client_bypass' as any;
+      }
+
       const user = authUser;
 
       // Check if user is admin
-      const { data: profile } = await supabase
+      const { data: profile, error: profError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
       
+      if (profError) {
+        console.error("[PROFILE_LOAD_ERROR]", profError);
+      }
+
       const { data: permissionData, error: permError } = await supabase
         .from('consultant_permissions')
         .select('*')
         .eq('consultant_id', user.id);
 
-      if (permError) throw permError;
+      if (permError) {
+        console.error("[PERMISSIONS_LOAD_ERROR]", permError);
+        throw permError;
+      }
+
+      console.log("[PERMISSIONS_LOADED]", { count: permissionData?.length, role: profile?.role });
 
       if (permissionData && permissionData.length > 0) {
         return permissionData as ConsultantPermission[];
       }
 
       if (profile?.role === 'admin') {
-        // Admins with no specific permission records have all permissions
         return 'admin' as const;
       }
 
@@ -154,8 +170,8 @@ export function useMyPermissions() {
   });
 
   const can = (moduleKey: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' = 'view') => {
-    if (isLoading) return true; // Default to true while loading to avoid flickering
-    if (permissions === 'admin' || perfil === 'admin') return true;
+    if (isLoading) return true; 
+    if (permissions === 'admin' || perfil === 'admin' || permissions === 'client_bypass' || perfil === 'cliente') return true;
     if (!permissions || !Array.isArray(permissions)) return false;
     
     const permission = permissions.find(p => p.module_key === moduleKey);

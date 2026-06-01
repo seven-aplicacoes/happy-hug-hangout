@@ -55,7 +55,14 @@ const RootRedirect = ({ children }: { children?: React.ReactNode }) => {
   const { user, perfil, isLoading } = useAuth();
   
   if (isLoading) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <span className="text-sm text-muted-foreground">Carregando portal...</span>
+        </div>
+      </div>
+    );
   }
 
   if (user) {

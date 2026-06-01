@@ -30,6 +30,10 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
   const { upsertReuniao } = useReunioes();
   
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  useEffect(() => {
+    setSelectedSlot(null);
+  }, [open]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
