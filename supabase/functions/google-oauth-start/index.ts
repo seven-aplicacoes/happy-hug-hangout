@@ -31,6 +31,8 @@ serve(async (req) => {
     authUrl.searchParams.set('access_type', 'offline');
     authUrl.searchParams.set('prompt', 'consent');
 
+    console.log("Generated Auth URL:", authUrl.toString());
+
     return new Response(JSON.stringify({ url: authUrl.toString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
