@@ -283,6 +283,7 @@ export interface ContractModuleMeeting {
   teamsJoinUrl?: string;
   location?: string;
   locationUrl?: string;
+  meetingUrl?: string;
   meetingLinkProvider?: 'teams' | 'manual';
   microsoftEventId?: string;
   orderIndex: number;
