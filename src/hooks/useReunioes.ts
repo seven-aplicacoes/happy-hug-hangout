@@ -65,7 +65,13 @@ export function useReunioes() {
         teamsJoinUrl: r.teams_join_url,
         teams_creation_status: r.teams_creation_status,
         teams_creation_error: r.teams_creation_error,
+        microsoft_sync_status: r.microsoft_sync_status,
+        microsoft_sync_error: r.microsoft_sync_error,
+        microsoft_last_sync_at: r.microsoft_last_sync_at,
+        sync_status: r.sync_status,
+        sync_error: r.sync_error,
       })) as Reuniao[];
+
 
     },
   });
