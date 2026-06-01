@@ -113,15 +113,18 @@ export const ModalRegistrarAta = ({ open, onClose, meetingId, meetingTitle, onSu
       });
 
       // Update timeline
-      await supabase.from('timeline_events').insert({
-        client_id: (await supabase.from('meetings').select('client_id').eq('id', meetingId).single()).data?.client_id,
-        meeting_id: meetingId,
-        type: 'reuniao',
-        title: `Ata registrada: ${meetingTitle}`,
-        description: minutes.summary,
-        date: new Date().toISOString(),
-        status: 'realizada'
-      });
+      const { data: meetingData } = await supabase.from('meetings').select('client_id').eq('id', meetingId).single();
+      if (meetingData) {
+        await supabase.from('timeline_events').insert({
+          client_id: meetingData.client_id,
+          meeting_id: meetingId,
+          type: 'reuniao',
+          title: `Ata registrada: ${meetingTitle}`,
+          description: minutes.summary || '',
+          date: new Date().toISOString(),
+          status: 'realizada'
+        } as any);
+      }
 
       toast({ title: 'Sucesso', description: 'Ata registrada com sucesso.' });
       if (onSuccess) onSuccess();
