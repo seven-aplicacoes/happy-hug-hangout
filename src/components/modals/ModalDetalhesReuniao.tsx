@@ -174,7 +174,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         location: r.location,
         locationUrl: r.location_url,
         teamsJoinUrl: r.teams_join_url,
-        meetingLinkProvider: r.meeting_link_provider as 'manual' | 'teams',
+        meetingLinkProvider: r.meeting_link_provider as 'manual' | 'teams' | 'teams_manual',
         microsoftEventId: r.microsoft_event_id,
         participantes: Array.isArray(r.participants) ? (r.participants as unknown as string[]) : [],
         createdAt: r.created_at,
