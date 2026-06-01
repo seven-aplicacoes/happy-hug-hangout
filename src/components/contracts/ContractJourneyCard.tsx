@@ -38,7 +38,9 @@ function normalizeStatus(status: string) {
     .trim();
 }
 
-const canAdvanceToNextMeeting = () => true;
+function canAdvanceToNextMeeting(_previousMeeting?: any) {
+  return true;
+}
 
 interface MeetingListProps {
   phase: any;
