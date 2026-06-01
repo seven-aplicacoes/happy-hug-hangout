@@ -39,11 +39,13 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const [minutes, setMinutes] = useState<MeetingMinutes | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [generatingTeams, setGeneratingTeams] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isConfirmingCompletion, setIsConfirmingCompletion] = useState(false);
   const [registrarAtaOpen, setRegistrarAtaOpen] = useState(false);
   const [remarcarOpen, setRemarcarOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+
 
 
   const isAdmin = perfil === 'admin';
