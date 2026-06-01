@@ -199,9 +199,11 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
       )}
 
 
-      <div className="space-y-4 mb-5">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Benefícios</p>
+        <div className="space-y-4 mb-5">
+          {integ.id === 'microsoft_outlook' && <MicrosoftDiagnostics />}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Benefícios</p>
+
           <ul className="space-y-1.5">
             {integ.beneficios.map((b, i) => (
               <li key={i} className="flex gap-2 text-sm">
