@@ -566,12 +566,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             )}
           </div>
           <div className="flex gap-2">
-            {canRegistrarAta && (
+            {!isClient && canRegistrarAta && (
               <Button variant="outline" onClick={() => setRegistrarAtaOpen(true)} className="gap-2">
                 <FileText className="h-4 w-4" /> {minutes ? 'Editar Ata' : 'Registrar Ata'}
               </Button>
             )}
-            {canMarkAsRealizada && (
+            {!isClient && canMarkAsRealizada && (
               <Button onClick={() => setIsConfirmingCompletion(true)} className="bg-green-600 hover:bg-green-700 text-white gap-2">
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
