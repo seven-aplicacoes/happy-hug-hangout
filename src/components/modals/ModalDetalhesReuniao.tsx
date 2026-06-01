@@ -805,7 +805,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                           </span>
                         </div>
                         
-                        {!isClient && (
+                        {canEditLink && (
                           <div className="flex flex-wrap gap-2">
                             <Button 
                               variant="outline" 
