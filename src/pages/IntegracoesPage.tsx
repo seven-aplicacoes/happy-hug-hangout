@@ -26,9 +26,9 @@ const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
 
 const labelStatus: Record<StatusIntegracao, string> = {
   conectado: 'Conectado',
-  beta: 'Beta',
-  disponivel: 'Disponível',
-  em_breve: 'Em Breve',
+  beta: 'Configuração',
+  disponivel: 'Configuração',
+  em_breve: 'Configuração',
 };
 
 const labelCategoria: Record<CategoriaIntegracao, string> = {
