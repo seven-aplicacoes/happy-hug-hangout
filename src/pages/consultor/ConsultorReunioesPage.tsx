@@ -238,14 +238,19 @@ export default function ConsultorReunioesPage() {
             />
             <div className="rounded-md border overflow-hidden divide-y">
               {items.map(r => (
-                <div key={r.id} className="cursor-pointer hover:bg-muted/50 transition-colors p-4 flex items-center justify-between gap-3 group">
-                  <div className="flex items-center gap-4 min-w-0" onClick={() => setSelectedReuniao(r)}>
+                <div 
+                  key={r.id} 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors p-4 flex items-center justify-between gap-3 group"
+                  onClick={() => setSelectedReuniao(r)}
+                >
+                  <div className="flex items-center gap-4 min-w-0">
                     <span className="text-base font-mono font-semibold text-primary tabular-nums shrink-0">{r.startTime}</span>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{r.clienteNome} — {r.tipo}</p>
                       <p className="text-xs text-muted-foreground truncate">{r.title}</p>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-2 shrink-0">
                     {r.status === 'agendada' && (
                       <div className="hidden group-hover:flex items-center gap-1 mr-2">
