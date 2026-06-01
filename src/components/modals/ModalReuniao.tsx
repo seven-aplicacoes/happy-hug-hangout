@@ -321,24 +321,25 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               : 'Link do Microsoft Teams gerado com sucesso.';
 
           } else {
-
-            throw new Error(response.data?.error || 'Link not generated');
+            const errorMsg = response.error || response.data?.error || 'Link not generated';
+            throw new Error(errorMsg);
           }
         } catch (teamsError: any) {
-          console.error('Teams integration failed:', teamsError);
+          console.error('[Teams] Falha ao gerar link:', teamsError);
+          const errorMsg = teamsError.message || String(teamsError);
+          
           toast({
             title: "Aviso",
             description: "Encontro salvo, mas não foi possível gerar o link do Teams automaticamente.",
             variant: "warning" as any
           });
+          
           payload.meetingLinkProvider = 'teams';
           payload.teams_creation_status = 'failed';
-          payload.teams_creation_error = teamsError.message || String(teamsError);
-          (payload as any).historyAction = 'teams_failed';
+          payload.teams_creation_error = errorMsg;
+          (payload as any).historyAction = 'teams_link_generation_failed';
           (payload as any).historyReason = `Falha ao gerar link do Microsoft Teams: ${payload.teams_creation_error}`;
         } finally {
-
-
           setIsGeneratingTeamsLink(false);
         }
       } else if (meetingLinkMode === 'manual' && manualMeetingUrl) {

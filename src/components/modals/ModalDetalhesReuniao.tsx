@@ -608,6 +608,28 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         )}
 
 
+        {showManualLinkForm && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-200">
+            <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2">
+              <LinkIcon className="h-4 w-4" /> Adicionar Link Manual
+            </h4>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-blue-800">URL da Reunião</Label>
+              <Input 
+                placeholder="https://..." 
+                value={manualUrl}
+                onChange={e => setManualUrl(e.target.value)}
+                className="bg-white border-blue-200 focus-visible:ring-blue-500"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(false)}>Cancelar</Button>
+              <Button size="sm" onClick={handleAddManualLink} disabled={submitting} className="bg-blue-600 hover:bg-blue-700">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar Link'}
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             <div className="bg-muted/30 rounded-2xl p-6 border border-muted/60 space-y-4">
@@ -706,10 +728,10 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                               )}
                               {reuniao.teams_creation_status === 'failed' ? "Tentar gerar link novamente" : "Gerar link do Teams"}
                             </Button>
-                            <Button 
+                             <Button 
                               variant="outline" 
                               size="sm" 
-                              onClick={() => setRemarcarOpen(true)} 
+                              onClick={() => setShowManualLinkForm(true)} 
                               className="text-[10px] h-8 gap-1.5"
                             >
                               <Plus className="h-3 w-3" /> Adicionar link manual
