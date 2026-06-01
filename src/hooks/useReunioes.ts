@@ -122,7 +122,11 @@ export function useReunioes() {
             scheduled_meeting_id: reuniao.status === 'cancelada' ? null : meetingId,
             scheduled_at: scheduledAt,
             consultant_id: reuniao.consultorId,
-            completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null
+            completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null,
+            teams_join_url: reuniao.teamsJoinUrl,
+            microsoft_event_id: reuniao.microsoftEventId,
+            meeting_link_provider: reuniao.meetingLinkProvider,
+            location_url: reuniao.locationUrl
           })
           .eq('id', reuniao.contractModuleMeetingId);
       }
