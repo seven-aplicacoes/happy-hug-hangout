@@ -337,9 +337,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                             Adicionar Manual
                           </Button>
                         </div>
-                        <Button variant="link" size="sm" className="text-[10px] text-muted-foreground" onClick={handleTestConnection} disabled={submitting}>
-                          {submitting ? 'Testando...' : 'Diagnosticar Conexão Google'}
-                        </Button>
+                        <div className="flex gap-4">
+                          <Button variant="link" size="sm" className="text-[10px] text-muted-foreground" onClick={handleTestConnection} disabled={submitting}>
+                            {submitting ? 'Testando...' : 'Diagnosticar Conexão Google'}
+                          </Button>
+                          <Button variant="link" size="sm" className="text-[10px] text-muted-foreground" onClick={handleTestEdgeFunction} disabled={submitting}>
+                            Testar Edge Function
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
