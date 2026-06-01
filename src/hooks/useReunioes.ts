@@ -270,6 +270,14 @@ export function useReunioes() {
     }
   });
 
+  const testMicrosoftConnection = async () => {
+    const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
+      body: { action: 'test_connection' }
+    });
+    if (error) throw error;
+    return data;
+  };
+
   const testMicrosoftCalendar = async () => {
     const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
       body: { action: 'test_calendar' }

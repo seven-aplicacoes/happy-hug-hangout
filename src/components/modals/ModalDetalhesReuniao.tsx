@@ -1078,7 +1078,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                       className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
                     >
                       {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
-                      Testar Conexão Graph
+                      1. Testar Conexão Básica
+                    </Button>
+
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleTestCalendar} 
+                      disabled={testingCalendar}
+                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
+                    >
+                      {testingCalendar ? <Loader2 className="h-3 w-3 animate-spin" /> : <Calendar className="h-3 w-3" />}
+                      2. Testar Calendário (POST)
                     </Button>
                     
                     <Button 
@@ -1086,12 +1097,16 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                       size="sm" 
                       onClick={() => generateTeamsLink()} 
                       disabled={generatingTeams}
-                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
+                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100 font-bold"
                     >
                       {generatingTeams ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
-                      Forçar Sincronização
+                      3. Forçar Sincronização
                     </Button>
                     
+                    <div className="bg-amber-100/50 p-2 rounded text-[9px] text-amber-900 border border-amber-200 mt-2 italic">
+                      <strong>Dica:</strong> Se o teste 1 der OK mas o 2 der 403, reconecte o Microsoft Outlook/Calendar com permissão total de Calendário.
+                    </div>
+
                     <Button 
                       variant="ghost" 
                       size="sm" 
