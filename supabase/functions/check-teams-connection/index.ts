@@ -10,14 +10,36 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const apiKey = Deno.env.get('MICROSOFT_TEAMS_API_KEY')
-  
-  // Se a chave da API do Lovable Connector estiver presente, consideramos conectado.
-  // Em uma implementação mais robusta, poderíamos fazer uma chamada de teste (/me).
-  const isConnected = !!apiKey
+  try {
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
+    const teamsApiKey = Deno.env.get('MICROSOFT_TEAMS_API_KEY')
 
-  return new Response(
-    JSON.stringify({ isConnected }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
+    if (!lovableApiKey || !teamsApiKey) {
+      return new Response(
+        JSON.stringify({ isConnected: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Verify connection via gateway's verify_credentials endpoint
+    const response = await fetch('https://connector-gateway.lovable.dev/api/v1/verify_credentials', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'X-Connection-Api-Key': teamsApiKey,
+      },
+    })
+
+    const isConnected = response.ok
+    return new Response(
+      JSON.stringify({ isConnected }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (err) {
+    console.error('check-teams-connection error:', err)
+    return new Response(
+      JSON.stringify({ isConnected: false }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
 })
