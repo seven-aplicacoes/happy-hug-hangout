@@ -99,12 +99,63 @@ export function useReunioes() {
       );
 
 
+      const { data: currentMeeting } = await supabase
+        .from('meetings')
+        .select('status, meeting_date, start_time, location_url, teams_join_url, meeting_url')
+        .eq('id', cleanPayload.id)
+        .maybeSingle();
+
       const { data, error } = await supabase
         .from('meetings')
-        .upsert(cleanPayload as any)
+        .upsert({ ...cleanPayload, updated_at: new Date().toISOString(), updated_by: user?.id } as any)
         .select();
 
       if (error) throw error;
+
+      const newMeeting = data[0];
+
+      // Log history if it's an update
+      if (currentMeeting) {
+        const historyPayload: any = {
+          meeting_id: newMeeting.id,
+          previous_status: currentMeeting.status,
+          new_status: newMeeting.status,
+          changed_by: user?.id,
+          action: 'update',
+          change_reason: newMeeting.status === 'cancelada' ? (reuniao as any).cancelReason : 'Alteração via formulário',
+        };
+
+        if (currentMeeting.status !== newMeeting.status) {
+          historyPayload.action = newMeeting.status === 'cancelada' ? 'cancel' : 'status_change';
+        }
+
+        if (currentMeeting.meeting_date !== newMeeting.meeting_date || currentMeeting.start_time !== newMeeting.start_time) {
+          historyPayload.action = 'reschedule';
+          historyPayload.previous_scheduled_at = currentMeeting.meeting_date ? `${currentMeeting.meeting_date}T${currentMeeting.start_time}` : null;
+          historyPayload.new_scheduled_at = newMeeting.meeting_date ? `${newMeeting.meeting_date}T${newMeeting.start_time}` : null;
+        }
+
+        const currentLink = currentMeeting.teams_join_url || currentMeeting.location_url || currentMeeting.meeting_url;
+        const newLink = newMeeting.teams_join_url || newMeeting.location_url || newMeeting.meeting_url;
+        if (currentLink !== newLink) {
+          historyPayload.previous_link = currentLink;
+          historyPayload.new_link = newLink;
+          if (historyPayload.action === 'update') historyPayload.action = 'link_change';
+        }
+
+        await supabase.from('meeting_status_history').insert(historyPayload);
+      } else {
+        // Initial schedule history
+        await supabase.from('meeting_status_history').insert({
+          meeting_id: newMeeting.id,
+          new_status: newMeeting.status,
+          changed_by: user?.id,
+          action: 'create',
+          change_reason: 'Agendamento inicial',
+          new_scheduled_at: newMeeting.meeting_date ? `${newMeeting.meeting_date}T${newMeeting.start_time}` : null,
+          new_link: newMeeting.teams_join_url || newMeeting.location_url || newMeeting.meeting_url
+        });
+      }
 
       // Se estiver vinculada a um encontro da jornada, atualiza o status desse encontro
       if (reuniao.contractModuleMeetingId) {
