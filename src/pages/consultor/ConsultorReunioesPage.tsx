@@ -270,8 +270,19 @@ export default function ConsultorReunioesPage() {
                         >
                           <CalendarClock className="h-3 w-3" /> Remarcar
                         </Button>
+                        {(r.teamsJoinUrl || r.meetingUrl) && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 text-[10px] gap-1 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={(e) => { e.stopPropagation(); window.open(r.teamsJoinUrl || r.meetingUrl, '_blank'); }}
+                          >
+                            <Play className="h-3 w-3" /> Entrar
+                          </Button>
+                        )}
                       </div>
                     )}
+
                     <StatusTag label={labelStatus[r.status]} />
                     <ChevronRight className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
                   </div>
