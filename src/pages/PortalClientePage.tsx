@@ -291,6 +291,20 @@ export default function PortalClientePage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <StatusTag label={event.status || ''} />
+                      {event.meeting_link && !['cancelada', 'cancelado'].includes(event.status || '') && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-[10px] uppercase font-bold text-blue-600 border-blue-200 hover:bg-blue-50 gap-1.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(event.meeting_link, '_blank', 'noopener,noreferrer');
+                          }}
+                        >
+                          {event.meeting_link_provider === 'teams' ? <Video className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
+                          Entrar
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold text-primary">
                         Ver detalhes
                       </Button>
