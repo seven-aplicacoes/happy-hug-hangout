@@ -875,7 +875,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               </div>
             </div>
 
-            <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+            <div className={cn("bg-primary/5 rounded-2xl p-4 border border-primary/10", isClient && "hidden")}>
               <h3 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
                 <Info className="h-4 w-4" /> Auditoria
               </h3>
