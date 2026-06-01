@@ -507,7 +507,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                     {minutes.discussionPoints && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
-                          <Users className="h-3 w-3" /> Pontos Discutidos
+                          <UsersIcon className="h-3 w-3" /> Pontos Discutidos
                         </h4>
                         <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.discussionPoints}</p>
                       </div>
@@ -526,7 +526,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                       {minutes.nextSteps && (
                         <div className="space-y-2">
                           <h4 className="text-[10px] font-black uppercase text-green-800 flex items-center gap-2">
-                            <ListChecks className="h-3 w-3" /> Próximos Passos
+                            <ListChecksIcon className="h-3 w-3" /> Próximos Passos
                           </h4>
                           <p className="text-xs text-green-900 leading-relaxed whitespace-pre-wrap">{minutes.nextSteps}</p>
                         </div>
@@ -536,11 +536,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                     {!isClient && minutes.internalNotes && (
                       <div className="mt-4 pt-4 border-t border-green-200/50 space-y-2 bg-amber-50/50 -mx-6 -mb-6 p-6">
                         <h4 className="text-[10px] font-black uppercase text-amber-800 flex items-center gap-2">
-                          <Lock className="h-3 w-3" /> Observações Internas
+                          <LockIcon className="h-3 w-3" /> Observações Internas
                         </h4>
                         <p className="text-xs text-amber-900 leading-relaxed whitespace-pre-wrap italic">{minutes.internalNotes}</p>
                       </div>
                     )}
+
                   </div>
                 </div>
               </div>
