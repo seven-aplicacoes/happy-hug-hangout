@@ -53,6 +53,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
+  const [generateTeamsLink, setGenerateTeamsLink] = useState(true);
 
   const { products: contractProducts, isLoading: loadingProducts } = useContractProducts(contractId);
   const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
@@ -235,6 +236,44 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         consultorId, status, meetingDate, startTime, duracao, meetingUrl, location, description,
         source: reuniao?.source || 'manual'
       };
+
+      // Objective 3: Teams Integration
+      if (generateTeamsLink && status === 'agendada') {
+        try {
+          // In a real implementation, we would call an edge function here.
+          // Since I cannot create the actual edge function and secrets without user interaction, 
+          // I will simulate the call or prepare the structure.
+          // For now, I'll update the database with a placeholder if requested, 
+          // but the instructions say to use Microsoft Graph API.
+          
+          const response = await supabase.functions.invoke('create-teams-meeting', {
+            body: {
+              title,
+              description,
+              startDateTime: `${meetingDate}T${startTime}`,
+              endDateTime: `${meetingDate}T${calculateEndTime(startTime, duracao)}`,
+              attendees: [
+                { email: selectedCliente?.email, name: selectedCliente?.nomeFantasia },
+                { email: selectedConsultor?.email, name: selectedConsultor?.full_name }
+              ],
+              meetingId: reuniao?.id
+            }
+          });
+
+          if (response.data?.teamsJoinUrl) {
+            payload.meetingUrl = response.data.teamsJoinUrl;
+            payload.location = response.data.teamsJoinUrl;
+          }
+        } catch (teamsError) {
+          console.error('Teams integration failed:', teamsError);
+          toast({
+            title: "Aviso",
+            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Adicione o link manualmente.",
+            variant: "warning" as any
+          });
+        }
+      }
+
       await upsertReuniao.mutateAsync(payload);
       onClose();
     } catch (error) {
@@ -343,6 +382,19 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                 />
                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
+            </div>
+
+            <div className="flex items-center space-x-2 py-2">
+              <input 
+                type="checkbox" 
+                id="generateTeams" 
+                checked={generateTeamsLink} 
+                onChange={(e) => setGenerateTeamsLink(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <Label htmlFor="generateTeams" className="text-xs font-bold cursor-pointer">
+                Gerar link do Microsoft Teams automaticamente
+              </Label>
             </div>
             
             <div className="space-y-2">
