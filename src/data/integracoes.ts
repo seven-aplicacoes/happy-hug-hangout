@@ -1,7 +1,7 @@
 // === Bloco 9 — Integrações Seven ===
 // Estrutura preparatória para integrações externas.
 
-export type StatusIntegracao = 'conectado' | 'disponivel' | 'em_breve' | 'beta';
+export type StatusIntegracao = 'conectado' | 'configuracao';
 export type CategoriaIntegracao = 'agenda' | 'reuniao' | 'mensageria' | 'conhecimento';
 
 export interface Integracao {
