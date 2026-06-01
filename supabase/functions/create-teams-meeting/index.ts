@@ -6,9 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// O connector_id principal para calendário é microsoft_outlook
-const CONNECTOR_ID = 'microsoft_outlook'
-const GATEWAY_URL = `https://connector-gateway.lovable.dev/${CONNECTOR_ID}`
+// O connector_id pode ser microsoft_outlook ou microsoft_teams
+let CONNECTOR_ID = 'microsoft_outlook'
+let GATEWAY_URL = `https://connector-gateway.lovable.dev/${CONNECTOR_ID}`
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,14 +23,22 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     const outlookApiKey = Deno.env.get('MICROSOFT_OUTLOOK_API_KEY');
+    const teamsApiKey = Deno.env.get('MICROSOFT_TEAMS_API_KEY');
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { meetingId, action: requestedAction } = await req.json();
-    console.log(`[TEAMS_SYNC_START]`, { meetingId, action: requestedAction });
+    const { meetingId, action: requestedAction, connector: requestedConnector } = await req.json();
+    console.log(`[TEAMS_SYNC_START]`, { meetingId, action: requestedAction, connector: requestedConnector });
 
-    if (!lovableApiKey || !outlookApiKey) {
-      console.error('[TEAMS_SYNC_ERROR] Missing API keys');
+    if (requestedConnector) {
+      CONNECTOR_ID = requestedConnector;
+      GATEWAY_URL = `https://connector-gateway.lovable.dev/${CONNECTOR_ID}`;
+    }
+
+    const currentApiKey = CONNECTOR_ID === 'microsoft_teams' ? teamsApiKey : outlookApiKey;
+
+    if (!lovableApiKey || !currentApiKey) {
+      console.error('[TEAMS_SYNC_ERROR] Missing API keys', { lovableApiKey: !!lovableApiKey, currentApiKey: !!currentApiKey, connector: CONNECTOR_ID });
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -44,7 +52,7 @@ serve(async (req) => {
 
     const commonHeaders = {
       'Authorization': `Bearer ${lovableApiKey}`,
-      'X-Connection-Api-Key': outlookApiKey,
+      'X-Connection-Api-Key': currentApiKey!,
       'Content-Type': 'application/json',
     };
 
