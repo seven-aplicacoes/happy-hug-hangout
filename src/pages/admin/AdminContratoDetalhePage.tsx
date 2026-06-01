@@ -5,8 +5,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   ArrowLeft, Briefcase, Calendar, DollarSign, Users, 
   ExternalLink, Loader2, Package, ListChecks, CheckCircle2,
-  Pencil, Save, X, Plus
+  Pencil, Save, X, Plus, Trash2, AlertTriangle
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useContratos } from '@/hooks/useContratos';
 import { useContractProducts } from '@/hooks/useContractProducts';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
@@ -26,7 +36,7 @@ export default function AdminContratoDetalhePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { contratos, isLoading: loadingContratos, upsertContrato } = useContratos();
+  const { contratos, isLoading: loadingContratos, upsertContrato, deleteContrato } = useContratos();
   const { clientes } = useClientes();
   const { consultores } = useConsultores();
   
@@ -35,6 +45,7 @@ export default function AdminContratoDetalhePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const contrato = useMemo(() => {
     return contratos?.find(c => c.id === id);
@@ -178,10 +189,20 @@ export default function AdminContratoDetalhePage() {
                 </Button>
               </>
             ) : (
-              <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
-                <Pencil className="h-4 w-4" />
-                Editar Contrato
-              </Button>
+              <>
+                <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
+                  <Pencil className="h-4 w-4" />
+                  Editar Contrato
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -303,6 +324,38 @@ export default function AdminContratoDetalhePage() {
         />
       )}
 
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-destructive mb-2">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertDialogTitle>Excluir Contrato Permanentemente</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="space-y-3">
+              <p>Tem certeza que deseja excluir o contrato <strong>{contrato.tipo}</strong>?</p>
+              <p className="p-3 bg-destructive/5 rounded-lg text-xs border border-destructive/10">
+                <strong>Atenção:</strong> Esta ação excluirá permanentemente todos os dados vinculados a este contrato, incluindo produtos, módulos, reuniões, tarefas e documentos.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                try {
+                  await deleteContrato.mutateAsync(contrato.id);
+                  navigate('/admin/contratos');
+                } catch (error) {
+                  // Erro já tratado pelo hook
+                }
+              }}
+            >
+              Excluir Permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
