@@ -2322,6 +2322,59 @@ export type Database = {
           },
         ]
       }
+      meeting_minutes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          decisions: string | null
+          discussion_points: string | null
+          id: string
+          internal_notes: string | null
+          meeting_id: string
+          next_steps: string | null
+          summary: string | null
+          updated_at: string | null
+          updated_by: string | null
+          visible_to_client: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          decisions?: string | null
+          discussion_points?: string | null
+          id?: string
+          internal_notes?: string | null
+          meeting_id: string
+          next_steps?: string | null
+          summary?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          visible_to_client?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          decisions?: string | null
+          discussion_points?: string | null
+          id?: string
+          internal_notes?: string | null
+          meeting_id?: string
+          next_steps?: string | null
+          summary?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          visible_to_client?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_minutes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_scheduling_events: {
         Row: {
           calendly_event_uri: string | null
