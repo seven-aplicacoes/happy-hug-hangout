@@ -61,7 +61,7 @@ export function useContractModuleMeetings(moduleId?: string) {
         const ADVANCING_STATUSES = [
           'realizada', 'concluido', 'concluído', 'cancelada', 'cancelado', 
           'no_show', 'no_show_justificado', 'finalizado', 'completed', 'done', 
-          'cancelled', 'canceled', 'remarcada_concluido'
+          'cancelled', 'canceled', 'remarcada_concluido', 'remarcada_cancelada'
         ];
 
         const normalizeStatus = (status: string) => {
