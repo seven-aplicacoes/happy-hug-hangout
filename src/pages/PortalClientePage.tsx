@@ -89,21 +89,12 @@ export default function PortalClientePage() {
   // Debug logs
   useEffect(() => {
     if (clientId) {
+      console.log('[Portal Cliente] session:', clienteSession);
       console.log('[Portal Cliente] client id:', clientId);
-      console.log('[Portal Cliente] contracts:', contratos);
+      console.log('[Portal Cliente] contracts list:', contratos);
       console.log('[Portal Cliente] active contract:', activeContract);
     }
-  }, [clientId, contratos, activeContract]);
-
-  const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
-  const { csatStatus } = usePortalCSAT(clientId);
-
-  const isLoading = loadingFicha || loadingContratos || loadingHist || loadingSummary;
-
-  useEffect(() => {
-    console.log('[Portal Cliente] session:', clienteSession);
-    console.log('[Portal Cliente] contracts list:', contratos);
-  }, [clienteSession, contratos]);
+  }, [clienteSession, clientId, contratos, activeContract]);
 
 
   const handleLogin = async () => {
