@@ -9,7 +9,6 @@ const corsHeaders = {
 
 serve(async (req) => {
   console.log("create-google-meet-meeting chamada");
-  console.log("Method:", req.method);
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -30,8 +29,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Payload recebido:", body);
-    meetingId = body.meetingId || body.meeting_id; // Suporte a ambos os formatos
+    meetingId = body.meetingId || body.meeting_id;
     action = body.action || 'create';
 
     if (!meetingId) {
@@ -54,23 +52,21 @@ serve(async (req) => {
     if (meeting.status === 'cancelada') throw new Error("Não é possível sincronizar uma reunião cancelada");
     if (!meeting.meeting_date || !meeting.start_time) throw new Error("Reunião não possui data ou hora definida");
 
-    const userId = meeting.consultant_id;
-    if (!userId) throw new Error("Reunião não possui consultor atribuído");
-
-    // Get connection
+    // Get GLOBAL connection
     let { data: connection, error: connError } = await supabase
       .from('google_connections')
       .select('*')
-      .eq('user_id', userId)
-      .single();
+      .eq('scope_type', 'global')
+      .eq('status', 'active')
+      .maybeSingle();
 
-    if (connError || !connection) throw new Error("Conexão Google não encontrada para este consultor");
-    if (!connection.refresh_token) throw new Error("Refresh token ausente. Peça reconexão da conta Google.");
+    if (connError || !connection) throw new Error("Conexão Google GLOBAL não configurada ou inativa.");
+    if (!connection.refresh_token) throw new Error("Refresh token global ausente. O administrador deve reconectar.");
 
-    // Check if token expired (or about to expire in 5 min)
+    // Check if token expired
     const expiresAt = new Date(connection.expires_at).getTime();
     if (expiresAt <= Date.now() + 300000) {
-      console.log("Token expirado ou expirando em breve, renovando...");
+      console.log("Token global expirado ou expirando em breve, renovando...");
       const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -83,16 +79,16 @@ serve(async (req) => {
       });
 
       const tokens = await refreshResponse.json();
-      if (!refreshResponse.ok) throw new Error("Falha ao renovar token Google: " + (tokens.error_description || tokens.error));
+      if (!refreshResponse.ok) throw new Error("Falha ao renovar token Google Global: " + (tokens.error_description || tokens.error));
       
       const updates = {
         access_token: tokens.access_token,
         expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       };
-      await supabase.from('google_connections').update(updates).eq('user_id', userId);
+      await supabase.from('google_connections').update(updates).eq('id', connection.id);
       connection.access_token = tokens.access_token;
-      console.log("Token renovado com sucesso");
+      console.log("Token global renovado com sucesso");
     }
 
     const accessToken = connection.access_token;
@@ -140,7 +136,7 @@ serve(async (req) => {
         method = 'PATCH';
       }
 
-      console.log(`Enviando ${method} para Google Calendar:`, url);
+      console.log(`Enviando ${method} para Google Calendar (Global):`, url);
       
       const response = await fetch(url, {
         method,
@@ -152,9 +148,7 @@ serve(async (req) => {
       });
 
       const event = await response.json();
-      console.log("Resposta Google Calendar:", event);
       
-      // Log interaction
       await supabase.from('meeting_sync_logs').insert({
         meeting_id: meetingId,
         action: `google_${action}`,
@@ -162,7 +156,8 @@ serve(async (req) => {
         provider: 'google',
         request_payload: eventBody,
         response_payload: event,
-        status_code: response.status
+        status_code: response.status,
+        requested_by_user_id: meeting.consultant_id // Track who triggered it
       });
 
       if (!response.ok) {
@@ -238,7 +233,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: false,
       error: error?.message || "Erro desconhecido na Edge Function",
-      stack: error?.stack || null
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
