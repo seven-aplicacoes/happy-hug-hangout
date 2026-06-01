@@ -53,25 +53,30 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const isClient = perfil === 'cliente';
 
   const fetchDetails = async () => {
+    if (!reuniaoId) {
+      console.error('[MeetingDetails] No reuniaoId provided');
+      return;
+    }
+
     setLoading(true);
     try {
+      console.log('[MeetingDetails] Fetching details for ID:', reuniaoId);
+      
       const { data: r, error } = await supabase
         .from('meetings')
         .select(`
           *,
           client:client_id (trade_name, corporate_name, email),
-          profile:consultant_id (full_name, email),
-          creator:profiles!meetings_created_by_fkey (full_name),
-          updater:profiles!meetings_updated_by_fkey (full_name),
-          canceler:profiles!meetings_canceled_by_fkey (full_name),
-          completer:profiles!meetings_completed_by_fkey (full_name)
+          profile:consultant_id (full_name, email)
         `)
-
         .eq('id', reuniaoId)
-        .single();
+        .maybeSingle();
 
+      if (error) {
+        console.error('[MeetingDetails] Supabase error fetching meeting:', error);
+        throw error;
+      }
 
-      if (error) throw error;
 
       // Fetch history
       const { data: h } = await supabase
