@@ -276,7 +276,23 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
   if (!reuniao) return null;
 
+  const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
+  const canCancel = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
+  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
+  const canRegistrarAta = !isClient && reuniao.status !== 'cancelada';
+
+  const handleMarkAsCompleted = async (withAta = false) => {
+    if (withAta) {
+      setRegistrarAtaOpen(true);
+      // We'll mark as completed after ata is saved if desired, 
+      // but for now let's just trigger the status update as well
+    }
+    await updateStatus('realizada', 'Reunião marcada como realizada pelo consultor');
+    setIsConfirmingCompletion(false);
+  };
+
   return (
+    <>
     <BaseModal 
       open={open} 
       onClose={onClose} 
@@ -288,11 +304,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             {!isClient && (
               <>
                 {(reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
-                  <Button variant="outline" onClick={() => onEdit?.(reuniao)} className="gap-2">
-                    <Pencil className="h-4 w-4" /> Reagendar
+                  <Button variant="outline" onClick={() => setRemarcarOpen(true)} className="gap-2">
+                    <Pencil className="h-4 w-4" /> Remarcar
                   </Button>
                 )}
-                {!['realizada', 'cancelada'].includes(reuniao.status) && !isCancelling && (
+                {canCancel && !isCancelling && (
                   <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
                     <Trash2 className="h-4 w-4" /> Cancelar
                   </Button>
@@ -301,13 +317,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             )}
           </div>
           <div className="flex gap-2">
-            {!isClient && reuniao.status === 'aguardando_confirmacao' && (
-              <Button onClick={() => updateStatus('realizada')} className="bg-green-600 hover:bg-green-700 text-white gap-2">
+            {canRegistrarAta && (
+              <Button variant="outline" onClick={() => setRegistrarAtaOpen(true)} className="gap-2">
+                <FileText className="h-4 w-4" /> {minutes ? 'Editar Ata' : 'Registrar Ata'}
+              </Button>
+            )}
+            {canMarkAsRealizada && (
+              <Button onClick={() => setIsConfirmingCompletion(true)} className="bg-green-600 hover:bg-green-700 text-white gap-2">
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
             )}
             {joinLink && reuniao.status !== 'cancelada' && (
-              <Button onClick={() => window.open(joinLink, '_blank')} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+              <Button onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
                 <Play className="h-4 w-4" /> Entrar na Reunião
               </Button>
             )}
@@ -337,6 +358,27 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             </div>
           </div>
         )}
+
+        {isConfirmingCompletion && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-200">
+            <h4 className="text-sm font-bold text-green-800 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" /> Finalizar Reunião
+            </h4>
+            <p className="text-xs text-green-700">Deseja marcar esta reunião como realizada? {!minutes && 'Você também pode registrar a ata agora.'}</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setIsConfirmingCompletion(false)}>Cancelar</Button>
+              {!minutes && (
+                <Button variant="outline" size="sm" onClick={() => handleMarkAsCompleted(true)} className="border-green-200 text-green-700 hover:bg-green-100">
+                  Registrar Ata e Marcar como Realizada
+                </Button>
+              )}
+              <Button className="bg-green-600 hover:bg-green-700" size="sm" onClick={() => handleMarkAsCompleted(false)} disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Marcar como Realizada'}
+              </Button>
+            </div>
+          </div>
+        )}
+
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
