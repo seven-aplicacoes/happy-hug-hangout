@@ -30,6 +30,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
+const ADVANCING_STATUSES = [
+  'realizada', 'concluida', 'concluido', 'concluído', 'cancelada', 'cancelado', 
+  'no_show', 'no_show_justificado', 'finalizado', 'completed', 'done', 
+  'cancelled', 'canceled', 'remarcada_concluido'
+];
+
+function normalizeStatus(status: string) {
+  return String(status || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function canAdvanceToNextMeeting(previousMeeting: ContractModuleMeeting | undefined) {
+  if (!previousMeeting) return true;
+  const normalized = normalizeStatus(previousMeeting.status);
+  return ADVANCING_STATUSES.some(s => normalizeStatus(s) === normalized);
+}
+
 interface MeetingListProps {
   phase: any;
   contrato: any;
