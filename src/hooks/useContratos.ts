@@ -90,6 +90,14 @@ export function useContratos() {
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
       toast({ title: 'Sucesso', description: 'Contrato removido.' });
     },
+    onError: (error: any) => {
+      console.error('Erro ao excluir contrato:', error);
+      toast({ 
+        title: 'Erro ao excluir', 
+        description: error.message || 'Ocorreu um erro ao tentar excluir o contrato. Verifique se existem dependências.',
+        variant: 'destructive'
+      });
+    },
   });
 
   return { contratos, isLoading, error, upsertContrato, deleteContrato };
