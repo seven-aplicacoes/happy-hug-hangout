@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   const startTimeStr = new Date().toISOString();
-  console.log(`[microsoft-sync] [TEAMS_LINK_START] Function started at ${startTimeStr}`);
+  console.log(`[TEAMS_SYNC_START] Function triggered at ${startTimeStr}`);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -24,24 +24,49 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const { meetingId, action: requestedAction } = await req.json();
+    console.log(`[TEAMS_SYNC_START]`, { meetingId, action: requestedAction });
+
     if (!lovableApiKey || !teamsApiKey) {
-      console.error('[microsoft-sync] Missing API keys');
+      console.error('[TEAMS_SYNC_ERROR] Missing API keys');
       return new Response(
-        JSON.stringify({ success: false, error: 'Conector Microsoft não configurado corretamente.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ 
+          success: false, 
+          error_code: 'MICROSOFT_TOKEN_MISSING',
+          message: 'Conector Microsoft não configurado corretamente. Verifique se o conector Microsoft Teams está ativo nas configurações do Lovable.' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
 
-    const { meetingId, action: requestedAction } = await req.json();
-    console.log(`[microsoft-sync] [TEAMS_LINK_START] Action: ${requestedAction}, MeetingID: ${meetingId}`);
-
-    if (!meetingId) {
-      return new Response(JSON.stringify({ success: false, error: 'meetingId é obrigatório.', message: 'ID da reunião não fornecido.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // DIAGNOSTIC ACTION
+    if (requestedAction === 'test_connection') {
+      console.log("[TEAMS_SYNC_DIAGNOSTIC] Testing connection...");
+      const testHeaders = {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'X-Connection-Api-Key': teamsApiKey,
+      };
+      
+      const meResponse = await fetch(`${GATEWAY_URL}/me`, { headers: testHeaders });
+      const meData = await meResponse.text();
+      console.log("[TEAMS_SYNC_DIAGNOSTIC] GET /me status:", meResponse.status);
+      
+      return new Response(JSON.stringify({ 
+        success: meResponse.ok,
+        status: meResponse.status,
+        details: meData
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    console.log(`[microsoft-sync] [TEAMS_LINK_FETCH_MEETING_START] Fetching meeting data for: ${meetingId}`);
+    if (!meetingId) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error_code: 'MISSING_MEETING_ID',
+        message: 'ID da reunião não fornecido.' 
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-    // 1. Fetch meeting data with client and consultant info
+    // 1. Fetch meeting data
     const { data: meeting, error: meetingError } = await supabase
       .from('meetings')
       .select(`
@@ -53,83 +78,76 @@ serve(async (req) => {
       .single();
 
     if (meetingError || !meeting) {
-      console.error('[microsoft-sync] [TEAMS_LINK_ERROR] Meeting not found:', meetingError);
-      return new Response(JSON.stringify({ success: false, error: 'Reunião não encontrada.', message: 'A reunião solicitada não existe no banco de dados.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      console.error('[TEAMS_SYNC_ERROR] Meeting not found:', meetingError);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error_code: 'MEETING_NOT_FOUND',
+        message: 'A reunião solicitada não existe no banco de dados.' 
+      }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    console.log(`[microsoft-sync] [TEAMS_LINK_MEETING_DATA]`, {
-      meetingId: meeting.id,
+    console.log("[TEAMS_SYNC_MEETING_FOUND]", {
+      meetingId,
+      status: meeting.status,
+      startTime: meeting.start_time,
+      endTime: meeting.end_time,
       clientId: meeting.client_id,
       consultantId: meeting.consultant_id,
-      startTime: meeting.start_time,
-      endTime: meeting.end_time, // Verificando se existe
-      status: meeting.status,
-      existingMicrosoftEventId: meeting.microsoft_event_id,
-      existingTeamsJoinUrl: meeting.teams_join_url
+      existingEventId: meeting.microsoft_event_id,
+      existingTeamsUrl: meeting.teams_join_url
     });
 
-    console.log(`[microsoft-sync] [TEAMS_LINK_VALIDATE_DATA]`);
-    
-    if (!meeting.client?.email) {
+    const clientEmail = meeting.client?.email;
+    const clientName = meeting.client?.trade_name || meeting.client?.corporate_name;
+    const consultantEmail = meeting.consultant?.email;
+    const consultantName = meeting.consultant?.full_name;
+
+    console.log("[TEAMS_SYNC_CLIENT]", { clientId: meeting.client_id, clientName, hasClientEmail: !!clientEmail });
+    console.log("[TEAMS_SYNC_CONSULTANT]", { consultantId: meeting.consultant_id, consultantName, hasConsultantEmail: !!consultantEmail });
+
+    if (!clientEmail) {
       return new Response(JSON.stringify({ 
         success: false, 
         error_code: "CLIENT_EMAIL_MISSING",
-        message: "O cliente não possui e-mail cadastrado. Cadastre um e-mail antes de gerar o link do Teams." 
+        message: "O cliente não possui e-mail cadastrado." 
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (!meeting.consultant?.email) {
+    if (!consultantEmail) {
       return new Response(JSON.stringify({ 
         success: false, 
         error_code: "CONSULTANT_EMAIL_MISSING",
-        message: "O consultor responsável não possui e-mail cadastrado. Verifique o cadastro do consultor." 
+        message: "O consultor responsável não possui e-mail cadastrado." 
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (!meeting.meeting_date || !meeting.start_time) {
        return new Response(JSON.stringify({ 
         success: false, 
-        message: "A reunião precisa de data e hora de início para gerar o link." 
+        error_code: "INVALID_START_END_TIME",
+        message: "A reunião precisa de data e hora de início." 
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const action = requestedAction || (meeting.microsoft_event_id ? 'update' : 'create');
-    const headers = {
-      'Authorization': `Bearer ${lovableApiKey}`,
-      'X-Connection-Api-Key': teamsApiKey,
-      'Content-Type': 'application/json',
-    };
-
-    let graphUrl = `${GATEWAY_URL}/me/events`;
-    let method = 'POST';
-    let body: any = null;
-
-    // Build attendees
-    const attendees = [];
-    if (meeting.client?.email) {
-      attendees.push({
-        emailAddress: { address: meeting.client.email, name: meeting.client.trade_name || meeting.client.corporate_name },
-        type: 'required'
-      });
-    }
-    if (meeting.consultant?.email) {
-      attendees.push({
-        emailAddress: { address: meeting.consultant.email, name: meeting.consultant.full_name },
-        type: 'required'
-      });
-    }
-
+    // Build Payload
     const timezone = meeting.timezone || 'America/Fortaleza';
+    const startDateTime = `${meeting.meeting_date}T${meeting.start_time}`;
     
-    // Prepare start/end times in ISO without 'Z' if timezone is provided, or as is
-    // Graph expects: { dateTime: "2023-01-01T10:00:00", timeZone: "America/Fortaleza" }
-    const startDateTime = meeting.meeting_date ? `${meeting.meeting_date}T${meeting.start_time}` : null;
-    
-    // Calculate end time
-    const [hours, minutes] = (meeting.start_time || "00:00").split(':').map(Number);
+    // End time calculation
+    const [hours, minutes] = meeting.start_time.split(':').map(Number);
     const endDate = new Date(meeting.meeting_date);
     endDate.setHours(hours, minutes + (meeting.duration || 60));
     const endDateTime = `${meeting.meeting_date}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
+
+    const attendees = [
+      { emailAddress: { address: clientEmail, name: clientName }, type: 'required' },
+      { emailAddress: { address: consultantEmail, name: consultantName }, type: 'required' }
+    ];
+
+    const action = requestedAction || (meeting.microsoft_event_id ? 'update' : 'create');
+    let graphUrl = `${GATEWAY_URL}/me/events`;
+    let method = 'POST';
+    let body: any = null;
 
     if (action === 'create' || action === 'update') {
       method = action === 'create' ? 'POST' : 'PATCH';
@@ -138,7 +156,7 @@ serve(async (req) => {
       }
 
       body = {
-        subject: meeting.title,
+        subject: meeting.title || `Reunião - ${clientName}`,
         body: {
           contentType: 'HTML',
           content: meeting.description || meeting.agenda || 'Reunião agendada pelo portal SEVEN.'
@@ -154,17 +172,21 @@ serve(async (req) => {
       if (!meeting.microsoft_event_id) {
         return new Response(JSON.stringify({ success: true, message: 'Nenhum evento Microsoft para cancelar.' }), { headers: corsHeaders });
       }
-      
-      // Use cancel endpoint if available, otherwise DELETE
       graphUrl = `${GATEWAY_URL}/me/events/${meeting.microsoft_event_id}/cancel`;
       method = 'POST';
       body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
     }
 
-    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_PAYLOAD]`, JSON.stringify(body, null, 2));
-    console.log(`[microsoft-sync] Calling Graph: ${method} ${graphUrl}`);
-    
-    // Log the attempt
+    console.log("[TEAMS_SYNC_GRAPH_ENDPOINT]", graphUrl);
+    console.log("[TEAMS_SYNC_GRAPH_PAYLOAD]", JSON.stringify(body, null, 2));
+
+    const headers = {
+      'Authorization': `Bearer ${lovableApiKey}`,
+      'X-Connection-Api-Key': teamsApiKey,
+      'Content-Type': 'application/json',
+    };
+
+    // Log start attempt
     const { data: logEntry } = await supabase.from('meeting_sync_logs').insert({
       meeting_id: meetingId,
       action: action,
@@ -172,21 +194,21 @@ serve(async (req) => {
       provider: 'microsoft_graph'
     }).select().single();
 
-    const response = await fetch(graphUrl, {
+    const graphResponse = await fetch(graphUrl, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined
     });
 
-    const responseStatus = response.status;
-    const responseText = await response.text();
+    const responseStatus = graphResponse.status;
+    const responseText = await graphResponse.text();
     let responseData: any = {};
     try { responseData = JSON.parse(responseText); } catch (e) { responseData = { raw: responseText }; }
 
-    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_RESPONSE_STATUS] ${responseStatus}`);
-    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_RESPONSE_BODY] ${responseText.slice(0, 500)}...`);
+    console.log("[TEAMS_SYNC_GRAPH_STATUS]", responseStatus);
+    console.log("[TEAMS_SYNC_GRAPH_RESPONSE]", JSON.stringify(responseData, null, 2));
 
-    const success = response.ok || responseStatus === 204;
+    const success = graphResponse.ok || responseStatus === 204;
 
     // Update log
     if (logEntry) {
@@ -222,8 +244,8 @@ serve(async (req) => {
         }
       }
 
-      const { data: updateResult, error: updateError } = await supabase.from('meetings').update(updates).eq('id', meetingId).select();
-      console.log(`[microsoft-sync] [TEAMS_LINK_SAVE_RESULT]`, updateError ? updateError : "Sucesso ao salvar no banco");
+      const { error: updateError } = await supabase.from('meetings').update(updates).eq('id', meetingId);
+      console.log("[TEAMS_SYNC_SAVE_RESULT]", updateError || "Sucesso");
 
       return new Response(JSON.stringify({ 
         success: true, 
@@ -231,6 +253,10 @@ serve(async (req) => {
         microsoftEventId: updates.microsoft_event_id 
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     } else {
+      let errorCode = "MICROSOFT_GRAPH_ERROR";
+      if (responseStatus === 403) errorCode = "MICROSOFT_PERMISSION_DENIED";
+      if (responseStatus === 401) errorCode = "MICROSOFT_TOKEN_INVALID";
+
       await supabase.from('meetings').update({
         microsoft_sync_status: 'error',
         microsoft_sync_error: responseData.error?.message || responseText,
@@ -239,13 +265,17 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({ 
         success: false, 
-        error: responseData.error?.message || 'Erro na sincronização com Microsoft Graph.',
+        error_code: errorCode,
+        message: responseData.error?.message || 'Erro na sincronização com Microsoft Graph.',
         details: responseData
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: responseStatus });
     }
 
   } catch (error) {
-    console.error('[microsoft-sync] [TEAMS_LINK_ERROR]', error);
+    console.error("[TEAMS_SYNC_ERROR]", {
+      message: error.message,
+      stack: error.stack
+    });
     return new Response(JSON.stringify({ 
       success: false, 
       error_code: "INTERNAL_SERVER_ERROR",
