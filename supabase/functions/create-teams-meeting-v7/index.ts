@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const VERSION = 'v7-final';
+const VERSION = 'v6-final';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -48,51 +48,44 @@ serve(async (req) => {
     let success = false;
     let finalData: any = {};
     let finalConnector = '';
-    const logs: any[] = [];
 
     for (const cid of connectors) {
       const akey = cid === 'microsoft_teams' ? teamsApiKey : outlookApiKey;
       if (!akey) continue;
 
       const url = `https://connector-gateway.lovable.dev/${cid}/me/events`;
-      const eventBody: any = {
-        subject: meeting.title || 'Reunião SEVEN',
+      const eventBody = {
+        subject: meeting.title || 'Reunião',
         start: { dateTime: `${meeting.meeting_date}T${meeting.start_time}`, timeZone: 'America/Fortaleza' },
         end: { dateTime: `${meeting.meeting_date}T${meeting.start_time}`, timeZone: 'America/Fortaleza' },
         isOnlineMeeting: true,
         onlineMeetingProvider: 'teamsForBusiness'
       };
 
-      // Try 1: teamsForBusiness
       let resp = await fetch(url, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${lovableApiKey}`, 'X-Connection-Api-Key': akey, 'Content-Type': 'application/json' },
         body: JSON.stringify(eventBody)
       });
-      let text = await resp.text();
-      logs.push({ connector: cid, provider: 'teamsForBusiness', status: resp.status, response: text });
 
-      // Try 2: default (no provider specified - often works for personal accounts)
       if (!resp.ok) {
-        delete eventBody.onlineMeetingProvider;
+        console.log(`[TEAMS_SYNC] teamsForBusiness failed for ${cid}, trying teamsForLife...`);
+        eventBody.onlineMeetingProvider = 'teamsForLife';
         resp = await fetch(url, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${lovableApiKey}`, 'X-Connection-Api-Key': akey, 'Content-Type': 'application/json' },
           body: JSON.stringify(eventBody)
         });
-        text = await resp.text();
-        logs.push({ connector: cid, provider: 'default', status: resp.status, response: text });
       }
 
+      const text = await resp.text();
+      try { finalData = JSON.parse(text); } catch { finalData = { raw: text }; }
+
       if (resp.ok) {
-        try { finalData = JSON.parse(text); } catch { finalData = { raw: text }; }
         success = true;
         finalConnector = cid;
         break;
       }
-      
-      // Keep last error for reporting
-      try { finalData = JSON.parse(text); } catch { finalData = { raw: text }; }
     }
 
     const updates = {
@@ -103,7 +96,7 @@ serve(async (req) => {
     };
 
     await supabase.from('meetings').update(updates).eq('id', meetingId);
-    return new Response(JSON.stringify({ success, version: VERSION, connector: finalConnector, data: finalData, logs }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success, version: VERSION, connector: finalConnector, data: finalData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (err) {
     return new Response(JSON.stringify({ success: false, error: err.message, version: VERSION }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
