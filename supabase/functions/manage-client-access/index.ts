@@ -38,40 +38,85 @@ serve(async (req) => {
     }
 
     if (action === "create") {
-      // 1. Create user in Auth
-      const { data: authUser, error: createError } = await supabaseClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { role: "cliente" }
-      });
+      // 1. Check if user already exists with this email
+      let userId: string | null = null;
+      let alreadyExisted = false;
 
-      if (createError) throw createError;
+      const { data: existingList, error: listError } = await supabaseClient.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+      if (listError) throw listError;
+
+      const existing = existingList?.users?.find(
+        (u: any) => (u.email || "").toLowerCase() === String(email).toLowerCase()
+      );
+
+      if (existing) {
+        userId = existing.id;
+        alreadyExisted = true;
+        // Update password if provided
+        if (password) {
+          const { error: updErr } = await supabaseClient.auth.admin.updateUserById(existing.id, {
+            password,
+            email_confirm: true,
+          });
+          if (updErr) throw updErr;
+        }
+      } else {
+        const { data: authUser, error: createError } = await supabaseClient.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { role: "cliente" },
+        });
+        if (createError) throw createError;
+        userId = authUser.user.id;
+      }
+
+      // Check if this auth user is already linked to a DIFFERENT client
+      const { data: linkedClients } = await supabaseClient
+        .from("clients")
+        .select("id")
+        .eq("auth_user_id", userId);
+
+      const linkedToOther = (linkedClients || []).some((c: any) => c.id !== clientId);
+      if (linkedToOther) {
+        return new Response(
+          JSON.stringify({
+            error: "Este e-mail já está vinculado a outro cliente. Use um e-mail diferente.",
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       // 2. Ensure profile exists with correct role
       await supabaseClient
         .from("profiles")
         .upsert({
-          id: authUser.user.id,
+          id: userId,
           email: email,
           role: "cliente",
-          status: "ativo"
+          status: "ativo",
         });
 
       // 3. Link auth_user_id to client
       const { error: updateError } = await supabaseClient
         .from("clients")
-        .update({ 
-          auth_user_id: authUser.user.id, 
+        .update({
+          auth_user_id: userId,
           portal_access_enabled: true,
-          email: email 
+          email: email,
         })
         .eq("id", clientId);
 
       if (updateError) throw updateError;
 
-      return new Response(JSON.stringify({ success: true, userId: authUser.user.id }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    } 
+      return new Response(
+        JSON.stringify({ success: true, userId, alreadyExisted }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     if (action === "reset-password") {
       const { data: clientData } = await supabaseClient
