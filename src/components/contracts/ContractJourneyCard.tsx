@@ -42,10 +42,6 @@ function normalizeStatus(status: string) {
   return s;
 }
 
-function canAdvanceToNextMeeting(_previousMeeting?: any) {
-  // Logic updated: now it's always possible to schedule meetings regardless of previous status
-  return true;
-}
 
 interface MeetingListProps {
   phase: any;
