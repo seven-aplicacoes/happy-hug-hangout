@@ -347,14 +347,22 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                   </div>
                 ) : (
                   <div className="bg-muted/50 border border-dashed rounded-xl p-6 text-center space-y-4">
-                    <p className="text-xs text-muted-foreground italic">Nenhum link gerado para esta reunião.</p>
+                    <div className="flex flex-col items-center gap-2">
+                      <Video className="h-8 w-8 text-muted-foreground/30" />
+                      <p className="text-xs text-muted-foreground italic font-medium">Link da reunião ainda não disponível.</p>
+                      {reuniao.calendar_sync_status === 'error' && (
+                        <p className="text-[10px] text-amber-600 font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+                          Erro na geração: {reuniao.calendar_sync_error || 'Erro desconhecido'}
+                        </p>
+                      )}
+                    </div>
                     {isAdminOrConsultant && (
-                      <div className="flex justify-center gap-3">
-                        <Button variant="outline" size="sm" onClick={handleGenerateMeetLink} disabled={generatingMeet}>
+                      <div className="flex justify-center gap-3 pt-2">
+                        <Button variant="outline" size="sm" onClick={handleGenerateMeetLink} disabled={generatingMeet} className="h-9 px-4 font-bold">
                           {generatingMeet ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Video className="h-4 w-4 mr-2" />}
                           Gerar Google Meet
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(true)}>
+                        <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(true)} className="h-9 px-4 font-bold">
                           Adicionar Manual
                         </Button>
                       </div>

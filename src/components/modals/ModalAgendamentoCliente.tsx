@@ -27,7 +27,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
     consultantId: moduleMeeting.consultantId
   };
   const { slots, availabilities, isLoading: loadingSlots } = useConsultantAvailability(filters);
-  const { upsertReuniao } = useReunioes();
+  const { upsertReuniao, syncGoogle } = useReunioes();
   
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   useEffect(() => {
@@ -79,7 +79,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
         return;
       }
 
-      await upsertReuniao.mutateAsync({
+      const result = await upsertReuniao.mutateAsync({
         id: moduleMeeting.scheduledMeetingId, // If exists, it will update
         clienteId: moduleMeeting.clientId,
         contractId: moduleMeeting.contractId,
@@ -94,8 +94,38 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
         status: 'agendada',
         source: 'portal_cliente',
         scheduledBy: user?.id, // Usar o ID de autenticação do usuário
-        meetingLinkProvider: 'teams'
+        meetingLinkProvider: 'google'
       });
+
+      const savedMeeting = result?.[0];
+      if (savedMeeting) {
+        try {
+          // Check if Google Connection exists (global)
+          const { data: googleConn } = await supabase
+            .from('google_connections')
+            .select('id')
+            .eq('scope_type', 'global')
+            .eq('status', 'active')
+            .maybeSingle();
+
+          if (googleConn) {
+            console.log('[Portal Agendamento] Iniciando sincronização Google Meet...');
+            await syncGoogle.mutateAsync({
+              meetingId: savedMeeting.id,
+              action: 'create'
+            });
+          } else {
+            console.warn('[Portal Agendamento] Conexão Google Global não encontrada.');
+          }
+        } catch (syncError: any) {
+          console.error('[Portal Agendamento] Erro ao sincronizar Google Meet:', syncError);
+          toast({ 
+            title: "Aviso", 
+            description: "Reunião agendada, mas não foi possível gerar o link do Google Meet automaticamente.", 
+            variant: "warning" as any 
+          });
+        }
+      }
 
       toast({ title: "Agendado!", description: "Seu encontro foi agendado com sucesso." });
       onClose();
