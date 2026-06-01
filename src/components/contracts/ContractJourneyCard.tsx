@@ -31,11 +31,15 @@ import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
 function normalizeStatus(status: string) {
-  return String(status || '')
+  const s = String(status || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
+  
+  if (s === 'cancelada') return 'cancelado';
+  if (s === 'concluida') return 'concluido';
+  return s;
 }
 
 function canAdvanceToNextMeeting(_previousMeeting?: any) {
