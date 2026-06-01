@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Loader2, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, Loader2, CheckCircle2, User, AlertCircle, RefreshCcw } from 'lucide-react';
 import { useConsultantAvailability } from '@/hooks/useConsultantAvailability';
 import { useReunioes } from '@/hooks/useReunioes';
 import { ContractModuleMeeting } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { checkConsultantConflict } from '@/lib/conflicts';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   open: boolean;
