@@ -183,7 +183,8 @@ serve(async (req) => {
     let responseData: any = {};
     try { responseData = JSON.parse(responseText); } catch (e) { responseData = { raw: responseText }; }
 
-    console.log(`[microsoft-sync] Graph response status: ${responseStatus}`);
+    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_RESPONSE_STATUS] ${responseStatus}`);
+    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_RESPONSE_BODY] ${responseText.slice(0, 500)}...`);
 
     const success = response.ok || responseStatus === 204;
 
