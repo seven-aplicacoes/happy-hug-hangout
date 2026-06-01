@@ -164,7 +164,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setLocation('');
       setLocationUrl('');
       setManualMeetingUrl('');
-      setProvider(teamsConnected ? 'teams' : 'manual');
+      setMeetingLinkMode(teamsConnected ? 'teams' : 'manual');
       setDescription('');
     }
     setErrors({});
