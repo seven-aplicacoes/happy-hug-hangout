@@ -15,7 +15,9 @@ export function useConsultantAvailability(filters: {
   const queryClient = useQueryClient();
 
   const { data: availabilities, isLoading: isLoadingRules } = useQuery({
-    queryKey: ['consultant-availability', filters],
+    queryKey: ['consultant-availability', filters, 'realtime'],
+    staleTime: 0,
+    refetchOnMount: true,
     queryFn: async () => {
       let query = supabase.from('consultant_availability').select('*');
       
@@ -40,7 +42,9 @@ export function useConsultantAvailability(filters: {
   });
 
   const { data: slots, isLoading: isLoadingSlots } = useQuery({
-    queryKey: ['consultant-slots', filters],
+    queryKey: ['consultant-slots', filters, 'realtime'],
+    staleTime: 0,
+    refetchOnMount: true,
     queryFn: async () => {
       let query = supabase.from('consultant_available_slots').select('*');
       
