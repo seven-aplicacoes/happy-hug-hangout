@@ -106,6 +106,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDuracao(reuniao.duracao || 60);
       setMeetingUrl(reuniao.meetingUrl || '');
       setLocation(reuniao.location || '');
+      setLocationUrl(reuniao.locationUrl || '');
+      setManualMeetingUrl(reuniao.locationUrl || reuniao.location || reuniao.meetingUrl || '');
+      setProvider(reuniao.meetingLinkProvider || (reuniao.teamsJoinUrl ? 'teams' : 'manual'));
       setDescription(reuniao.description || '');
     } else if (initialData) {
       setTitle(initialData.title || '');
@@ -122,6 +125,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDuracao(initialData.duracao || 60);
       setMeetingUrl(initialData.meetingUrl || '');
       setLocation(initialData.location || '');
+      setLocationUrl(initialData.locationUrl || '');
+      setManualMeetingUrl(initialData.locationUrl || initialData.location || initialData.meetingUrl || '');
+      setProvider(initialData.meetingLinkProvider || (initialData.teamsJoinUrl ? 'teams' : 'manual'));
       setDescription(initialData.description || '');
     } else {
       setTitle('');
@@ -138,10 +144,13 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setDuracao(60);
       setMeetingUrl('');
       setLocation('');
+      setLocationUrl('');
+      setManualMeetingUrl('');
+      setProvider(teamsConnected ? 'teams' : 'manual');
       setDescription('');
     }
     setErrors({});
-  }, [reuniao, initialData, open]);
+  }, [reuniao, initialData, open, teamsConnected]);
 
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
