@@ -23,8 +23,14 @@ export function useConsultantAvailability(filters: {
       if (filters.contractId) query = query.eq('contract_id', filters.contractId);
       if (filters.contractProductId) query = query.eq('contract_product_id', filters.contractProductId);
       if (filters.contractPhaseId) query = query.eq('contract_phase_id', filters.contractPhaseId);
-      if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
-      if (filters.contractModuleMeetingId) query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
+      
+      if (filters.consultantId && filters.contractModuleMeetingId) {
+        query = query.eq('consultant_id', filters.consultantId)
+          .or(`contract_module_meeting_id.eq.${filters.contractModuleMeetingId},contract_module_meeting_id.is.null`);
+      } else {
+        if (filters.consultantId) query = query.eq('consultant_id', filters.consultantId);
+        if (filters.contractModuleMeetingId) query = query.eq('contract_module_meeting_id', filters.contractModuleMeetingId);
+      }
 
       const { data, error } = await query;
       if (error) throw error;
