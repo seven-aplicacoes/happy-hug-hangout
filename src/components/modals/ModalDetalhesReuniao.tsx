@@ -407,26 +407,59 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 <Info className="h-4 w-4" /> Auditoria
               </h3>
               <div className="space-y-2 text-[10px]">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Criado em:</span>
-                  <span className="font-medium">{reuniao.createdAt ? format(new Date(reuniao.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}</span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Criado em:</span>
+                    <span className="font-medium">{reuniao.createdAt ? format(new Date(reuniao.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}</span>
+                  </div>
+                  {reuniao.createdByName && (
+                    <div className="flex justify-end text-[9px] text-muted-foreground italic">
+                      por {reuniao.createdByName}
+                    </div>
+                  )}
                 </div>
                 {reuniao.updatedAt && format(new Date(reuniao.updatedAt), 'yyyy-MM-dd HH:mm') !== (reuniao.createdAt ? format(new Date(reuniao.createdAt), 'yyyy-MM-dd HH:mm') : '') && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Última att:</span>
-                    <span className="font-medium">{format(new Date(reuniao.updatedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                  <div className="flex flex-col gap-1 border-t border-muted/30 pt-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Última att:</span>
+                      <span className="font-medium">{format(new Date(reuniao.updatedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                    </div>
+                    {reuniao.updatedByName && (
+                      <div className="flex justify-end text-[9px] text-muted-foreground italic">
+                        por {reuniao.updatedByName}
+                      </div>
+                    )}
                   </div>
                 )}
                 {reuniao.canceledAt && (
-                  <div className="flex justify-between text-red-600">
-                    <span>Cancelado em:</span>
-                    <span className="font-bold">{format(new Date(reuniao.canceledAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                  <div className="flex flex-col gap-1 border-t border-red-100 pt-1">
+                    <div className="flex justify-between text-red-600">
+                      <span>Cancelado em:</span>
+                      <span className="font-bold">{format(new Date(reuniao.canceledAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                    </div>
+                    {reuniao.canceledByName && (
+                      <div className="flex justify-end text-[9px] text-red-500 italic">
+                        por {reuniao.canceledByName}
+                      </div>
+                    )}
+                    {reuniao.cancelReason && (
+                      <div className="bg-red-50 p-1.5 rounded text-red-800 mt-1">
+                        Motivo: {reuniao.cancelReason}
+                      </div>
+                    )}
                   </div>
                 )}
                 {reuniao.completedAt && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Finalizado em:</span>
-                    <span className="font-bold">{format(new Date(reuniao.completedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                  <div className="flex flex-col gap-1 border-t border-green-100 pt-1">
+                    <div className="flex justify-between text-green-600">
+                      <span>Finalizado em:</span>
+                      <span className="font-bold">{format(new Date(reuniao.completedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                    </div>
+                    {reuniao.completedByName && (
+                      <div className="flex justify-end text-[9px] text-green-500 italic">
+                        por {reuniao.completedByName}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
