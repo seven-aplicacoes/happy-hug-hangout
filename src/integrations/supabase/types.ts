@@ -1011,7 +1011,15 @@ export type Database = {
           strategic_name?: string | null
           subtitle?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contract_methodology_phases_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_module_documents: {
         Row: {
