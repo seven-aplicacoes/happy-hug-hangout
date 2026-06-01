@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import {
   INTEGRACOES,
   EVENTOS_INTEGRACAO,
@@ -14,8 +16,10 @@ import {
 } from '@/data/integracoes';
 import {
   CalendarDays, Video, MessageCircle, BookOpen, Plug, CheckCircle2, Clock,
-  ArrowUpRight, RefreshCw, Settings2, ExternalLink,
+  ArrowUpRight, RefreshCw, Settings2, ExternalLink, AlertCircle, ShieldCheck, UserCheck, Activity
 } from 'lucide-react';
+import { useReunioes } from '@/hooks/useReunioes';
+
 
 const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
   agenda: CalendarDays,
