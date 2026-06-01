@@ -107,9 +107,20 @@ export const ModalRegistrarAta = ({ open, onClose, meetingId, meetingTitle, onSu
       await supabase.from('meeting_status_history').insert({
         meeting_id: meetingId,
         action: minutes.id ? 'minutes_updated' : 'minutes_created',
-        new_status: 'realizada', // Assuming minutes are usually for completed meetings, but don't force it
+        new_status: 'realizada', 
         changed_by: user?.id,
         change_reason: minutes.id ? 'Ata atualizada' : 'Ata registrada'
+      });
+
+      // Update timeline
+      await supabase.from('timeline_events').insert({
+        client_id: (await supabase.from('meetings').select('client_id').eq('id', meetingId).single()).data?.client_id,
+        meeting_id: meetingId,
+        type: 'reuniao',
+        title: `Ata registrada: ${meetingTitle}`,
+        description: minutes.summary,
+        date: new Date().toISOString(),
+        status: 'realizada'
       });
 
       toast({ title: 'Sucesso', description: 'Ata registrada com sucesso.' });
