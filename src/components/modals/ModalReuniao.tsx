@@ -60,9 +60,27 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual'>('teams');
   const [manualMeetingUrl, setManualMeetingUrl] = useState('');
   const [isGeneratingTeamsLink, setIsGeneratingTeamsLink] = useState(false);
-  
-  const currentUserProfile = (consultores || []).find(c => c.id === user?.id);
-  const teamsConnected = currentUserProfile?.microsoft_teams_connected || false;
+  const [teamsConnected, setTeamsConnected] = useState(false);
+  const [isLoadingTeamsStatus, setIsLoadingTeamsStatus] = useState(true);
+
+  useEffect(() => {
+    const checkTeamsConnection = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('check-teams-connection');
+        if (error) throw error;
+        setTeamsConnected(data?.isConnected || false);
+      } catch (err) {
+        console.error('Error checking Teams connection:', err);
+        setTeamsConnected(false);
+      } finally {
+        setIsLoadingTeamsStatus(false);
+      }
+    };
+
+    if (open) {
+      checkTeamsConnection();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!teamsConnected) {
@@ -70,7 +88,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     } else if (!reuniao && !initialData) {
       setMeetingLinkMode('teams');
     }
-  }, [teamsConnected, reuniao, initialData]);
+  }, [teamsConnected, reuniao, initialData, isLoadingTeamsStatus]);
 
   const { products: contractProducts, isLoading: loadingProducts } = useContractProducts(contractId);
   const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
@@ -268,7 +286,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
         source: reuniao?.source || 'manual'
       };
 
-      // Objective 3: Teams Integration
+      // Teams Integration
       if (meetingLinkMode === 'teams' && status === 'agendada' && teamsConnected) {
         setIsGeneratingTeamsLink(true);
         try {
@@ -279,10 +297,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               startDateTime: `${meetingDate}T${startTime}`,
               endDateTime: `${meetingDate}T${calculateEndTime(startTime, duracao)}`,
               attendees: [
-                { email: selectedCliente?.email, name: selectedCliente?.nomeFantasia },
+                { email: selectedCliente?.email, name: selectedCliente?.nomeFantasia || selectedCliente?.razaoSocial },
                 { email: selectedConsultor?.email, name: selectedConsultor?.full_name }
-              ],
-              meetingId: reuniao?.id
+              ]
             }
           });
 
@@ -292,15 +309,17 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             payload.locationUrl = response.data.teamsJoinUrl;
             payload.teamsJoinUrl = response.data.teamsJoinUrl;
             payload.microsoftEventId = response.data.microsoftEventId;
+            payload.meetingLinkProvider = 'teams';
+          } else {
+            throw new Error(response.data?.error || 'Link not generated');
           }
         } catch (teamsError) {
           console.error('Teams integration failed:', teamsError);
           toast({
             title: "Aviso",
-            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Você pode adicionar o link manualmente.",
+            description: "Encontro salvo, mas não foi possível gerar o link do Teams. Adicione o link manualmente.",
             variant: "warning" as any
           });
-          // Se falhar, muda para manual para que o usuário possa inserir o link
           payload.meetingLinkProvider = 'manual';
         } finally {
           setIsGeneratingTeamsLink(false);
@@ -406,24 +425,26 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
             {/* Integração Microsoft Teams / Link Manual */}
             <div className="space-y-4 pt-2">
-              {teamsConnected ? (
+              {isLoadingTeamsStatus ? (
+                <div className="bg-muted/30 border border-muted/60 rounded-2xl p-4 flex items-center justify-center h-24">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : teamsConnected ? (
                 meetingLinkMode === 'teams' ? (
                   <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-[#4B53BC] flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" fill="white" fillOpacity="0.2"/>
-                            <path d="M16 16L19 19M16 8L19 5M5 19L8 16M5 5L8 8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                            <rect x="7" y="7" width="10" height="10" rx="2" fill="white"/>
-                          </svg>
+                          <Video className="h-5 w-5 text-white" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-blue-900">Microsoft Teams conectado</span>
                             <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Conectado</Badge>
                           </div>
-                          <p className="text-[10px] text-blue-700/70 font-medium">O link da reunião será gerado automaticamente ao salvar.</p>
+                          <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">
+                            O link da reunião será gerado automaticamente ao salvar.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -467,7 +488,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                     <div>
                       <p className="text-sm font-bold text-amber-900">Microsoft Teams não conectado</p>
                       <p className="text-[10px] text-amber-700/70 font-medium leading-relaxed">
-                        Configure a integração para gerar links automaticamente ou insira um link manual abaixo.
+                        Conecte o Microsoft Teams no Lovable ou insira um link manual.
                       </p>
                     </div>
                   </div>
