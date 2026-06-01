@@ -54,7 +54,20 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
-  const [generateTeamsLink, setGenerateTeamsLink] = useState(true);
+  const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual'>('teams');
+  const [manualMeetingUrl, setManualMeetingUrl] = useState('');
+  const [isGeneratingTeamsLink, setIsGeneratingTeamsLink] = useState(false);
+  
+  const currentUserProfile = (consultores || []).find(c => c.id === user?.id);
+  const teamsConnected = currentUserProfile?.microsoft_teams_connected || false;
+
+  useEffect(() => {
+    if (!teamsConnected) {
+      setMeetingLinkMode('manual');
+    } else if (!reuniao && !initialData) {
+      setMeetingLinkMode('teams');
+    }
+  }, [teamsConnected, reuniao, initialData]);
 
   const { products: contractProducts, isLoading: loadingProducts } = useContractProducts(contractId);
   const { phases: productPhases, isLoading: loadingPhases } = useContractProductPhases(contractProductId);
