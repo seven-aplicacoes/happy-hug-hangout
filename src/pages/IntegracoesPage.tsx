@@ -164,15 +164,18 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
   const handleConnect = async () => {
     if (integ.id === 'google_calendar') {
       setLoading(true);
+      console.log("Iniciando conexão Google OAuth");
       try {
         const { data, error } = await supabase.functions.invoke('google-oauth-start', {
           body: { redirect_uri: window.location.origin + window.location.pathname }
         });
         if (error) throw error;
+        if (data?.success === false) throw new Error(data.error);
         if (data?.url) {
           window.location.href = data.url;
         }
       } catch (err: any) {
+        console.error("Erro ao conectar Google:", err);
         toast({ title: 'Erro ao iniciar conexão', description: err.message, variant: 'destructive' });
       } finally {
         setLoading(false);
@@ -186,8 +189,9 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
     if (integ.id === 'google_calendar') {
       setLoading(true);
       try {
-        const { error } = await supabase.functions.invoke('disconnect-google');
+        const { data, error } = await supabase.functions.invoke('disconnect-google');
         if (error) throw error;
+        if (data?.success === false) throw new Error(data.error);
         toast({ title: 'Desconectado', description: 'Sua conta Google foi desconectada.' });
         queryClient.invalidateQueries({ queryKey: ['google-connection'] });
       } catch (err: any) {
@@ -280,13 +284,14 @@ export default function IntegracoesPage() {
       const processCallback = async () => {
         toast({ title: 'Processando conexão...', description: 'Aguarde um momento.' });
         try {
-          const { error } = await supabase.functions.invoke('google-oauth-callback', {
+          const { data, error } = await supabase.functions.invoke('google-oauth-callback', {
             body: { 
               code,
               redirect_uri: window.location.origin + window.location.pathname
             }
           });
           if (error) throw error;
+          if (data?.success === false) throw new Error(data.error);
           toast({ title: 'Conectado com sucesso!', description: 'Sua conta Google foi vinculada.' });
           queryClient.invalidateQueries({ queryKey: ['google-connection'] });
           // Clear code from URL

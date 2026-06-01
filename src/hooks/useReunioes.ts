@@ -248,11 +248,24 @@ export function useReunioes() {
 
   const syncGoogle = useMutation({
     mutationFn: async ({ meetingId, action }: GoogleSyncParams) => {
-      const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
-        body: { meetingId, action }
+      console.log(`Chamando Edge Function create-google-meet-meeting [${action}]`, {
+        meeting_id: meetingId
       });
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Erro na sincronização Google Meet');
+
+      const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
+        body: { meeting_id: meetingId, action }
+      });
+
+      if (error) {
+        console.error("Erro ao chamar Edge Function:", error);
+        throw new Error(error.message || "Erro de rede ao chamar Edge Function");
+      }
+
+      if (data?.success === false) {
+        console.error("Erro retornado pela Edge Function:", data);
+        throw new Error(data?.error || "Falha ao sincronizar com Google");
+      }
+
       return data;
     },
     onSuccess: () => {
