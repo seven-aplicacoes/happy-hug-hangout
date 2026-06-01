@@ -791,7 +791,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                               ) : (
                                 <RefreshCcw className="h-3 w-3" />
                               )}
-                              {reuniao.teams_creation_status === 'failed' ? "Tentar gerar link novamente" : "Gerar link do Teams"}
+                              {reuniao.teams_creation_status === 'failed' ? "Tentar gerar link (Outlook)" : "Gerar link do Teams via Outlook"}
                             </Button>
                              <Button 
                               variant="outline" 
@@ -1104,7 +1104,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                     </Button>
                     
                     <div className="bg-amber-100/50 p-2 rounded text-[9px] text-amber-900 border border-amber-200 mt-2 italic">
-                      <strong>Dica:</strong> Se o teste 1 der OK mas o 2 der 403, reconecte o Microsoft Outlook/Calendar com permissão total de Calendário.
+                      <strong>Conector atual:</strong> Microsoft Outlook/Calendar. Certifique-se de que a conta está conectada com permissões de calendário.
                     </div>
 
                     <Button 
