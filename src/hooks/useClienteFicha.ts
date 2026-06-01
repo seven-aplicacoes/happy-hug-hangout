@@ -19,7 +19,8 @@ export function useClienteFicha(clientId?: string) {
         .select(`
           *,
           consultant:profiles!clients_consultant_id_fkey (
-            full_name
+            full_name,
+            phone
           )
         `)
         .eq('id', clientId)
