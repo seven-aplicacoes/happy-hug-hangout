@@ -134,9 +134,10 @@ export function useReunioes() {
           previous_status: currentMeeting.status,
           new_status: newMeeting.status,
           changed_by: user?.id,
-          action: 'update',
-          change_reason: newMeeting.status === 'cancelada' ? (reuniao as any).cancelReason : 'Alteração via formulário',
+          action: (reuniao as any).historyAction || 'update',
+          change_reason: (reuniao as any).historyReason || (newMeeting.status === 'cancelada' ? (reuniao as any).cancelReason : 'Alteração via formulário'),
         };
+
 
         if (currentMeeting.status !== newMeeting.status) {
           historyPayload.action = newMeeting.status === 'cancelada' ? 'cancel' : 'status_change';
