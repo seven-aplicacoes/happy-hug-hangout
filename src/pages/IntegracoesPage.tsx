@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   INTEGRACOES,
   EVENTOS_INTEGRACAO,
@@ -16,10 +16,10 @@ import {
 } from '@/data/integracoes';
 import {
   CalendarDays, Video, MessageCircle, BookOpen, Plug, CheckCircle2, Clock,
-  ArrowUpRight, RefreshCw, Settings2, ExternalLink, AlertCircle, ShieldCheck, UserCheck, Activity
+  ArrowUpRight, RefreshCw, Settings2, ExternalLink, Activity, ShieldCheck, UserCheck
 } from 'lucide-react';
 import { useReunioes } from '@/hooks/useReunioes';
-
+import { useAuth } from '@/contexts/AuthContext';
 
 const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
   agenda: CalendarDays,
@@ -69,16 +69,29 @@ function CardIntegracao({ integ, onSelect }: { integ: Integracao; onSelect: (i: 
   );
 }
 
-function MicrosoftDiagnostics() {
-  const { testMicrosoftConnection, testMicrosoftCalendar, syncMicrosoft, reunioes } = useReunioes();
-  const [testing, setTesting] = useState(false);
-  
+function GoogleDiagnostics() {
+  const { user } = useAuth();
+  const { data: connection } = useQuery({
+    queryKey: ['google-connection', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('google_connections')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
   const { data: logs } = useQuery({
-    queryKey: ['microsoft-sync-logs'],
+    queryKey: ['google-sync-logs'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('meeting_sync_logs')
         .select('*')
+        .eq('provider', 'google')
         .order('created_at', { ascending: false })
         .limit(5);
       if (error) throw error;
@@ -86,58 +99,32 @@ function MicrosoftDiagnostics() {
     }
   });
 
-  const lastMeeting = useMemo(() => {
-    return reunioes?.find(r => r.teamsJoinUrl && r.microsoft_sync_status === 'success');
-  }, [reunioes]);
-
-  const handleTest = async () => {
-    setTesting(true);
-    try {
-      const res = await testMicrosoftConnection();
-      if (res.success) {
-        toast({ title: "Conexão OK", description: `Conta: ${res.data?.userPrincipalName || 'Identificada'}` });
-      } else {
-        toast({ title: "Falha na conexão", description: res.error || "Erro desconhecido", variant: "destructive" });
-      }
-    } catch (e: any) {
-      toast({ title: "Erro no teste", description: e.message, variant: "destructive" });
-    } finally {
-      setTesting(false);
-    }
-  };
+  if (!connection) return null;
 
   return (
     <div className="mt-6 space-y-4 border-t pt-6">
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-4 flex items-center gap-2">
-        <Activity className="h-3 w-3" /> Diagnóstico Técnico
+        <Activity className="h-3 w-3" /> Status da Integração
       </p>
       
       <div className="grid grid-cols-1 gap-2">
         <div className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5" /> Permissão Calendars.ReadWrite
+            <ShieldCheck className="h-3.5 w-3.5" /> Email Conectado
           </span>
-          <span className="text-emerald-500 font-medium">Ativa</span>
+          <span className="text-blue-600 font-medium">{connection.google_email}</span>
         </div>
         <div className="flex items-center justify-between p-2 rounded bg-muted/30 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">
-            <UserCheck className="h-3.5 w-3.5" /> Refresh Token (offline_access)
+            <UserCheck className="h-3.5 w-3.5" /> Última Atualização
           </span>
-          <span className="text-emerald-500 font-medium">Disponível</span>
+          <span className="text-muted-foreground">{fmtData(connection.updated_at)}</span>
         </div>
       </div>
 
-      {lastMeeting && (
-        <div className="p-3 rounded-md bg-muted/50 border border-border/50">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Última reunião sincronizada</p>
-          <p className="text-xs font-medium truncate">{lastMeeting.title}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{fmtData(lastMeeting.microsoft_last_sync_at || undefined)}</p>
-        </div>
-      )}
-
       {logs && logs.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Logs de Sincronização</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Últimas Atividades</p>
           <div className="space-y-1">
             {logs.map((log) => (
               <div key={log.id} className="text-[10px] flex items-center justify-between p-1.5 border-b last:border-0 border-border/40">
@@ -150,17 +137,65 @@ function MicrosoftDiagnostics() {
           </div>
         </div>
       )}
-
-      <Button variant="outline" size="sm" className="w-full h-8 text-[11px]" onClick={handleTest} disabled={testing}>
-        {testing ? <RefreshCw className="h-3 w-3 mr-2 animate-spin" /> : <ShieldCheck className="h-3 w-3 mr-2" />}
-        Testar Conexão Graph
-      </Button>
     </div>
   );
 }
 
 function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () => void }) {
-  const ativo = integ.status === 'conectado' || integ.status === 'beta';
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+
+  const { data: connection } = useQuery({
+    queryKey: ['google-connection', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('google_connections')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
+  const isConnected = integ.id === 'google_calendar' ? !!connection : integ.status === 'conectado';
+
+  const handleConnect = async () => {
+    if (integ.id === 'google_calendar') {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('google-oauth-start');
+        if (error) throw error;
+        if (data?.url) {
+          window.location.href = data.url;
+        }
+      } catch (err: any) {
+        toast({ title: 'Erro ao iniciar conexão', description: err.message, variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      toast({ title: 'Em breve', description: 'Esta integração estará disponível em breve.' });
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (integ.id === 'google_calendar') {
+      setLoading(true);
+      try {
+        const { error } = await supabase.functions.invoke('disconnect-google');
+        if (error) throw error;
+        toast({ title: 'Desconectado', description: 'Sua conta Google foi desconectada.' });
+        queryClient.invalidateQueries({ queryKey: ['google-connection'] });
+      } catch (err: any) {
+        toast({ title: 'Erro ao desconectar', description: err.message, variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <Card className="p-6 sticky top-4">
       <div className="flex items-start justify-between mb-5">
@@ -168,8 +203,8 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{integ.fornecedor}</p>
           <h2 className="text-xl font-light mt-1">{integ.nome}</h2>
           <div className="flex items-center gap-1.5 mt-2">
-            <span className={`h-1.5 w-1.5 rounded-full ${dotStatus[integ.status]}`} />
-            <span className="text-xs text-muted-foreground">{labelStatus[integ.status]} · {labelCategoria[integ.categoria]}</span>
+            <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : dotStatus[integ.status]}`} />
+            <span className="text-xs text-muted-foreground">{isConnected ? 'Conectado' : labelStatus[integ.status]} · {labelCategoria[integ.categoria]}</span>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>Fechar</Button>
@@ -177,33 +212,23 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 
       <p className="text-sm text-muted-foreground leading-relaxed mb-5">{integ.descricao}</p>
 
-      {ativo && (
-        <div className="grid grid-cols-2 gap-3 p-3 rounded-md bg-muted/40 mb-5">
+      {isConnected && connection && integ.id === 'google_calendar' && (
+        <div className="grid grid-cols-1 gap-3 p-3 rounded-md bg-muted/40 mb-5">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Conta</p>
-            <p className="text-xs font-medium mt-0.5 truncate">{integ.contaVinculada || 'nathansilva12004@outlook.com'}</p>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Conta Conectada</p>
+            <p className="text-xs font-medium mt-0.5 truncate">{connection.google_email}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Conectado em</p>
-            <p className="text-xs font-medium mt-0.5">{integ.conectadoEm ? new Date(integ.conectadoEm).toLocaleDateString('pt-BR') : '01/06/2026'}</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Última sync</p>
-            <p className="text-xs font-medium mt-0.5">{fmtData(integ.ultimaSincronizacao)}</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Itens</p>
-            <p className="text-xs font-medium mt-0.5">{integ.itensSincronizados ?? '—'}</p>
+            <p className="text-xs font-medium mt-0.5">{new Date(connection.created_at).toLocaleDateString('pt-BR')}</p>
           </div>
         </div>
       )}
 
-
-        <div className="space-y-4 mb-5">
-          {integ.id === 'microsoft_outlook' && <MicrosoftDiagnostics />}
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Benefícios</p>
-
+      <div className="space-y-4 mb-5">
+        {integ.id === 'google_calendar' && <GoogleDiagnostics />}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Benefícios</p>
           <ul className="space-y-1.5">
             {integ.beneficios.map((b, i) => (
               <li key={i} className="flex gap-2 text-sm">
@@ -213,59 +238,27 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
             ))}
           </ul>
         </div>
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Capacidades</p>
-          <div className="flex flex-wrap gap-1.5">
-            {integ.capacidades.map((c, i) => (
-              <span key={i} className="text-xs px-2 py-0.5 rounded-sm bg-muted text-foreground">{c}</span>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Escopos requeridos</p>
-          <div className="flex flex-wrap gap-1.5">
-            {integ.escopos.map((s, i) => (
-              <code key={i} className="text-[11px] px-1.5 py-0.5 rounded-sm bg-foreground/5 text-foreground font-mono">{s}</code>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="flex flex-col gap-2 pt-4 border-t border-border/60">
-        {integ.status === 'conectado' || integ.status === 'beta' ? (
+        {isConnected ? (
           <>
-            <Button onClick={() => toast({ title: 'Sincronização iniciada', description: `${integ.nome} está sincronizando.` })}>
+            <Button onClick={() => toast({ title: 'Sincronização iniciada' })}>
               <RefreshCw className="h-4 w-4 mr-2" strokeWidth={1.5} /> Sincronizar agora
             </Button>
-            <Button variant="outline" onClick={() => toast({ title: 'Configurações abertas', description: 'Edite escopos e preferências.' })}>
-              <Settings2 className="h-4 w-4 mr-2" strokeWidth={1.5} /> Configurações
+            <Button variant="outline" className="text-destructive hover:bg-destructive/5" onClick={handleDisconnect} disabled={loading}>
+              Desconectar Conta
             </Button>
           </>
-        ) : integ.status === 'disponivel' ? (
-          <Button onClick={() => {
-            // Se for Microsoft, vamos usar o mecanismo de reconexão ou sugerir o fluxo correto
-            if (integ.id === 'microsoft_outlook') {
-              toast({ 
-                title: 'Conectando Microsoft', 
-                description: 'Certifique-se de autorizar as permissões de Calendário e Reuniões Online.' 
-              });
-              // Simular abertura do gateway (em produção isso abriria o modal de conexão do Lovable)
-              window.open('https://lovable.dev/projects/' + window.location.pathname.split('/')[2] + '/integrations', '_blank');
-            } else {
-              toast({ title: 'Conexão iniciada', description: `Autorize ${integ.nome} na nova janela.` });
-            }
-          }}>
-            <Plug className="h-4 w-4 mr-2" strokeWidth={1.5} /> Conectar {integ.nome}
+        ) : integ.status === 'disponivel' || integ.status === 'beta' ? (
+          <Button onClick={handleConnect} disabled={loading}>
+            {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Plug className="h-4 w-4 mr-2" />}
+            Conectar {integ.nome}
           </Button>
         ) : (
           <Button variant="outline" disabled>
             <Clock className="h-4 w-4 mr-2" strokeWidth={1.5} /> Em breve
           </Button>
-        )}
-        {integ.documentacaoUrl && (
-          <a href={integ.documentacaoUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 self-start">
-            Documentação <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
-          </a>
         )}
       </div>
     </Card>
@@ -275,15 +268,36 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
 export default function IntegracoesPage() {
   const [filtro, setFiltro] = useState<'todas' | CategoriaIntegracao>('todas');
   const [selecionada, setSelecionada] = useState<Integracao | null>(INTEGRACOES[0]);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Check for OAuth callback code in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code) {
+      const processCallback = async () => {
+        toast({ title: 'Processando conexão...', description: 'Aguarde um momento.' });
+        try {
+          const { error } = await supabase.functions.invoke('google-oauth-callback', {
+            body: { code }
+          });
+          if (error) throw error;
+          toast({ title: 'Conectado com sucesso!', description: 'Sua conta Google foi vinculada.' });
+          queryClient.invalidateQueries({ queryKey: ['google-connection'] });
+          // Clear code from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (err: any) {
+          toast({ title: 'Erro na conexão', description: err.message, variant: 'destructive' });
+        }
+      };
+      processCallback();
+    }
+  }, []);
 
   const lista = useMemo(
     () => filtro === 'todas' ? INTEGRACOES : INTEGRACOES.filter(i => i.categoria === filtro),
     [filtro],
   );
-
-  const conectadas = INTEGRACOES.filter(i => i.status === 'conectado' || i.status === 'beta').length;
-  const disponiveis = INTEGRACOES.filter(i => i.status === 'disponivel').length;
-  const futuras = INTEGRACOES.filter(i => i.status === 'em_breve').length;
 
   const filtros: Array<{ id: 'todas' | CategoriaIntegracao; label: string }> = [
     { id: 'todas', label: 'Todas' },
@@ -297,35 +311,17 @@ export default function IntegracoesPage() {
     <div>
       <PageHeader
         titulo="Integrações"
-        subtitulo="Conecte calendários, salas de reunião, mensageria e a base de conhecimento Seven em um único lugar."
+        subtitulo="Conecte calendários, salas de reunião e ferramentas externas ao Sistema SEVEN."
       />
-
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <Card className="p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Conectadas</p>
-          <p className="text-3xl font-thin mt-2">{conectadas}</p>
-          <p className="text-xs text-muted-foreground mt-1">Sincronizando ativamente</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Disponíveis</p>
-          <p className="text-3xl font-thin mt-2">{disponiveis}</p>
-          <p className="text-xs text-muted-foreground mt-1">Prontas para conectar</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Roadmap</p>
-          <p className="text-3xl font-thin mt-2">{futuras}</p>
-          <p className="text-xs text-muted-foreground mt-1">Em breve no produto</p>
-        </Card>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2">
             {filtros.map(f => (
               <button
                 key={f.id}
                 onClick={() => setFiltro(f.id)}
-                className={`text-xs px-3 py-1.5 rounded-sm transition-colors ${
+                className={`text-xs px-3 py-1.5 rounded-sm transition-colors whitespace-nowrap ${
                   filtro === f.id
                     ? 'bg-foreground text-background'
                     : 'bg-muted text-muted-foreground hover:bg-muted/70'
@@ -339,35 +335,6 @@ export default function IntegracoesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {lista.map(i => <CardIntegracao key={i.id} integ={i} onSelect={setSelecionada} />)}
           </div>
-
-          <Card className="p-5 mt-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-4">Atividade recente</p>
-            <div className="space-y-3">
-              {EVENTOS_INTEGRACAO.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">Nenhuma atividade recente.</p>
-              ) : (
-                EVENTOS_INTEGRACAO.map(ev => {
-                  const integ = INTEGRACOES.find(i => i.id === ev.integracaoId);
-                  return (
-                    <div key={ev.id} className="flex gap-3 pb-3 border-b border-border/60 last:border-0 last:pb-0">
-                      <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-                        <RefreshCw className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <p className="text-sm font-medium">{ev.titulo}</p>
-                          <span className="text-[11px] text-muted-foreground shrink-0">{fmtData(ev.data)}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {integ?.nome} · {ev.detalhe}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </Card>
         </div>
 
         <div>
