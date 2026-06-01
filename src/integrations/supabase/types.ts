@@ -1111,6 +1111,7 @@ export type Database = {
           created_at: string
           id: string
           meeting_number: number
+          microsoft_event_id: string | null
           module_id: string
           order_index: number
           product_id: string
@@ -1118,6 +1119,7 @@ export type Database = {
           scheduled_at: string | null
           scheduled_meeting_id: string | null
           status: string
+          teams_join_url: string | null
           title: string
           updated_at: string
         }
@@ -1132,6 +1134,7 @@ export type Database = {
           created_at?: string
           id?: string
           meeting_number: number
+          microsoft_event_id?: string | null
           module_id: string
           order_index?: number
           product_id: string
@@ -1139,6 +1142,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string
+          teams_join_url?: string | null
           title: string
           updated_at?: string
         }
@@ -1153,6 +1157,7 @@ export type Database = {
           created_at?: string
           id?: string
           meeting_number?: number
+          microsoft_event_id?: string | null
           module_id?: string
           order_index?: number
           product_id?: string
@@ -1160,6 +1165,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduled_meeting_id?: string | null
           status?: string
+          teams_join_url?: string | null
           title?: string
           updated_at?: string
         }
@@ -2186,6 +2192,56 @@ export type Database = {
           },
         ]
       }
+      meeting_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          meeting_id: string
+          new_date: string | null
+          new_start_time: string | null
+          new_status: string | null
+          previous_date: string | null
+          previous_start_time: string | null
+          previous_status: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id: string
+          new_date?: string | null
+          new_start_time?: string | null
+          new_status?: string | null
+          previous_date?: string | null
+          previous_start_time?: string | null
+          previous_status?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          new_date?: string | null
+          new_start_time?: string | null
+          new_status?: string | null
+          previous_date?: string | null
+          previous_start_time?: string | null
+          previous_status?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_history_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_history_events: {
         Row: {
           client_id: string | null
@@ -2429,12 +2485,14 @@ export type Database = {
           meeting_minutes: string | null
           meeting_url: string | null
           methodology_phase_id: string | null
+          microsoft_event_id: string | null
           participants: Json | null
           reschedule_url: string | null
           scheduled_by: string | null
           source: string | null
           start_time: string
           status: string | null
+          teams_join_url: string | null
           title: string | null
           type: string | null
           updated_at: string | null
@@ -2477,12 +2535,14 @@ export type Database = {
           meeting_minutes?: string | null
           meeting_url?: string | null
           methodology_phase_id?: string | null
+          microsoft_event_id?: string | null
           participants?: Json | null
           reschedule_url?: string | null
           scheduled_by?: string | null
           source?: string | null
           start_time: string
           status?: string | null
+          teams_join_url?: string | null
           title?: string | null
           type?: string | null
           updated_at?: string | null
@@ -2525,12 +2585,14 @@ export type Database = {
           meeting_minutes?: string | null
           meeting_url?: string | null
           methodology_phase_id?: string | null
+          microsoft_event_id?: string | null
           participants?: Json | null
           reschedule_url?: string | null
           scheduled_by?: string | null
           source?: string | null
           start_time?: string
           status?: string | null
+          teams_join_url?: string | null
           title?: string | null
           type?: string | null
           updated_at?: string | null

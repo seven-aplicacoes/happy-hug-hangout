@@ -244,6 +244,9 @@ export interface ContractModuleMeeting {
   consultantId?: string;
   scheduledAt?: string;
   completedAt?: string;
+  teamsJoinUrl?: string;
+  location?: string;
+  microsoftEventId?: string;
   orderIndex: number;
   consultantName?: string;
 }
