@@ -331,7 +331,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
           payload.meetingLinkProvider = 'teams';
           payload.teams_creation_status = 'failed';
           payload.teams_creation_error = teamsError.message || String(teamsError);
+          (payload as any).historyAction = 'teams_failed';
+          (payload as any).historyReason = `Falha ao gerar link do Microsoft Teams: ${payload.teams_creation_error}`;
         } finally {
+
 
           setIsGeneratingTeamsLink(false);
         }
