@@ -167,7 +167,7 @@ function AdminSidebar() {
               )}
 
               {filteredSoon.length > 0 && (
-                <Collapsible asChild className="group/collapsible opacity-[0.45]">
+                <Collapsible asChild className="group/collapsible">
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton className="h-10">
