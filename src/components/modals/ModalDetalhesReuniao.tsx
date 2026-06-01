@@ -98,10 +98,10 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         cancelReason: r.cancel_reason,
         completedAt: r.completed_at,
         completedBy: r.completed_by,
-        createdByName: r.creator?.full_name,
-        updatedByName: r.updater?.full_name,
-        canceledByName: r.canceler?.full_name,
-        completedByName: r.completer?.full_name
+        createdByName: Array.isArray(r.creator) ? r.creator[0]?.full_name : (r.creator as any)?.full_name,
+        updatedByName: Array.isArray(r.updater) ? r.updater[0]?.full_name : (r.updater as any)?.full_name,
+        canceledByName: Array.isArray(r.canceler) ? r.canceler[0]?.full_name : (r.canceler as any)?.full_name,
+        completedByName: Array.isArray(r.completer) ? r.completer[0]?.full_name : (r.completer as any)?.full_name
       };
 
       setReuniao(mappedReuniao);
