@@ -93,7 +93,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const { phases: productPhases } = useContractProductPhases(contractProductId);
   const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
   
-  const { availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
+  const { availabilities, slots, isLoading: loadingAvailability } = useConsultantAvailability({
     contractModuleMeetingId: contractModuleMeetingId && contractModuleMeetingId !== 'none' ? contractModuleMeetingId : undefined,
     consultantId: consultorId || undefined
   });
@@ -159,6 +159,17 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     }
     setErrors({});
   }, [reuniao, initialData, open, googleConnected, isLoadingGoogleStatus]);
+
+  useEffect(() => {
+    if (open && slots) {
+      console.log("[ModalReuniao] Slots atualizados:", { 
+        count: slots.length, 
+        consultorId, 
+        meetingDate,
+        availCount: availabilities?.length 
+      });
+    }
+  }, [slots, open, consultorId, meetingDate, availabilities]);
 
   useEffect(() => {
     if (contractProductPhaseId && contractProductPhaseId !== 'none') {
@@ -409,6 +420,48 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                   <Input type="number" value={duracao} onChange={e => setDuracao(Number(e.target.value))} className="h-11 bg-white" />
                 </div>
               </div>
+
+              {consultorId && meetingDate && (
+                <div className="space-y-3 pt-2 border-t border-primary/10">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <Clock className="h-3 w-3" /> Horários Disponíveis ({selectedConsultor?.full_name})
+                  </Label>
+                  
+                  {loadingAvailability ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      <span className="text-[10px] text-muted-foreground italic">Buscando disponibilidade...</span>
+                    </div>
+                  ) : slots?.filter(s => s.available_date === meetingDate && !s.is_booked).length === 0 ? (
+                    <p className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 italic">
+                      {availabilities && availabilities.length > 0 
+                        ? "Nenhum horário livre para esta data." 
+                        : "Consultor sem disponibilidade configurada."}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {slots?.filter(s => s.available_date === meetingDate && !s.is_booked).map((slot: any) => (
+                        <Button
+                          key={slot.id}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "h-8 text-[10px] font-bold",
+                            startTime === slot.start_time.substring(0, 5) ? "bg-primary text-white border-primary shadow-sm" : "bg-white"
+                          )}
+                          onClick={() => {
+                            setStartTime(slot.start_time.substring(0, 5));
+                            setDuracao(slot.duration_minutes || 60);
+                          }}
+                        >
+                          {slot.start_time.substring(0, 5)}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
