@@ -664,7 +664,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
             )}
-            {joinLink && reuniao.status !== 'cancelada' && (
+            {joinLink && !['cancelada', 'cancelado'].includes(reuniao.status) && (
               <Button onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
                 <Play className="h-4 w-4" /> Entrar na Reunião
               </Button>

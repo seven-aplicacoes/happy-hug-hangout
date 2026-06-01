@@ -33,6 +33,10 @@ export function useClienteHistorico(clientId?: string) {
           status,
           consultant_id,
           type,
+          teams_join_url,
+          location_url,
+          meeting_url,
+          meeting_link_provider,
           profile:consultant_id (full_name)
         `)
         .eq('client_id', clientId)
@@ -63,7 +67,9 @@ export function useClienteHistorico(clientId?: string) {
         descricao: m.description || '',
         meeting_id: m.id,
         status: m.status,
-        consultant_name: m.profile?.full_name
+        consultant_name: m.profile?.full_name,
+        meeting_link: m.teams_join_url || m.meeting_url || m.location_url,
+        meeting_link_provider: m.meeting_link_provider
       }));
 
       // Merge and sort by date descending

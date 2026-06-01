@@ -170,10 +170,11 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                         )}
                       </div>
                     );
-                  } else if (normalizedStatusValue === 'agendado') {
+                  } else if (normalizedStatusValue !== 'cancelada' && normalizedStatusValue !== 'cancelado') {
+                    const meetingLink = meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl;
                     return (
                       <div className="flex gap-2">
-                        {(meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl) && (
+                        {meetingLink && (
                           <Button 
                             size="sm" 
                             variant="default" 
@@ -181,36 +182,18 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                               "h-8 gap-1.5 px-3 text-white text-[10px] font-bold uppercase",
                               meeting.meetingLinkProvider === 'teams' ? "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20" : "bg-primary hover:bg-primary/90"
                             )}
-                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.meetingUrl || meeting.location || meeting.locationUrl, '_blank', 'noopener,noreferrer')}
+                            onClick={() => window.open(meetingLink, '_blank', 'noopener,noreferrer')}
                           >
                             {meeting.meetingLinkProvider === 'teams' ? <Video className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />} 
                             Entrar
                           </Button>
                         )}
                         <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => handleOpenDetail(meeting)}>
-                          Detalhes
+                          {['realizada', 'concluida', 'concluido', 'concluído'].includes(normalizedStatusValue) ? 'Ver Realizado' : 'Detalhes'}
                         </Button>
                       </div>
                     );
                   } else if (normalizedStatusValue === 'cancelada' || normalizedStatusValue === 'cancelado') {
-                    return (
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className="h-8 bg-red-50 text-red-600 border-red-200 uppercase font-black text-[10px]">
-                          Cancelado
-                        </Badge>
-                        {(mode === 'admin' || mode === 'consultor') && (
-                          <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => onSchedule(meeting)}>
-                            Reagendar
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  } else if (['realizada', 'concluida', 'concluido', 'concluído'].includes(normalizedStatusValue)) {
-                    return (
-                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5" onClick={() => handleOpenDetail(meeting)}>
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Realizado
-                      </Button>
-                    );
                   } else {
                     return (
                       <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 text-[10px] font-bold uppercase" onClick={() => handleOpenDetail(meeting)}>

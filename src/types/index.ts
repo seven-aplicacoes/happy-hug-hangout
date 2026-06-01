@@ -458,6 +458,8 @@ export interface TimelineEvent {
   faseRelacionada?: string;
   meeting_id?: string;
   consultant_name?: string;
+  meeting_link?: string;
+  meeting_link_provider?: string;
 }
 
 export interface ContractProduct {
