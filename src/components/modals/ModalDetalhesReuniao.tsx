@@ -183,7 +183,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         updatedByName: profilesMap[r.updated_by] || 'Sistema',
         canceledByName: profilesMap[r.canceled_by] || 'Desconhecido',
         completedByName: profilesMap[r.completed_by] || 'Desconhecido',
-        teams_creation_status: r.teams_creation_status,
+        teams_creation_status: r.teams_creation_status as 'created' | 'failed' | null,
         teams_creation_error: r.teams_creation_error
       };
 
