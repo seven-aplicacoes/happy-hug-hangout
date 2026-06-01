@@ -87,6 +87,10 @@ export default function PortalClientePage() {
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
   
   // Debug logs
+  const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
+  const { csatStatus } = usePortalCSAT(clientId);
+  const isLoading = loadingFicha || loadingContratos || loadingHist || loadingSummary;
+
   useEffect(() => {
     if (clientId) {
       console.log('[Portal Cliente] session:', clienteSession);
