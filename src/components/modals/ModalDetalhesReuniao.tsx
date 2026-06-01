@@ -78,22 +78,58 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       }
 
 
-      // Fetch history
-      const { data: h } = await supabase
-        .from('meeting_status_history')
-        .select(`
-          *,
-          profile:changed_by (full_name)
-        `)
-        .eq('meeting_id', reuniaoId)
-        .order('created_at', { ascending: false });
+      if (!r) {
+        console.error('[MeetingDetails] Meeting not found for ID:', reuniaoId);
+        throw new Error('Reunião não encontrada');
+      }
 
-      // Fetch minutes
-      const { data: m } = await supabase
-        .from('meeting_minutes')
-        .select('*')
-        .eq('meeting_id', reuniaoId)
-        .maybeSingle();
+      // Step 2: Resilient fetch for audit profile names (created_by, updated_by, etc.)
+      const profileIds = [r.created_by, r.updated_by, r.canceled_by, r.completed_by].filter(Boolean);
+      let profilesMap: Record<string, string> = {};
+      
+      if (profileIds.length > 0) {
+        try {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', profileIds);
+          
+          profilesData?.forEach(p => {
+            profilesMap[p.id] = p.full_name;
+          });
+        } catch (auditErr) {
+          console.warn('[MeetingDetails] audit fetch warning:', auditErr);
+        }
+      }
+
+      // Step 3: Fetch history
+      let h: any[] = [];
+      try {
+        const { data: historyData } = await supabase
+          .from('meeting_status_history')
+          .select(`
+            *,
+            profile:changed_by (full_name)
+          `)
+          .eq('meeting_id', reuniaoId)
+          .order('created_at', { ascending: false });
+        h = historyData || [];
+      } catch (histErr) {
+        console.warn('[MeetingDetails] history fetch warning:', histErr);
+      }
+
+      // Step 4: Fetch minutes
+      let m: any = null;
+      try {
+        const { data: minutesData } = await supabase
+          .from('meeting_minutes')
+          .select('*')
+          .eq('meeting_id', reuniaoId)
+          .maybeSingle();
+        m = minutesData;
+      } catch (minErr) {
+        console.warn('[MeetingDetails] minutes fetch warning:', minErr);
+      }
 
       const mappedMinutes: MeetingMinutes | null = m ? {
         id: m.id,
@@ -112,13 +148,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
       setMinutes(mappedMinutes);
 
-
       const mappedReuniao: Reuniao = {
         id: r.id,
         clienteId: r.client_id,
         clienteNome: r.client?.trade_name || r.client?.corporate_name || 'Desconhecido',
         consultorId: r.consultant_id,
-        consultorNome: r.profile && 'full_name' in r.profile ? (r.profile as any).full_name : 'Desconhecido',
+        consultorNome: r.profile?.full_name || 'Desconhecido',
         contractId: r.contract_id,
         contractProductId: r.contract_product_id,
         contractProductPhaseId: r.contract_product_phase_id,
@@ -143,14 +178,16 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         cancelReason: r.cancel_reason,
         completedAt: r.completed_at,
         completedBy: r.completed_by,
-        createdByName: Array.isArray(r.creator) ? r.creator[0]?.full_name : (r.creator as any)?.full_name,
-        updatedByName: Array.isArray(r.updater) ? r.updater[0]?.full_name : (r.updater as any)?.full_name,
-        canceledByName: Array.isArray(r.canceler) ? r.canceler[0]?.full_name : (r.canceler as any)?.full_name,
-        completedByName: Array.isArray(r.completer) ? r.completer[0]?.full_name : (r.completer as any)?.full_name
+        createdByName: profilesMap[r.created_by] || 'Sistema',
+        updatedByName: profilesMap[r.updated_by] || 'Sistema',
+        canceledByName: profilesMap[r.canceled_by] || 'Desconhecido',
+        completedByName: profilesMap[r.completed_by] || 'Desconhecido',
+        teams_creation_status: r.teams_creation_status,
+        teams_creation_error: r.teams_creation_error
       };
 
       setReuniao(mappedReuniao);
-      setHistory((h || []).map((item: any) => ({
+      setHistory(h.map((item: any) => ({
         id: item.id,
         meetingId: item.meeting_id,
         previousStatus: item.previous_status,
@@ -161,13 +198,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         payload: item.payload,
         createdAt: item.created_at
       })));
-    } catch (err) {
-      console.error('Error fetching meeting details:', err);
-      toast({ title: 'Erro', description: 'Não foi possível carregar os detalhes da reunião.', variant: 'destructive' });
+    } catch (err: any) {
+      console.error('[MeetingDetails] Error in fetchDetails:', err);
+      toast({ title: 'Erro', description: err.message || 'Não foi possível carregar os detalhes da reunião.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     if (open && reuniaoId) {
