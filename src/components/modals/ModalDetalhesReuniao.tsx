@@ -123,22 +123,38 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const handleGenerateMeetLink = async () => {
     if (!reuniao) return;
     setGeneratingMeet(true);
+    console.log("Iniciando geração de Google Meet", { meetingId: reuniao.id, action: reuniao.google_event_id ? 'update' : 'create' });
+    
     try {
       const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
         body: { 
-          meetingId: reuniao.id, 
+          meeting_id: reuniao.id, 
           action: reuniao.google_event_id ? 'update' : 'create' 
         }
       });
       
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        console.error("Erro ao chamar Edge Function create-google-meet-meeting:", error);
+        throw new Error(error.message || "Erro de conexão com a Edge Function");
+      }
+
+      if (data?.success === false) {
+        console.error("Edge Function retornou erro:", data);
+        throw new Error(data.error || "Falha ao processar link no Google");
+      }
 
       toast({ title: 'Sucesso', description: 'Link do Google Meet processado com sucesso.' });
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      toast({ title: 'Erro na Sincronização', description: err.message, variant: 'destructive' });
+      console.error("Erro completo handleGenerateMeetLink:", err);
+      toast({ 
+        title: 'Erro na Sincronização', 
+        description: err.message.includes("Failed to send a request") 
+          ? "Não foi possível alcançar a Edge Function. Verifique se ela foi deployada corretamente no Supabase." 
+          : err.message, 
+        variant: 'destructive' 
+      });
     } finally {
       setGeneratingMeet(false);
     }
@@ -146,18 +162,44 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
   const handleTestConnection = async () => {
     setSubmitting(true);
+    console.log("Iniciando diagnóstico de conexão Google");
     try {
-      const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
-        body: { action: 'test_connection' }
-      });
-      if (error) throw error;
-      if (data?.success) {
+      const { data, error } = await supabase.functions.invoke('diagnose-google-connection');
+      
+      if (error) {
+        console.error("Erro ao chamar Edge Function diagnose-google-connection:", error);
+        throw new Error(error.message || "Erro de conexão com a Edge Function");
+      }
+
+      if (data?.success === false) {
+        toast({ title: 'Atenção', description: data.error || 'Não conectado', variant: 'warning' as any });
+      } else {
         toast({ 
           title: 'Conexão OK', 
-          description: `Conectado como ${data.email}. Scopes: ${data.scopes?.join(', ')}` 
+          description: `Conectado como ${data.data?.email}. Token: ${data.data?.tokenStatus}` 
         });
-      } else {
-        toast({ title: 'Erro', description: data?.error || 'Não conectado', variant: 'destructive' });
+      }
+    } catch (err: any) {
+      console.error("Erro completo handleTestConnection:", err);
+      toast({ 
+        title: 'Erro no Diagnóstico', 
+        description: err.message.includes("Failed to send a request")
+          ? "Edge Function 'diagnose-google-connection' não encontrada ou erro de CORS."
+          : err.message, 
+        variant: 'destructive' 
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleTestEdgeFunction = async () => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('test-google-edge-function');
+      if (error) throw error;
+      if (data?.success) {
+        toast({ title: 'Teste OK', description: data.message });
       }
     } catch (err: any) {
       toast({ title: 'Erro no Teste', description: err.message, variant: 'destructive' });
