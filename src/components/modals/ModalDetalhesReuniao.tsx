@@ -10,8 +10,9 @@ import {
   User, CheckCircle2, XCircle, AlertCircle, 
   History, Info, Pencil, Trash2, Loader2, Play,
   Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff,
-  Users, ListChecks, Lock
+  Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon
 } from 'lucide-react';
+
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
