@@ -568,6 +568,21 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         </div>
       </div>
     </BaseModal>
+
+    <ModalRegistrarAta 
+      open={registrarAtaOpen} 
+      onClose={() => setRegistrarAtaOpen(false)} 
+      meetingId={reuniao.id} 
+      meetingTitle={reuniao.title} 
+      onSuccess={fetchDetails} 
+    />
+
+    <ModalReuniao 
+      open={remarcarOpen} 
+      onClose={() => setRemarcarOpen(false)} 
+      reuniao={reuniao} 
+    />
+    </>
   );
 };
 
