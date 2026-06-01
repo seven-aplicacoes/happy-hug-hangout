@@ -256,6 +256,7 @@ export interface MeetingStatusHistory {
   previousStatus: string | null;
   newStatus: string;
   changedBy: string | null;
+  changedByName?: string;
   changeReason: string | null;
   action?: string;
   previousScheduledAt?: string;
