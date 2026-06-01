@@ -192,6 +192,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         teams_creation_error: r.teams_creation_error
       };
 
+      // Ensure status is normalized for local UI
+      if (r.status === 'realizado') (mappedReuniao as any).status = 'realizada';
+      if (r.status === 'cancelado') (mappedReuniao as any).status = 'cancelada';
+      if (r.status === 'agendado') (mappedReuniao as any).status = 'agendada';
+
       setReuniao(mappedReuniao);
       setHistory(h.map((item: any) => ({
         id: item.id,
@@ -262,6 +267,17 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       } else if (newStatus === 'realizada') {
         payload.completed_at = new Date().toISOString();
         payload.completed_by = user?.id;
+        
+        // Update timeline on completion
+        await supabase.from('timeline_events').insert({
+          client_id: reuniao.clienteId,
+          meeting_id: reuniao.id,
+          type: 'reuniao',
+          title: `Reunião realizada: ${reuniao.title}`,
+          description: reuniao.description || '',
+          date: new Date().toISOString(),
+          status: 'realizada'
+        } as any);
       }
 
       const { error } = await supabase
@@ -512,15 +528,13 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   if (!reuniao && !loading) return null;
 
   const canEdit = !isClient && (reuniao.status === 'agendada' || reuniao.status === 'em_andamento' || reuniao.status === 'reagendada' || reuniao.status === 'aguardando_confirmacao');
-  const canCancel = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
-  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada'].includes(reuniao.status);
+  const canCancel = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
+  const canMarkAsRealizada = !isClient && !['realizada', 'cancelada', 'realizado'].includes(reuniao.status);
   const canRegistrarAta = !isClient && reuniao.status !== 'cancelada';
 
   const handleMarkAsCompleted = async (withAta = false) => {
     if (withAta) {
       setRegistrarAtaOpen(true);
-      // We'll mark as completed after ata is saved if desired, 
-      // but for now let's just trigger the status update as well
     }
     await updateStatus('realizada', 'Reunião marcada como realizada pelo consultor');
     setIsConfirmingCompletion(false);
@@ -532,7 +546,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       open={open} 
       onClose={onClose} 
       titulo={reuniao.title} 
-      size="2xl"
+      size="full"
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
@@ -552,12 +566,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
             )}
           </div>
           <div className="flex gap-2">
-            {canRegistrarAta && (
+            {!isClient && canRegistrarAta && (
               <Button variant="outline" onClick={() => setRegistrarAtaOpen(true)} className="gap-2">
                 <FileText className="h-4 w-4" /> {minutes ? 'Editar Ata' : 'Registrar Ata'}
               </Button>
             )}
-            {canMarkAsRealizada && (
+            {!isClient && canMarkAsRealizada && (
               <Button onClick={() => setIsConfirmingCompletion(true)} className="bg-green-600 hover:bg-green-700 text-white gap-2">
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
@@ -838,7 +852,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white border rounded-2xl p-4 space-y-4">
+            <div className={cn("bg-white border rounded-2xl p-4 space-y-4", isClient && "hidden")}>
               <h3 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                 <History className="h-4 w-4" /> Histórico
               </h3>
@@ -861,7 +875,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
               </div>
             </div>
 
-            <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+            <div className={cn("bg-primary/5 rounded-2xl p-4 border border-primary/10", isClient && "hidden")}>
               <h3 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
                 <Info className="h-4 w-4" /> Auditoria
               </h3>

@@ -54,6 +54,7 @@ import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard'
 import { StatusTag } from '@/components/StatusTag';
 import { labelStatus } from '@/data/mockData';
 import { Accordion } from '@/components/ui/accordion';
+import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 
 
 export default function PortalClientePage() {
@@ -64,6 +65,7 @@ export default function PortalClientePage() {
   const [erro, setErro] = useState('');
   
   const [isCsatOpen, setIsCsatOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
   const [csatRatings, setCsatRatings] = useState({
     meeting: 0,
@@ -266,14 +268,22 @@ export default function PortalClientePage() {
             <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico de Reuniões</h2>
           </div>
           <div className="space-y-4">
-            {historico?.map(event => (
-              <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex gap-6">
+            {historico?.filter(e => e.tipo === 'reuniao' || (e as any).visible_to_client !== false).map(event => (
+              <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex flex-col md:flex-row gap-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
+                if (event.tipo === 'reuniao' && event.meeting_id) {
+                  setSelectedMeeting({ id: event.meeting_id, title: event.titulo });
+                  setIsDetailOpen(true);
+                }
+              }}>
                 <div className="md:w-32 shrink-0 border-r border-neutral-100 pr-6">
                   <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">{event.tipo}</p>
                 </div>
                 <div className="flex-1 space-y-2">
-                  <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                    <StatusTag label={event.status || ''} />
+                  </div>
                   <p className="text-sm text-neutral-500 leading-relaxed">{event.descricao}</p>
                 </div>
               </Card>
@@ -304,6 +314,14 @@ export default function PortalClientePage() {
           <DialogFooter><Button onClick={handleSubmitCsat} disabled={csatRatings.meeting === 0}>Enviar Feedback</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {selectedMeeting?.id && (
+        <ModalDetalhesReuniao 
+          open={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          reuniaoId={selectedMeeting.id}
+        />
+      )}
     </div>
   );
 }
