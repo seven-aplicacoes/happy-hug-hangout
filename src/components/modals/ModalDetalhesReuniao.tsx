@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
-  History, Info, Pencil, Trash2, Loader2, Play
+  History, Info, Pencil, Trash2, Loader2, Play,
+  Copy, Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
