@@ -222,7 +222,8 @@ serve(async (req) => {
         }
       }
 
-      await supabase.from('meetings').update(updates).eq('id', meetingId);
+      const { data: updateResult, error: updateError } = await supabase.from('meetings').update(updates).eq('id', meetingId).select();
+      console.log(`[microsoft-sync] [TEAMS_LINK_SAVE_RESULT]`, updateError ? updateError : "Sucesso ao salvar no banco");
 
       return new Response(JSON.stringify({ 
         success: true, 
