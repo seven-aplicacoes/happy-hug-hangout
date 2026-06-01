@@ -80,8 +80,6 @@ export function useReunioes() {
         calendar_sync_status: r.calendar_sync_status,
         calendar_sync_error: r.calendar_sync_error,
       })) as Reuniao[];
-
-
     },
   });
 
@@ -115,19 +113,16 @@ export function useReunioes() {
         teams_join_url: reuniao.teamsJoinUrl,
         teams_creation_status: reuniao.teams_creation_status,
         teams_creation_error: reuniao.teams_creation_error,
+        meet_join_url: reuniao.meet_join_url,
+        google_event_id: reuniao.google_event_id,
       };
 
-
-      // Se o status mudar de cancelada para agendada, limpamos os campos de cancelamento
       if (reuniao.status === 'agendada') {
         payload.canceled_at = null;
         payload.canceled_by = null;
         payload.cancel_reason = null;
       }
 
-
-      // Filter out undefined values to avoid overwriting with null if not intended
-      // Special case: if ID is null, we remove it so it's treated as a new insert
       const cleanPayload = Object.fromEntries(
         Object.entries(payload).filter(([k, v]) => {
           if (k === 'id' && !v) return false;
@@ -135,10 +130,9 @@ export function useReunioes() {
         })
       );
 
-
       const { data: currentMeeting } = await supabase
         .from('meetings')
-        .select('status, meeting_date, start_time, location_url, teams_join_url, meeting_url')
+        .select('status, meeting_date, start_time, location_url, teams_join_url, meet_join_url, meeting_url')
         .eq('id', cleanPayload.id as string)
         .maybeSingle();
 
@@ -148,11 +142,10 @@ export function useReunioes() {
         .select();
 
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error("Não foi possível salvar a reunião. Verifique suas permissões.");
+      if (!data || data.length === 0) throw new Error("Não foi possível salvar a reunião.");
 
       const newMeeting = data[0];
 
-      // Log history if it's an update
       if (currentMeeting) {
         const historyPayload: any = {
           meeting_id: newMeeting.id,
@@ -162,7 +155,6 @@ export function useReunioes() {
           action: (reuniao as any).historyAction || 'update',
           change_reason: (reuniao as any).historyReason || (newMeeting.status === 'cancelada' ? (reuniao as any).cancelReason : 'Alteração via formulário'),
         };
-
 
         if (currentMeeting.status !== newMeeting.status) {
           historyPayload.action = newMeeting.status === 'cancelada' ? 'cancel' : 'status_change';
@@ -174,8 +166,8 @@ export function useReunioes() {
           historyPayload.new_scheduled_at = newMeeting.meeting_date ? `${newMeeting.meeting_date}T${newMeeting.start_time}` : null;
         }
 
-        const currentLink = currentMeeting.teams_join_url || currentMeeting.location_url || currentMeeting.meeting_url;
-        const newLink = newMeeting.teams_join_url || newMeeting.location_url || newMeeting.meeting_url;
+        const currentLink = currentMeeting.teams_join_url || currentMeeting.meet_join_url || currentMeeting.location_url || currentMeeting.meeting_url;
+        const newLink = newMeeting.teams_join_url || newMeeting.meet_join_url || newMeeting.location_url || newMeeting.meeting_url;
         if (currentLink !== newLink) {
           historyPayload.previous_link = currentLink;
           historyPayload.new_link = newLink;
@@ -184,7 +176,6 @@ export function useReunioes() {
 
         await supabase.from('meeting_status_history').insert(historyPayload);
       } else {
-        // Initial schedule history
         await supabase.from('meeting_status_history').insert({
           meeting_id: newMeeting.id,
           new_status: newMeeting.status,
@@ -192,20 +183,18 @@ export function useReunioes() {
           action: 'create',
           change_reason: 'Agendamento inicial',
           new_scheduled_at: newMeeting.meeting_date ? `${newMeeting.meeting_date}T${newMeeting.start_time}` : null,
-          new_link: newMeeting.teams_join_url || newMeeting.location_url || newMeeting.meeting_url
+          new_link: newMeeting.teams_join_url || newMeeting.meet_join_url || newMeeting.location_url || newMeeting.meeting_url
         });
       }
 
-      // Se estiver vinculada a um encontro da jornada, atualiza o status desse encontro
       if (reuniao.contractModuleMeetingId) {
         const meetingId = data[0].id;
-        // Se a reunião estiver cancelada, o encontro volta para pendente
         const status = reuniao.status === 'realizada' ? 'realizada' : (reuniao.status === 'cancelada' ? 'cancelada' : 'agendado');
         const scheduledAt = (reuniao.meetingDate && reuniao.startTime && reuniao.status !== 'cancelada')
           ? `${reuniao.meetingDate}T${reuniao.startTime}` 
           : null;
 
-        const { error: updateMeetingError } = await supabase
+        await supabase
           .from('contract_module_meetings')
           .update({
             status,
@@ -214,38 +203,22 @@ export function useReunioes() {
             consultant_id: reuniao.consultorId,
             completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null,
             teams_join_url: reuniao.teamsJoinUrl,
+            meet_join_url: reuniao.meet_join_url,
             microsoft_event_id: reuniao.microsoftEventId,
+            google_event_id: reuniao.google_event_id,
             meeting_link_provider: reuniao.meetingLinkProvider,
             location_url: reuniao.locationUrl
           })
           .eq('id', reuniao.contractModuleMeetingId);
-
-        if (updateMeetingError) {
-          console.error('Erro ao atualizar contrato:', updateMeetingError);
-          throw updateMeetingError;
-        }
       }
 
-
       return data;
-
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reunioes'] });
       queryClient.invalidateQueries({ queryKey: ['contract-module-meetings'] });
-      queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
-      queryClient.invalidateQueries({ queryKey: ['clientes'] });
       toast({ title: 'Sucesso', description: 'Reunião salva com sucesso.' });
     },
-
-    onError: (error: any) => {
-      console.error('Erro ao salvar reunião:', error);
-      toast({ 
-        title: 'Erro ao salvar', 
-        description: error.message || 'Ocorreu um erro ao tentar salvar a reunião. Verifique os dados e tente novamente.',
-        variant: 'destructive'
-      });
-    }
   });
 
   const deleteReuniao = useMutation({
@@ -261,31 +234,26 @@ export function useReunioes() {
 
   const syncMicrosoft = useMutation({
     mutationFn: async ({ meetingId, action }: MicrosoftSyncParams) => {
-      console.log(`[useReunioes] Iniciando syncMicrosoft para ID: ${meetingId}, Ação: ${action}`);
       const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
         body: { meetingId, action }
       });
-      
-      if (error) {
-        console.error('[useReunioes] Erro na chamada da Edge Function:', error);
-        throw error;
-      }
-      
-      if (!data?.success) {
-        console.error('[useReunioes] Erro retornado pela Edge Function:', data);
-        const errorMsg = data?.message || data?.error || 'Erro na sincronização Microsoft';
-        const detailMsg = data?.details?.error?.message || data?.details?.message || '';
-        
-        // Handle 403 Access Denied specifically
-        if (detailMsg.includes('Access is denied') || data?.details?.status === 403) {
-          throw new Error(`Permissão Negada: Sua conta Microsoft não permite criar reuniões online ou os escopos de acesso expiraram. Por favor, reconecte sua conta em Configurações > Integrações.`);
-        }
-        
-        throw new Error(`${errorMsg}${detailMsg ? `: ${detailMsg}` : ''}`);
-      }
-      
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.message || 'Erro na sincronização Microsoft');
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reunioes'] });
+    }
+  });
 
+  const syncGoogle = useMutation({
+    mutationFn: async ({ meetingId, action }: GoogleSyncParams) => {
+      const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
+        body: { meetingId, action }
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Erro na sincronização Google Meet');
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reunioes'] });
@@ -296,7 +264,6 @@ export function useReunioes() {
     const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
       body: { action: 'test_connection' }
     });
-    if (error) throw error;
     return data;
   };
 
@@ -304,7 +271,6 @@ export function useReunioes() {
     const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
       body: { action: 'test_calendar' }
     });
-    if (error) throw error;
     return data;
   };
 
@@ -315,6 +281,7 @@ export function useReunioes() {
     upsertReuniao, 
     deleteReuniao, 
     syncMicrosoft,
+    syncGoogle,
     testMicrosoftConnection,
     testMicrosoftCalendar
   };
