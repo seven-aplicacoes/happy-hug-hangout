@@ -18,10 +18,10 @@ serve(async (req) => {
     }
 
     const scopes = [
+      'openid',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/calendar.events',
-      'https://www.googleapis.com/auth/calendar'
+      'https://www.googleapis.com/auth/calendar.events'
     ];
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
