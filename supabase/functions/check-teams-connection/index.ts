@@ -13,20 +13,24 @@ serve(async (req) => {
   try {
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
     const teamsApiKey = Deno.env.get('MICROSOFT_TEAMS_API_KEY')
+    const outlookApiKey = Deno.env.get('MICROSOFT_OUTLOOK_API_KEY')
 
-    if (!lovableApiKey || !teamsApiKey) {
+    // If no API keys at all, definitely not connected
+    if (!lovableApiKey || (!teamsApiKey && !outlookApiKey)) {
       return new Response(
-        JSON.stringify({ isConnected: false }),
+        JSON.stringify({ isConnected: false, reason: 'No API keys configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Verify connection via gateway's verify_credentials endpoint
+    // Try to verify with whatever key we have (Teams preferred for "Teams" check)
+    const activeKey = teamsApiKey || outlookApiKey;
+    
     const response = await fetch('https://connector-gateway.lovable.dev/api/v1/verify_credentials', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
-        'X-Connection-Api-Key': teamsApiKey,
+        'X-Connection-Api-Key': activeKey!,
       },
     })
 
@@ -38,7 +42,7 @@ serve(async (req) => {
   } catch (err) {
     console.error('check-teams-connection error:', err)
     return new Response(
-      JSON.stringify({ isConnected: false }),
+      JSON.stringify({ isConnected: false, error: err.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
