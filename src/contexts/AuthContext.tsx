@@ -159,7 +159,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from('clients')
       .select('id, trade_name, portal_access_enabled, status')
       .eq('auth_user_id', data.user.id)
-      .single();
+      .is('deleted_at', null)
+      .maybeSingle();
 
     if (!clientData) {
       await supabase.auth.signOut();
