@@ -89,19 +89,60 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
                   </Button>
                 )}
 
-                {meeting.status === 'pendente' ? (
-                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary" onClick={() => onSchedule(meeting)}>
-                    <Calendar className="h-3.5 w-3.5" /> Agendar
-                  </Button>
-                ) : meeting.status === 'agendado' ? (
-                  <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
-                    Reagendar
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
-                  </Button>
-                )}
+                {(() => {
+                  const isFirst = meeting.meetingNumber === 1;
+                  const prevMeeting = meetings.find(m => m.meetingNumber === meeting.meetingNumber - 1);
+                  const isPrevFinished = prevMeeting && ['realizada', 'concluído', 'cancelado', 'remarcada_concluido', 'no_show_justificado'].includes(prevMeeting.status);
+                  const isLocked = !isFirst && !isPrevFinished;
+
+                  if (meeting.status === 'pendente') {
+                    return (
+                      <div className="relative group/tooltip">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className={cn(
+                            "h-8 gap-1.5 px-3 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary",
+                            isLocked && "opacity-50 cursor-not-allowed grayscale"
+                          )} 
+                          onClick={() => !isLocked && onSchedule(meeting)}
+                          disabled={isLocked}
+                        >
+                          <Calendar className="h-3.5 w-3.5" /> Agendar
+                        </Button>
+                        {isLocked && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center">
+                            Este encontro só poderá ser agendado após o encontro anterior ser realizado, cancelado ou finalizado.
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } else if (meeting.status === 'agendado') {
+                    return (
+                      <div className="flex gap-2">
+                        {(meeting.teamsJoinUrl || meeting.location) && (
+                          <Button 
+                            size="sm" 
+                            variant="default" 
+                            className="h-8 gap-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase"
+                            onClick={() => window.open(meeting.teamsJoinUrl || meeting.location, '_blank')}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" /> Entrar na Reunião
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" className="h-8 gap-1.5 px-3" onClick={() => onSchedule(meeting)}>
+                          Reagendar
+                        </Button>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-3 text-seven-success font-bold bg-seven-success/5">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
+                      </Button>
+                    );
+                  }
+                })()}
               </div>
             </div>
           </div>
