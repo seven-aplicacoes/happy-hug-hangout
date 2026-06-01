@@ -127,7 +127,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setMeetingDate(reuniao.meetingDate || '');
       setStartTime(reuniao.startTime || '');
       setDuracao(reuniao.duracao || 60);
-      setManualMeetingUrl(reuniao.location_url || reuniao.location || reuniao.meetingUrl || '');
+      setManualMeetingUrl(reuniao.locationUrl || reuniao.location || reuniao.meetingUrl || '');
       setMeetingLinkMode(reuniao.meetingLinkProvider === 'google' ? 'google' : 'manual');
       setDescription(reuniao.description || '');
     } else if (initialData) {
@@ -143,7 +143,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       setMeetingDate(initialData.meetingDate || '');
       setStartTime(initialData.startTime || '');
       setDuracao(initialData.duracao || 60);
-      setManualMeetingUrl(initialData.location_url || initialData.location || initialData.meetingUrl || '');
+      setManualMeetingUrl(initialData.locationUrl || initialData.location || initialData.meetingUrl || '');
       setMeetingLinkMode(initialData.meetingLinkProvider === 'google' ? 'google' : 'manual');
       setDescription(initialData.description || '');
     } else {
