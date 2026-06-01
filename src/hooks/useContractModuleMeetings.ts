@@ -65,11 +65,16 @@ export function useContractModuleMeetings(moduleId?: string) {
         ];
 
         const normalizeStatus = (status: string) => {
-          return String(status || '')
+          const s = String(status || '')
             .toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .trim();
+          
+          // Adicional: Mapear status que significam a mesma coisa para o sistema
+          if (s === 'cancelada') return 'cancelado';
+          if (s === 'concluida') return 'concluido';
+          return s;
         };
 
         if (prevMeeting) {
