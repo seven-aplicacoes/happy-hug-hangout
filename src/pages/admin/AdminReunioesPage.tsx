@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { ModalRegistrarReuniao } from '@/components/modals/ModalRegistrarReuniao';
-import { ModalVerDetalhesReuniao } from '@/components/modals/ModalVerDetalhesReuniao';
+import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { Reuniao } from '@/types';
 
 export default function AdminReunioesPage() {
