@@ -124,9 +124,7 @@ export default function PortalClientePage() {
       return;
     }
 
-    const consultantPhone = cliente?.contact_phone || ""; // Fallback to client phone if not found, but we want consultant phone
-    // Actually we need to fetch the consultant phone from profiles
-    const phone = cliente?.consultant_phone || "";
+    const phone = (cliente as any)?.consultant_phone || "";
     
     if (phone) {
       const cleanPhone = phone.replace(/\D/g, '');
