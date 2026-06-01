@@ -93,7 +93,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const { phases: productPhases } = useContractProductPhases(contractProductId);
   const { meetings: moduleMeetings } = useContractModuleMeetings(contractProductPhaseId);
   
-  const { availabilities, isLoading: loadingAvailability } = useConsultantAvailability({
+  const { availabilities, slots, isLoading: loadingAvailability } = useConsultantAvailability({
     contractModuleMeetingId: contractModuleMeetingId && contractModuleMeetingId !== 'none' ? contractModuleMeetingId : undefined,
     consultantId: consultorId || undefined
   });
