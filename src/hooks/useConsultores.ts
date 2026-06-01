@@ -17,6 +17,8 @@ export type ConsultantProfile = {
   entry_date?: string | null;
   max_clients?: number;
   hours_available?: number;
+  microsoft_teams_connected?: boolean;
+  microsoft_teams_account?: string | null;
 };
 
 export const useConsultores = () => {
