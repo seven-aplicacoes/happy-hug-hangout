@@ -62,9 +62,7 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
-  const [meetingToEdit, setMeetingToEdit] = useState<ContractModuleMeeting | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const { toast } = useToast();
 
   const handleOpenDetail = (meeting: ContractModuleMeeting) => {
@@ -83,7 +81,6 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
 
   const handleEditFromDetail = (reuniao: Reuniao) => {
     setIsDetailOpen(false);
-    // Find the original meeting item
     const original = meetings?.find(m => m.scheduledMeetingId === reuniao.id);
     if (original) {
       onSchedule(original);
@@ -94,16 +91,6 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
   if (!meetings || meetings.length === 0) return <div className="p-8 text-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed my-2">Nenhum encontro configurado para este módulo.</div>;
 
   return (
-    <div className="space-y-2 mt-4 animate-in slide-in-from-top-2 duration-300">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-black uppercase text-muted-foreground">Progresso: {meetings.filter(m => m.status === 'realizada').length}/{meetings.length} encontros</span>
-      </div>
-      {meetings.map((meeting) => (
-        <div key={meeting.id} className="space-y-2">
-            <div 
-              className="group flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg border bg-white hover:border-primary/40 hover:shadow-sm transition-all gap-4 cursor-pointer"
-              onClick={() => handleOpenDetail(meeting)}
-            >
     <div className="space-y-2 mt-4 animate-in slide-in-from-top-2 duration-300">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-black uppercase text-muted-foreground">
