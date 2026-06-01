@@ -262,6 +262,17 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       } else if (newStatus === 'realizada') {
         payload.completed_at = new Date().toISOString();
         payload.completed_by = user?.id;
+        
+        // Update timeline on completion
+        await supabase.from('timeline_events').insert({
+          client_id: reuniao.clienteId,
+          meeting_id: reuniao.id,
+          type: 'reuniao',
+          title: `Reunião realizada: ${reuniao.title}`,
+          description: reuniao.description || '',
+          date: new Date().toISOString(),
+          status: 'realizada'
+        } as any);
       }
 
       const { error } = await supabase
