@@ -414,7 +414,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                     }}
                     disabled={!consultorId || loadingAvailability}
                   >
-                    <SelectTrigger className={cn("h-11 pl-10 bg-white shadow-sm transition-all focus:ring-2 focus:ring-primary/20", errors.meetingDate && "border-destructive")}>
+                    <SelectTrigger className={cn("h-11 relative pl-10 bg-white shadow-sm transition-all focus:ring-2 focus:ring-primary/20", errors.meetingDate && "border-destructive")}>
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder={!consultorId ? "Selecione um consultor primeiro" : "Selecione uma data disponível"} />
                     </SelectTrigger>
@@ -460,7 +460,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                     onValueChange={setStartTime}
                     disabled={!meetingDate || loadingAvailability}
                   >
-                    <SelectTrigger className={cn("h-11 bg-white shadow-sm transition-all focus:ring-2 focus:ring-primary/20", errors.startTime && "border-destructive")}>
+                    <SelectTrigger className={cn("h-11 relative bg-white shadow-sm transition-all focus:ring-2 focus:ring-primary/20", errors.startTime && "border-destructive")}>
                       <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50" />
                       <span className="pl-6">
                         <SelectValue placeholder={!meetingDate ? "Aguardando data..." : "Selecione o horário"} />
