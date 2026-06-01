@@ -444,7 +444,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     setSubmitting(true);
     try {
       const isTeams = manualUrl.toLowerCase().includes('teams.microsoft.com');
-      const provider = isTeams ? 'teams' : 'manual';
+      const provider = isTeams ? 'teams_manual' : 'manual';
 
       const { error } = await supabase
         .from('meetings')
