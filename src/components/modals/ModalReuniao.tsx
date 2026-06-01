@@ -62,16 +62,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
   useEffect(() => {
     const checkGoogleConnection = async () => {
-      if (!user?.id) return;
       try {
-        const { data, error } = await supabase
-          .from('google_connections')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
+        const { data, error } = await supabase.functions.invoke('diagnose-google-connection');
         if (error) throw error;
-        setGoogleConnected(!!data);
+        setGoogleConnected(!!data?.connected);
       } catch (err) {
         console.error('Error checking Google connection:', err);
         setGoogleConnected(false);
@@ -83,7 +77,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (open) {
       checkGoogleConnection();
     }
-  }, [open, user?.id]);
+  }, [open]);
 
   useEffect(() => {
     if (!isLoadingGoogleStatus) {
