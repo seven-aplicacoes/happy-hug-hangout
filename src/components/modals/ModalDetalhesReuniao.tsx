@@ -393,8 +393,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                   history.map((h, i) => (
                     <div key={h.id} className="relative pl-4 border-l-2 border-muted pb-4 last:pb-0">
                       <div className="absolute -left-[5px] top-0 h-2 w-2 rounded-full bg-primary" />
-                      <p className="text-[10px] font-black text-foreground">{h.newStatus.toUpperCase()}</p>
-                      <p className="text-[9px] text-muted-foreground">{format(new Date(h.createdAt), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                      <div className="flex justify-between items-start">
+                        <p className="text-[10px] font-black text-foreground">{h.newStatus.toUpperCase()}</p>
+                        <p className="text-[9px] text-muted-foreground">{format(new Date(h.createdAt), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                      </div>
+                      {h.changedByName && <p className="text-[9px] text-muted-foreground italic">por {h.changedByName}</p>}
                       {h.changeReason && <p className="text-[10px] mt-1 italic">"{h.changeReason}"</p>}
                     </div>
                   ))
