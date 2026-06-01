@@ -149,11 +149,11 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
              </div>
           ) : availableSlots.length === 0 ? (
              <div className="py-10 text-center bg-muted/20 rounded-lg border border-dashed">
-               <p className="text-sm text-muted-foreground font-bold">
-                 {availabilities && availabilities.length > 0 
-                   ? "Não há horários livres disponíveis para este período." 
-                   : "O consultor responsável ainda não configurou disponibilidade."}
-               </p>
+                <p className="text-sm text-muted-foreground font-bold">
+                  {availabilities && availabilities.length > 0 
+                    ? "Não há horários livres disponíveis para este período." 
+                    : "Este encontro ainda não permite agendamento automático."}
+                </p>
                <p className="text-[11px] text-muted-foreground mt-2">Entre em contato com o consultor responsável.</p>
                
                <Button 
