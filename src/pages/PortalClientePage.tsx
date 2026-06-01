@@ -118,8 +118,21 @@ export default function PortalClientePage() {
   };
 
   const handleContactConsultant = () => {
-    const phone = "5511999999999"; 
-    window.open(`https://wa.me/${phone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
+    if (!activeContract?.consultorId) {
+      toast({ title: 'Aviso', description: 'Consultor não atribuído ao seu contrato ativo.', variant: 'default' });
+      return;
+    }
+
+    const consultantPhone = cliente?.contact_phone || ""; // Fallback to client phone if not found, but we want consultant phone
+    // Actually we need to fetch the consultant phone from profiles
+    const phone = cliente?.consultant_phone || "";
+    
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      window.open(`https://wa.me/${cleanPhone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
+    } else {
+      toast({ title: 'Aviso', description: 'Telefone do consultor não cadastrado.', variant: 'default' });
+    }
   };
 
   if (!clienteSession) {
