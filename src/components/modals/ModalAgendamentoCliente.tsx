@@ -27,7 +27,7 @@ export const ModalAgendamentoCliente = ({ open, onClose, moduleMeeting }: Props)
     consultantId: moduleMeeting.consultantId
   };
   const { slots, availabilities, isLoading: loadingSlots } = useConsultantAvailability(filters);
-  const { upsertReuniao } = useReunioes();
+  const { upsertReuniao, syncGoogle } = useReunioes();
   
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   useEffect(() => {
