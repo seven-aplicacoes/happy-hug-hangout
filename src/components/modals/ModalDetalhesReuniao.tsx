@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
-  History, Info, Pencil, Trash2, Loader2, Play,
+  History, Info, Pencil, Trash2, Loader2, Play, RefreshCcw,
   Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff,
   Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon
 } from 'lucide-react';
