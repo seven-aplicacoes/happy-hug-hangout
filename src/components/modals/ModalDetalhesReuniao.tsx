@@ -124,17 +124,45 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     if (!reuniao) return;
     setGeneratingMeet(true);
     try {
-      await syncGoogle.mutateAsync({ 
-        meetingId: reuniao.id, 
-        action: reuniao.google_event_id ? 'update' : 'create' 
+      const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
+        body: { 
+          meetingId: reuniao.id, 
+          action: reuniao.google_event_id ? 'update' : 'create' 
+        }
       });
-      toast({ title: 'Sucesso', description: 'Link do Google Meet gerado com sucesso.' });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: 'Sucesso', description: 'Link do Google Meet processado com sucesso.' });
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast({ title: 'Erro na Sincronização', description: err.message, variant: 'destructive' });
     } finally {
       setGeneratingMeet(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-google-meet-meeting', {
+        body: { action: 'test_connection' }
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast({ 
+          title: 'Conexão OK', 
+          description: `Conectado como ${data.email}. Scopes: ${data.scopes?.join(', ')}` 
+        });
+      } else {
+        toast({ title: 'Erro', description: data?.error || 'Não conectado', variant: 'destructive' });
+      }
+    } catch (err: any) {
+      toast({ title: 'Erro no Teste', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -257,13 +285,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                   <div className="bg-muted/50 border border-dashed rounded-xl p-6 text-center space-y-4">
                     <p className="text-xs text-muted-foreground italic">Nenhum link gerado para esta reunião.</p>
                     {canManageMeeting && (
-                      <div className="flex justify-center gap-3">
-                        <Button variant="outline" size="sm" onClick={handleGenerateMeetLink} disabled={generatingMeet}>
-                          {generatingMeet ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4 mr-2" />}
-                          Gerar Google Meet
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(true)}>
-                          Adicionar Manual
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="flex justify-center gap-3">
+                          <Button variant="outline" size="sm" onClick={handleGenerateMeetLink} disabled={generatingMeet}>
+                            {generatingMeet ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Video className="h-4 w-4 mr-2" />}
+                            Gerar Google Meet
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(true)}>
+                            Adicionar Manual
+                          </Button>
+                        </div>
+                        <Button variant="link" size="sm" className="text-[10px] text-muted-foreground" onClick={handleTestConnection} disabled={submitting}>
+                          {submitting ? 'Testando...' : 'Diagnosticar Conexão Google'}
                         </Button>
                       </div>
                     )}
