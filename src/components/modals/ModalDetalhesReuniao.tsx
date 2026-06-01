@@ -47,10 +47,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         .select(`
           *,
           client:client_id (trade_name, corporate_name),
-          profile:consultant_id (full_name),
-          contract:contract_id (tipo, data_inicio),
-          product:contract_product_id (id),
-          phase:contract_product_phase_id (name)
+          profile:consultant_id (full_name)
         `)
         .eq('id', reuniaoId)
         .single();
@@ -69,7 +66,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         clienteId: r.client_id,
         clienteNome: r.client?.trade_name || r.client?.corporate_name || 'Desconhecido',
         consultorId: r.consultant_id,
-        consultorNome: r.profile?.full_name || 'Desconhecido',
+        consultorNome: r.profile && 'full_name' in r.profile ? (r.profile as any).full_name : 'Desconhecido',
         contractId: r.contract_id,
         contractProductId: r.contract_product_id,
         contractProductPhaseId: r.contract_product_phase_id,
@@ -78,15 +75,15 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         duracao: r.duration,
         tipo: r.type,
         title: r.title,
-        status: r.status,
+        status: r.status as Reuniao['status'],
         description: r.description,
         meetingUrl: r.meeting_url,
         location: r.location,
         locationUrl: r.location_url,
         teamsJoinUrl: r.teams_join_url,
-        meetingLinkProvider: r.meeting_link_provider,
+        meetingLinkProvider: r.meeting_link_provider as 'manual' | 'teams',
         microsoftEventId: r.microsoft_event_id,
-        participantes: r.participants || [],
+        participantes: Array.isArray(r.participants) ? (r.participants as unknown as string[]) : [],
         createdAt: r.created_at,
         updatedAt: r.updated_at,
         canceledAt: r.canceled_at,
@@ -97,7 +94,16 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       };
 
       setReuniao(mappedReuniao);
-      setHistory(h || []);
+      setHistory((h || []).map((item: any) => ({
+        id: item.id,
+        meetingId: item.meeting_id,
+        previousStatus: item.previous_status,
+        newStatus: item.new_status,
+        changedBy: item.changed_by,
+        changeReason: item.change_reason,
+        payload: item.payload,
+        createdAt: item.created_at
+      })));
     } catch (err) {
       console.error('Error fetching meeting details:', err);
       toast({ title: 'Erro', description: 'Não foi possível carregar os detalhes da reunião.', variant: 'destructive' });

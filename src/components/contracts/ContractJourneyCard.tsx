@@ -1,3 +1,4 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
   Pencil, Save, X, Trash2, Plus, FileText, ChevronRight, ChevronDown, 
@@ -37,6 +38,7 @@ interface MeetingListProps {
 }
 
 function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingListProps) {
+  const queryClient = useQueryClient();
   const { meetings, isLoading } = useContractModuleMeetings(phase.id);
   const [meetingForAvailability, setMeetingForAvailability] = useState<string | null>(null);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
