@@ -47,7 +47,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         .select(`
           *,
           client:client_id (trade_name, corporate_name),
-          profile:consultant_id (full_name)
+          profile:consultant_id (full_name),
+          creator:created_by (full_name),
+          updater:updated_by (full_name),
+          canceler:canceled_by (full_name),
+          completer:completed_by (full_name)
         `)
         .eq('id', reuniaoId)
         .single();
