@@ -23,19 +23,19 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) throw new Error("Header de Autorização ausente");
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (userError || !user) throw new Error("Usuário não autenticado ou sessão expirada");
-
+    // Get the global connection
     const { data: connection, error: connError } = await supabase
       .from('google_connections')
       .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .eq('scope_type', 'global')
+      .eq('status', 'active')
+      .maybeSingle();
 
     if (connError || !connection) {
       return new Response(JSON.stringify({ 
-        success: false, 
-        error: "Google não conectado para este usuário" 
+        success: true, 
+        connected: false,
+        message: "Nenhuma conexão Google global configurada." 
       }), { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -54,6 +54,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
+      connected: true,
+      scope_type: 'global',
       data: {
         email: connection.google_email,
         scopes: connection.scopes,

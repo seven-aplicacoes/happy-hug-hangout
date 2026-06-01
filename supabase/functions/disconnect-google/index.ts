@@ -24,10 +24,15 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (userError || !user) throw new Error("Usuário não autenticado");
 
+    // Only admin can disconnect
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') throw new Error("Apenas administradores podem desconectar a conta global.");
+
+    // Update global connection status instead of delete, or delete if preferred
     const { error } = await supabase
       .from('google_connections')
-      .delete()
-      .eq('user_id', user.id);
+      .update({ status: 'disconnected', updated_at: new Date().toISOString() })
+      .eq('scope_type', 'global');
 
     if (error) throw error;
 

@@ -13,9 +13,6 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { userId } = await req.json().catch(() => ({}));
-    if (!userId) throw new Error("userId é obrigatório");
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
@@ -26,14 +23,16 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get the global connection
     const { data: connection, error: fetchError } = await supabase
       .from('google_connections')
       .select('*')
-      .eq('user_id', userId)
-      .single();
+      .eq('scope_type', 'global')
+      .eq('status', 'active')
+      .maybeSingle();
 
-    if (fetchError || !connection) throw new Error("Conexão não encontrada");
-    if (!connection.refresh_token) throw new Error("Refresh token não disponível");
+    if (fetchError || !connection) throw new Error("Conexão global ativa não encontrada");
+    if (!connection.refresh_token) throw new Error("Refresh token global não disponível");
 
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -59,7 +58,7 @@ serve(async (req) => {
       updates.refresh_token = tokens.refresh_token;
     }
 
-    await supabase.from('google_connections').update(updates).eq('user_id', userId);
+    await supabase.from('google_connections').update(updates).eq('id', connection.id);
 
     return new Response(JSON.stringify({ success: true, access_token: tokens.access_token }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

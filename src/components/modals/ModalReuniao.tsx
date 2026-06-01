@@ -62,16 +62,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
 
   useEffect(() => {
     const checkGoogleConnection = async () => {
-      if (!user?.id) return;
       try {
-        const { data, error } = await supabase
-          .from('google_connections')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
+        const { data, error } = await supabase.functions.invoke('diagnose-google-connection');
         if (error) throw error;
-        setGoogleConnected(!!data);
+        setGoogleConnected(!!data?.connected);
       } catch (err) {
         console.error('Error checking Google connection:', err);
         setGoogleConnected(false);
@@ -83,7 +77,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
     if (open) {
       checkGoogleConnection();
     }
-  }, [open, user?.id]);
+  }, [open]);
 
   useEffect(() => {
     if (!isLoadingGoogleStatus) {
@@ -341,10 +335,10 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-blue-900">Google Meet conectado</span>
-                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Conectado</Badge>
+                          <span className="text-sm font-bold text-blue-900">Google Meet (Conexão Global)</span>
+                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] h-4 px-1.5 uppercase font-black">Ativo</Badge>
                         </div>
-                        <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">O link será gerado automaticamente.</p>
+                        <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">O link será gerado usando a conta do sistema.</p>
                       </div>
                     </div>
                     <button type="button" onClick={() => setMeetingLinkMode('manual')} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-4">Usar link manual</button>
@@ -366,8 +360,8 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
                   <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-amber-900">Google Calendar não conectado</p>
-                      <p className="text-[10px] text-amber-700/70">Conecte sua conta nas configurações ou use link manual.</p>
+                      <p className="text-sm font-bold text-amber-900">Google Calendar não configurado</p>
+                      <p className="text-[10px] text-amber-700/70">A conexão global ainda não foi realizada pelo administrador. Use link manual.</p>
                     </div>
                   </div>
                   <div className="space-y-2">
