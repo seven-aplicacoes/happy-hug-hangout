@@ -252,12 +252,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
-            {!isClient && !['realizada', 'cancelada'].includes(reuniao.status) && (
+            {!isClient && (
               <>
-                <Button variant="outline" onClick={() => onEdit?.(reuniao)} className="gap-2">
-                  <Pencil className="h-4 w-4" /> Reagendar
-                </Button>
-                {!isCancelling && (
+                {(reuniao.status === 'cancelada' || !['realizada'].includes(reuniao.status)) && (
+                  <Button variant="outline" onClick={() => onEdit?.(reuniao)} className="gap-2">
+                    <Pencil className="h-4 w-4" /> Reagendar
+                  </Button>
+                )}
+                {!['realizada', 'cancelada'].includes(reuniao.status) && !isCancelling && (
                   <Button variant="ghost" onClick={() => setIsCancelling(true)} className="text-destructive hover:bg-destructive/5 gap-2">
                     <Trash2 className="h-4 w-4" /> Cancelar
                   </Button>
