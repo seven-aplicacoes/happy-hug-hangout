@@ -77,13 +77,6 @@ export interface Cliente {
   updated_by?: string;
   avatar_url?: string;
   avatar_path?: string;
-  consultant?: {
-    id: string;
-    full_name: string;
-    email: string;
-    phone: string;
-    calendly_url: string | null;
-  };
 }
 
 
@@ -236,12 +229,6 @@ export interface Reuniao {
   location?: string;
   scheduledBy?: string;
   contractModuleMeetingId?: string;
-  cancelUrl?: string;
-  rescheduleUrl?: string;
-  contratoNome?: string;
-  produtoNome?: string;
-
-
 }
 
 export interface ContractModuleMeeting {
@@ -258,14 +245,8 @@ export interface ContractModuleMeeting {
   scheduledAt?: string;
   completedAt?: string;
   orderIndex: number;
-  availableFrom?: string;
-  availableUntil?: string;
   consultantName?: string;
-  cancelUrl?: string;
-  rescheduleUrl?: string;
 }
-
-
 
 export interface ContractModuleDocument {
   id: string;
@@ -491,49 +472,4 @@ export interface ConsultantAvailableSlot {
   meeting_id?: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface ConsultantCalendlyEventType {
-  id: string;
-  consultant_id: string;
-  name: string;
-  description?: string;
-  calendly_url: string;
-  event_category?: string;
-  product_id?: string;
-  module_id?: string;
-  meeting_template_id?: string;
-  is_default: boolean;
-  is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface MeetingSchedulingEvent {
-  id: string;
-  client_id: string;
-  contract_id?: string;
-  product_id?: string;
-  module_id?: string;
-  meeting_id: string;
-  consultant_id: string;
-  provider: string;
-  calendly_event_uri?: string;
-  calendly_invitee_uri?: string;
-  calendly_event_uuid?: string;
-  calendly_invitee_uuid?: string;
-  event_name?: string;
-  invitee_name?: string;
-  invitee_email?: string;
-  scheduled_start_time?: string;
-  scheduled_end_time?: string;
-  timezone?: string;
-  status: string;
-  cancel_url?: string;
-  reschedule_url?: string;
-  canceled_at?: string;
-  cancellation_reason?: string;
-  raw_payload?: any;
-  created_at?: string;
-  updated_at?: string;
 }

@@ -29,12 +29,7 @@ export function useTarefas() {
         `);
 
       if (perfil === 'consultor' && user?.consultorId) {
-        const { data: myClients } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('consultant_id', user.consultorId)
-          .is('deleted_at', null);
-          
+        const { data: myClients } = await supabase.from('clients').select('id').eq('consultant_id', user.consultorId);
         const clientIds = myClients?.map(c => c.id) || [];
         
         if (clientIds.length > 0) {
@@ -80,7 +75,6 @@ export function useTarefas() {
         };
       }) as (Tarefa & { isAtrasada?: boolean })[];
     },
-    enabled: !!perfil,
   });
 
   const upsertTarefa = useMutation({

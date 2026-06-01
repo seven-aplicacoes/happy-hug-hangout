@@ -9,9 +9,8 @@ export function useSurveys(consultantId?: string) {
         .from('csat_surveys')
         .select('*');
       if (error) throw error;
-      return data || [];
+      return data;
     },
-    enabled: !!consultantId,
   });
 
   const { data: npsSurveys, isLoading: loadingNps } = useQuery({
@@ -21,9 +20,8 @@ export function useSurveys(consultantId?: string) {
         .from('nps_surveys')
         .select('*');
       if (error) throw error;
-      return data || [];
+      return data;
     },
-    enabled: !!consultantId,
   });
 
   return {

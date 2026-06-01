@@ -12,8 +12,7 @@ export function useReunioes() {
   const { data: reunioes, isLoading, error } = useQuery({
     queryKey: ['reunioes', perfil, user?.consultorId],
     queryFn: async () => {
-      // 1. Fetch manual meetings from 'meetings' table
-      let meetingsQuery = supabase
+      let query = supabase
         .from('meetings')
         .select(`
           *,
@@ -22,34 +21,13 @@ export function useReunioes() {
         `);
 
       if (perfil === 'consultor' && user?.consultorId) {
-        meetingsQuery = meetingsQuery.eq('consultant_id', user.consultorId);
+        query = query.eq('consultant_id', user.consultorId);
       }
 
-      const { data: meetingsData, error: meetingsError } = await meetingsQuery;
-      if (meetingsError) throw meetingsError;
+      const { data, error } = await query;
+      if (error) throw error;
 
-      // 2. Fetch scheduled meetings from 'contract_module_meetings' table
-      let moduleMeetingsQuery = supabase
-        .from('contract_module_meetings')
-        .select(`
-          *,
-          client:client_id (trade_name, corporate_name),
-          profile:consultant_id (full_name),
-          contract:contract_id (tipo),
-          product:product_id (name)
-        `)
-        .neq('status', 'pendente') // Carregar agendadas, canceladas e concluídas
-        .order('scheduled_at', { ascending: false });
-
-      if (perfil === 'consultor' && user?.consultorId) {
-        moduleMeetingsQuery = moduleMeetingsQuery.eq('consultant_id', user.consultorId);
-      }
-
-      const { data: moduleMeetingsData, error: moduleMeetingsError } = await moduleMeetingsQuery;
-      if (moduleMeetingsError) throw moduleMeetingsError;
-
-      // 3. Merge and normalize
-      const meetings = (meetingsData || []).map((r: any) => ({
+      return data.map((r: any) => ({
         id: r.id,
         clienteId: r.client_id,
         clienteNome: r.client?.trade_name || r.client?.corporate_name || 'Desconhecido',
@@ -58,69 +36,26 @@ export function useReunioes() {
         contractProductPhaseId: r.contract_product_phase_id,
         consultorId: r.consultant_id,
         consultorNome: r.profile?.full_name || 'Desconhecido',
-        meetingDate: r.meeting_date || '',
-        data: r.meeting_date || '',
-        startTime: r.start_time || '',
-        hora: r.start_time || '',
+        meetingDate: r.meeting_date,
+        data: r.meeting_date,
+        startTime: r.start_time,
+        hora: r.start_time,
         duracao: r.duration,
-        tipo: r.type || 'Reunião',
+        tipo: r.type,
         title: r.title,
         pauta: r.title,
         description: r.description,
         status: r.status,
         ata: r.meeting_minutes,
         participantes: Array.isArray(r.participants) ? r.participants : [],
-        source: r.source || 'manual',
+        source: r.source,
         externalId: r.external_id,
         meetingUrl: r.meeting_url,
         location: r.location,
         scheduledBy: r.scheduled_by,
         contractModuleMeetingId: r.contract_module_meeting_id,
-        cancelUrl: r.cancel_url,
-        rescheduleUrl: r.reschedule_url,
-      }));
-
-      const moduleMeetings = (moduleMeetingsData || []).map((m: any) => {
-        // Se a reunião estiver vinculada à tabela 'meetings', usamos a versão de 'meetings'
-        // Mas se for um encontro de módulo que só existe aqui, exibimos.
-        if (meetings.some(mTable => mTable.contractModuleMeetingId === m.id)) {
-          return null;
-        }
-
-        const scheduledDate = m.scheduled_at ? m.scheduled_at.split('T')[0] : '';
-        const scheduledTime = m.scheduled_at ? new Date(m.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-
-        return {
-          id: m.id,
-          clienteId: m.client_id,
-          clienteNome: m.client?.trade_name || m.client?.corporate_name || 'Desconhecido',
-          contratoId: m.contract_id,
-          contratoNome: m.contract?.tipo,
-          productId: m.product_id,
-          produtoNome: m.product?.name,
-          moduleId: m.module_id,
-          consultorId: m.consultant_id,
-          consultorNome: m.profile?.full_name || 'Desconhecido',
-          meetingDate: scheduledDate,
-          data: scheduledDate,
-          startTime: scheduledTime,
-          hora: scheduledTime,
-          duracao: 60,
-          tipo: 'Encontro de Módulo',
-          title: m.title || `Encontro #${m.meeting_number}`,
-          pauta: m.title || `Encontro #${m.meeting_number}`,
-          status: m.status === 'agendado' ? 'agendada' : (m.status === 'cancelada' ? 'cancelada' : (m.status === 'realizada' ? 'realizada' : m.status)),
-          participantes: [],
-          source: 'module_meeting',
-          contractModuleMeetingId: m.id,
-          cancelUrl: m.cancel_url,
-          rescheduleUrl: m.reschedule_url,
-        };
-      }).filter(Boolean);
-
-      return [...meetings, ...moduleMeetings] as Reuniao[];
+      })) as Reuniao[];
     },
-    enabled: !!perfil,
   });
 
   const upsertReuniao = useMutation({

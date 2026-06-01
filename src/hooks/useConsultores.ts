@@ -17,7 +17,6 @@ export type ConsultantProfile = {
   entry_date?: string | null;
   max_clients?: number;
   hours_available?: number;
-  calendly_url?: string | null;
 };
 
 export const useConsultores = () => {

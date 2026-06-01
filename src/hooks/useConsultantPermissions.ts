@@ -126,14 +126,12 @@ export function useMyPermissions() {
       const user = authUser;
 
       // Check if user is admin
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
       
-      if (profileError) console.error('Error fetching profile in useMyPermissions:', profileError);
-
       const { data: permissionData, error: permError } = await supabase
         .from('consultant_permissions')
         .select('*')
@@ -158,12 +156,6 @@ export function useMyPermissions() {
   const can = (moduleKey: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' = 'view') => {
     if (isLoading) return true; // Default to true while loading to avoid flickering
     if (permissions === 'admin' || perfil === 'admin') return true;
-    
-    // Fallback for consultants: allow basic access to dashboard and profile if no permissions defined
-    if (perfil === 'consultor' && (moduleKey === 'dashboard' || moduleKey === 'perfil' || moduleKey === 'reunioes' || moduleKey === 'clientes')) {
-      if (!permissions || !Array.isArray(permissions) || permissions.length === 0) return true;
-    }
-
     if (!permissions || !Array.isArray(permissions)) return false;
     
     const permission = permissions.find(p => p.module_key === moduleKey);

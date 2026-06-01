@@ -19,13 +19,7 @@ import {
 import { ConsultantProfile } from "@/hooks/useConsultores";
 import { useToast } from "@/hooks/use-toast";
 import { useConsultantGoals, IndicatorGoal } from "@/hooks/useConsultantGoals";
-import { useConsultantCalendlyEventTypes } from "@/hooks/useConsultantCalendlyEventTypes";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CalendarClock, ExternalLink, Loader2 } from "lucide-react";
-
-import type { ConsultantCalendlyEventType } from "@/types";
-
 
 // KPI_CONFIG removed - managed in AdminConsultantGoalsPage
 
@@ -58,116 +52,6 @@ const ESPECIALIDADES = [
   { label: 'Estratégia', value: 'estrategia' },
 ];
 
-const CalendlyEventTypesManager = ({ consultantId }: { consultantId: string }) => {
-  const { eventTypes, isLoading, upsertEventType, deleteEventType } = useConsultantCalendlyEventTypes(consultantId);
-  const [isAdding, setIsAdding] = useState(false);
-  const [newType, setNewType] = useState<Partial<ConsultantCalendlyEventType>>({
-    name: "",
-    calendly_url: "",
-    event_category: "followup",
-    is_active: true,
-    is_default: false
-  });
-
-  const handleAdd = async () => {
-    if (!newType.name || !newType.calendly_url) return;
-    await upsertEventType.mutateAsync(newType);
-    setNewType({ name: "", calendly_url: "", event_category: "followup", is_active: true, is_default: false });
-    setIsAdding(false);
-  };
-
-  if (isLoading) return <div className="text-center py-4"><Loader2 className="h-4 w-4 animate-spin mx-auto text-primary" /></div>;
-
-  return (
-    <div className="space-y-3">
-      <div className="space-y-2">
-        {eventTypes?.map((et) => (
-          <div key={et.id} className="flex items-center justify-between p-3 rounded-lg border bg-neutral-50 group">
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-neutral-900 truncate">{et.name}</p>
-              <p className="text-[10px] text-muted-foreground truncate max-w-[300px]">{et.calendly_url}</p>
-              <div className="flex gap-2 mt-1">
-                <Badge variant="outline" className="text-[8px] uppercase">{et.event_category}</Badge>
-                {et.is_default && <Badge variant="secondary" className="text-[8px] uppercase bg-primary/10 text-primary border-primary/20">Padrão</Badge>}
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground" onClick={() => window.open(et.calendly_url, '_blank')}>
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:bg-destructive/5" onClick={() => deleteEventType.mutate(et.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {isAdding ? (
-        <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 space-y-3 animate-in slide-in-from-top-2">
-          <div className="space-y-2">
-            <Label className="text-[10px] uppercase font-bold tracking-wider">Nome do Tipo</Label>
-            <Input 
-              value={newType.name} 
-              onChange={e => setNewType({ ...newType, name: e.target.value })} 
-              placeholder="Ex: Kickoff, Reunião Mensal"
-              className="h-8 text-xs"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] uppercase font-bold tracking-wider">URL Calendly</Label>
-            <Input 
-              value={newType.calendly_url} 
-              onChange={e => setNewType({ ...newType, calendly_url: e.target.value })} 
-              placeholder="https://calendly.com/..."
-              className="h-8 text-xs"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-bold tracking-wider">Categoria</Label>
-              <Select value={newType.event_category} onValueChange={v => setNewType({ ...newType, event_category: v })}>
-                <SelectTrigger className="h-8 text-[10px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="diagnostic">Diagnóstico</SelectItem>
-                  <SelectItem value="kickoff">Kickoff</SelectItem>
-                  <SelectItem value="followup">Acompanhamento</SelectItem>
-                  <SelectItem value="closing">Encerramento</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <input 
-                type="checkbox" 
-                checked={newType.is_default} 
-                onChange={e => setNewType({ ...newType, is_default: e.target.checked })}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <span className="text-[10px] font-bold uppercase text-muted-foreground">Padrão para categoria</span>
-            </div>
-          </div>
-          <div className="flex gap-2 pt-2">
-            <Button size="sm" className="h-7 text-[10px] flex-1" onClick={handleAdd}>Salvar Link</Button>
-            <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => setIsAdding(false)}>Cancelar</Button>
-          </div>
-        </div>
-      ) : (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full h-8 border-dashed gap-1.5 text-xs font-bold"
-          onClick={() => setIsAdding(true)}
-        >
-          <Plus className="h-3.5 w-3.5" /> Adicionar link específico
-        </Button>
-      )}
-    </div>
-  );
-};
-
-
 export const ConsultorModal = ({
   isOpen,
   onClose,
@@ -193,7 +77,6 @@ export const ConsultorModal = ({
     role: "consultor",
     max_clients: 10,
     hours_available: 160,
-    calendly_url: "",
   });
 
   const { consultantGoals } = useConsultantGoals(consultor?.id);
@@ -256,7 +139,6 @@ export const ConsultorModal = ({
         role: (consultor as any).role || "consultor",
         max_clients: consultor.max_clients || 10,
         hours_available: consultor.hours_available || 160,
-        calendly_url: consultor.calendly_url || "",
       });
     } else {
       setFormData({
@@ -271,7 +153,6 @@ export const ConsultorModal = ({
         role: "consultor",
         max_clients: 10,
         hours_available: 160,
-        calendly_url: "",
       });
     }
   }, [consultor, isOpen]);
@@ -279,16 +160,6 @@ export const ConsultorModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate Calendly URL if provided
-    if (formData.calendly_url && !formData.calendly_url.startsWith('https://calendly.com/')) {
-       toast({
-        title: "Link do Calendly inválido",
-        description: "Informe uma URL válida do Calendly (ex: https://calendly.com/seu-usuario/reuniao).",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Final check for mandatory fields
     if (!formData.full_name || !formData.email || (!consultor && !formData.password) || !formData.role || !formData.status) {
       toast({
@@ -377,41 +248,6 @@ export const ConsultorModal = ({
                 }}
               />
             </div>
-            <div className="col-span-2 space-y-4 pt-4">
-              <Separator />
-              <div className="flex items-center gap-2">
-                <CalendarClock className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-tight">Configuração de Agendamento Calendly</h3>
-              </div>
-              
-              <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-dashed">
-                <div className="space-y-2">
-                  <Label htmlFor="calendly_url" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Link padrão do Calendly</Label>
-                  <Input
-                    id="calendly_url"
-                    type="url"
-                    placeholder="https://calendly.com/seu-usuario/reuniao"
-                    value={formData.calendly_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, calendly_url: e.target.value })
-                    }
-                    className="h-10 bg-white"
-                  />
-                  <p className="text-[10px] text-muted-foreground italic">Usado quando não houver um link específico para o tipo de encontro.</p>
-                </div>
-
-                {consultor && (
-                  <div className="space-y-4 pt-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Links específicos por tipo de encontro</Label>
-                      <p className="text-[10px] text-muted-foreground">Use quando o consultor tiver links diferentes para diagnóstico, kickoff, acompanhamento ou encerramento.</p>
-                    </div>
-                    <CalendlyEventTypesManager consultantId={consultor.id} />
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="role">Tipo de Acesso *</Label>
               <Select
@@ -523,9 +359,7 @@ export const ConsultorModal = ({
                   ))}
                 </SelectContent>
               </Select>
-          </div>
-          
-
+            </div>
 
           </div>
           

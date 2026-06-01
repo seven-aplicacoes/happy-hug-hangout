@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { SevenLogo } from '@/components/SevenLogo';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -24,12 +23,8 @@ import {
   Users,
   Loader2,
   ChevronUp,
-  ChevronDown,
-  RefreshCw,
-  XCircle,
-  ShieldAlert
+  ChevronDown
 } from 'lucide-react';
-
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClienteFicha } from '@/hooks/useClienteFicha';
@@ -58,21 +53,16 @@ import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard'
 import { StatusTag } from '@/components/StatusTag';
 import { labelStatus } from '@/data/mockData';
 import { Accordion } from '@/components/ui/accordion';
-import { CalendlyModal } from '@/components/modals/CalendlyModal';
-import { DEFAULT_CALENDLY_URL } from '@/lib/calendly';
 
 
 export default function PortalClientePage() {
-  const { toast } = useToast();
   const { clienteSession, loginCliente, logoutCliente } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
-  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
   
   const [isCsatOpen, setIsCsatOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
-  const [calendlyContext, setCalendlyContext] = useState<any>(null);
   const [csatRatings, setCsatRatings] = useState({
     meeting: 0,
     consultant: 0,
@@ -126,35 +116,9 @@ export default function PortalClientePage() {
     setIsCsatOpen(false);
   };
 
-  const handleOpenCalendly = (meeting?: any) => {
-    if (meeting) {
-      setCalendlyContext({
-        clientId: clientId,
-        clientName: cliente?.nomeFantasia,
-        contractId: activeContract?.id,
-        contractName: activeContract?.tipo,
-        productId: meeting.productId,
-        productName: meeting.productName,
-        moduleId: meeting.moduleId,
-        moduleName: meeting.moduleName,
-        meetingId: meeting.id,
-        meetingTitle: meeting.title,
-        consultantId: meeting.consultantId || activeContract?.consultorId,
-        consultantName: meeting.consultantName || activeContract?.consultorNome
-      });
-    } else {
-      setCalendlyContext(null);
-    }
-    setIsCalendlyOpen(true);
-  };
-
   const handleContactConsultant = () => {
-    const phone = cliente?.consultant?.phone || cliente?.contact_phone || ""; 
-    if (!phone) {
-      toast({ title: 'Aviso', description: 'Telefone do consultor não configurado.' });
-      return;
-    }
-    window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
+    const phone = "5511999999999"; 
+    window.open(`https://wa.me/${phone}?text=Olá, sou o cliente ${cliente?.nomeFantasia} e gostaria de falar sobre minha jornada.`, '_blank');
   };
 
   if (!clienteSession) {
@@ -192,30 +156,9 @@ export default function PortalClientePage() {
       <div className="min-h-screen bg-neutral-50 p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           <Skeleton className="h-16 w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>
           <Skeleton className="h-[600px] w-full" />
         </div>
-      </div>
-    );
-  }
-
-  if (!cliente && !loadingFicha) {
-    return (
-      <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-8 text-center">
-        <ShieldAlert className="h-12 w-12 text-amber-500 mb-4" />
-        <h2 className="text-xl font-bold text-neutral-900 mb-2">Sem acesso disponível</h2>
-        <p className="text-neutral-500 max-w-md">
-          Não conseguimos carregar os dados do seu perfil de cliente. 
-          Por favor, verifique se o seu usuário está corretamente vinculado a um cliente ou entre em contato com o suporte.
-        </p>
-        <Button variant="outline" className="mt-6" onClick={logoutCliente}>
-          Sair do Portal
-        </Button>
       </div>
     );
   }
@@ -278,7 +221,6 @@ export default function PortalClientePage() {
                 contrato={contrato} 
                 expanded={contrato.id === activeContract?.id} 
                 mode="client" 
-                
               />
             ))}
           </Accordion>
@@ -300,63 +242,25 @@ export default function PortalClientePage() {
             <h2 className="text-2xl font-bold text-neutral-900 uppercase tracking-tight">Histórico de Reuniões</h2>
           </div>
           <div className="space-y-4">
-            {historico?.map(event => {
-              const type = (event as any).eventType;
-              const isScheduling = !!type;
-              
-              const icons: Record<string, any> = {
-                scheduled: <Calendar className="h-5 w-5 text-blue-500" />,
-                rescheduled: <RefreshCw className="h-5 w-5 text-amber-500" />,
-                canceled: <XCircle className="h-5 w-5 text-red-500" />,
-                completed: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-              };
-
-              const colors: Record<string, string> = {
-                scheduled: "bg-blue-50 border-blue-100",
-                rescheduled: "bg-amber-50 border-amber-100",
-                canceled: "bg-red-50 border-red-100",
-                completed: "bg-green-50 border-green-100",
-              };
-
-              return (
-                <Card key={event.id} className={cn("p-5 border shadow-sm flex gap-6 transition-all hover:shadow-md", isScheduling ? colors[type] : "bg-white border-neutral-100")}>
-                  <div className="md:w-32 shrink-0 border-r border-neutral-200/50 pr-6 flex flex-col justify-center">
-                    <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-1">
-                      {format(new Date(event.data), "HH:mm")}
-                    </p>
-                  </div>
-                  <div className="flex-1 flex gap-4 items-start">
-                    <div className="mt-1 shrink-0">
-                      {isScheduling ? icons[type] : <History className="h-5 w-5 text-neutral-400" />}
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-neutral-900">{event.titulo}</h4>
-                        {isScheduling && <Badge variant="outline" className="text-[9px] uppercase font-black">{type}</Badge>}
-                      </div>
-                      <p className="text-sm text-neutral-600 leading-relaxed">{event.descricao}</p>
-                      
-                      {(event as any).newStartTime && (
-                        <p className="text-[10px] font-medium text-neutral-500 flex items-center gap-1.5 pt-1">
-                          <Clock className="h-3 w-3" /> 
-                          Horário: {format(new Date((event as any).newStartTime), "dd/MM/yy 'às' HH:mm")}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
+            {historico?.map(event => (
+              <Card key={event.id} className="p-5 border-none shadow-sm bg-white flex gap-6">
+                <div className="md:w-32 shrink-0 border-r border-neutral-100 pr-6">
+                  <p className="text-xs font-bold text-neutral-900">{format(new Date(event.data), "dd/MM/yyyy")}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">{event.tipo}</p>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h4 className="font-semibold text-neutral-900">{event.titulo}</h4>
+                  <p className="text-sm text-neutral-500 leading-relaxed">{event.descricao}</p>
+                </div>
+              </Card>
+            ))}
             {historico?.length === 0 && (
               <div className="py-12 text-center bg-white rounded-xl border-2 border-dashed border-neutral-100">
-                <History className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
-                <p className="text-neutral-400 text-sm">Você ainda não possui histórico de reuniões.</p>
+                <p className="text-neutral-400 text-sm">Nenhum registro no histórico.</p>
               </div>
             )}
           </div>
         </section>
-
 
       </div>
 
@@ -376,17 +280,6 @@ export default function PortalClientePage() {
           <DialogFooter><Button onClick={handleSubmitCsat} disabled={csatRatings.meeting === 0}>Enviar Feedback</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <CalendlyModal
-        open={isCalendlyOpen}
-        onClose={() => setIsCalendlyOpen(false)}
-        url={cliente?.consultant?.calendly_url || DEFAULT_CALENDLY_URL}
-        prefill={{
-          name: cliente?.contact_name || cliente?.nomeFantasia,
-          email: cliente?.email || cliente?.institutional_email,
-        }}
-        context={calendlyContext}
-      />
     </div>
   );
 }

@@ -36,13 +36,7 @@ export function useContractModuleMeetings(moduleId?: string) {
         scheduledAt: m.scheduled_at,
         completedAt: m.completed_at,
         orderIndex: m.order_index,
-        availableFrom: m.available_from,
-        availableUntil: m.available_until,
         consultantName: m.consultant?.full_name,
-        cancelUrl: m.cancel_url,
-        rescheduleUrl: m.reschedule_url,
-
-
       })) as ContractModuleMeeting[];
     },
     enabled: !!moduleId,
@@ -69,8 +63,6 @@ export function useContractModuleMeetings(moduleId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-module-meetings', moduleId] });
       queryClient.invalidateQueries({ queryKey: ['contract-product-phases'] });
-      queryClient.invalidateQueries({ queryKey: ['portal-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['cliente-historico'] });
     },
   });
 

@@ -57,27 +57,13 @@ export default function ConsultorDashboardPage() {
   const { reunioes, isLoading: loadingReunioes } = useReunioes();
   const { tarefas, isLoading: loadingTarefas } = useTarefas();
   const { csatSurveys, npsSurveys, isLoading: loadingSurveys } = useSurveys(consultorId);
-  const { mergedGoals: targets, isLoading: loadingTargets } = useConsultantGoals(consultorId);
 
-  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions || loadingSurveys || loadingTargets;
-
-  useEffect(() => {
-    if (isLoading) {
-      console.log('ConsultorDashboardPage: isLoading flags:', {
-        loadingClientes,
-        loadingContratos,
-        loadingReunioes,
-        loadingTarefas,
-        loadingPermissions,
-        loadingSurveys,
-        loadingTargets
-      });
-    }
-  }, [isLoading, loadingClientes, loadingContratos, loadingReunioes, loadingTarefas, loadingPermissions, loadingSurveys, loadingTargets]);
+  const isLoading = loadingClientes || loadingContratos || loadingReunioes || loadingTarefas || loadingPermissions || loadingSurveys;
 
   const [filtro, setFiltro] = useState<CarteiraFiltro>(null);
   const [alertasOpen, setAlertasOpen] = useState(false);
   const [periodo, setPeriodo] = useState(() => getPeriodo('mes_atual'));
+  const { mergedGoals: targets, isLoading: loadingTargets } = useConsultantGoals(consultorId);
   const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
     isOpen: false, title: '', type: null 
   });
@@ -96,73 +82,65 @@ export default function ConsultorDashboardPage() {
           perfil: '/consultor/meu-perfil'
         };
         const path = modulePaths[firstAllowed.module_key];
-        if (path && path !== '/consultor/dashboard') navigate(path);
+        if (path) navigate(path);
       }
     }
   }, [loadingPermissions, can, permissions, navigate]);
 
   const stats = useMemo(() => {
-    // Robust checks
-    const safeClientes = clientes || [];
-    const safeContratos = contratos || [];
-    const safeReunioes = reunioes || [];
-    const safeTarefas = tarefas || [];
-    const safeCsat = csatSurveys || [];
-    const safeNps = npsSurveys || [];
+    if (!clientes || !contratos || !reunioes || !tarefas) return null;
 
-    const meusClientes = safeClientes;
-    const reunioesHoje = safeReunioes.filter(r => (r.meetingDate || '') === hojeStr);
-    const minhasTarefas = safeTarefas;
+    const meusClientes = clientes;
+    const reunioesHoje = reunioes.filter(r => r.meetingDate === hojeStr);
+    const minhasTarefas = tarefas;
     
     const tarefasPrioritarias = minhasTarefas
       .filter(t => t.status !== 'concluida')
       .sort((a, b) => {
-        const p: any = { critico: 0, alto: 1, medio: 2, baixo: 3 };
-        const valA = p[a.prioridade] ?? 4;
-        const valB = p[b.prioridade] ?? 4;
-        return valA - valB;
+        const p = { critico: 0, alto: 1, medio: 2, baixo: 3 };
+        return (p[a.prioridade] ?? 4) - (p[b.prioridade] ?? 4);
       })
       .slice(0, 3);
 
     const enriquecidos = meusClientes.map(c => ({
       ...c,
-      engajamento: calcularEngajamento(c.id, safeReunioes),
-      diasSemReuniao: diasDesdeUltimaReuniao(c.id, safeReunioes),
+      engajamento: calcularEngajamento(c.id),
+      diasSemReuniao: diasDesdeUltimaReuniao(c.id),
     }));
 
     const criticos = enriquecidos.filter(c => c.engajamento === 'critico');
     const atencao = enriquecidos.filter(c => c.engajamento === 'atencao');
     const emDia = enriquecidos.filter(c => c.engajamento === 'em_dia');
 
-    const contratosEncerrando = safeContratos.filter(c => {
-      if (!c.dataFim) return false;
+    const contratosEncerrando = contratos.filter(c => {
       const d = (new Date(c.dataFim).getTime() - hoje.getTime()) / 86400000;
       return d > 0 && d <= 90 && c.status !== 'encerrado' && c.status !== 'cancelado';
     });
 
     const upsell = enriquecidos.filter(c => c.potencialUpsell);
     
+    // Alertas de contrato (assuming getAlertasContrato handles internal state or needs data)
+    // For now we'll keep the existing hook/data call but pass consultorId
     const alertasContrato = getAlertasContrato({ consultorId });
 
-    const proximasReunioes = safeReunioes
+    const proximasReunioes = reunioes
       .filter(r => {
-        const mDate = r.meetingDate || '';
-        const sTime = r.startTime || '';
-        const isFuture = mDate > hojeStr;
-        const isTodayPending = mDate === hojeStr && sTime >= new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const isFuture = r.meetingDate > hojeStr;
+        const isTodayPending = r.meetingDate === hojeStr && r.startTime >= new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
         return (isFuture || isTodayPending) && r.status === 'agendada';
       })
-      .sort((a, b) => (a.meetingDate || '').localeCompare(b.meetingDate || '') || (a.startTime || '').localeCompare(b.startTime || ''))
+      .sort((a, b) => a.meetingDate.localeCompare(b.meetingDate) || a.startTime.localeCompare(b.startTime))
       .slice(0, 5);
 
-    const metricas = calcularMetricasConsultor(consultorId, periodo, safeReunioes, safeClientes, safeCsat, safeNps);
+    // Métricas do consultor
+    const metricas = calcularMetricasConsultor(consultorId, periodo, reunioes, clientes, csatSurveys, npsSurveys);
 
     return {
       meusClientes, reunioesHoje, minhasTarefas, tarefasPrioritarias, criticos,
       atencao, emDia, contratosEncerrando, upsell, alertasContrato, proximasReunioes,
       metricas
     };
-  }, [clientes, contratos, reunioes, tarefas, csatSurveys, npsSurveys, periodo, consultorId, hojeStr]);
+  }, [clientes, contratos, reunioes, tarefas, periodo, consultorId, hojeStr]);
 
   const targetMap = useMemo(() => {
     const map: Record<string, any> = {};
