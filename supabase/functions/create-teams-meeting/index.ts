@@ -114,7 +114,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        teamsJoinUrl: data?.onlineMeeting?.joinUrl || data?.onlineMeetingUrl || data?.webLink || data?.joinUrl,
+        teamsJoinUrl: data?.onlineMeeting?.joinUrl || data?.onlineMeetingUrl || data?.webLink || data?.joinUrl || data?.joinWebUrl,
         microsoftEventId: data?.id,
         rawResponse: data
       }),

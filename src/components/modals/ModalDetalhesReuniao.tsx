@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Calendar, Clock, MapPin, Video, ExternalLink, 
   User, CheckCircle2, XCircle, AlertCircle, 
   History, Info, Pencil, Trash2, Loader2, Play, RefreshCcw,
-  Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff,
+  Copy, Plus, FileText, AlignLeft, ShieldCheck, Eye, EyeOff, Link as LinkIcon,
   Users as UsersIcon, ListChecks as ListChecksIcon, Lock as LockIcon
 } from 'lucide-react';
 
@@ -45,6 +47,9 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const [registrarAtaOpen, setRegistrarAtaOpen] = useState(false);
   const [remarcarOpen, setRemarcarOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [showManualLinkForm, setShowManualLinkForm] = useState(false);
+  const [manualUrl, setManualUrl] = useState('');
+  const [manualProvider, setManualProvider] = useState<'teams' | 'manual'>('manual');
 
 
 
@@ -325,6 +330,11 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
 
       if (!rawData) throw new Error('Reunião não encontrada');
 
+      // Validation
+      if (!reuniao.meetingDate) throw new Error('Data da reunião não informada.');
+      if (!reuniao.startTime) throw new Error('Horário da reunião não informado.');
+      if (!reuniao.title) throw new Error('Título da reunião não informado.');
+
       const isUpdate = !!reuniao.microsoftEventId;
       const startDateTime = `${reuniao.meetingDate}T${reuniao.startTime}:00`;
       
@@ -334,6 +344,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       endDate.setHours(hours, minutes, 0);
       endDate.setMinutes(endDate.getMinutes() + (reuniao.duracao || 60));
       const endDateTime = `${reuniao.meetingDate}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
+
 
       const response = await supabase.functions.invoke('create-teams-meeting', {
         body: {
@@ -381,7 +392,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
         fetchDetails();
       } else {
-        const errorMsg = response.data?.error || 'Não foi possível gerar o link do Teams';
+        const errorMsg = response.error || response.data?.error || 'Não foi possível gerar o link do Teams';
         
         await supabase
           .from('meetings')
@@ -393,15 +404,77 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           })
           .eq('id', reuniao.id);
 
+        await supabase.from('meeting_status_history').insert({
+          meeting_id: reuniao.id,
+          action: 'teams_link_generation_failed',
+          new_status: reuniao.status,
+          changed_by: user?.id,
+          change_reason: `Falha ao gerar link do Teams: ${errorMsg}`
+        });
+
         throw new Error(errorMsg);
       }
     } catch (err: any) {
-      console.error('Error generating Teams link:', err);
-      toast({ title: 'Erro', description: err.message || 'Falha ao gerar link do Teams.', variant: 'destructive' });
+      console.error('[Teams] Falha ao gerar link:', err);
+      toast({ title: 'Falha ao gerar link do Teams', description: err.message || 'Erro desconhecido ao gerar link.', variant: 'destructive' });
     } finally {
       setGeneratingTeams(false);
     }
   };
+
+  const handleAddManualLink = async () => {
+    if (!reuniao) return;
+    if (!manualUrl.trim()) {
+      toast({ title: 'Campo obrigatório', description: 'Informe a URL da reunião.', variant: 'destructive' });
+      return;
+    }
+
+    if (!manualUrl.startsWith('http://') && !manualUrl.startsWith('https://')) {
+      toast({ title: 'URL inválida', description: 'A URL deve começar com http:// ou https://', variant: 'destructive' });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const isTeams = manualUrl.toLowerCase().includes('teams.microsoft.com');
+      const provider = isTeams ? 'teams' : 'manual';
+
+      const { error } = await supabase
+        .from('meetings')
+        .update({
+          location_url: manualUrl,
+          meeting_url: manualUrl,
+          teams_join_url: isTeams ? manualUrl : null,
+          meeting_link_provider: provider,
+          teams_creation_status: isTeams ? 'created' : 'manual',
+          teams_creation_error: null,
+          updated_at: new Date().toISOString(),
+          updated_by: user?.id
+        })
+        .eq('id', reuniao.id);
+
+      if (error) throw error;
+
+      await supabase.from('meeting_status_history').insert({
+        meeting_id: reuniao.id,
+        action: 'manual_link_added',
+        new_status: reuniao.status,
+        changed_by: user?.id,
+        change_reason: `Link manual adicionado (${provider}).`
+      });
+
+      toast({ title: 'Sucesso', description: 'Link manual adicionado com sucesso.' });
+      setShowManualLinkForm(false);
+      setManualUrl('');
+      fetchDetails();
+    } catch (err: any) {
+      console.error('Error adding manual link:', err);
+      toast({ title: 'Erro', description: 'Não foi possível salvar o link manual.', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
 
   const getStatusBadge = (status: string) => {
@@ -535,6 +608,28 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         )}
 
 
+        {showManualLinkForm && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-200">
+            <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2">
+              <LinkIcon className="h-4 w-4" /> Adicionar Link Manual
+            </h4>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-blue-800">URL da Reunião</Label>
+              <Input 
+                placeholder="https://..." 
+                value={manualUrl}
+                onChange={e => setManualUrl(e.target.value)}
+                className="bg-white border-blue-200 focus-visible:ring-blue-500"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setShowManualLinkForm(false)}>Cancelar</Button>
+              <Button size="sm" onClick={handleAddManualLink} disabled={submitting} className="bg-blue-600 hover:bg-blue-700">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar Link'}
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             <div className="bg-muted/30 rounded-2xl p-6 border border-muted/60 space-y-4">
@@ -633,10 +728,10 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                               )}
                               {reuniao.teams_creation_status === 'failed' ? "Tentar gerar link novamente" : "Gerar link do Teams"}
                             </Button>
-                            <Button 
+                             <Button 
                               variant="outline" 
                               size="sm" 
-                              onClick={() => setRemarcarOpen(true)} 
+                              onClick={() => setShowManualLinkForm(true)} 
                               className="text-[10px] h-8 gap-1.5"
                             >
                               <Plus className="h-3 w-3" /> Adicionar link manual
