@@ -70,7 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .from('clients')
                 .select('id, trade_name')
                 .eq('auth_user_id', session.user.id)
-                .single();
+                .is('deleted_at', null)
+                .maybeSingle();
 
               if (clientData) {
                 setClienteSession({
@@ -121,7 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .from('clients')
         .select('email, portal_access_enabled, status')
         .eq('cnpj', cnpjLimpo)
-        .single();
+        .is('deleted_at', null)
+        .maybeSingle();
 
       if (error || !client) return { ok: false, erro: 'Cliente não encontrado com este CNPJ.' };
       if (!client.portal_access_enabled) return { ok: false, erro: 'Acesso ao portal desativado para este cliente.' };
@@ -157,7 +159,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from('clients')
       .select('id, trade_name, portal_access_enabled, status')
       .eq('auth_user_id', data.user.id)
-      .single();
+      .is('deleted_at', null)
+      .maybeSingle();
 
     if (!clientData) {
       await supabase.auth.signOut();
