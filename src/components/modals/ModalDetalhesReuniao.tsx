@@ -999,10 +999,88 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 )}
               </div>
             </div>
+
+            {isAdmin && (
+              <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 space-y-3">
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-amber-800 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4" /> Diagnóstico Microsoft
+                </h3>
+                
+                <div className="space-y-2 text-[10px]">
+                  <div className="flex justify-between">
+                    <span className="text-amber-700">Status Sync:</span>
+                    <Badge variant="outline" className={cn(
+                      "text-[9px] h-4",
+                      reuniao.microsoft_sync_status === 'success' ? "bg-green-100 text-green-700 border-green-200" : 
+                      reuniao.microsoft_sync_status === 'error' ? "bg-red-100 text-red-700 border-red-200" : "bg-gray-100 text-gray-700"
+                    )}>
+                      {reuniao.microsoft_sync_status || 'Pendente'}
+                    </Badge>
+                  </div>
+                  
+                  {reuniao.microsoft_last_sync_at && (
+                    <div className="flex justify-between">
+                      <span className="text-amber-700">Última Sync:</span>
+                      <span className="font-medium">{format(new Date(reuniao.microsoft_last_sync_at), 'dd/MM HH:mm', { locale: ptBR })}</span>
+                    </div>
+                  )}
+
+                  {reuniao.microsoftEventId && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-amber-700">Microsoft Event ID:</span>
+                      <span className="font-mono text-[8px] break-all bg-white p-1 rounded border">{reuniao.microsoftEventId}</span>
+                    </div>
+                  )}
+
+                  {reuniao.microsoft_sync_error && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-red-700 font-bold">Último Erro:</span>
+                      <div className="bg-red-100/50 p-2 rounded text-[9px] text-red-800 break-words border border-red-200">
+                        {reuniao.microsoft_sync_error}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleTestConnection} 
+                      disabled={testingConnection}
+                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
+                    >
+                      {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
+                      Testar Conexão Graph
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => generateTeamsLink()} 
+                      disabled={generatingTeams}
+                      className="text-[9px] h-7 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100"
+                    >
+                      {generatingTeams ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
+                      Forçar Sincronização
+                    </Button>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowManualLinkForm(true)}
+                      className="text-[9px] h-7 text-amber-700 hover:bg-amber-100"
+                    >
+                      Vincular Link Manualmente
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </BaseModal>
+
 
     {reuniao && (
       <>
