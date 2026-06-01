@@ -59,7 +59,12 @@ export default function AdminReunioesPage() {
       header: 'Reunião', 
       render: (r) => (
         <div>
-          <p className="font-medium text-sm line-clamp-1">{r.title || 'Sem pauta'}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm line-clamp-1">{r.title || 'Sem pauta'}</p>
+            {r.meetingLinkProvider === 'teams' && (
+              <Badge className="h-4 px-1.5 bg-[#4B53BC] text-white text-[8px] uppercase font-bold">Teams</Badge>
+            )}
+          </div>
           <p className="text-[11px] text-muted-foreground line-clamp-1">{r.tipo}</p>
         </div>
       )
