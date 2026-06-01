@@ -46,6 +46,18 @@ const autoVariant = (label: string): StatusVariant => {
 
 export const StatusTag = ({ label, variant, className }: StatusTagProps) => {
   const v = variant || autoVariant(label);
+  
+  // Custom display mapping
+  let displayLabel = label;
+  const lowerLabel = label.toLowerCase().trim();
+  if (['realizada', 'realizado', 'concluida', 'concluido', 'completed', 'done'].includes(lowerLabel)) {
+    displayLabel = 'Concluído';
+  } else if (['agendada', 'agendado'].includes(lowerLabel)) {
+    displayLabel = 'Agendado';
+  } else if (['cancelada', 'cancelado'].includes(lowerLabel)) {
+    displayLabel = 'Cancelado';
+  }
+
   return (
     <span
       className={cn(
@@ -56,7 +68,7 @@ export const StatusTag = ({ label, variant, className }: StatusTagProps) => {
       )}
     >
       <span className={cn('h-1.5 w-1.5 rounded-full', variantDot[v])} />
-      {label}
+      {displayLabel}
     </span>
   );
 };
