@@ -85,6 +85,16 @@ export default function PortalClientePage() {
 
   const { submitCSAT } = useClientCSAT(clientId);
   const { historico, isLoading: loadingHist } = useClienteHistorico(clientId);
+  
+  // Debug logs
+  useEffect(() => {
+    if (clientId) {
+      console.log('[Portal Cliente] client id:', clientId);
+      console.log('[Portal Cliente] contracts:', contratos);
+      console.log('[Portal Cliente] active contract:', activeContract);
+    }
+  }, [clientId, contratos, activeContract]);
+
   const { summary, isLoading: loadingSummary } = usePortalSummary(clientId);
   const { csatStatus } = usePortalCSAT(clientId);
 
