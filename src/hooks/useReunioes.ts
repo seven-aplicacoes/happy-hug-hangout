@@ -4,6 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { Reuniao } from '@/types';
 
+export interface MicrosoftSyncParams {
+  meetingId: string;
+  action?: 'create' | 'update' | 'cancel' | 'delete';
+}
+
 export function useReunioes() {
   const { user, perfil } = useAuth();
   const { toast } = useToast();
