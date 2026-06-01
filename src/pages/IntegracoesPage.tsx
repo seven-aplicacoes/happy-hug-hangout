@@ -30,7 +30,7 @@ const labelStatus: Record<StatusIntegracao, string> = {
 };
 
 const labelCategoria: Record<CategoriaIntegracao, string> = {
-  agenda: 'Agenda',
+  agenda: 'Configuração',
   reuniao: 'Reunião',
   mensageria: 'Mensageria',
   conhecimento: 'Conhecimento',
@@ -362,7 +362,7 @@ export default function IntegracoesPage() {
 
   const filtros: Array<{ id: 'todas' | CategoriaIntegracao; label: string }> = [
     { id: 'todas', label: 'Todas' },
-    { id: 'agenda', label: 'Agenda' },
+    { id: 'agenda', label: 'Configuração' },
     { id: 'reuniao', label: 'Reuniões' },
     { id: 'mensageria', label: 'Mensageria' },
     { id: 'conhecimento', label: 'Conhecimento' },

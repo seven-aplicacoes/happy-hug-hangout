@@ -62,7 +62,7 @@ export const labelStatus: Record<StatusIntegracao, string> = {
 };
 
 export const labelCategoria: Record<CategoriaIntegracao, string> = {
-  agenda: 'Agenda',
+  agenda: 'Configuração',
   reuniao: 'Reuniões',
   mensageria: 'Mensageria',
   conhecimento: 'Conhecimento',
