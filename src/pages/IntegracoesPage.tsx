@@ -26,9 +26,7 @@ const iconCategoria: Record<CategoriaIntegracao, typeof CalendarDays> = {
 
 const labelStatus: Record<StatusIntegracao, string> = {
   conectado: 'Conectado',
-  beta: 'Beta',
-  disponivel: 'Disponível',
-  em_breve: 'Em Breve',
+  configuracao: 'Configuração',
 };
 
 const labelCategoria: Record<CategoriaIntegracao, string> = {
@@ -40,9 +38,7 @@ const labelCategoria: Record<CategoriaIntegracao, string> = {
 
 const dotStatus: Record<StatusIntegracao, string> = {
   conectado: 'bg-emerald-500',
-  beta: 'bg-amber-500',
-  disponivel: 'bg-sky-500',
-  em_breve: 'bg-muted-foreground/40',
+  configuracao: 'bg-amber-500',
 };
 
 function fmtData(iso?: string) {

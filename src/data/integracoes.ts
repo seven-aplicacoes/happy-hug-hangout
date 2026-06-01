@@ -1,7 +1,7 @@
 // === Bloco 9 — Integrações Seven ===
 // Estrutura preparatória para integrações externas.
 
-export type StatusIntegracao = 'conectado' | 'disponivel' | 'em_breve' | 'beta';
+export type StatusIntegracao = 'conectado' | 'configuracao';
 export type CategoriaIntegracao = 'agenda' | 'reuniao' | 'mensageria' | 'conhecimento';
 
 export interface Integracao {
@@ -27,7 +27,7 @@ export const INTEGRACOES: Integracao[] = [
     nome: 'Google Calendar / Meet',
     fornecedor: 'Google',
     categoria: 'agenda',
-    status: 'disponivel',
+    status: 'configuracao',
     descricao: 'Sincronização de calendário e criação automática de reuniões Google Meet.',
     beneficios: [
       'Criação automática de links Google Meet',
@@ -39,27 +39,11 @@ export const INTEGRACOES: Integracao[] = [
     documentacaoUrl: 'https://developers.google.com/calendar/api/v3/reference/events',
   },
   {
-    id: 'microsoft_outlook',
-    nome: 'Outlook / Microsoft 365',
-    fornecedor: 'Microsoft',
-    categoria: 'agenda',
-    status: 'disponivel',
-    descricao: 'Sincronização de calendário e criação automática de reuniões Teams via Outlook.',
-    beneficios: [
-      'Criação automática de links Teams',
-      'Sincronização bidirecional de eventos',
-      'Suporte a contas Pessoais e Business',
-    ],
-    capacidades: ['Criar eventos', 'Atualizar eventos', 'Cancelar reuniões', 'Online Meetings'],
-    escopos: ['Calendars.ReadWrite', 'offline_access', 'User.Read'],
-    documentacaoUrl: 'https://learn.microsoft.com/en-us/graph/api/resources/calendar',
-  },
-  {
     id: 'calendly',
     nome: 'Calendly',
     fornecedor: 'Calendly',
     categoria: 'agenda',
-    status: 'em_breve',
+    status: 'configuracao',
     descricao: 'Permite que clientes agendem reuniões diretamente na agenda do consultor.',
     beneficios: [
       'Autoatendimento de agendamento',
@@ -74,9 +58,7 @@ export const INTEGRACOES: Integracao[] = [
 
 export const labelStatus: Record<StatusIntegracao, string> = {
   conectado: 'Conectado',
-  disponivel: 'Disponível',
-  em_breve: 'Em breve',
-  beta: 'Beta',
+  configuracao: 'Configuração',
 };
 
 export const labelCategoria: Record<CategoriaIntegracao, string> = {
