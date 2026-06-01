@@ -202,7 +202,7 @@ serve(async (req) => {
             { emailAddress: { address: consultantEmail, name: consultantName }, type: 'required' }
           ],
           isOnlineMeeting: true,
-          onlineMeetingProvider: 'teamsForBusiness'
+          onlineMeetingProvider: 'teamsForBusiness' // Tentaremos mudar para teamsForLife se falhar, ou usar onlineMeetings endpoint
         };
       } else if (action === 'cancel' || action === 'delete') {
         if (!meeting.microsoft_event_id) {
