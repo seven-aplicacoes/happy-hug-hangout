@@ -33,7 +33,9 @@ export function useContractProductPhases(contractProductId?: string) {
       if (error) throw error;
 
       return (data || []).map((p: any) => {
-        const meetingsScheduled = p.meetings?.[0]?.count || 0;
+        const scheduledCount = p.scheduled?.[0]?.count || 0;
+        const realizedCount = p.realized?.[0]?.count || 0;
+        const meetingsScheduled = scheduledCount + realizedCount;
         const methodology = p.methodology_phase || {};
 
         return {
