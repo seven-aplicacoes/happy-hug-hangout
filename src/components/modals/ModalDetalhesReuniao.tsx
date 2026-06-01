@@ -204,8 +204,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         updatedByName: profilesMap[r.updated_by] || 'Sistema',
         canceledByName: profilesMap[r.canceled_by] || 'Desconhecido',
         completedByName: profilesMap[r.completed_by] || 'Desconhecido',
-        teams_creation_status: r.teams_creation_status as 'created' | 'failed' | null,
-        teams_creation_error: r.teams_creation_error
+        teams_creation_status: r.teams_creation_status as 'created' | 'failed' | 'manual' | null,
+        teams_creation_error: r.teams_creation_error,
+        microsoft_sync_status: r.microsoft_sync_status as 'success' | 'error' | null,
+        microsoft_sync_error: r.microsoft_sync_error,
+        microsoft_last_sync_at: r.microsoft_last_sync_at
+
       };
 
       // Ensure status is normalized for local UI
