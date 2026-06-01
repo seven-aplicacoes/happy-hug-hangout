@@ -61,12 +61,12 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           *,
           client:client_id (trade_name, corporate_name, email),
           profile:consultant_id (full_name, email),
-          creator:auth.users!created_by (id),
-          updater:auth.users!updated_by (id),
-          canceler:profiles!canceled_by (full_name),
-          completer:auth.users!completed_by (id)
-
+          creator:profiles!meetings_created_by_fkey (full_name),
+          updater:profiles!meetings_updated_by_fkey (full_name),
+          canceler:profiles!meetings_canceled_by_fkey (full_name),
+          completer:profiles!meetings_completed_by_fkey (full_name)
         `)
+
         .eq('id', reuniaoId)
         .single();
 
