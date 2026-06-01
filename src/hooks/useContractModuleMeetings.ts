@@ -49,51 +49,8 @@ export function useContractModuleMeetings(moduleId?: string) {
 
   const updateMeeting = useMutation({
     mutationFn: async (meeting: Partial<ContractModuleMeeting>) => {
-      // Check sequential scheduling
-      if (meeting.status === 'agendado') {
-        const { data: prevMeeting } = await supabase
-          .from('contract_module_meetings')
-          .select('status')
-          .eq('module_id', meeting.moduleId)
-          .eq('meeting_number', (meeting.meetingNumber || 1) - 1)
-          .single();
-
-        const ADVANCING_STATUSES = [
-          'realizada', 'concluido', 'concluida', 'concluído', 'cancelada', 'cancelado', 
-          'no_show', 'no_show_justificado', 'finalizado', 'completed', 'done', 
-          'cancelled', 'canceled', 'remarcada_concluido', 'remarcada_cancelada'
-        ];
-
-        const normalizeStatus = (status: string) => {
-          const s = String(status || '')
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .trim();
-          
-          // Adicional: Mapear status que significam a mesma coisa para o sistema
-          if (s === 'cancelada') return 'cancelado';
-          if (s === 'concluida') return 'concluido';
-          return s;
-        };
-
-        if (prevMeeting) {
-          const normalized = normalizeStatus(prevMeeting.status);
-          const isAdvancing = ADVANCING_STATUSES.some(s => normalizeStatus(s) === normalized);
-          
-          // Debugging log for development/troubleshooting
-          console.log('[Sequential Scheduling Debug]:', {
-            prevStatus: prevMeeting.status,
-            normalizedStatus: normalized,
-            isAdvancing: isAdvancing,
-            meetingNumber: meeting.meetingNumber
-          });
-
-          if (!isAdvancing) {
-            throw new Error('O encontro anterior deve estar finalizado para agendar este.');
-          }
-        }
-      }
+      // Sequential scheduling block REMOVED.
+      // Now meetings can be scheduled regardless of previous meeting status.
 
       const { data, error } = await supabase
         .from('contract_module_meetings')
