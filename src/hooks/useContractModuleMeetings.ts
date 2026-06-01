@@ -59,23 +59,36 @@ export function useContractModuleMeetings(moduleId?: string) {
           .single();
 
         const ADVANCING_STATUSES = [
-          'realizada', 'concluido', 'concluído', 'cancelada', 'cancelado', 
+          'realizada', 'concluido', 'concluida', 'concluído', 'cancelada', 'cancelado', 
           'no_show', 'no_show_justificado', 'finalizado', 'completed', 'done', 
-          'cancelled', 'canceled', 'remarcada_concluido'
+          'cancelled', 'canceled', 'remarcada_concluido', 'remarcada_cancelada'
         ];
 
         const normalizeStatus = (status: string) => {
-          return String(status || '')
+          const s = String(status || '')
             .toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .trim();
+          
+          // Adicional: Mapear status que significam a mesma coisa para o sistema
+          if (s === 'cancelada') return 'cancelado';
+          if (s === 'concluida') return 'concluido';
+          return s;
         };
 
         if (prevMeeting) {
           const normalized = normalizeStatus(prevMeeting.status);
           const isAdvancing = ADVANCING_STATUSES.some(s => normalizeStatus(s) === normalized);
           
+          // Debugging log for development/troubleshooting
+          console.log('[Sequential Scheduling Debug]:', {
+            prevStatus: prevMeeting.status,
+            normalizedStatus: normalized,
+            isAdvancing: isAdvancing,
+            meetingNumber: meeting.meetingNumber
+          });
+
           if (!isAdvancing) {
             throw new Error('O encontro anterior deve estar finalizado para agendar este.');
           }
