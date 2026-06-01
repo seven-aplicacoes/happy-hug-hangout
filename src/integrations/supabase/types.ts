@@ -2570,8 +2570,56 @@ export type Database = {
           },
         ]
       }
+      meeting_sync_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          meeting_id: string | null
+          provider: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          status_code: number | null
+          success: boolean | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          meeting_id?: string | null
+          provider?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status_code?: number | null
+          success?: boolean | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          meeting_id?: string | null
+          provider?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status_code?: number | null
+          success?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_sync_logs_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meetings: {
         Row: {
+          agenda: string | null
           calendly_cancel_url: string | null
           calendly_event_type_uri: string | null
           calendly_event_uri: string | null
@@ -2613,6 +2661,13 @@ export type Database = {
           meeting_url: string | null
           methodology_phase_id: string | null
           microsoft_event_id: string | null
+          microsoft_event_web_link: string | null
+          microsoft_graph_response: Json | null
+          microsoft_last_sync_at: string | null
+          microsoft_organizer_email: string | null
+          microsoft_sync_error: string | null
+          microsoft_sync_status: string | null
+          notes: string | null
           participants: Json | null
           reschedule_url: string | null
           scheduled_by: string | null
@@ -2622,12 +2677,14 @@ export type Database = {
           teams_creation_error: string | null
           teams_creation_status: string | null
           teams_join_url: string | null
+          timezone: string | null
           title: string | null
           type: string | null
           updated_at: string | null
           updated_by: string | null
         }
         Insert: {
+          agenda?: string | null
           calendly_cancel_url?: string | null
           calendly_event_type_uri?: string | null
           calendly_event_uri?: string | null
@@ -2669,6 +2726,13 @@ export type Database = {
           meeting_url?: string | null
           methodology_phase_id?: string | null
           microsoft_event_id?: string | null
+          microsoft_event_web_link?: string | null
+          microsoft_graph_response?: Json | null
+          microsoft_last_sync_at?: string | null
+          microsoft_organizer_email?: string | null
+          microsoft_sync_error?: string | null
+          microsoft_sync_status?: string | null
+          notes?: string | null
           participants?: Json | null
           reschedule_url?: string | null
           scheduled_by?: string | null
@@ -2678,12 +2742,14 @@ export type Database = {
           teams_creation_error?: string | null
           teams_creation_status?: string | null
           teams_join_url?: string | null
+          timezone?: string | null
           title?: string | null
           type?: string | null
           updated_at?: string | null
           updated_by?: string | null
         }
         Update: {
+          agenda?: string | null
           calendly_cancel_url?: string | null
           calendly_event_type_uri?: string | null
           calendly_event_uri?: string | null
@@ -2725,6 +2791,13 @@ export type Database = {
           meeting_url?: string | null
           methodology_phase_id?: string | null
           microsoft_event_id?: string | null
+          microsoft_event_web_link?: string | null
+          microsoft_graph_response?: Json | null
+          microsoft_last_sync_at?: string | null
+          microsoft_organizer_email?: string | null
+          microsoft_sync_error?: string | null
+          microsoft_sync_status?: string | null
+          notes?: string | null
           participants?: Json | null
           reschedule_url?: string | null
           scheduled_by?: string | null
@@ -2734,6 +2807,7 @@ export type Database = {
           teams_creation_error?: string | null
           teams_creation_status?: string | null
           teams_join_url?: string | null
+          timezone?: string | null
           title?: string | null
           type?: string | null
           updated_at?: string | null

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,229 +13,198 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  console.log('[create-teams-meeting] Function started');
+  const startTimeStr = new Date().toISOString();
+  console.log(`[microsoft-sync] Function started at ${startTimeStr}`);
 
   try {
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
-    const teamsApiKey = Deno.env.get('MICROSOFT_TEAMS_API_KEY')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const teamsApiKey = Deno.env.get('MICROSOFT_TEAMS_API_KEY');
 
-    if (!lovableApiKey) {
-      console.error('[create-teams-meeting] LOVABLE_API_KEY is not configured');
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    if (!lovableApiKey || !teamsApiKey) {
+      console.error('[microsoft-sync] Missing API keys');
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Erro de configuração do sistema.',
-          details: 'LOVABLE_API_KEY is not configured',
-          step: 'auth'
-        }), 
+        JSON.stringify({ success: false, error: 'Conector Microsoft não configurado corretamente.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
 
-    if (!teamsApiKey) {
-      console.error('[create-teams-meeting] MICROSOFT_TEAMS_API_KEY is not configured');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'O Microsoft Teams não está conectado ou a conexão expirou.',
-          details: 'MICROSOFT_TEAMS_API_KEY is not configured (Microsoft Teams connector not linked)',
-          step: 'auth'
-        }), 
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      )
+    const { meetingId, action: requestedAction } = await req.json();
+    console.log(`[microsoft-sync] Action: ${requestedAction}, MeetingID: ${meetingId}`);
+
+    if (!meetingId) {
+      return new Response(JSON.stringify({ success: false, error: 'meetingId é obrigatório.' }), { status: 400, headers: corsHeaders });
     }
 
-    const body = await req.json()
-    console.log('[create-teams-meeting] Parsed payload:', JSON.stringify(body, null, 2));
+    // 1. Fetch meeting data with client and consultant info
+    const { data: meeting, error: meetingError } = await supabase
+      .from('meetings')
+      .select(`
+        *,
+        client:client_id (trade_name, corporate_name, email),
+        consultant:consultant_id (full_name, email)
+      `)
+      .eq('id', meetingId)
+      .single();
 
-    const { 
-      action, // 'create', 'update', 'cancel'
-      title, 
-      description, 
-      startDateTime, 
-      endDateTime, 
-      attendees,
-      microsoftEventId,
-      timezone = 'America/Fortaleza'
-    } = body
-
-    // Validation
-    console.log('[create-teams-meeting] Validating payload for action:', action);
-    if (action !== 'cancel' && action !== 'delete') {
-      if (!title) {
-        console.error('[create-teams-meeting] Missing title');
-        return new Response(JSON.stringify({ success: false, error: 'Título da reunião não informado.', step: 'payload_validation' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
-      }
-      if (!startDateTime) {
-        console.error('[create-teams-meeting] Missing startDateTime');
-        return new Response(JSON.stringify({ success: false, error: 'Data e horário de início não informados.', step: 'payload_validation' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
-      }
-      if (!endDateTime) {
-        console.error('[create-teams-meeting] Missing endDateTime');
-        return new Response(JSON.stringify({ success: false, error: 'Data e horário de término não informados.', step: 'payload_validation' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
-      }
+    if (meetingError || !meeting) {
+      console.error('[microsoft-sync] Error fetching meeting:', meetingError);
+      return new Response(JSON.stringify({ success: false, error: 'Reunião não encontrada.' }), { status: 404, headers: corsHeaders });
     }
 
+    const action = requestedAction || (meeting.microsoft_event_id ? 'update' : 'create');
     const headers = {
       'Authorization': `Bearer ${lovableApiKey}`,
       'X-Connection-Api-Key': teamsApiKey,
       'Content-Type': 'application/json',
-    }
+    };
 
-    let response;
+    let graphUrl = `${GATEWAY_URL}/v1.0/me/events`;
     let method = 'POST';
-    let url = `${GATEWAY_URL}/v1.0/me/events`; // Updated to typical Graph structure if gateway maps it
+    let body: any = null;
 
-    if (action === 'cancel' || action === 'delete') {
-      if (!microsoftEventId) {
-        console.error('[create-teams-meeting] Missing microsoftEventId for cancellation');
-        return new Response(
-          JSON.stringify({ success: false, error: 'ID do evento Microsoft não informado para cancelamento.', step: 'payload_validation' }), 
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
-      }
-      
-      console.log('[create-teams-meeting] Cancelling event:', microsoftEventId);
-      response = await fetch(`${GATEWAY_URL}/v1.0/me/events/${microsoftEventId}`, {
-        method: 'DELETE',
-        headers
+    // Build attendees
+    const attendees = [];
+    if (meeting.client?.email) {
+      attendees.push({
+        emailAddress: { address: meeting.client.email, name: meeting.client.trade_name || meeting.client.corporate_name },
+        type: 'required'
       });
-      
-      if (response.status === 204) {
-        console.log('[create-teams-meeting] Event cancelled successfully');
-        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-    } else if (action === 'update' && microsoftEventId) {
-      method = 'PATCH';
-      url = `${GATEWAY_URL}/v1.0/me/events/${microsoftEventId}`;
-      console.log('[create-teams-meeting] Updating event:', microsoftEventId);
+    }
+    if (meeting.consultant?.email) {
+      attendees.push({
+        emailAddress: { address: meeting.consultant.email, name: meeting.consultant.full_name },
+        type: 'required'
+      });
     }
 
-    if (action !== 'cancel' && action !== 'delete') {
-      const eventBody = {
-        subject: title,
+    const timezone = meeting.timezone || 'America/Fortaleza';
+    
+    // Prepare start/end times in ISO without 'Z' if timezone is provided, or as is
+    // Graph expects: { dateTime: "2023-01-01T10:00:00", timeZone: "America/Fortaleza" }
+    const startDateTime = meeting.meeting_date ? `${meeting.meeting_date}T${meeting.start_time}` : null;
+    
+    // Calculate end time
+    const [hours, minutes] = (meeting.start_time || "00:00").split(':').map(Number);
+    const endDate = new Date(meeting.meeting_date);
+    endDate.setHours(hours, minutes + (meeting.duration || 60));
+    const endDateTime = `${meeting.meeting_date}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
+
+    if (action === 'create' || action === 'update') {
+      method = action === 'create' ? 'POST' : 'PATCH';
+      if (action === 'update' && meeting.microsoft_event_id) {
+        graphUrl = `${GATEWAY_URL}/v1.0/me/events/${meeting.microsoft_event_id}`;
+      }
+
+      body = {
+        subject: meeting.title,
         body: {
           contentType: 'HTML',
-          content: description || 'Reunião agendada pelo sistema SEVEN.',
+          content: meeting.description || meeting.agenda || 'Reunião agendada pelo portal SEVEN.'
         },
-        start: {
-          dateTime: startDateTime,
-          timeZone: timezone,
-        },
-        end: {
-          dateTime: endDateTime,
-          timeZone: timezone,
-        },
-        location: {
-          displayName: 'Microsoft Teams Meeting',
-        },
-        attendees: (attendees || [])
-          .filter((a: any) => a.email)
-          .map((a: any) => ({
-            emailAddress: {
-              address: a.email,
-              name: a.name || a.email,
-            },
-            type: 'required',
-          })),
+        start: { dateTime: startDateTime, timeZone: timezone },
+        end: { dateTime: endDateTime, timeZone: timezone },
+        location: { displayName: 'Microsoft Teams' },
+        attendees,
         isOnlineMeeting: true,
-        onlineMeetingProvider: 'teamsForBusiness',
+        onlineMeetingProvider: 'teamsForBusiness'
+      };
+    } else if (action === 'cancel' || action === 'delete') {
+      if (!meeting.microsoft_event_id) {
+        return new Response(JSON.stringify({ success: true, message: 'Nenhum evento Microsoft para cancelar.' }), { headers: corsHeaders });
+      }
+      
+      // Use cancel endpoint if available, otherwise DELETE
+      graphUrl = `${GATEWAY_URL}/v1.0/me/events/${meeting.microsoft_event_id}/cancel`;
+      method = 'POST';
+      body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
+    }
+
+    console.log(`[microsoft-sync] Calling Graph: ${method} ${graphUrl}`);
+    
+    // Log the attempt
+    const { data: logEntry } = await supabase.from('meeting_sync_logs').insert({
+      meeting_id: meetingId,
+      action: action,
+      request_payload: body,
+      provider: 'microsoft_graph'
+    }).select().single();
+
+    const response = await fetch(graphUrl, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined
+    });
+
+    const responseStatus = response.status;
+    const responseText = await response.text();
+    let responseData: any = {};
+    try { responseData = JSON.parse(responseText); } catch (e) { responseData = { raw: responseText }; }
+
+    console.log(`[microsoft-sync] Graph response status: ${responseStatus}`);
+
+    const success = response.ok || responseStatus === 204;
+
+    // Update log
+    if (logEntry) {
+      await supabase.from('meeting_sync_logs').update({
+        response_payload: responseData,
+        status_code: responseStatus,
+        success: success,
+        error_message: success ? null : (responseData.error?.message || responseText)
+      }).eq('id', logEntry.id);
+    }
+
+    if (success) {
+      const updates: any = {
+        microsoft_last_sync_at: new Date().toISOString(),
+        microsoft_sync_status: 'success',
+        microsoft_sync_error: null,
+        microsoft_graph_response: responseData
       };
 
-      console.log('[create-teams-meeting] Calling Microsoft Graph at:', url);
-      console.log('[create-teams-meeting] Graph payload:', JSON.stringify(eventBody, null, 2));
-
-      try {
-        response = await fetch(url, {
-          method,
-          headers,
-          body: JSON.stringify(eventBody)
-        });
-      } catch (err) {
-        console.error('[create-teams-meeting] Fetch error:', err);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Falha na comunicação com o Microsoft Graph.',
-            details: err instanceof Error ? err.message : String(err),
-            step: 'microsoft_graph_request'
-          }), 
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 502 }
-        );
-      }
-    }
-
-    const rawText = await response!.text()
-    console.log('[create-teams-meeting] Microsoft Graph response status:', response!.status);
-    console.log('[create-teams-meeting] Microsoft Graph raw response:', rawText.slice(0, 1000));
-
-    let data: any = null
-    try {
-      data = rawText ? JSON.parse(rawText) : null
-    } catch {
-      console.error('[create-teams-meeting] Failed to parse JSON response');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Resposta inválida do servidor Microsoft.',
-          details: `Gateway returned ${response!.status}: ${rawText.slice(0, 200)}`,
-          step: 'microsoft_graph_response'
-        }), 
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 502 }
-      );
-    }
-
-    if (!response!.ok || data?.error) {
-      console.error('[create-teams-meeting] Microsoft Graph returned error:', data);
-      const message = data?.error?.message || data?.message || `Status ${response!.status}`
-      
-      let errorLabel = 'Não foi possível criar a reunião no Microsoft Teams.';
-      if (message.toLowerCase().includes('permission') || message.toLowerCase().includes('access denied')) {
-        errorLabel = 'O Microsoft Teams está conectado, mas a conexão atual não possui permissão para criar eventos de calendário. Conecte o Outlook/Calendar ou reconecte aceitando permissões de calendário.';
+      if (action === 'create' || action === 'update') {
+        if (responseData.id) updates.microsoft_event_id = responseData.id;
+        if (responseData.webLink) updates.microsoft_event_web_link = responseData.webLink;
+        
+        const joinUrl = responseData.onlineMeeting?.joinUrl || 
+                        responseData.onlineMeetingUrl || 
+                        responseData.joinUrl || 
+                        responseData.joinWebUrl;
+        
+        if (joinUrl) {
+          updates.teams_join_url = joinUrl;
+          updates.meeting_url = joinUrl;
+          updates.location_url = joinUrl;
+        }
       }
 
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: errorLabel,
-          details: message,
-          step: 'microsoft_graph_response',
-          graphResponse: data
-        }), 
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response!.status }
-      )
+      await supabase.from('meetings').update(updates).eq('id', meetingId);
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        teamsJoinUrl: updates.teams_join_url, 
+        microsoftEventId: updates.microsoft_event_id 
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    } else {
+      await supabase.from('meetings').update({
+        microsoft_sync_status: 'error',
+        microsoft_sync_error: responseData.error?.message || responseText,
+        microsoft_last_sync_at: new Date().toISOString()
+      }).eq('id', meetingId);
+
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: responseData.error?.message || 'Erro na sincronização com Microsoft Graph.',
+        details: responseData
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: responseStatus });
     }
-
-    const teamsJoinUrl = data?.onlineMeeting?.joinUrl || 
-                         data?.onlineMeetingUrl || 
-                         data?.joinUrl || 
-                         data?.joinWebUrl || 
-                         (data?.onlineMeeting && data.onlineMeeting.joinUrl) ||
-                         data?.webLink;
-
-    console.log('[create-teams-meeting] Extracted joinUrl:', teamsJoinUrl);
-    console.log('[create-teams-meeting] Extracted eventId:', data?.id);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        teamsJoinUrl,
-        microsoftEventId: data?.id,
-        rawResponse: data
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
 
   } catch (error) {
-    console.error('[create-teams-meeting] Global error:', error)
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Ocorreu um erro inesperado ao processar a reunião.',
-        details: error instanceof Error ? error.message : String(error),
-        step: 'unknown'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    console.error('[microsoft-sync] Global error:', error);
+    return new Response(JSON.stringify({ success: false, error: error.message }), { headers: corsHeaders, status: 500 });
   }
 })

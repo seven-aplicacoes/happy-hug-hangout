@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useReunioes } from '@/hooks/useReunioes';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +38,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
   const { user, perfil } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { syncMicrosoft } = useReunioes();
   const [reuniao, setReuniao] = useState<Reuniao | null>(null);
   const [history, setHistory] = useState<MeetingStatusHistory[]>([]);
   const [minutes, setMinutes] = useState<MeetingMinutes | null>(null);
@@ -269,11 +271,9 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
         // Microsoft Teams Cancellation
         if (reuniao.microsoftEventId) {
           try {
-            await supabase.functions.invoke('create-teams-meeting', {
-              body: {
-                action: 'cancel',
-                microsoftEventId: reuniao.microsoftEventId
-              }
+            await syncMicrosoft.mutateAsync({ 
+              meetingId: reuniao.id, 
+              action: 'cancel' 
             });
           } catch (teamsErr) {
             console.error('Failed to cancel Teams meeting:', teamsErr);
@@ -363,132 +363,18 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
     if (!reuniao) return;
     setGeneratingTeams(true);
     
-    console.group('[Teams Integration] Tentar gerar link novamente');
+    console.group('[Teams Sync] Tentar gerar link novamente');
     console.log('Meeting ID:', reuniao.id);
-    console.log('Microsoft Event ID:', reuniao.microsoftEventId);
     console.groupEnd();
 
     try {
-      const { data: rawData } = await supabase
-        .from('meetings')
-        .select(`
-          *,
-          client:client_id (trade_name, corporate_name, email),
-          profile:consultant_id (full_name, email)
-        `)
-        .eq('id', reuniao.id)
-        .single();
-
-      if (!rawData) throw new Error('Reunião não encontrada');
-
-      // Validation
-      if (!reuniao.meetingDate) throw new Error('Data da reunião não informada.');
-      if (!reuniao.startTime) throw new Error('Horário da reunião não informado.');
-      if (!reuniao.title) throw new Error('Título da reunião não informado.');
-
-      const isUpdate = !!reuniao.microsoftEventId;
-      const startDateTime = `${reuniao.meetingDate}T${reuniao.startTime}:00`;
-      
-      // Calculate end time
-      const [hours, minutes] = reuniao.startTime.split(':').map(Number);
-      const endDate = new Date();
-      endDate.setHours(hours, minutes, 0);
-      endDate.setMinutes(endDate.getMinutes() + (reuniao.duracao || 60));
-      const endDateTime = `${reuniao.meetingDate}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
-
-      const teamsPayload = {
-        action: isUpdate ? 'update' : 'create',
-        microsoftEventId: reuniao.microsoftEventId,
-        title: reuniao.title,
-        description: reuniao.description,
-        startDateTime,
-        endDateTime,
-        attendees: [
-          { email: (rawData.client as any)?.email, name: (rawData.client as any)?.trade_name || (rawData.client as any)?.corporate_name },
-          { email: (rawData.profile as any)?.email, name: (rawData.profile as any)?.full_name }
-        ]
-      };
-
-      console.group('[Teams Integration] Chamando Edge Function');
-      console.log('Payload:', teamsPayload);
-      console.groupEnd();
-
-      const { data, error: invokeError } = await supabase.functions.invoke('create-teams-meeting', {
-        body: teamsPayload
-      });
-
-      console.group('[Teams Integration] Resposta da Edge Function');
-      console.log('Data:', data);
-      console.log('Error:', invokeError);
-      console.groupEnd();
-
-      // Handle the new structured error format
-      if (invokeError || (data && !data.success)) {
-        const errorDetails = data?.details || invokeError?.message || 'Erro desconhecido';
-        const errorMsg = data?.error || 'Não foi possível gerar o link do Teams';
-        
-        console.error('[Teams Integration] Falha na Edge Function:', { errorMsg, errorDetails, data });
-
-        await supabase
-          .from('meetings')
-          .update({
-            teams_creation_status: 'failed',
-            teams_creation_error: `${errorMsg} (${errorDetails})`,
-            updated_at: new Date().toISOString(),
-            updated_by: user?.id
-          })
-          .eq('id', reuniao.id);
-
-        await supabase.from('meeting_status_history').insert({
-          meeting_id: reuniao.id,
-          action: 'teams_link_generation_failed',
-          new_status: reuniao.status,
-          changed_by: user?.id,
-          change_reason: `Falha ao gerar link do Teams: ${errorMsg}. Detalhes: ${errorDetails}`,
-          payload: data // Store the full error response for debugging
-        });
-
-        throw new Error(errorMsg);
-      }
-
-      if (data?.teamsJoinUrl) {
-        console.log('[Teams Integration] Sucesso ao obter link:', data.teamsJoinUrl);
-        const updatePayload = {
-          teams_join_url: data.teamsJoinUrl,
-          location_url: data.teamsJoinUrl,
-          meeting_url: data.teamsJoinUrl,
-          microsoft_event_id: data.microsoftEventId,
-          meeting_link_provider: 'teams',
-          teams_creation_status: 'created',
-          teams_creation_error: null,
-          updated_at: new Date().toISOString(),
-          updated_by: user?.id
-        };
-
-        const { error: dbError } = await supabase
-          .from('meetings')
-          .update(updatePayload)
-          .eq('id', reuniao.id);
-
-        if (dbError) throw dbError;
-
-        await supabase.from('meeting_status_history').insert({
-          meeting_id: reuniao.id,
-          action: isUpdate ? 'link_updated' : 'link_created',
-          new_status: reuniao.status,
-          changed_by: user?.id,
-          change_reason: 'Link do Microsoft Teams gerado com sucesso'
-        });
-
-        console.log('[Teams Integration] Supabase atualizado com sucesso');
-        toast({ title: 'Sucesso', description: 'Link do Teams gerado com sucesso.' });
-        fetchDetails();
-      } else {
-        throw new Error('Link do Teams não retornado na resposta.');
-      }
+      await syncMicrosoft.mutateAsync({ meetingId: reuniao.id });
+      toast({ title: 'Sucesso', description: 'Link do Teams gerado e sincronizado com sucesso.' });
+      fetchDetails();
+      if (onRefresh) onRefresh();
     } catch (err: any) {
-      console.error('[Teams Integration] Erro capturado no frontend:', err);
-      toast({ title: 'Falha ao gerar link do Teams', description: err.message || 'Erro desconhecido ao gerar link.', variant: 'destructive' });
+      console.error('[Teams Sync] Erro:', err);
+      toast({ title: 'Erro', description: err.message || 'Não foi possível gerar o link do Teams.', variant: 'destructive' });
     } finally {
       setGeneratingTeams(false);
     }
@@ -573,6 +459,14 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
           new_description: newDescription
         }
       });
+
+      if (reuniao.microsoftEventId) {
+        try {
+          await syncMicrosoft.mutateAsync({ meetingId: reuniao.id, action: 'update' });
+        } catch (syncErr) {
+          console.error('Failed to sync description update to Microsoft:', syncErr);
+        }
+      }
 
       toast({ title: 'Sucesso', description: 'Pauta atualizada com sucesso.' });
       setIsEditingDescription(false);
@@ -664,8 +558,8 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
                 <CheckCircle2 className="h-4 w-4" /> Marcar como Realizada
               </Button>
             )}
-            {joinLink && !['cancelada', 'cancelado'].includes(reuniao.status) && (
-              <Button onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+            {joinLink && ['agendada', 'reagendada', 'em_andamento', 'agendado', 'reagendado'].includes(reuniao.status) && (
+              <Button onClick={() => window.open(joinLink, '_blank', 'noopener,noreferrer')} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 px-6 font-bold shadow-lg">
                 <Play className="h-4 w-4" /> Entrar na Reunião
               </Button>
             )}
