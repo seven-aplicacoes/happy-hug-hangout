@@ -306,7 +306,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
             }
           });
 
-          if (response.data?.teamsJoinUrl) {
+          if (response.data?.success && response.data?.teamsJoinUrl) {
             payload.meetingUrl = response.data.teamsJoinUrl;
             payload.location = response.data.teamsJoinUrl;
             payload.locationUrl = response.data.teamsJoinUrl;
@@ -321,8 +321,9 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
               : 'Link do Microsoft Teams gerado com sucesso.';
 
           } else {
-            const errorMsg = response.error || response.data?.error || 'Link not generated';
-            throw new Error(errorMsg);
+            const errorMsg = response.data?.error || response.error || 'Não foi possível gerar o link do Teams';
+            const errorDetails = response.data?.details || '';
+            throw new Error(`${errorMsg}${errorDetails ? ` (${errorDetails})` : ''}`);
           }
         } catch (teamsError: any) {
           console.error('[Teams] Falha ao gerar link:', teamsError);
