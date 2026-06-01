@@ -119,7 +119,7 @@ export function useReunioes() {
           .from('contract_module_meetings')
           .update({
             status,
-            scheduled_meeting_id: reuniao.status === 'cancelada' ? null : meetingId,
+            scheduled_meeting_id: meetingId,
             scheduled_at: scheduledAt,
             consultant_id: reuniao.consultorId,
             completed_at: reuniao.status === 'realizada' ? new Date().toISOString() : null,
