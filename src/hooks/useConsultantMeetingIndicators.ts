@@ -54,7 +54,8 @@ export function useConsultantMeetingIndicators(consultantId: string | undefined,
 
     return {
       realizadas,
-      agendadas,
+      agendadas: scheduledFuture - realizadas, // Just an estimation
+
       previstas,
       saldo,
       aderencia,
