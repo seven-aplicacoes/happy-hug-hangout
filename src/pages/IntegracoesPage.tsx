@@ -38,9 +38,7 @@ const labelCategoria: Record<CategoriaIntegracao, string> = {
 
 const dotStatus: Record<StatusIntegracao, string> = {
   conectado: 'bg-emerald-500',
-  beta: 'bg-amber-500',
-  disponivel: 'bg-sky-500',
-  em_breve: 'bg-muted-foreground/40',
+  configuracao: 'bg-amber-500',
 };
 
 function fmtData(iso?: string) {
