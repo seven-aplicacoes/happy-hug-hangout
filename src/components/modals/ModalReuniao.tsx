@@ -57,7 +57,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseResponsibleId, setPhaseResponsibleId] = useState<string | null>(null);
-  const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual'>('teams');
+  const [meetingLinkMode, setMeetingLinkMode] = useState<'teams' | 'manual' | 'teams_manual'>('teams');
   const [manualMeetingUrl, setManualMeetingUrl] = useState('');
   const [isGeneratingTeamsLink, setIsGeneratingTeamsLink] = useState(false);
   const [teamsConnected, setTeamsConnected] = useState(false);
