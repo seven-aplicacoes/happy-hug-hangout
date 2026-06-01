@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useAutoMeetingStatus } from "@/hooks/useAutoMeetingStatus";
 
 import LoginPage from "@/pages/LoginPage";
 import SelecionarAmbientePage from "@/pages/SelecionarAmbientePage";
