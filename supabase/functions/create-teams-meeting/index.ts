@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   const startTimeStr = new Date().toISOString();
-  console.log(`[microsoft-sync] Function started at ${startTimeStr}`);
+  console.log(`[microsoft-sync] [TEAMS_LINK_START] Function started at ${startTimeStr}`);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -33,11 +33,13 @@ serve(async (req) => {
     }
 
     const { meetingId, action: requestedAction } = await req.json();
-    console.log(`[microsoft-sync] Action: ${requestedAction}, MeetingID: ${meetingId}`);
+    console.log(`[microsoft-sync] [TEAMS_LINK_START] Action: ${requestedAction}, MeetingID: ${meetingId}`);
 
     if (!meetingId) {
-      return new Response(JSON.stringify({ success: false, error: 'meetingId é obrigatório.' }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ success: false, error: 'meetingId é obrigatório.', message: 'ID da reunião não fornecido.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    console.log(`[microsoft-sync] [TEAMS_LINK_FETCH_MEETING_START] Fetching meeting data for: ${meetingId}`);
 
     // 1. Fetch meeting data with client and consultant info
     const { data: meeting, error: meetingError } = await supabase
@@ -51,8 +53,44 @@ serve(async (req) => {
       .single();
 
     if (meetingError || !meeting) {
-      console.error('[microsoft-sync] Error fetching meeting:', meetingError);
-      return new Response(JSON.stringify({ success: false, error: 'Reunião não encontrada.' }), { status: 404, headers: corsHeaders });
+      console.error('[microsoft-sync] [TEAMS_LINK_ERROR] Meeting not found:', meetingError);
+      return new Response(JSON.stringify({ success: false, error: 'Reunião não encontrada.', message: 'A reunião solicitada não existe no banco de dados.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    console.log(`[microsoft-sync] [TEAMS_LINK_MEETING_DATA]`, {
+      meetingId: meeting.id,
+      clientId: meeting.client_id,
+      consultantId: meeting.consultant_id,
+      startTime: meeting.start_time,
+      endTime: meeting.end_time, // Verificando se existe
+      status: meeting.status,
+      existingMicrosoftEventId: meeting.microsoft_event_id,
+      existingTeamsJoinUrl: meeting.teams_join_url
+    });
+
+    console.log(`[microsoft-sync] [TEAMS_LINK_VALIDATE_DATA]`);
+    
+    if (!meeting.client?.email) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error_code: "CLIENT_EMAIL_MISSING",
+        message: "O cliente não possui e-mail cadastrado. Cadastre um e-mail antes de gerar o link do Teams." 
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!meeting.consultant?.email) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error_code: "CONSULTANT_EMAIL_MISSING",
+        message: "O consultor responsável não possui e-mail cadastrado. Verifique o cadastro do consultor." 
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!meeting.meeting_date || !meeting.start_time) {
+       return new Response(JSON.stringify({ 
+        success: false, 
+        message: "A reunião precisa de data e hora de início para gerar o link." 
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const action = requestedAction || (meeting.microsoft_event_id ? 'update' : 'create');
@@ -123,6 +161,7 @@ serve(async (req) => {
       body = { comment: meeting.cancel_reason || 'Cancelado via portal.' };
     }
 
+    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_PAYLOAD]`, JSON.stringify(body, null, 2));
     console.log(`[microsoft-sync] Calling Graph: ${method} ${graphUrl}`);
     
     // Log the attempt
@@ -144,7 +183,8 @@ serve(async (req) => {
     let responseData: any = {};
     try { responseData = JSON.parse(responseText); } catch (e) { responseData = { raw: responseText }; }
 
-    console.log(`[microsoft-sync] Graph response status: ${responseStatus}`);
+    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_RESPONSE_STATUS] ${responseStatus}`);
+    console.log(`[microsoft-sync] [TEAMS_LINK_GRAPH_RESPONSE_BODY] ${responseText.slice(0, 500)}...`);
 
     const success = response.ok || responseStatus === 204;
 
@@ -182,7 +222,8 @@ serve(async (req) => {
         }
       }
 
-      await supabase.from('meetings').update(updates).eq('id', meetingId);
+      const { data: updateResult, error: updateError } = await supabase.from('meetings').update(updates).eq('id', meetingId).select();
+      console.log(`[microsoft-sync] [TEAMS_LINK_SAVE_RESULT]`, updateError ? updateError : "Sucesso ao salvar no banco");
 
       return new Response(JSON.stringify({ 
         success: true, 
@@ -204,7 +245,11 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('[microsoft-sync] Global error:', error);
-    return new Response(JSON.stringify({ success: false, error: error.message }), { headers: corsHeaders, status: 500 });
+    console.error('[microsoft-sync] [TEAMS_LINK_ERROR]', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error_code: "INTERNAL_SERVER_ERROR",
+      message: error.message || 'Erro inesperado na Edge Function.' 
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
   }
 })
