@@ -35,7 +35,7 @@ const variantBg: Record<StatusVariant, string> = {
 
 // Auto-map common statuses to variants
 const autoVariant = (label: string): StatusVariant => {
-  const l = label.toLowerCase().trim();
+  const l = String(label ?? '').toLowerCase().trim();
   if (['ativo', 'concluída', 'concluida', 'realizada', 'resolvido', 'baixo', 'em dia', 'renovado'].includes(l)) return 'success';
   if (['em risco', 'médio', 'medio', 'em andamento', 'remarcada', 'alerta', 'atenção', 'atencao', 'em renovação', 'em renovacao', 'suspenso'].includes(l)) return 'warning';
   if (['crítico', 'critico', 'alto', 'impedida', 'cancelada', 'pausado', 'bloqueado', 'com impedimento', 'churn'].includes(l)) return 'danger';
@@ -48,8 +48,8 @@ export const StatusTag = ({ label, variant, className }: StatusTagProps) => {
   const v = variant || autoVariant(label);
   
   // Custom display mapping
-  let displayLabel = label;
-  const lowerLabel = label.toLowerCase().trim();
+  let displayLabel = label ?? '';
+  const lowerLabel = String(label ?? '').toLowerCase().trim();
   if (['realizada', 'realizado', 'concluida', 'concluido', 'completed', 'done'].includes(lowerLabel)) {
     displayLabel = 'Concluído';
   } else if (['agendada', 'agendado'].includes(lowerLabel)) {
