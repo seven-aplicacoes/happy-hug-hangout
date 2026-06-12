@@ -48,8 +48,8 @@ export const StatusTag = ({ label, variant, className }: StatusTagProps) => {
   const v = variant || autoVariant(label);
   
   // Custom display mapping
-  let displayLabel = label;
-  const lowerLabel = label.toLowerCase().trim();
+  let displayLabel = label ?? '';
+  const lowerLabel = String(label ?? '').toLowerCase().trim();
   if (['realizada', 'realizado', 'concluida', 'concluido', 'completed', 'done'].includes(lowerLabel)) {
     displayLabel = 'Concluído';
   } else if (['agendada', 'agendado'].includes(lowerLabel)) {
