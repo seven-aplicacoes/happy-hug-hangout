@@ -20,7 +20,7 @@ import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { cn } from '@/lib/utils';
 import type { Reuniao } from '@/types';
 
-const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const normalize = (s?: string | null) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 const DIAS_POR_PAGINA = 10;
 
