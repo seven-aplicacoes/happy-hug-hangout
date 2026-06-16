@@ -28,6 +28,11 @@ export default function NovoClientePage() {
   const isAdmin = perfil === 'admin';
   const basePath = isAdmin ? '/admin' : '/consultor';
 
+  const OBJETIVO_MAX = 300;
+  const BRIEFING_MAX = 500;
+  const ITEM_MAX_CHARS = 80;
+  const LIST_MAX_ITEMS = 5;
+
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({
     razaoSocial: '', nomeFantasia: '', cnpj: '', regiao: 'sudeste',
@@ -36,8 +41,13 @@ export default function NovoClientePage() {
     cep: '', street: '', number: '', complement: '', neighborhood: '',
     institutional_email: '',
     contact_name: '', contact_phone: '',
+    current_objective: '', briefing: '',
     liberarPortal: false, emailPortal: '', senhaPortal: '',
   });
+  const [pains, setPains] = useState<string[]>([]);
+  const [successFactors, setSuccessFactors] = useState<string[]>([]);
+  const [newPain, setNewPain] = useState('');
+  const [newFactor, setNewFactor] = useState('');
 
   useEffect(() => {
     if (!isAdmin && user?.id) {
