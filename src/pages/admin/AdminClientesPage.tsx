@@ -5,6 +5,7 @@ import { FilterBar, FilterConfig } from '@/components/FilterBar';
 import { DataTable, Column } from '@/components/DataTable';
 import { StatusTag } from '@/components/StatusTag';
 import { useClientes } from '@/hooks/useClientes';
+import { matchesClienteSearch } from '@/lib/searchClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ModalNovoCliente } from '@/components/modals/ModalNovoCliente';
@@ -79,14 +80,8 @@ export default function AdminClientesPage() {
   const data = useMemo(() => {
     if (!clientes) return [];
     let d = [...clientes];
-    const q = search.toLowerCase();
-    
-    if (q) {
-      d = d.filter(c => 
-        (c.nomeFantasia || '').toLowerCase().includes(q) || 
-        (c.razaoSocial || '').toLowerCase().includes(q) ||
-        (c.cnpj || '').toLowerCase().includes(q)
-      );
+    if (search.trim()) {
+      d = d.filter(c => matchesClienteSearch(c, search));
     }
     
     if (filters.status && filters.status !== 'todos') {
@@ -245,7 +240,7 @@ export default function AdminClientesPage() {
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Buscar por nome, razão social ou CNPJ..."
+        searchPlaceholder="Buscar por nome fantasia, razão social, CNPJ ou responsável..."
         filters={filterConfigs}
         filterValues={filters}
         onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
@@ -256,6 +251,7 @@ export default function AdminClientesPage() {
         data={data} 
         columns={columns} 
         onRowClick={(c) => navigate(`/admin/cliente/${c.id}`)} 
+        emptyMessage="Nenhum cliente encontrado para essa busca. Revise o termo digitado ou limpe os filtros aplicados."
       />
 
       

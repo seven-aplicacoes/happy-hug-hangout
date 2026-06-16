@@ -64,6 +64,8 @@ export function useClientes() {
         briefing: c.briefing,
         avatar_url: c.avatar_url,
         avatar_path: c.avatar_path,
+        contact_name: c.contact_name,
+        contact_phone: c.contact_phone,
       })) as Cliente[];
 
     },

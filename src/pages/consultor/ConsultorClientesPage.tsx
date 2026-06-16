@@ -23,6 +23,7 @@ import { Plus, Target, Loader2, Trash2 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import type { Cliente, FaseMetodologica, Contrato } from '@/types';
 import { useClientes } from '@/hooks/useClientes';
+import { matchesClienteSearch } from '@/lib/searchClientes';
 
 import { useContratos } from '@/hooks/useContratos';
 import { useReunioes } from '@/hooks/useReunioes';
@@ -123,8 +124,7 @@ export default function ConsultorClientesPage() {
 
   const data = useMemo(() => {
     let d = [...meusClientes];
-    const q = normalize(search);
-    if (q) d = d.filter(c => normalize(c.nomeFantasia).includes(q) || normalize(c.razaoSocial).includes(q));
+    if (search.trim()) d = d.filter(c => matchesClienteSearch(c, search));
     if (filters.status && filters.status !== 'todos') d = d.filter(c => c.status === filters.status);
     if (filters.porte && filters.porte !== 'todos') d = d.filter(c => getPorte(c) === filters.porte);
 
@@ -302,7 +302,7 @@ export default function ConsultorClientesPage() {
       <div className="space-y-3">
         <FilterBar
           searchValue={search} onSearchChange={setSearch}
-          searchPlaceholder="Buscar cliente..."
+          searchPlaceholder="Buscar por nome fantasia, razão social, CNPJ ou responsável..."
           filters={filterConfigs} filterValues={filters}
           onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
           dateRange={{ key: 'dataInicio', label: 'Início' }}
@@ -332,7 +332,7 @@ export default function ConsultorClientesPage() {
           ))}
         </div>
       </div>
-      <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} />
+      <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} emptyMessage="Nenhum cliente encontrado para essa busca. Revise o termo digitado ou limpe os filtros aplicados." />
       
       <AlertDialog open={!!clienteToDelete} onOpenChange={(open) => !open && setClienteToDelete(null)}>
         <AlertDialogContent>
