@@ -240,7 +240,7 @@ export default function AdminClientesPage() {
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Buscar por nome, razão social ou CNPJ..."
+        searchPlaceholder="Buscar por nome fantasia, razão social, CNPJ ou responsável..."
         filters={filterConfigs}
         filterValues={filters}
         onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
