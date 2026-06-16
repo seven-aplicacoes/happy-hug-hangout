@@ -117,28 +117,47 @@ Deno.serve(async (req) => {
     }
 
     const d = await resp.json();
-    const uf = (d.uf || '').toUpperCase();
-    const ddd = d.ddd_telefone_1 || '';
-    const ddd2 = d.ddd_telefone_2 || '';
-    const telefone = ddd || ddd2 || '';
+
+    // Try ReceitaWS as enrichment when key fields are missing (email, logradouro, numero, etc.)
+    let r: any = {};
+    try {
+      const rwResp = await fetch(`https://receitaws.com.br/v1/cnpj/${clean}`, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'lovable-app/1.0' },
+      });
+      if (rwResp.ok) {
+        const rwData = await rwResp.json();
+        if (rwData && rwData.status !== 'ERROR') r = rwData;
+      } else {
+        await rwResp.text().catch(() => {});
+      }
+    } catch (e) {
+      console.error('ReceitaWS enrich failed', e);
+    }
+
+    const uf = (d.uf || r.uf || '').toUpperCase();
+    const telefone =
+      d.ddd_telefone_1 || d.ddd_telefone_2 || r.telefone || '';
+    const logradouroFull =
+      [d.descricao_tipo_de_logradouro, d.logradouro].filter(Boolean).join(' ').trim()
+      || r.logradouro || '';
 
     const payload = {
       cnpj: maskCNPJ(clean),
-      razao_social: d.razao_social || '',
-      nome_fantasia: d.nome_fantasia || d.razao_social || '',
-      email: d.email || '',
+      razao_social: d.razao_social || r.nome || '',
+      nome_fantasia: d.nome_fantasia || r.fantasia || d.razao_social || r.nome || '',
+      email: d.email || r.email || '',
       telefone,
-      cep: maskCEP(d.cep || ''),
-      logradouro: [d.descricao_tipo_de_logradouro, d.logradouro].filter(Boolean).join(' ').trim(),
-      numero: d.numero || '',
-      complemento: d.complemento || '',
-      bairro: d.bairro || '',
-      cidade: d.municipio || '',
+      cep: maskCEP(d.cep || r.cep || ''),
+      logradouro: logradouroFull,
+      numero: d.numero || r.numero || '',
+      complemento: d.complemento || r.complemento || '',
+      bairro: d.bairro || r.bairro || '',
+      cidade: d.municipio || r.municipio || '',
       estado: uf,
       regiao: REGIAO_BY_UF[uf] || '',
-      porte: mapPorte(d.porte),
-      atividade_principal: d.cnae_fiscal_descricao || '',
-      situacao: d.descricao_situacao_cadastral || '',
+      porte: mapPorte(d.porte || r.porte),
+      atividade_principal: d.cnae_fiscal_descricao || (r.atividade_principal?.[0]?.text) || '',
+      situacao: d.descricao_situacao_cadastral || r.situacao || '',
     };
 
     return new Response(JSON.stringify(payload), {
