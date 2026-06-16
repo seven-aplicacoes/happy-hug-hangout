@@ -8,13 +8,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useContratos } from '@/hooks/useContratos';
-import { Loader2, Shield, MapPin, ArrowLeft, Save, X, Plus, Trash2, Target } from 'lucide-react';
+import { Loader2, Shield, MapPin, ArrowLeft, Save, X, Plus, Trash2, Target, Search, Building2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+const REGIAO_BY_UF: Record<string, string> = {
+  AC: 'norte', AP: 'norte', AM: 'norte', PA: 'norte', RO: 'norte', RR: 'norte', TO: 'norte',
+  AL: 'nordeste', BA: 'nordeste', CE: 'nordeste', MA: 'nordeste', PB: 'nordeste', PE: 'nordeste', PI: 'nordeste', RN: 'nordeste', SE: 'nordeste',
+  DF: 'centro_oeste', GO: 'centro_oeste', MT: 'centro_oeste', MS: 'centro_oeste',
+  ES: 'sudeste', MG: 'sudeste', RJ: 'sudeste', SP: 'sudeste',
+  PR: 'sul', RS: 'sul', SC: 'sul',
+};
+
+function maskCnpj(val: string) {
+  return val.replace(/\D/g, '').slice(0, 14)
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+}
+
+function isValidCNPJ(cnpj: string): boolean {
+  const c = cnpj.replace(/\D/g, '');
+  if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
+  const calc = (base: string, weights: number[]) => {
+    const sum = base.split('').reduce((a, n, i) => a + parseInt(n) * weights[i], 0);
+    const mod = sum % 11;
+    return mod < 2 ? 0 : 11 - mod;
+  };
+  const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const w2 = [6, ...w1];
+  return calc(c.slice(0, 12), w1) === parseInt(c[12]) && calc(c.slice(0, 13), w2) === parseInt(c[13]);
+}
 
 export default function NovoClientePage() {
   const navigate = useNavigate();
