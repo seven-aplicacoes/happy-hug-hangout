@@ -136,7 +136,7 @@ export default function ConsultorDashboardPage() {
     const metricas = calcularMetricasConsultor(consultorId, periodo, reunioes, clientes, csatSurveys, npsSurveys);
 
     return {
-      meusClientes, reunioesHoje, minhasTarefas, tarefasPrioritarias, criticos,
+      meusClientes, minhasTarefas, tarefasPrioritarias, criticos,
       atencao, emDia, contratosEncerrando, upsell, alertasContrato, proximasReunioes,
       metricas
     };
