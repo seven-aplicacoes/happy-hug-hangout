@@ -188,10 +188,15 @@ export default function ConsultorClientesPage() {
               </div>
             </TooltipTrigger>
 
-            <TooltipContent side="right" className="max-w-[340px] text-xs space-y-2">
+            <TooltipContent
+              side="right"
+              className="text-xs space-y-2 w-[min(520px,calc(100vw-32px))] max-w-[min(520px,calc(100vw-32px))]"
+            >
               <div>
                 <p className="ui-overline">Briefing</p>
-                <p className="whitespace-pre-wrap break-words">{briefingShort || 'Não informado'}</p>
+                <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
+                  {briefingFull || 'Não informado'}
+                </p>
               </div>
               <div>
                 <p className="ui-overline">Principais dores</p>
