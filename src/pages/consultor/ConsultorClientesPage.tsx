@@ -302,7 +302,7 @@ export default function ConsultorClientesPage() {
       <div className="space-y-3">
         <FilterBar
           searchValue={search} onSearchChange={setSearch}
-          searchPlaceholder="Buscar cliente..."
+          searchPlaceholder="Buscar por nome fantasia, razão social, CNPJ ou responsável..."
           filters={filterConfigs} filterValues={filters}
           onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
           dateRange={{ key: 'dataInicio', label: 'Início' }}
