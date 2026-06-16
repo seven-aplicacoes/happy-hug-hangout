@@ -160,7 +160,6 @@ export default function ConsultorClientesPage() {
     { key: 'nome', header: 'Cliente', render: (c) => {
       const ctx = getClienteContexto(c);
       const briefingFull = ctx.briefing?.trim() || '';
-      const briefingShort = briefingFull.length > 250 ? briefingFull.slice(0, 250) + '…' : briefingFull;
       const objetivoShort = (ctx.objetivoAtual || '').length > 80
         ? (ctx.objetivoAtual || '').slice(0, 80) + '…'
         : (ctx.objetivoAtual || '');
