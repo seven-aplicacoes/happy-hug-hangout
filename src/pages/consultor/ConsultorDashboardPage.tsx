@@ -67,6 +67,7 @@ export default function ConsultorDashboardPage() {
   const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
     isOpen: false, title: '', type: null 
   });
+  const [tarefaDetalhe, setTarefaDetalhe] = useState<Tarefa | null>(null);
 
   useEffect(() => {
     if (!loadingPermissions && !can('dashboard') && Array.isArray(permissions)) {
