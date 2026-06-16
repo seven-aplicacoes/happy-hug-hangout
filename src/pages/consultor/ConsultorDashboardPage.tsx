@@ -209,7 +209,7 @@ export default function ConsultorDashboardPage() {
   if (!stats) return null;
 
   const {
-    meusClientes, reunioesHoje, minhasTarefas, tarefasPrioritarias, criticos,
+    meusClientes, minhasTarefas, tarefasPrioritarias, criticos,
     atencao, emDia, contratosEncerrando, upsell, alertasContrato, proximasReunioes,
     metricas
   } = stats;
