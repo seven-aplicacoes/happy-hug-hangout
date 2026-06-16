@@ -55,13 +55,62 @@ Deno.serve(async (req) => {
       });
     }
 
-    const resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${clean}`);
+    let resp: Response;
+    try {
+      resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${clean}`, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'lovable-app/1.0' },
+      });
+    } catch (e) {
+      console.error('BrasilAPI fetch threw:', e);
+      return new Response(JSON.stringify({ error: 'Não foi possível consultar o CNPJ agora.' }), {
+        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (resp.status === 404) {
+      await resp.text().catch(() => {});
       return new Response(JSON.stringify({ error: 'CNPJ não encontrado' }), {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
     if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      console.error('BrasilAPI non-OK', resp.status, body?.slice(0, 300));
+      // Fallback: try minhareceita.org
+      try {
+        const r2 = await fetch(`https://minhareceita.org/${clean}`, {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (r2.ok) {
+          const m = await r2.json();
+          const uf = (m.uf || '').toUpperCase();
+          const payload = {
+            cnpj: maskCNPJ(clean),
+            razao_social: m.razao_social || '',
+            nome_fantasia: m.nome_fantasia || m.razao_social || '',
+            email: m.email || '',
+            telefone: m.ddd_telefone_1 || m.ddd_telefone_2 || '',
+            cep: maskCEP(m.cep || ''),
+            logradouro: [m.descricao_tipo_de_logradouro, m.logradouro].filter(Boolean).join(' ').trim(),
+            numero: m.numero || '',
+            complemento: m.complemento || '',
+            bairro: m.bairro || '',
+            cidade: m.municipio || '',
+            estado: uf,
+            regiao: REGIAO_BY_UF[uf] || '',
+            porte: mapPorte(m.porte),
+            atividade_principal: m.cnae_fiscal_descricao || '',
+            situacao: m.descricao_situacao_cadastral || '',
+          };
+          return new Response(JSON.stringify(payload), {
+            status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        await r2.text().catch(() => {});
+      } catch (e) {
+        console.error('minhareceita fallback failed', e);
+      }
       return new Response(JSON.stringify({ error: 'Não foi possível consultar o CNPJ agora.' }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
