@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useContratos } from '@/hooks/useContratos';
-import { Loader2, Shield, MapPin, ArrowLeft, Save, X } from 'lucide-react';
+import { Loader2, Shield, MapPin, ArrowLeft, Save, X, Plus, Trash2, Target } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
