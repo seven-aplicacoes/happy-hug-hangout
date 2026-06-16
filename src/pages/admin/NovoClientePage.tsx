@@ -571,6 +571,29 @@ export default function NovoClientePage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={confirmOverwriteOpen} onOpenChange={setConfirmOverwriteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Substituir dados existentes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alguns campos já foram preenchidos. Deseja substituir pelas informações encontradas no CNPJ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              if (pendingLookup) applyLookup(pendingLookup, false);
+              setPendingLookup(null);
+              setCnpjMessage({ type: 'success', text: 'Campos vazios foram preenchidos. Dados existentes foram mantidos.' });
+            }}>Manter dados atuais</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (pendingLookup) applyLookup(pendingLookup, true);
+              setPendingLookup(null);
+              setCnpjMessage({ type: 'success', text: 'Dados encontrados e preenchidos automaticamente.' });
+            }}>Substituir dados</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
