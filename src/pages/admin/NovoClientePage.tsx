@@ -8,13 +8,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useContratos } from '@/hooks/useContratos';
-import { Loader2, Shield, MapPin, ArrowLeft, Save, X, Plus, Trash2, Target } from 'lucide-react';
+import { Loader2, Shield, MapPin, ArrowLeft, Save, X, Plus, Trash2, Target, Search, Building2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+const REGIAO_BY_UF: Record<string, string> = {
+  AC: 'norte', AP: 'norte', AM: 'norte', PA: 'norte', RO: 'norte', RR: 'norte', TO: 'norte',
+  AL: 'nordeste', BA: 'nordeste', CE: 'nordeste', MA: 'nordeste', PB: 'nordeste', PE: 'nordeste', PI: 'nordeste', RN: 'nordeste', SE: 'nordeste',
+  DF: 'centro_oeste', GO: 'centro_oeste', MT: 'centro_oeste', MS: 'centro_oeste',
+  ES: 'sudeste', MG: 'sudeste', RJ: 'sudeste', SP: 'sudeste',
+  PR: 'sul', RS: 'sul', SC: 'sul',
+};
+
+function maskCnpj(val: string) {
+  return val.replace(/\D/g, '').slice(0, 14)
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+}
+
+function isValidCNPJ(cnpj: string): boolean {
+  const c = cnpj.replace(/\D/g, '');
+  if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
+  const calc = (base: string, weights: number[]) => {
+    const sum = base.split('').reduce((a, n, i) => a + parseInt(n) * weights[i], 0);
+    const mod = sum % 11;
+    return mod < 2 ? 0 : 11 - mod;
+  };
+  const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const w2 = [6, ...w1];
+  return calc(c.slice(0, 12), w1) === parseInt(c[12]) && calc(c.slice(0, 13), w2) === parseInt(c[13]);
+}
 
 export default function NovoClientePage() {
   const navigate = useNavigate();
@@ -49,6 +82,11 @@ export default function NovoClientePage() {
   const [newPain, setNewPain] = useState('');
   const [newFactor, setNewFactor] = useState('');
 
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjMessage, setCnpjMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [pendingLookup, setPendingLookup] = useState<any>(null);
+  const [confirmOverwriteOpen, setConfirmOverwriteOpen] = useState(false);
+
   useEffect(() => {
     if (!isAdmin && user?.id) {
       setForm(prev => ({ ...prev, consultorId: user.id }));
@@ -56,6 +94,69 @@ export default function NovoClientePage() {
   }, [isAdmin, user]);
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const applyLookup = (data: any, overwrite: boolean) => {
+    setForm(prev => {
+      const pick = (cur: string, next: string) => {
+        if (!next) return cur;
+        if (!cur || cur.trim() === '') return next;
+        return overwrite ? next : cur;
+      };
+      return {
+        ...prev,
+        cnpj: data.cnpj || prev.cnpj,
+        razaoSocial: pick(prev.razaoSocial, data.razao_social),
+        nomeFantasia: pick(prev.nomeFantasia, data.nome_fantasia),
+        institutional_email: pick(prev.institutional_email, data.email),
+        contact_phone: pick(prev.contact_phone, data.telefone),
+        porte: pick(prev.porte, data.porte) as any,
+        cep: pick(prev.cep, data.cep),
+        street: pick(prev.street, data.logradouro),
+        number: pick(prev.number, data.numero),
+        complement: pick(prev.complement, data.complemento),
+        neighborhood: pick(prev.neighborhood, data.bairro),
+        regiao: pick(prev.regiao, data.regiao) || prev.regiao,
+      };
+    });
+  };
+
+  const handleBuscarCnpj = async () => {
+    setCnpjMessage(null);
+    const clean = form.cnpj.replace(/\D/g, '');
+    if (clean.length !== 14 || !isValidCNPJ(clean)) {
+      setCnpjMessage({ type: 'error', text: 'Digite um CNPJ válido.' });
+      return;
+    }
+    setCnpjLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lookup-cnpj', { body: { cnpj: clean } });
+      if (error || !data || (data as any).error) {
+        const msg = (data as any)?.error === 'CNPJ não encontrado'
+          ? 'CNPJ não encontrado.'
+          : 'Não foi possível buscar os dados deste CNPJ. Preencha manualmente ou tente novamente.';
+        setCnpjMessage({ type: 'error', text: msg });
+        return;
+      }
+      const lookup = data as any;
+      const camposComDados = [
+        form.razaoSocial, form.nomeFantasia, form.institutional_email,
+        form.contact_phone, form.cep, form.street, form.number,
+        form.complement, form.neighborhood,
+      ].some(v => (v || '').trim() !== '');
+
+      if (camposComDados) {
+        setPendingLookup(lookup);
+        setConfirmOverwriteOpen(true);
+      } else {
+        applyLookup(lookup, true);
+        setCnpjMessage({ type: 'success', text: 'Dados encontrados e preenchidos automaticamente.' });
+      }
+    } catch (_err) {
+      setCnpjMessage({ type: 'error', text: 'Não foi possível consultar o CNPJ agora. Tente novamente ou preencha os dados manualmente.' });
+    } finally {
+      setCnpjLoading(false);
+    }
+  };
 
   const addItem = (list: string[], setList: (l: string[]) => void, value: string, reset: () => void, label: string) => {
     const v = value.trim();
@@ -83,8 +184,8 @@ export default function NovoClientePage() {
       return;
     }
     const cleanCnpj = form.cnpj.replace(/\D/g, '');
-    if (cleanCnpj.length !== 14) {
-      toast({ title: "CNPJ inválido", description: "O CNPJ deve conter 14 dígitos.", variant: "destructive" });
+    if (cleanCnpj.length !== 14 || !isValidCNPJ(cleanCnpj)) {
+      toast({ title: "CNPJ inválido", description: "Digite um CNPJ válido.", variant: "destructive" });
       return;
     }
     if (!form.consultorId) {
@@ -94,6 +195,24 @@ export default function NovoClientePage() {
 
     setIsLoading(true);
     try {
+      // Duplicate CNPJ check (with or without mask)
+      const masked = maskCnpj(cleanCnpj);
+      const { data: existing } = await supabase
+        .from('clients')
+        .select('id')
+        .or(`cnpj.eq.${cleanCnpj},cnpj.eq.${masked}`)
+        .is('deleted_at', null)
+        .limit(1)
+        .maybeSingle();
+      if (existing) {
+        toast({
+          title: 'Cliente já cadastrado',
+          description: 'Já existe um cliente com este CNPJ. Verifique a listagem antes de criar um novo cadastro.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
       const result = await upsertCliente.mutateAsync({
         razaoSocial: form.razaoSocial,
         nomeFantasia: form.nomeFantasia,
@@ -177,6 +296,42 @@ export default function NovoClientePage() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
+              <CardTitle className="text-sm font-semibold text-primary/80 uppercase tracking-wider flex items-center gap-2">
+                <Building2 className="h-4 w-4" /> Identificação da empresa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+                <div className="space-y-2">
+                  <Label>CNPJ *</Label>
+                  <Input
+                    value={form.cnpj}
+                    onChange={e => { setCnpjMessage(null); set('cnpj', maskCnpj(e.target.value)); }}
+                    onPaste={e => {
+                      e.preventDefault();
+                      const txt = e.clipboardData.getData('text');
+                      setCnpjMessage(null);
+                      set('cnpj', maskCnpj(txt));
+                    }}
+                    placeholder="00.000.000/0000-00"
+                    inputMode="numeric"
+                  />
+                </div>
+                <Button type="button" onClick={handleBuscarCnpj} disabled={cnpjLoading} className="gap-2">
+                  {cnpjLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {cnpjLoading ? 'Buscando...' : 'Buscar dados'}
+                </Button>
+              </div>
+              {cnpjMessage && (
+                <p className={`text-xs ${cnpjMessage.type === 'success' ? 'text-emerald-600' : cnpjMessage.type === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {cnpjMessage.text}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-sm font-semibold text-primary/80 uppercase tracking-wider">Dados Básicos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -184,28 +339,11 @@ export default function NovoClientePage() {
                 <Label>Razão Social *</Label>
                 <Input value={form.razaoSocial} onChange={e => set('razaoSocial', e.target.value)} placeholder="Razão social completa" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Nome Fantasia *</Label>
-                  <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" />
-                </div>
-                <div className="space-y-2">
-                  <Label>CNPJ *</Label>
-                  <Input 
-                    value={form.cnpj} 
-                    onChange={e => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 14);
-                      const masked = val
-                        .replace(/^(\d{2})(\d)/, '$1.$2')
-                        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-                        .replace(/\.(\d{3})(\d)/, '.$1/$2')
-                        .replace(/(\d{4})(\d)/, '$1-$2');
-                      set('cnpj', masked);
-                    }} 
-                    placeholder="00.000.000/0001-00" 
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Nome Fantasia *</Label>
+                <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" />
               </div>
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -433,6 +571,29 @@ export default function NovoClientePage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={confirmOverwriteOpen} onOpenChange={setConfirmOverwriteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Substituir dados existentes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alguns campos já foram preenchidos. Deseja substituir pelas informações encontradas no CNPJ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              if (pendingLookup) applyLookup(pendingLookup, false);
+              setPendingLookup(null);
+              setCnpjMessage({ type: 'success', text: 'Campos vazios foram preenchidos. Dados existentes foram mantidos.' });
+            }}>Manter dados atuais</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (pendingLookup) applyLookup(pendingLookup, true);
+              setPendingLookup(null);
+              setCnpjMessage({ type: 'success', text: 'Dados encontrados e preenchidos automaticamente.' });
+            }}>Substituir dados</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

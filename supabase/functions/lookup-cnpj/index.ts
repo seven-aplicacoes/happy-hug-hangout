@@ -1,0 +1,103 @@
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+
+const REGIAO_BY_UF: Record<string, string> = {
+  AC: 'norte', AP: 'norte', AM: 'norte', PA: 'norte', RO: 'norte', RR: 'norte', TO: 'norte',
+  AL: 'nordeste', BA: 'nordeste', CE: 'nordeste', MA: 'nordeste', PB: 'nordeste', PE: 'nordeste', PI: 'nordeste', RN: 'nordeste', SE: 'nordeste',
+  DF: 'centro_oeste', GO: 'centro_oeste', MT: 'centro_oeste', MS: 'centro_oeste',
+  ES: 'sudeste', MG: 'sudeste', RJ: 'sudeste', SP: 'sudeste',
+  PR: 'sul', RS: 'sul', SC: 'sul',
+};
+
+function isValidCNPJ(cnpj: string): boolean {
+  if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
+  const calc = (base: string, weights: number[]) => {
+    const sum = base.split('').reduce((acc, n, i) => acc + parseInt(n) * weights[i], 0);
+    const mod = sum % 11;
+    return mod < 2 ? 0 : 11 - mod;
+  };
+  const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const w2 = [6, ...w1];
+  const d1 = calc(cnpj.slice(0, 12), w1);
+  const d2 = calc(cnpj.slice(0, 13), w2);
+  return d1 === parseInt(cnpj[12]) && d2 === parseInt(cnpj[13]);
+}
+
+function maskCNPJ(c: string): string {
+  return c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+}
+
+function maskCEP(c: string): string {
+  const d = (c || '').replace(/\D/g, '');
+  return d.length === 8 ? d.replace(/^(\d{5})(\d{3})$/, '$1-$2') : (c || '');
+}
+
+function mapPorte(p: string | undefined): string {
+  if (!p) return '';
+  const up = p.toUpperCase();
+  if (up.includes('MEI') || up.includes('MICRO EMPRESARIO INDIVIDUAL')) return 'MEI';
+  if (up.includes('MICRO')) return 'Micro';
+  if (up.includes('PEQUEN')) return 'Pequena';
+  if (up.includes('MEDI') || up.includes('MÉDI')) return 'Média';
+  if (up.includes('DEMAIS') || up.includes('GRANDE')) return 'Grande';
+  return '';
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  try {
+    const { cnpj } = await req.json().catch(() => ({ cnpj: '' }));
+    const clean = String(cnpj || '').replace(/\D/g, '');
+
+    if (clean.length !== 14 || !isValidCNPJ(clean)) {
+      return new Response(JSON.stringify({ error: 'CNPJ inválido' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${clean}`);
+    if (resp.status === 404) {
+      return new Response(JSON.stringify({ error: 'CNPJ não encontrado' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (!resp.ok) {
+      return new Response(JSON.stringify({ error: 'Não foi possível consultar o CNPJ agora.' }), {
+        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const d = await resp.json();
+    const uf = (d.uf || '').toUpperCase();
+    const ddd = d.ddd_telefone_1 || '';
+    const ddd2 = d.ddd_telefone_2 || '';
+    const telefone = ddd || ddd2 || '';
+
+    const payload = {
+      cnpj: maskCNPJ(clean),
+      razao_social: d.razao_social || '',
+      nome_fantasia: d.nome_fantasia || d.razao_social || '',
+      email: d.email || '',
+      telefone,
+      cep: maskCEP(d.cep || ''),
+      logradouro: [d.descricao_tipo_de_logradouro, d.logradouro].filter(Boolean).join(' ').trim(),
+      numero: d.numero || '',
+      complemento: d.complemento || '',
+      bairro: d.bairro || '',
+      cidade: d.municipio || '',
+      estado: uf,
+      regiao: REGIAO_BY_UF[uf] || '',
+      porte: mapPorte(d.porte),
+      atividade_principal: d.cnae_fiscal_descricao || '',
+      situacao: d.descricao_situacao_cadastral || '',
+    };
+
+    return new Response(JSON.stringify(payload), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (_e) {
+    return new Response(JSON.stringify({ error: 'Não foi possível consultar o CNPJ agora.' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
