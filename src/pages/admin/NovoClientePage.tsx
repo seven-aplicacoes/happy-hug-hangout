@@ -57,6 +57,22 @@ export default function NovoClientePage() {
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
 
+  const addItem = (list: string[], setList: (l: string[]) => void, value: string, reset: () => void, label: string) => {
+    const v = value.trim();
+    if (!v) return;
+    if (list.length >= LIST_MAX_ITEMS) {
+      toast({ title: 'Limite atingido', description: `Você pode adicionar até ${LIST_MAX_ITEMS} ${label}.`, variant: 'destructive' });
+      return;
+    }
+    if (v.length > ITEM_MAX_CHARS) {
+      toast({ title: 'Item muito longo', description: `Cada item deve ter no máximo ${ITEM_MAX_CHARS} caracteres.`, variant: 'destructive' });
+      return;
+    }
+    setList([...list, v]);
+    reset();
+  };
+
+
   const handleSalvar = async () => {
     if (!form.razaoSocial.trim()) {
       toast({ title: "Campo obrigatório", description: "Informe a Razão Social.", variant: "destructive" });
