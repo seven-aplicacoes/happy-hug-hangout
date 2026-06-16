@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { PageHeader } from '@/components/PageHeader';
+import { ModalDetalhesTarefa } from '@/components/modals/ModalDetalhesTarefa';
 import { StatCard } from '@/components/StatCard';
 import { TaskCard } from '@/components/TaskCard';
 import { Card, CardContent } from '@/components/ui/card';
