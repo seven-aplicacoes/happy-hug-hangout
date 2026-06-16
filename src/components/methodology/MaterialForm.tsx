@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -127,7 +128,7 @@ export function MaterialForm({ open, onOpenChange, phaseId, material }: Material
       toast({ title: 'Sucesso', description: 'Material salvo com sucesso.' });
       onOpenChange(false);
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+      toast({ variant: 'destructive', title: 'Erro', description: getFriendlyError(error).description });
     } finally {
       setLoading(false);
     }

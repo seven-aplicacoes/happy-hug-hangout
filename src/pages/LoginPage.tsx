@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -89,7 +90,7 @@ export default function LoginPage() {
         }
       }
     } catch (error: any) {
-      toast({ title: 'Erro de autenticação', description: error.message || 'Credenciais inválidas.', variant: 'destructive' });
+      toast({ title: 'Erro de autenticação', description: getFriendlyError(error).description, variant: 'destructive' });
     } finally {
       setLoading(false);
     }

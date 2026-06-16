@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/ui/button';
@@ -127,7 +128,7 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
     } catch (error: any) {
       toast({ 
         title: 'Erro ao criar', 
-        description: error.message || 'Ocorreu um erro inesperado.',
+        description: getFriendlyError(error).description,
         variant: 'destructive' 
       });
     } finally {

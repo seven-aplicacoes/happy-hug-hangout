@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useEffect, useRef } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/ui/button';
@@ -545,7 +546,7 @@ export const ModalContrato = ({ open, onClose, contrato }: Props) => {
       console.error('Erro detalhado ao salvar:', error);
       toast({ 
         title: 'Erro ao salvar', 
-        description: error.message || 'Não foi possível salvar as alterações do contrato.', 
+        description: getFriendlyError(error).description, 
         variant: 'destructive' 
       });
     } finally {

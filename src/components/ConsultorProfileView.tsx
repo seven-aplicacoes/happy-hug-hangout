@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,7 +103,7 @@ export const ConsultorProfileView = ({ consultorId, modo, onExportar }: Consulto
       console.error("Erro ao atualizar perfil:", error);
       toast({
         title: "Não foi possível atualizar o perfil.",
-        description: error.message,
+        description: getFriendlyError(error).description,
         variant: "destructive",
       });
     }

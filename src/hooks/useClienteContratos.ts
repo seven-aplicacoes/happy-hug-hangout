@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -81,7 +82,7 @@ export function useClienteContratos(clientId?: string) {
       toast({ title: 'Sucesso', description: 'Contrato salvo com sucesso.' });
     },
     onError: (error: any) => {
-      toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro ao salvar', description: getFriendlyError(error).description, variant: 'destructive' });
     },
   });
 

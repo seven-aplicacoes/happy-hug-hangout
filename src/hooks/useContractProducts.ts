@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -133,7 +134,7 @@ export function useContractProducts(contractId?: string) {
     onError: (error: any) => {
       toast({ 
         title: 'Erro ao remover', 
-        description: error.message || 'Não foi possível remover o produto do contrato.', 
+        description: getFriendlyError(error).description, 
         variant: 'destructive' 
       });
     }

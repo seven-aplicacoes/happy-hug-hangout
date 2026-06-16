@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useEffect } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/ui/button';
@@ -291,7 +292,7 @@ export const ModalReuniao = ({ open, onClose, reuniao, initialData }: Props) => 
       console.error('[Meeting Schedule] Erro ao salvar:', error);
       toast({ 
         title: "Erro ao salvar", 
-        description: error.message || "Ocorreu um erro inesperado ao salvar a reunião.", 
+        description: getFriendlyError(error).description || "Ocorreu um erro inesperado ao salvar a reunião.", 
         variant: "destructive" 
       });
     } finally {

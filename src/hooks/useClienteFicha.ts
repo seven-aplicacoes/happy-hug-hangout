@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -122,7 +123,7 @@ export function useClienteFicha(clientId?: string) {
       toast({ title: 'Sucesso', description: 'Dados do cliente atualizados.' });
     },
     onError: (error: any) => {
-      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro ao atualizar', description: getFriendlyError(error).description, variant: 'destructive' });
     },
   });
 

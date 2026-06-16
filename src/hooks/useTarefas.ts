@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -143,7 +144,7 @@ export function useTarefas() {
       console.error('Error in upsertTarefa:', error);
       toast({ 
         title: 'Erro ao salvar', 
-        description: error.message || 'Erro na comunicação com o banco.',
+        description: getFriendlyError(error).description,
         variant: 'destructive'
       });
     }

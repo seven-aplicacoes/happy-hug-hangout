@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState } from "react";
 import { BaseModal } from "../BaseModal";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ export function ModalAcessoPortal({ open, onClose, cliente }: ModalAcessoPortalP
       toast({ title: "Sucesso", description: "Acesso ao portal criado com sucesso." });
       onClose();
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: getFriendlyError(err).description, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,7 @@ export function ModalAcessoPortal({ open, onClose, cliente }: ModalAcessoPortalP
       toast({ title: "Sucesso", description: "Senha redefinida com sucesso." });
       setPassword("");
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: getFriendlyError(err).description, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ export function ModalAcessoPortal({ open, onClose, cliente }: ModalAcessoPortalP
       setEnabled(val);
       toast({ title: "Sucesso", description: `Acesso ao portal ${val ? 'ativado' : 'desativado'}.` });
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: getFriendlyError(err).description, variant: "destructive" });
     } finally {
       setLoading(false);
     }

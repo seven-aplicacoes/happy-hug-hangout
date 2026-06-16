@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Briefcase, Calendar, DollarSign, Users, Loader2, Clock, CheckCircle2, Circle, 
@@ -691,7 +692,7 @@ function ProductItem({ product, contrato, isEditing: isParentEditing, onSchedule
       console.error("Erro ao salvar produto do contrato:", error);
       toast({ 
         title: "Erro", 
-        description: error.message || "Não foi possível salvar as alterações do produto. Verifique os vínculos no Supabase.",
+        description: getFriendlyError(error).description || "Não foi possível salvar as alterações do produto. Verifique os vínculos no Supabase.",
         variant: "destructive"
       });
     }
