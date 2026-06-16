@@ -82,6 +82,11 @@ export default function NovoClientePage() {
   const [newPain, setNewPain] = useState('');
   const [newFactor, setNewFactor] = useState('');
 
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjMessage, setCnpjMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [pendingLookup, setPendingLookup] = useState<any>(null);
+  const [confirmOverwriteOpen, setConfirmOverwriteOpen] = useState(false);
+
   useEffect(() => {
     if (!isAdmin && user?.id) {
       setForm(prev => ({ ...prev, consultorId: user.id }));
@@ -90,9 +95,69 @@ export default function NovoClientePage() {
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
 
-  const addItem = (list: string[], setList: (l: string[]) => void, value: string, reset: () => void, label: string) => {
-    const v = value.trim();
-    if (!v) return;
+  const applyLookup = (data: any, overwrite: boolean) => {
+    setForm(prev => {
+      const pick = (cur: string, next: string) => {
+        if (!next) return cur;
+        if (!cur || cur.trim() === '') return next;
+        return overwrite ? next : cur;
+      };
+      return {
+        ...prev,
+        cnpj: data.cnpj || prev.cnpj,
+        razaoSocial: pick(prev.razaoSocial, data.razao_social),
+        nomeFantasia: pick(prev.nomeFantasia, data.nome_fantasia),
+        institutional_email: pick(prev.institutional_email, data.email),
+        contact_phone: pick(prev.contact_phone, data.telefone),
+        porte: pick(prev.porte, data.porte) as any,
+        cep: pick(prev.cep, data.cep),
+        street: pick(prev.street, data.logradouro),
+        number: pick(prev.number, data.numero),
+        complement: pick(prev.complement, data.complemento),
+        neighborhood: pick(prev.neighborhood, data.bairro),
+        regiao: pick(prev.regiao, data.regiao) || prev.regiao,
+      };
+    });
+  };
+
+  const handleBuscarCnpj = async () => {
+    setCnpjMessage(null);
+    const clean = form.cnpj.replace(/\D/g, '');
+    if (clean.length !== 14 || !isValidCNPJ(clean)) {
+      setCnpjMessage({ type: 'error', text: 'Digite um CNPJ válido.' });
+      return;
+    }
+    setCnpjLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lookup-cnpj', { body: { cnpj: clean } });
+      if (error || !data || (data as any).error) {
+        const msg = (data as any)?.error === 'CNPJ não encontrado'
+          ? 'CNPJ não encontrado.'
+          : 'Não foi possível buscar os dados deste CNPJ. Preencha manualmente ou tente novamente.';
+        setCnpjMessage({ type: 'error', text: msg });
+        return;
+      }
+      const lookup = data as any;
+      const camposComDados = [
+        form.razaoSocial, form.nomeFantasia, form.institutional_email,
+        form.contact_phone, form.cep, form.street, form.number,
+        form.complement, form.neighborhood,
+      ].some(v => (v || '').trim() !== '');
+
+      if (camposComDados) {
+        setPendingLookup(lookup);
+        setConfirmOverwriteOpen(true);
+      } else {
+        applyLookup(lookup, true);
+        setCnpjMessage({ type: 'success', text: 'Dados encontrados e preenchidos automaticamente.' });
+      }
+    } catch (_err) {
+      setCnpjMessage({ type: 'error', text: 'Não foi possível consultar o CNPJ agora. Tente novamente ou preencha os dados manualmente.' });
+    } finally {
+      setCnpjLoading(false);
+    }
+  };
+
     if (list.length >= LIST_MAX_ITEMS) {
       toast({ title: 'Limite atingido', description: `Você pode adicionar até ${LIST_MAX_ITEMS} ${label}.`, variant: 'destructive' });
       return;
