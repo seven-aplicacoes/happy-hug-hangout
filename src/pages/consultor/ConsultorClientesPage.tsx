@@ -159,6 +159,15 @@ export default function ConsultorClientesPage() {
   const columns: Column<Cliente>[] = [
     { key: 'nome', header: 'Cliente', render: (c) => {
       const ctx = getClienteContexto(c);
+      const briefingFull = ctx.briefing?.trim() || '';
+      const briefingShort = briefingFull.length > 250 ? briefingFull.slice(0, 250) + '…' : briefingFull;
+      const objetivoShort = (ctx.objetivoAtual || '').length > 80
+        ? (ctx.objetivoAtual || '').slice(0, 80) + '…'
+        : (ctx.objetivoAtual || '');
+      const doresTop = ctx.dores.slice(0, 3);
+      const doresRestantes = Math.max(0, ctx.dores.length - 3);
+      const fatoresTop = ctx.fatoresSucesso.slice(0, 3);
+      const fatoresRestantes = Math.max(0, ctx.fatoresSucesso.length - 3);
       return (
         <TooltipProvider delayDuration={200}>
           <Tooltip>
@@ -173,7 +182,9 @@ export default function ConsultorClientesPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium truncate">{c.nomeFantasia}</p>
-                  <p className="text-[11px] text-muted-foreground truncate max-w-[260px]">{ctx.objetivoAtual}</p>
+                  <p className="text-[11px] text-muted-foreground truncate max-w-[260px]">
+                    {objetivoShort || 'Não informado'}
+                  </p>
                 </div>
               </div>
             </TooltipTrigger>
@@ -181,25 +192,32 @@ export default function ConsultorClientesPage() {
             <TooltipContent side="right" className="max-w-[340px] text-xs space-y-2">
               <div>
                 <p className="ui-overline">Briefing</p>
-                <p>{ctx.briefing}</p>
+                <p className="whitespace-pre-wrap break-words">{briefingShort || 'Não informado'}</p>
               </div>
               <div>
                 <p className="ui-overline">Principais dores</p>
-                <ul className="list-disc list-inside text-muted-foreground">
-                  {ctx.dores.map(d => <li key={d}>{d}</li>)}
-                </ul>
+                {doresTop.length > 0 ? (
+                  <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+                    {doresTop.map(d => <li key={d} className="break-words">{d}</li>)}
+                    {doresRestantes > 0 && <li className="list-none italic">+ {doresRestantes} {doresRestantes === 1 ? 'item' : 'itens'}</li>}
+                  </ul>
+                ) : <p className="text-muted-foreground italic">Nenhuma dor cadastrada</p>}
               </div>
               <div>
                 <p className="ui-overline">Fatores de sucesso</p>
-                <ul className="list-disc list-inside text-muted-foreground">
-                  {ctx.fatoresSucesso.map(f => <li key={f}>{f}</li>)}
-                </ul>
+                {fatoresTop.length > 0 ? (
+                  <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+                    {fatoresTop.map(f => <li key={f} className="break-words">{f}</li>)}
+                    {fatoresRestantes > 0 && <li className="list-none italic">+ {fatoresRestantes} {fatoresRestantes === 1 ? 'item' : 'itens'}</li>}
+                  </ul>
+                ) : <p className="text-muted-foreground italic">Nenhum fator cadastrado</p>}
               </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       );
     }},
+
     { key: 'prioridade', header: 'Prioridade', render: (c) => {
       const p = calcularPrioridade(c, contratos || [], tarefas || []);
 

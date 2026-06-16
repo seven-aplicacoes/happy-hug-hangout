@@ -225,21 +225,47 @@ export default function ClienteDetalhePage() {
     }
   };
 
+  const PAIN_MAX_ITEMS = 5;
+  const PAIN_MAX_CHARS = 80;
+  const FACTOR_MAX_ITEMS = 5;
+  const FACTOR_MAX_CHARS = 80;
+  const OBJETIVO_MAX = 300;
+  const BRIEFING_MAX = 500;
+
   const addPain = () => {
-    if (fichaNewPain.trim() && !fichaPains.includes(fichaNewPain.trim())) {
-      setFichaPains([...fichaPains, fichaNewPain.trim()]);
-      setFichaNewPain('');
+    const v = fichaNewPain.trim();
+    if (!v) return;
+    if (fichaPains.length >= PAIN_MAX_ITEMS) {
+      toast({ title: 'Limite atingido', description: `Máximo de ${PAIN_MAX_ITEMS} dores, com até ${PAIN_MAX_CHARS} caracteres cada.`, variant: 'destructive' });
+      return;
     }
+    if (v.length > PAIN_MAX_CHARS) {
+      toast({ title: 'Texto muito longo', description: `Cada dor pode ter no máximo ${PAIN_MAX_CHARS} caracteres.`, variant: 'destructive' });
+      return;
+    }
+    if (fichaPains.includes(v)) return;
+    setFichaPains([...fichaPains, v]);
+    setFichaNewPain('');
   };
 
   const removePain = (p: string) => setFichaPains(fichaPains.filter(item => item !== p));
 
   const addSuccessFactor = () => {
-    if (fichaNewSuccessFactor.trim() && !fichaSuccessFactors.includes(fichaNewSuccessFactor.trim())) {
-      setFichaSuccessFactors([...fichaSuccessFactors, fichaNewSuccessFactor.trim()]);
-      setFichaNewSuccessFactor('');
+    const v = fichaNewSuccessFactor.trim();
+    if (!v) return;
+    if (fichaSuccessFactors.length >= FACTOR_MAX_ITEMS) {
+      toast({ title: 'Limite atingido', description: `Máximo de ${FACTOR_MAX_ITEMS} fatores, com até ${FACTOR_MAX_CHARS} caracteres cada.`, variant: 'destructive' });
+      return;
     }
+    if (v.length > FACTOR_MAX_CHARS) {
+      toast({ title: 'Texto muito longo', description: `Cada fator pode ter no máximo ${FACTOR_MAX_CHARS} caracteres.`, variant: 'destructive' });
+      return;
+    }
+    if (fichaSuccessFactors.includes(v)) return;
+    setFichaSuccessFactors([...fichaSuccessFactors, v]);
+    setFichaNewSuccessFactor('');
   };
+
 
   const removeSuccessFactor = (s: string) => setFichaSuccessFactors(fichaSuccessFactors.filter(item => item !== s));
 
@@ -512,51 +538,110 @@ export default function ClienteDetalhePage() {
                   <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Alinhamento Estratégico</h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Objetivo Atual</Label>
-                      <Textarea value={fichaForm?.current_objective} onChange={e => setF('current_objective', e.target.value)} disabled={!isEditing} className="bg-white font-medium min-h-[80px]" />
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase">Objetivo Atual</Label>
+                        {isEditing && (
+                          <span className="text-[10px] text-muted-foreground">{(fichaForm?.current_objective || '').length}/{OBJETIVO_MAX}</span>
+                        )}
+                      </div>
+                      <Textarea
+                        value={fichaForm?.current_objective}
+                        onChange={e => setF('current_objective', e.target.value.slice(0, OBJETIVO_MAX))}
+                        disabled={!isEditing}
+                        maxLength={OBJETIVO_MAX}
+                        placeholder={!isEditing && !fichaForm?.current_objective ? 'Não informado' : ''}
+                        className="bg-white font-medium min-h-[80px]"
+                      />
                     </div>
                     
                     <div className="space-y-3">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Dores e Problemas</Label>
                       {isEditing && (
-                        <div className="flex gap-2">
-                          <Input value={fichaNewPain} onChange={e => setFichaNewPain(e.target.value)} placeholder="Nova dor..." className="h-8 text-xs" />
-                          <Button size="sm" onClick={addPain} type="button" className="h-8"><PlusCircle className="h-4 w-4" /></Button>
+                        <div className="space-y-1">
+                          <div className="flex gap-2">
+                            <Input
+                              value={fichaNewPain}
+                              onChange={e => setFichaNewPain(e.target.value.slice(0, PAIN_MAX_CHARS))}
+                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addPain(); } }}
+                              placeholder="Nova dor..."
+                              maxLength={PAIN_MAX_CHARS}
+                              className="h-8 text-xs"
+                            />
+                            <Button size="sm" onClick={addPain} type="button" className="h-8" disabled={fichaPains.length >= PAIN_MAX_ITEMS}><PlusCircle className="h-4 w-4" /></Button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">{fichaPains.length}/{PAIN_MAX_ITEMS} itens · {fichaNewPain.length}/{PAIN_MAX_CHARS} caracteres</p>
                         </div>
                       )}
-                      <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-muted/20 border border-dashed">
-                        {fichaPains.length > 0 ? fichaPains.map(p => (
-                          <Badge key={p} variant="secondary" className="pr-1 gap-1 py-1 font-medium bg-white border">
-                            {p}
-                            {isEditing && <MinusCircle className="h-3 w-3 text-destructive cursor-pointer hover:scale-110 transition-transform" onClick={() => removePain(p)} />}
-                          </Badge>
-                        )) : <span className="text-[10px] text-muted-foreground italic self-center">Nenhuma dor registrada</span>}
+                      <div className="min-h-[40px] p-3 rounded-lg bg-muted/20 border border-dashed">
+                        {fichaPains.length > 0 ? (
+                          <ul className="space-y-1.5">
+                            {fichaPains.map(p => (
+                              <li key={p} className="flex items-start gap-2 text-sm">
+                                <span className="text-primary mt-1.5 leading-none">•</span>
+                                <span className="flex-1 break-words">{p}</span>
+                                {isEditing && (
+                                  <MinusCircle className="h-3.5 w-3.5 text-destructive cursor-pointer hover:scale-110 transition-transform shrink-0 mt-1" onClick={() => removePain(p)} />
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : <span className="text-[11px] text-muted-foreground italic">Nenhuma dor cadastrada</span>}
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Fatores de Sucesso</Label>
                       {isEditing && (
-                        <div className="flex gap-2">
-                          <Input value={fichaNewSuccessFactor} onChange={e => setFichaNewSuccessFactor(e.target.value)} placeholder="Novo fator..." className="h-8 text-xs" />
-                          <Button size="sm" onClick={addSuccessFactor} type="button" className="h-8"><PlusCircle className="h-4 w-4" /></Button>
+                        <div className="space-y-1">
+                          <div className="flex gap-2">
+                            <Input
+                              value={fichaNewSuccessFactor}
+                              onChange={e => setFichaNewSuccessFactor(e.target.value.slice(0, FACTOR_MAX_CHARS))}
+                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSuccessFactor(); } }}
+                              placeholder="Novo fator..."
+                              maxLength={FACTOR_MAX_CHARS}
+                              className="h-8 text-xs"
+                            />
+                            <Button size="sm" onClick={addSuccessFactor} type="button" className="h-8" disabled={fichaSuccessFactors.length >= FACTOR_MAX_ITEMS}><PlusCircle className="h-4 w-4" /></Button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">{fichaSuccessFactors.length}/{FACTOR_MAX_ITEMS} itens · {fichaNewSuccessFactor.length}/{FACTOR_MAX_CHARS} caracteres</p>
                         </div>
                       )}
-                      <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-muted/20 border border-dashed">
-                        {fichaSuccessFactors.length > 0 ? fichaSuccessFactors.map(s => (
-                          <Badge key={s} variant="secondary" className="pr-1 gap-1 py-1 font-medium bg-white border">
-                            {s}
-                            {isEditing && <MinusCircle className="h-3 w-3 text-destructive cursor-pointer hover:scale-110 transition-transform" onClick={() => removeSuccessFactor(s)} />}
-                          </Badge>
-                        )) : <span className="text-[10px] text-muted-foreground italic self-center">Nenhum fator registrado</span>}
+                      <div className="min-h-[40px] p-3 rounded-lg bg-muted/20 border border-dashed">
+                        {fichaSuccessFactors.length > 0 ? (
+                          <ul className="space-y-1.5">
+                            {fichaSuccessFactors.map(s => (
+                              <li key={s} className="flex items-start gap-2 text-sm">
+                                <span className="text-primary mt-1.5 leading-none">•</span>
+                                <span className="flex-1 break-words">{s}</span>
+                                {isEditing && (
+                                  <MinusCircle className="h-3.5 w-3.5 text-destructive cursor-pointer hover:scale-110 transition-transform shrink-0 mt-1" onClick={() => removeSuccessFactor(s)} />
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : <span className="text-[11px] text-muted-foreground italic">Nenhum fator cadastrado</span>}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-5 pb-2 border-b">Briefing / Observações</h4>
-                  <Textarea value={fichaForm?.briefing} onChange={e => setF('briefing', e.target.value)} disabled={!isEditing} className="bg-white font-medium min-h-[120px]" placeholder="Notas adicionais sobre o cliente..." />
+                  <div className="flex items-center justify-between mb-5 pb-2 border-b">
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em]">Briefing / Observações</h4>
+                    {isEditing && (
+                      <span className="text-[10px] text-muted-foreground">{(fichaForm?.briefing || '').length}/{BRIEFING_MAX}</span>
+                    )}
+                  </div>
+                  <Textarea
+                    value={fichaForm?.briefing}
+                    onChange={e => setF('briefing', e.target.value.slice(0, BRIEFING_MAX))}
+                    disabled={!isEditing}
+                    maxLength={BRIEFING_MAX}
+                    className="bg-white font-medium min-h-[120px]"
+                    placeholder={!isEditing && !fichaForm?.briefing ? 'Não informado' : 'Notas adicionais sobre o cliente...'}
+                  />
+
                 </div>
               </div>
 

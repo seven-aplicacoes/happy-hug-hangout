@@ -218,54 +218,32 @@ export interface ClienteContexto {
   briefing: string;
 }
 
-const DORES_POOL = [
-  'Margem operacional reduzida',
-  'Alta rotatividade da equipe',
-  'Concentração em poucos clientes',
-  'Falta de previsibilidade financeira',
-  'Processos comerciais informais',
-  'Indicadores não acompanhados',
-  'Atendimento inconsistente',
-];
-
-const FATORES_POOL = [
-  'Equipe engajada com cultura de dados',
-  'Sócios com perfil empreendedor',
-  'Marca consolidada na região',
-  'Carteira de clientes recorrente',
-  'Operação digitalizada',
-  'Estrutura física adequada',
-];
-
-const OBJETIVOS_POOL = [
-  'Profissionalizar a gestão para escalar a operação',
-  'Estruturar processo comercial e dobrar conversão',
-  'Recuperar margem e organizar fluxo de caixa',
-  'Implementar metodologia de gestão por indicadores',
-  'Preparar a empresa para receber investimento',
-  'Estruturar a sucessão familiar',
-];
+function normalizeList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map(v => String(v).trim()).filter(Boolean);
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return value
+      .split(/\r?\n|;|,|\|/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
 
 export function getClienteContexto(cliente: Cliente): ClienteContexto {
-  const seed = hash(cliente.id);
-  const dores = [
-    DORES_POOL[seed % DORES_POOL.length],
-    DORES_POOL[(seed >> 2) % DORES_POOL.length],
-    DORES_POOL[(seed >> 4) % DORES_POOL.length],
-  ].filter((v, i, a) => a.indexOf(v) === i);
-  const fatores = [
-    FATORES_POOL[seed % FATORES_POOL.length],
-    FATORES_POOL[(seed >> 3) % FATORES_POOL.length],
-  ].filter((v, i, a) => a.indexOf(v) === i);
-  const objetivo = OBJETIVOS_POOL[seed % OBJETIVOS_POOL.length];
-  const produto = getProdutoAtualCliente(cliente.id) || 'Consultoria';
+  const dores = normalizeList((cliente as any).pains);
+  const fatores = normalizeList((cliente as any).success_factors);
+  const objetivo = ((cliente as any).current_objective || '').toString().trim();
+  const briefing = ((cliente as any).briefing || '').toString().trim();
   return {
     dores,
     fatoresSucesso: fatores,
     objetivoAtual: objetivo,
-    briefing: `${cliente.nomeFantasia} (${cliente.segmento}, região ${cliente.regiao}) contratou ${produto} para ${objetivo.toLowerCase()}. Faturamento mensal declarado: R$ ${(cliente.faturamentoMensal/1000).toFixed(0)}k. Especialidade focal: ${cliente.especialidade}.`,
+    briefing,
   };
 }
+
 
 // ---------- Prioridade automática do cliente ----------
 
