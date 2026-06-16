@@ -93,8 +93,12 @@ export default function NovoClientePage() {
         institutional_email: form.institutional_email,
         contact_name: form.contact_name,
         contact_phone: form.contact_phone,
+        current_objective: form.current_objective || null,
+        briefing: form.briefing || null,
+        pains,
+        success_factors: successFactors,
         faseMetodologica: 'diagnostico',
-      });
+      } as any);
 
       const clientId = result?.[0]?.id;
 
