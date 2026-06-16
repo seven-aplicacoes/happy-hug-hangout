@@ -5,6 +5,7 @@ import { FilterBar, FilterConfig } from '@/components/FilterBar';
 import { DataTable, Column } from '@/components/DataTable';
 import { StatusTag } from '@/components/StatusTag';
 import { useClientes } from '@/hooks/useClientes';
+import { matchesClienteSearch } from '@/lib/searchClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ModalNovoCliente } from '@/components/modals/ModalNovoCliente';
