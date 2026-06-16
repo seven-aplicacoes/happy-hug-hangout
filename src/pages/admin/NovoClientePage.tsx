@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useClientes } from '@/hooks/useClientes';
 import { useConsultores } from '@/hooks/useConsultores';
 import { useContratos } from '@/hooks/useContratos';
-import { Loader2, Shield, MapPin, ArrowLeft, Save, X } from 'lucide-react';
+import { Loader2, Shield, MapPin, ArrowLeft, Save, X, Plus, Trash2, Target } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,11 @@ export default function NovoClientePage() {
   const isAdmin = perfil === 'admin';
   const basePath = isAdmin ? '/admin' : '/consultor';
 
+  const OBJETIVO_MAX = 300;
+  const BRIEFING_MAX = 500;
+  const ITEM_MAX_CHARS = 80;
+  const LIST_MAX_ITEMS = 5;
+
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({
     razaoSocial: '', nomeFantasia: '', cnpj: '', regiao: 'sudeste',
@@ -35,8 +41,13 @@ export default function NovoClientePage() {
     cep: '', street: '', number: '', complement: '', neighborhood: '',
     institutional_email: '',
     contact_name: '', contact_phone: '',
+    current_objective: '', briefing: '',
     liberarPortal: false, emailPortal: '', senhaPortal: '',
   });
+  const [pains, setPains] = useState<string[]>([]);
+  const [successFactors, setSuccessFactors] = useState<string[]>([]);
+  const [newPain, setNewPain] = useState('');
+  const [newFactor, setNewFactor] = useState('');
 
   useEffect(() => {
     if (!isAdmin && user?.id) {
@@ -45,6 +56,22 @@ export default function NovoClientePage() {
   }, [isAdmin, user]);
 
   const set = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const addItem = (list: string[], setList: (l: string[]) => void, value: string, reset: () => void, label: string) => {
+    const v = value.trim();
+    if (!v) return;
+    if (list.length >= LIST_MAX_ITEMS) {
+      toast({ title: 'Limite atingido', description: `Você pode adicionar até ${LIST_MAX_ITEMS} ${label}.`, variant: 'destructive' });
+      return;
+    }
+    if (v.length > ITEM_MAX_CHARS) {
+      toast({ title: 'Item muito longo', description: `Cada item deve ter no máximo ${ITEM_MAX_CHARS} caracteres.`, variant: 'destructive' });
+      return;
+    }
+    setList([...list, v]);
+    reset();
+  };
+
 
   const handleSalvar = async () => {
     if (!form.razaoSocial.trim()) {
@@ -82,8 +109,12 @@ export default function NovoClientePage() {
         institutional_email: form.institutional_email,
         contact_name: form.contact_name,
         contact_phone: form.contact_phone,
+        current_objective: form.current_objective || null,
+        briefing: form.briefing || null,
+        pains,
+        success_factors: successFactors,
         faseMetodologica: 'diagnostico',
-      });
+      } as any);
 
       const clientId = result?.[0]?.id;
 
@@ -306,6 +337,102 @@ export default function NovoClientePage() {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold text-primary/80 uppercase tracking-wider flex items-center gap-2">
+            <Target className="h-4 w-4" /> Alinhamento Estratégico
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Objetivo atual</Label>
+                <span className="text-[10px] text-muted-foreground">{form.current_objective.length}/{OBJETIVO_MAX}</span>
+              </div>
+              <Textarea
+                value={form.current_objective}
+                onChange={e => set('current_objective', e.target.value.slice(0, OBJETIVO_MAX))}
+                placeholder="Qual o objetivo principal do cliente neste momento?"
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Briefing / Observações</Label>
+                <span className="text-[10px] text-muted-foreground">{form.briefing.length}/{BRIEFING_MAX}</span>
+              </div>
+              <Textarea
+                value={form.briefing}
+                onChange={e => set('briefing', e.target.value.slice(0, BRIEFING_MAX))}
+                placeholder="Notas adicionais sobre o cliente..."
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label>Dores e problemas <span className="text-[10px] text-muted-foreground font-normal">({pains.length}/{LIST_MAX_ITEMS})</span></Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newPain}
+                  onChange={e => setNewPain(e.target.value.slice(0, ITEM_MAX_CHARS))}
+                  placeholder="Adicionar dor ou problema"
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(pains, setPains, newPain, () => setNewPain(''), 'dores e problemas'); } }}
+                />
+                <Button type="button" variant="outline" size="icon" onClick={() => addItem(pains, setPains, newPain, () => setNewPain(''), 'dores e problemas')}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {pains.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhuma dor cadastrada.</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {pains.map((p, i) => (
+                    <li key={i} className="flex items-start justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                      <span className="break-words flex-1">{p}</span>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setPains(pains.filter((_, idx) => idx !== i))}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fatores de sucesso <span className="text-[10px] text-muted-foreground font-normal">({successFactors.length}/{LIST_MAX_ITEMS})</span></Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newFactor}
+                  onChange={e => setNewFactor(e.target.value.slice(0, ITEM_MAX_CHARS))}
+                  placeholder="Adicionar fator de sucesso"
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(successFactors, setSuccessFactors, newFactor, () => setNewFactor(''), 'fatores de sucesso'); } }}
+                />
+                <Button type="button" variant="outline" size="icon" onClick={() => addItem(successFactors, setSuccessFactors, newFactor, () => setNewFactor(''), 'fatores de sucesso')}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {successFactors.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhum fator de sucesso cadastrado.</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {successFactors.map((f, i) => (
+                    <li key={i} className="flex items-start justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                      <span className="break-words flex-1">{f}</span>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setSuccessFactors(successFactors.filter((_, idx) => idx !== i))}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
