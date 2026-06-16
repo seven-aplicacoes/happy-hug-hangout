@@ -251,6 +251,7 @@ export default function AdminClientesPage() {
         data={data} 
         columns={columns} 
         onRowClick={(c) => navigate(`/admin/cliente/${c.id}`)} 
+        emptyMessage="Nenhum cliente encontrado para essa busca. Revise o termo digitado ou limpe os filtros aplicados."
       />
 
       
