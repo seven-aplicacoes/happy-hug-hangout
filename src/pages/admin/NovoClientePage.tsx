@@ -184,8 +184,8 @@ export default function NovoClientePage() {
       return;
     }
     const cleanCnpj = form.cnpj.replace(/\D/g, '');
-    if (cleanCnpj.length !== 14) {
-      toast({ title: "CNPJ inválido", description: "O CNPJ deve conter 14 dígitos.", variant: "destructive" });
+    if (cleanCnpj.length !== 14 || !isValidCNPJ(cleanCnpj)) {
+      toast({ title: "CNPJ inválido", description: "Digite um CNPJ válido.", variant: "destructive" });
       return;
     }
     if (!form.consultorId) {
@@ -195,6 +195,24 @@ export default function NovoClientePage() {
 
     setIsLoading(true);
     try {
+      // Duplicate CNPJ check (with or without mask)
+      const masked = maskCnpj(cleanCnpj);
+      const { data: existing } = await supabase
+        .from('clients')
+        .select('id')
+        .or(`cnpj.eq.${cleanCnpj},cnpj.eq.${masked}`)
+        .is('deleted_at', null)
+        .limit(1)
+        .maybeSingle();
+      if (existing) {
+        toast({
+          title: 'Cliente já cadastrado',
+          description: 'Já existe um cliente com este CNPJ. Verifique a listagem antes de criar um novo cadastro.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
       const result = await upsertCliente.mutateAsync({
         razaoSocial: form.razaoSocial,
         nomeFantasia: form.nomeFantasia,
