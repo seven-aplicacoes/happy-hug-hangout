@@ -332,7 +332,7 @@ export default function ConsultorClientesPage() {
           ))}
         </div>
       </div>
-      <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} />
+      <DataTable data={data} columns={columns} onRowClick={(c) => navigate(`/consultor/cliente/${c.id}`)} emptyMessage="Nenhum cliente encontrado para essa busca. Revise o termo digitado ou limpe os filtros aplicados." />
       
       <AlertDialog open={!!clienteToDelete} onOpenChange={(open) => !open && setClienteToDelete(null)}>
         <AlertDialogContent>
