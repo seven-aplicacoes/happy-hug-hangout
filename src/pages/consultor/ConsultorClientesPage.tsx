@@ -23,6 +23,7 @@ import { Plus, Target, Loader2, Trash2 } from 'lucide-react';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import type { Cliente, FaseMetodologica, Contrato } from '@/types';
 import { useClientes } from '@/hooks/useClientes';
+import { matchesClienteSearch } from '@/lib/searchClientes';
 
 import { useContratos } from '@/hooks/useContratos';
 import { useReunioes } from '@/hooks/useReunioes';
