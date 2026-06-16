@@ -124,8 +124,7 @@ export default function ConsultorClientesPage() {
 
   const data = useMemo(() => {
     let d = [...meusClientes];
-    const q = normalize(search);
-    if (q) d = d.filter(c => normalize(c.nomeFantasia).includes(q) || normalize(c.razaoSocial).includes(q));
+    if (search.trim()) d = d.filter(c => matchesClienteSearch(c, search));
     if (filters.status && filters.status !== 'todos') d = d.filter(c => c.status === filters.status);
     if (filters.porte && filters.porte !== 'todos') d = d.filter(c => getPorte(c) === filters.porte);
 
