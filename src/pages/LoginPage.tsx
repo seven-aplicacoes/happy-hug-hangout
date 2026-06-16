@@ -90,7 +90,7 @@ export default function LoginPage() {
         }
       }
     } catch (error: any) {
-      toast({ title: 'Erro de autenticação', description: getFriendlyError(error).description, variant: 'destructive' });
+      { const f = getFriendlyError(error, 'login'); toast({ title: f.title, description: f.description, variant: 'destructive' }); }
     } finally {
       setLoading(false);
     }
