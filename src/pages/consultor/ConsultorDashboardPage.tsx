@@ -557,11 +557,12 @@ export default function ConsultorDashboardPage() {
         </Card>
       </section>
 
-      {/* Tarefas Prioritárias */}
+      {/* Tarefas Críticas */}
       <section>
         <SectionHeader
           overline="Prioridade"
-          titulo="Tarefas críticas"
+          titulo="Tarefas Críticas"
+          descricao="Tarefas de alta prioridade que precisam de atenção."
           action={
             <Button variant="ghost" size="sm" onClick={() => navigate('/consultor/tarefas')} className="text-xs">
               Ver todas <ArrowRight className="h-3 w-3 ml-1" />
@@ -571,14 +572,22 @@ export default function ConsultorDashboardPage() {
         <Card>
           <CardContent className="p-3 space-y-2">
             {tarefasPrioritarias.length === 0 ? (
-              <EmptyState titulo="Nenhuma tarefa prioritária" descricao="Você está em dia com as urgências." />
+              <EmptyState
+                titulo="Nenhuma tarefa crítica"
+                descricao="As tarefas de prioridade crítica aparecerão aqui quando forem cadastradas."
+              />
             ) : tarefasPrioritarias.map(t => (
-              <TaskCard key={t.id} tarefa={t} onClick={() => navigate(`/consultor/cliente/${t.clienteId}`)} />
+              <TaskCard key={t.id} tarefa={t} onClick={() => setTarefaDetalhe(t)} />
             ))}
           </CardContent>
         </Card>
       </section>
 
+      <ModalDetalhesTarefa
+        open={!!tarefaDetalhe}
+        onClose={() => setTarefaDetalhe(null)}
+        tarefa={tarefaDetalhe}
+      />
     </div>
   );
 }
