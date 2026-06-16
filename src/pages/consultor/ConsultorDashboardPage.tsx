@@ -94,7 +94,7 @@ export default function ConsultorDashboardPage() {
 
     const meusClientes = clientes;
     
-    const minhasTarefas = tarefas;
+    const minhasTarefas = (tarefas || []).filter(t => t.consultorId === consultorId);
     
     const hojeDate = hojeStr;
     const tarefasPrioritarias = minhasTarefas
