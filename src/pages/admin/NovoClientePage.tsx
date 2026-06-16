@@ -158,6 +158,9 @@ export default function NovoClientePage() {
     }
   };
 
+  const addItem = (list: string[], setList: (l: string[]) => void, value: string, reset: () => void, label: string) => {
+    const v = value.trim();
+    if (!v) return;
     if (list.length >= LIST_MAX_ITEMS) {
       toast({ title: 'Limite atingido', description: `Você pode adicionar até ${LIST_MAX_ITEMS} ${label}.`, variant: 'destructive' });
       return;
