@@ -80,14 +80,8 @@ export default function AdminClientesPage() {
   const data = useMemo(() => {
     if (!clientes) return [];
     let d = [...clientes];
-    const q = search.toLowerCase();
-    
-    if (q) {
-      d = d.filter(c => 
-        (c.nomeFantasia || '').toLowerCase().includes(q) || 
-        (c.razaoSocial || '').toLowerCase().includes(q) ||
-        (c.cnpj || '').toLowerCase().includes(q)
-      );
+    if (search.trim()) {
+      d = d.filter(c => matchesClienteSearch(c, search));
     }
     
     if (filters.status && filters.status !== 'todos') {
