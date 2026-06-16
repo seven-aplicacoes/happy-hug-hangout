@@ -338,6 +338,32 @@ export default function ConsultorDashboardPage() {
         <StatCard titulo="Meu perfil" valor="→" icon={UserCircle} size="compact" subtitulo="Indicadores e carteira" onClick={() => navigate('/consultor/meu-perfil')} />
       </section>
 
+      {/* Tarefas Críticas */}
+      <section>
+        <SectionHeader
+          overline="Prioridade"
+          titulo="Tarefas Críticas"
+          descricao="Tarefas de alta prioridade que precisam de atenção."
+          action={
+            <Button variant="ghost" size="sm" onClick={() => navigate('/consultor/tarefas')} className="text-xs">
+              Ver todas <ArrowRight className="h-3 w-3 ml-1" />
+            </Button>
+          }
+        />
+        <Card>
+          <CardContent className="p-3 space-y-2">
+            {tarefasPrioritarias.length === 0 ? (
+              <EmptyState
+                titulo="Nenhuma tarefa crítica"
+                descricao="As tarefas de prioridade crítica aparecerão aqui quando forem cadastradas."
+              />
+            ) : tarefasPrioritarias.map(t => (
+              <TaskCard key={t.id} tarefa={t} onClick={() => setTarefaDetalhe(t)} />
+            ))}
+          </CardContent>
+        </Card>
+      </section>
+
       {/* Alertas de Contrato */}
       <section>
         <SectionHeader
