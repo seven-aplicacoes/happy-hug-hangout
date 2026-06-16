@@ -91,7 +91,7 @@ export default function ConsultorDashboardPage() {
     if (!clientes || !contratos || !reunioes || !tarefas) return null;
 
     const meusClientes = clientes;
-    const reunioesHoje = reunioes.filter(r => r.meetingDate === hojeStr);
+    
     const minhasTarefas = tarefas;
     
     const tarefasPrioritarias = minhasTarefas
