@@ -296,6 +296,42 @@ export default function NovoClientePage() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
+              <CardTitle className="text-sm font-semibold text-primary/80 uppercase tracking-wider flex items-center gap-2">
+                <Building2 className="h-4 w-4" /> Identificação da empresa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+                <div className="space-y-2">
+                  <Label>CNPJ *</Label>
+                  <Input
+                    value={form.cnpj}
+                    onChange={e => { setCnpjMessage(null); set('cnpj', maskCnpj(e.target.value)); }}
+                    onPaste={e => {
+                      e.preventDefault();
+                      const txt = e.clipboardData.getData('text');
+                      setCnpjMessage(null);
+                      set('cnpj', maskCnpj(txt));
+                    }}
+                    placeholder="00.000.000/0000-00"
+                    inputMode="numeric"
+                  />
+                </div>
+                <Button type="button" onClick={handleBuscarCnpj} disabled={cnpjLoading} className="gap-2">
+                  {cnpjLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {cnpjLoading ? 'Buscando...' : 'Buscar dados'}
+                </Button>
+              </div>
+              {cnpjMessage && (
+                <p className={`text-xs ${cnpjMessage.type === 'success' ? 'text-emerald-600' : cnpjMessage.type === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {cnpjMessage.text}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-sm font-semibold text-primary/80 uppercase tracking-wider">Dados Básicos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -303,28 +339,11 @@ export default function NovoClientePage() {
                 <Label>Razão Social *</Label>
                 <Input value={form.razaoSocial} onChange={e => set('razaoSocial', e.target.value)} placeholder="Razão social completa" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Nome Fantasia *</Label>
-                  <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" />
-                </div>
-                <div className="space-y-2">
-                  <Label>CNPJ *</Label>
-                  <Input 
-                    value={form.cnpj} 
-                    onChange={e => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 14);
-                      const masked = val
-                        .replace(/^(\d{2})(\d)/, '$1.$2')
-                        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-                        .replace(/\.(\d{3})(\d)/, '.$1/$2')
-                        .replace(/(\d{4})(\d)/, '$1-$2');
-                      set('cnpj', masked);
-                    }} 
-                    placeholder="00.000.000/0001-00" 
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Nome Fantasia *</Label>
+                <Input value={form.nomeFantasia} onChange={e => set('nomeFantasia', e.target.value)} placeholder="Nome fantasia" />
               </div>
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
