@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,7 +109,7 @@ export function PhaseForm({ open, onOpenChange, phase }: PhaseFormProps) {
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error saving phase:', error);
-      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+      toast({ variant: 'destructive', title: 'Erro', description: getFriendlyError(error).description });
     } finally {
       setLoading(false);
     }

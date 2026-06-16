@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useMemo, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -182,7 +183,7 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
           window.location.href = data.url;
         }
       } catch (err: any) {
-        toast({ title: 'Erro ao iniciar conexão', description: err.message, variant: 'destructive' });
+        toast({ title: 'Erro ao iniciar conexão', description: getFriendlyError(err).description, variant: 'destructive' });
       } finally {
         setLoading(false);
       }
@@ -204,7 +205,7 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
         toast({ title: 'Desconectado', description: 'A conta Google global foi desconectada.' });
         queryClient.invalidateQueries({ queryKey: ['google-connection-global'] });
       } catch (err: any) {
-        toast({ title: 'Erro ao desconectar', description: err.message, variant: 'destructive' });
+        toast({ title: 'Erro ao desconectar', description: getFriendlyError(err).description, variant: 'destructive' });
       } finally {
         setLoading(false);
       }
@@ -222,7 +223,7 @@ function DetalheIntegracao({ integ, onClose }: { integ: Integracao; onClose: () 
         toast({ title: 'Atenção', description: data?.message || 'Nenhuma conexão global encontrada.', variant: 'warning' as any });
       }
     } catch (err: any) {
-      toast({ title: 'Erro no diagnóstico', description: err.message, variant: 'destructive' });
+      toast({ title: 'Erro no diagnóstico', description: getFriendlyError(err).description, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -348,7 +349,7 @@ export default function IntegracoesPage() {
           queryClient.invalidateQueries({ queryKey: ['google-connection-global'] });
           window.history.replaceState({}, document.title, window.location.pathname);
         } catch (err: any) {
-          toast({ title: 'Erro na conexão', description: err.message, variant: 'destructive' });
+          toast({ title: 'Erro na conexão', description: getFriendlyError(err).description, variant: 'destructive' });
         }
       };
       processCallback();

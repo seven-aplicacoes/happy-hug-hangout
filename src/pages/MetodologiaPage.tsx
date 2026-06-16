@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
@@ -190,7 +191,7 @@ export default function MetodologiaPage() {
       await deleteMaterial(id);
       toast({ title: 'Sucesso', description: 'Material removido.' });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Erro', description: err.message });
+      toast({ variant: 'destructive', title: 'Erro', description: getFriendlyError(err).description });
     }
   };
 
@@ -202,7 +203,7 @@ export default function MetodologiaPage() {
       queryClient.invalidateQueries({ queryKey: ['methodology-transversal'] });
       toast({ title: 'Sucesso', description: 'Material removido.' });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Erro', description: err.message });
+      toast({ variant: 'destructive', title: 'Erro', description: getFriendlyError(err).description });
     }
   };
 
@@ -214,7 +215,7 @@ export default function MetodologiaPage() {
       queryClient.invalidateQueries({ queryKey: ['methodology-phases-crud'] });
       toast({ title: 'Sucesso', description: 'Fase removida.' });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Erro', description: err.message });
+      toast({ variant: 'destructive', title: 'Erro', description: getFriendlyError(err).description });
     }
   };
 

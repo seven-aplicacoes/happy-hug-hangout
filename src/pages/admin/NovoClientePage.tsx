@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -112,7 +113,7 @@ export default function NovoClientePage() {
       }
     } catch (error: any) {
       console.error(error);
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar", description: getFriendlyError(error).description, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

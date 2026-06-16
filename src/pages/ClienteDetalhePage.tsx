@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -112,7 +113,7 @@ export default function ClienteDetalhePage() {
     } catch (error: any) {
       toast({
         title: "Erro no upload",
-        description: error.message || "Não foi possível enviar a imagem.",
+        description: getFriendlyError(error).description || "Não foi possível enviar a imagem.",
         variant: "destructive"
       });
     } finally {
@@ -140,7 +141,7 @@ export default function ClienteDetalhePage() {
     } catch (error: any) {
       toast({
         title: "Erro ao remover",
-        description: error.message || "Não foi possível remover a imagem.",
+        description: getFriendlyError(error).description || "Não foi possível remover a imagem.",
         variant: "destructive"
       });
     }

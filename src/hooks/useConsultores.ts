@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -84,7 +85,7 @@ export const useConsultores = () => {
     onError: (error: any) => {
       toast({
         title: "Erro na operação",
-        description: error.message || "Ocorreu um erro ao processar a solicitação.",
+        description: getFriendlyError(error).description || "Ocorreu um erro ao processar a solicitação.",
         variant: "destructive",
       });
     },

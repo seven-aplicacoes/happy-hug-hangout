@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -155,7 +156,7 @@ export function useContractModuleDocuments(moduleId?: string, contractId?: strin
     } catch (error: any) {
       toast({
         title: 'Erro ao baixar arquivo',
-        description: error.message,
+        description: getFriendlyError(error).description,
         variant: 'destructive',
         duration: 3000
       });

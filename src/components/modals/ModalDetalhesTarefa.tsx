@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useEffect } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/ui/button';
@@ -123,7 +124,7 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
       setIsEditing(false);
       toast({ title: 'Sucesso', description: 'Tarefa atualizada com sucesso.' });
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: getFriendlyError(error).description, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }

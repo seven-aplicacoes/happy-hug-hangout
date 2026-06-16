@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -94,7 +95,7 @@ export function useContratos() {
       console.error('Erro ao excluir contrato:', error);
       toast({ 
         title: 'Erro ao excluir', 
-        description: error.message || 'Ocorreu um erro ao tentar excluir o contrato. Verifique se existem dependências.',
+        description: getFriendlyError(error).description,
         variant: 'destructive'
       });
     },

@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -115,7 +116,7 @@ export function useClienteHistorico(clientId?: string) {
       queryClient.invalidateQueries({ queryKey: ['cliente-historico', clientId] });
     },
     onError: (error: any) => {
-      toast({ title: 'Erro ao registrar histórico', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro ao registrar histórico', description: getFriendlyError(error).description, variant: 'destructive' });
     },
   });
 

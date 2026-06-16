@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -62,7 +63,7 @@ export function useProdutos() {
       toast({ 
         variant: "destructive", 
         title: 'Erro ao excluir', 
-        description: error.message || 'Ocorreu um erro ao tentar excluir o produto.' 
+        description: getFriendlyError(error).description 
       });
     },
   });

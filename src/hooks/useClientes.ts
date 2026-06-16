@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -117,7 +118,7 @@ export function useClientes() {
       toast({ title: 'Sucesso', description: 'Cliente salvo com sucesso.' });
     },
     onError: (error: any) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: getFriendlyError(error).description, variant: 'destructive' });
     },
   });
 
@@ -135,7 +136,7 @@ export function useClientes() {
       toast({ title: 'Sucesso', description: 'Cliente excluído com sucesso.' });
     },
     onError: (error: any) => {
-      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro ao excluir', description: getFriendlyError(error).description, variant: 'destructive' });
     },
   });
 

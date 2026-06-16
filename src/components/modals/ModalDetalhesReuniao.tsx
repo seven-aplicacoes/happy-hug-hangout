@@ -1,3 +1,4 @@
+import { getFriendlyError } from '@/lib/friendlyErrors';
 import { useState, useEffect, useMemo } from 'react';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/ui/button';
@@ -126,7 +127,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       });
 
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: getFriendlyError(err).description, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -161,7 +162,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      toast({ title: 'Erro na Sincronização', description: err.message, variant: 'destructive' });
+      toast({ title: 'Erro na Sincronização', description: getFriendlyError(err).description, variant: 'destructive' });
     } finally {
       setGeneratingMeet(false);
     }
@@ -197,7 +198,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       fetchDetails();
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: getFriendlyError(err).description, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -220,7 +221,7 @@ export const ModalDetalhesReuniao = ({ open, onClose, reuniaoId, onEdit, onRefre
       setShowManualLinkForm(false);
       fetchDetails();
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: getFriendlyError(err).description, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
