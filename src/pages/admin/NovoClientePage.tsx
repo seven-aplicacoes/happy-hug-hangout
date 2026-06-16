@@ -337,6 +337,102 @@ export default function NovoClientePage() {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold text-primary/80 uppercase tracking-wider flex items-center gap-2">
+            <Target className="h-4 w-4" /> Alinhamento Estratégico
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Objetivo atual</Label>
+                <span className="text-[10px] text-muted-foreground">{form.current_objective.length}/{OBJETIVO_MAX}</span>
+              </div>
+              <Textarea
+                value={form.current_objective}
+                onChange={e => set('current_objective', e.target.value.slice(0, OBJETIVO_MAX))}
+                placeholder="Qual o objetivo principal do cliente neste momento?"
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Briefing / Observações</Label>
+                <span className="text-[10px] text-muted-foreground">{form.briefing.length}/{BRIEFING_MAX}</span>
+              </div>
+              <Textarea
+                value={form.briefing}
+                onChange={e => set('briefing', e.target.value.slice(0, BRIEFING_MAX))}
+                placeholder="Notas adicionais sobre o cliente..."
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label>Dores e problemas <span className="text-[10px] text-muted-foreground font-normal">({pains.length}/{LIST_MAX_ITEMS})</span></Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newPain}
+                  onChange={e => setNewPain(e.target.value.slice(0, ITEM_MAX_CHARS))}
+                  placeholder="Adicionar dor ou problema"
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(pains, setPains, newPain, () => setNewPain(''), 'dores e problemas'); } }}
+                />
+                <Button type="button" variant="outline" size="icon" onClick={() => addItem(pains, setPains, newPain, () => setNewPain(''), 'dores e problemas')}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {pains.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhuma dor cadastrada.</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {pains.map((p, i) => (
+                    <li key={i} className="flex items-start justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                      <span className="break-words flex-1">{p}</span>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setPains(pains.filter((_, idx) => idx !== i))}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fatores de sucesso <span className="text-[10px] text-muted-foreground font-normal">({successFactors.length}/{LIST_MAX_ITEMS})</span></Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newFactor}
+                  onChange={e => setNewFactor(e.target.value.slice(0, ITEM_MAX_CHARS))}
+                  placeholder="Adicionar fator de sucesso"
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(successFactors, setSuccessFactors, newFactor, () => setNewFactor(''), 'fatores de sucesso'); } }}
+                />
+                <Button type="button" variant="outline" size="icon" onClick={() => addItem(successFactors, setSuccessFactors, newFactor, () => setNewFactor(''), 'fatores de sucesso')}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {successFactors.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhum fator de sucesso cadastrado.</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {successFactors.map((f, i) => (
+                    <li key={i} className="flex items-start justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                      <span className="break-words flex-1">{f}</span>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setSuccessFactors(successFactors.filter((_, idx) => idx !== i))}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
