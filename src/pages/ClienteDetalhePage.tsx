@@ -225,21 +225,47 @@ export default function ClienteDetalhePage() {
     }
   };
 
+  const PAIN_MAX_ITEMS = 5;
+  const PAIN_MAX_CHARS = 80;
+  const FACTOR_MAX_ITEMS = 5;
+  const FACTOR_MAX_CHARS = 80;
+  const OBJETIVO_MAX = 300;
+  const BRIEFING_MAX = 500;
+
   const addPain = () => {
-    if (fichaNewPain.trim() && !fichaPains.includes(fichaNewPain.trim())) {
-      setFichaPains([...fichaPains, fichaNewPain.trim()]);
-      setFichaNewPain('');
+    const v = fichaNewPain.trim();
+    if (!v) return;
+    if (fichaPains.length >= PAIN_MAX_ITEMS) {
+      toast({ title: 'Limite atingido', description: `Máximo de ${PAIN_MAX_ITEMS} dores, com até ${PAIN_MAX_CHARS} caracteres cada.`, variant: 'destructive' });
+      return;
     }
+    if (v.length > PAIN_MAX_CHARS) {
+      toast({ title: 'Texto muito longo', description: `Cada dor pode ter no máximo ${PAIN_MAX_CHARS} caracteres.`, variant: 'destructive' });
+      return;
+    }
+    if (fichaPains.includes(v)) return;
+    setFichaPains([...fichaPains, v]);
+    setFichaNewPain('');
   };
 
   const removePain = (p: string) => setFichaPains(fichaPains.filter(item => item !== p));
 
   const addSuccessFactor = () => {
-    if (fichaNewSuccessFactor.trim() && !fichaSuccessFactors.includes(fichaNewSuccessFactor.trim())) {
-      setFichaSuccessFactors([...fichaSuccessFactors, fichaNewSuccessFactor.trim()]);
-      setFichaNewSuccessFactor('');
+    const v = fichaNewSuccessFactor.trim();
+    if (!v) return;
+    if (fichaSuccessFactors.length >= FACTOR_MAX_ITEMS) {
+      toast({ title: 'Limite atingido', description: `Máximo de ${FACTOR_MAX_ITEMS} fatores, com até ${FACTOR_MAX_CHARS} caracteres cada.`, variant: 'destructive' });
+      return;
     }
+    if (v.length > FACTOR_MAX_CHARS) {
+      toast({ title: 'Texto muito longo', description: `Cada fator pode ter no máximo ${FACTOR_MAX_CHARS} caracteres.`, variant: 'destructive' });
+      return;
+    }
+    if (fichaSuccessFactors.includes(v)) return;
+    setFichaSuccessFactors([...fichaSuccessFactors, v]);
+    setFichaNewSuccessFactor('');
   };
+
 
   const removeSuccessFactor = (s: string) => setFichaSuccessFactors(fichaSuccessFactors.filter(item => item !== s));
 
