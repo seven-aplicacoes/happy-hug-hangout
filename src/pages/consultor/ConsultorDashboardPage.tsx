@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { PageHeader } from '@/components/PageHeader';
+import { ModalDetalhesTarefa } from '@/components/modals/ModalDetalhesTarefa';
 import { StatCard } from '@/components/StatCard';
 import { TaskCard } from '@/components/TaskCard';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,6 +68,7 @@ export default function ConsultorDashboardPage() {
   const [modalList, setModalList] = useState<{ isOpen: boolean; title: string; type: CarteiraFiltro }>({ 
     isOpen: false, title: '', type: null 
   });
+  const [tarefaDetalhe, setTarefaDetalhe] = useState<Tarefa | null>(null);
 
   useEffect(() => {
     if (!loadingPermissions && !can('dashboard') && Array.isArray(permissions)) {
@@ -94,13 +96,18 @@ export default function ConsultorDashboardPage() {
     
     const minhasTarefas = tarefas;
     
+    const hojeDate = hojeStr;
     const tarefasPrioritarias = minhasTarefas
-      .filter(t => t.status !== 'concluida')
+      .filter(t => t.prioridade === 'critico' && t.status !== 'concluida')
       .sort((a, b) => {
-        const p = { critico: 0, alto: 1, medio: 2, baixo: 3 };
-        return (p[a.prioridade] ?? 4) - (p[b.prioridade] ?? 4);
+        const av = a.dataVencimento || '';
+        const bv = b.dataVencimento || '';
+        const aOverdue = av && av < hojeDate ? 0 : av ? 1 : 2;
+        const bOverdue = bv && bv < hojeDate ? 0 : bv ? 1 : 2;
+        if (aOverdue !== bOverdue) return aOverdue - bOverdue;
+        return av.localeCompare(bv);
       })
-      .slice(0, 3);
+      .slice(0, 5);
 
     const enriquecidos = meusClientes.map(c => ({
       ...c,
@@ -550,11 +557,12 @@ export default function ConsultorDashboardPage() {
         </Card>
       </section>
 
-      {/* Tarefas Prioritárias */}
+      {/* Tarefas Críticas */}
       <section>
         <SectionHeader
           overline="Prioridade"
-          titulo="Tarefas críticas"
+          titulo="Tarefas Críticas"
+          descricao="Tarefas de alta prioridade que precisam de atenção."
           action={
             <Button variant="ghost" size="sm" onClick={() => navigate('/consultor/tarefas')} className="text-xs">
               Ver todas <ArrowRight className="h-3 w-3 ml-1" />
@@ -564,14 +572,22 @@ export default function ConsultorDashboardPage() {
         <Card>
           <CardContent className="p-3 space-y-2">
             {tarefasPrioritarias.length === 0 ? (
-              <EmptyState titulo="Nenhuma tarefa prioritária" descricao="Você está em dia com as urgências." />
+              <EmptyState
+                titulo="Nenhuma tarefa crítica"
+                descricao="As tarefas de prioridade crítica aparecerão aqui quando forem cadastradas."
+              />
             ) : tarefasPrioritarias.map(t => (
-              <TaskCard key={t.id} tarefa={t} onClick={() => navigate(`/consultor/cliente/${t.clienteId}`)} />
+              <TaskCard key={t.id} tarefa={t} onClick={() => setTarefaDetalhe(t)} />
             ))}
           </CardContent>
         </Card>
       </section>
 
+      <ModalDetalhesTarefa
+        open={!!tarefaDetalhe}
+        onClose={() => setTarefaDetalhe(null)}
+        tarefa={tarefaDetalhe}
+      />
     </div>
   );
 }
