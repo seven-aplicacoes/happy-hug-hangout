@@ -479,12 +479,12 @@ export default function ConsultorDashboardPage() {
         </div>
       </section>
 
-      {/* Próximas Reuniões */}
+      {/* Próximas Reuniões (inclui hoje) */}
       <section>
         <SectionHeader
           overline="Agenda"
           titulo="Próximas Reuniões"
-          descricao="Próximos 5 agendamentos"
+          descricao="Próximos 10 agendamentos, incluindo hoje"
           action={
             <Button variant="ghost" size="sm" onClick={() => navigate('/consultor/reunioes')} className="text-xs">
               Ver agenda completa <ArrowRight className="h-3 w-3 ml-1" />
@@ -494,10 +494,15 @@ export default function ConsultorDashboardPage() {
         <Card>
           <CardContent className="p-2">
             {proximasReunioes.length === 0 ? (
-              <EmptyState titulo="Nenhuma reunião futura agendada" descricao="Use 'Agendar' nos cards acima para preencher sua agenda." />
+              <EmptyState
+                titulo="Nenhuma reunião agendada"
+                descricao="Quando houver reuniões na sua agenda, elas aparecerão aqui."
+              />
             ) : proximasReunioes.map(r => {
               const eng = calcularEngajamento(r.clienteId);
               const alerta = eng !== 'em_dia';
+              const link = r.meetingUrl?.trim();
+              const hasLink = !!link;
               return (
                 <ListRow
                   key={r.id}
@@ -505,8 +510,24 @@ export default function ConsultorDashboardPage() {
                   trailing={
                     <div className="flex items-center gap-2">
                       {alerta && <StatusTag label={labelEngajamento[eng]} variant={variantEngajamento[eng]} />}
-                      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate(`/consultor/cliente/${r.clienteId}`); }}>
-                        <Eye className="h-3 w-3 mr-1" /> Ver
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/consultor/cliente/${r.clienteId}`); }}
+                      >
+                        <Eye className="h-3 w-3 mr-1" /> Ver Cliente
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-seven-success hover:bg-seven-success/90 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!hasLink}
+                        title={hasLink ? 'Abrir reunião em nova aba' : 'Link da reunião não cadastrado.'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (hasLink) window.open(link!, '_blank', 'noopener,noreferrer');
+                        }}
+                      >
+                        <Play className="h-3 w-3 mr-1" /> Iniciar
                       </Button>
                     </div>
                   }
@@ -517,7 +538,9 @@ export default function ConsultorDashboardPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{r.clienteNome}</p>
-                      <p className="text-xs text-muted-foreground truncate">{r.tipo} · {labelStatus[r.status]}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {(r.title || r.tipo)} · {labelStatus[r.status]}
+                      </p>
                     </div>
                   </div>
                 </ListRow>
@@ -527,67 +550,28 @@ export default function ConsultorDashboardPage() {
         </Card>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Reuniões de Hoje */}
-        <section>
-          <SectionHeader
-            overline="Hoje"
-            titulo="Reuniões"
-            action={
-              <Button variant="ghost" size="sm" onClick={() => navigate('/consultor/reunioes')} className="text-xs">
-                Ver todas <ArrowRight className="h-3 w-3 ml-1" />
-              </Button>
-            }
-          />
-          <Card>
-            <CardContent className="p-2">
-              {reunioesHoje.length === 0 ? (
-                <EmptyState titulo="Sem reuniões hoje" descricao="Aproveite para avançar tarefas pendentes." />
-              ) : reunioesHoje.map(r => (
-                <ListRow
-                  key={r.id}
-                  onClick={() => navigate(`/consultor/cliente/${r.clienteId}`)}
-                  trailing={
-                    <Button size="sm" className="bg-seven-success hover:bg-seven-success/90 text-white" onClick={(e) => { e.stopPropagation(); navigate(`/consultor/cliente/${r.clienteId}`); }}>
-                      <Play className="h-3 w-3 mr-1" /> Iniciar
-                    </Button>
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-base font-mono font-semibold text-primary tabular-nums">{r.startTime}</span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{r.clienteNome}</p>
-                      <p className="text-xs text-muted-foreground truncate">{r.title}</p>
-                    </div>
-                  </div>
-                </ListRow>
-              ))}
-            </CardContent>
-          </Card>
-        </section>
+      {/* Tarefas Prioritárias */}
+      <section>
+        <SectionHeader
+          overline="Prioridade"
+          titulo="Tarefas críticas"
+          action={
+            <Button variant="ghost" size="sm" onClick={() => navigate('/consultor/tarefas')} className="text-xs">
+              Ver todas <ArrowRight className="h-3 w-3 ml-1" />
+            </Button>
+          }
+        />
+        <Card>
+          <CardContent className="p-3 space-y-2">
+            {tarefasPrioritarias.length === 0 ? (
+              <EmptyState titulo="Nenhuma tarefa prioritária" descricao="Você está em dia com as urgências." />
+            ) : tarefasPrioritarias.map(t => (
+              <TaskCard key={t.id} tarefa={t} onClick={() => navigate(`/consultor/cliente/${t.clienteId}`)} />
+            ))}
+          </CardContent>
+        </Card>
+      </section>
 
-        {/* Tarefas Prioritárias */}
-        <section>
-          <SectionHeader
-            overline="Prioridade"
-            titulo="Tarefas críticas"
-            action={
-              <Button variant="ghost" size="sm" onClick={() => navigate('/consultor/tarefas')} className="text-xs">
-                Ver todas <ArrowRight className="h-3 w-3 ml-1" />
-              </Button>
-            }
-          />
-          <Card>
-            <CardContent className="p-3 space-y-2">
-              {tarefasPrioritarias.length === 0 ? (
-                <EmptyState titulo="Nenhuma tarefa prioritária" descricao="Você está em dia com as urgências." />
-              ) : tarefasPrioritarias.map(t => (
-                <TaskCard key={t.id} tarefa={t} onClick={() => navigate(`/consultor/cliente/${t.clienteId}`)} />
-              ))}
-            </CardContent>
-          </Card>
-        </section>
-      </div>
     </div>
   );
 }
