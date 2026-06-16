@@ -96,7 +96,7 @@ export default function ConsultorDashboardPage() {
     
     const hojeDate = hojeStr;
     const tarefasPrioritarias = minhasTarefas
-      .filter(t => t.prioridade === 'critico' && t.status !== 'concluida' && t.status !== 'cancelada')
+      .filter(t => t.prioridade === 'critico' && t.status !== 'concluida')
       .sort((a, b) => {
         const av = a.dataVencimento || '';
         const bv = b.dataVencimento || '';
