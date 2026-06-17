@@ -674,7 +674,11 @@ export default function ClienteDetalhePage() {
             <p className="text-muted-foreground">Carregando contratos e produtos...</p>
           </div>
         ) : contratosCliente.length > 0 ? (
-          <Accordion type="single" collapsible className="w-full space-y-4">
+          <Accordion
+            type="multiple"
+            defaultValue={contratosCliente.map(c => c.id)}
+            className="w-full space-y-4"
+          >
             {contratosCliente.map(contrato => (
               <ContractJourneyCard 
                 key={contrato.id} 
@@ -697,6 +701,18 @@ export default function ClienteDetalhePage() {
           </Card>
         )}
       </section>
+
+      {/* --- Seção 3: Tarefas do Cliente --- */}
+      {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
+
+      <ModalTarefa
+        open={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        defaultContext={{
+          clienteId: id,
+          consultorId: user?.id,
+        }}
+      />
 
     </div>
   );
