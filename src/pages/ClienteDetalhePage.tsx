@@ -54,7 +54,10 @@ export default function ClienteDetalhePage() {
   const [fichaNewPain, setFichaNewPain] = useState('');
   const [fichaNewSuccessFactor, setFichaNewSuccessFactor] = useState('');
   const [isUploadingAvatar, setIsSubmittingAvatar] = useState(false);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const openNewTask = () => setTaskModalOpen(true);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
