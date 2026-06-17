@@ -39,17 +39,21 @@ const origemConfig: Record<OrigemDemanda, { icon: typeof Video; label: string }>
 };
 
 export const TaskCard = ({ tarefa, onClick, draggable, onDragStart, onDelete }: TaskCardProps) => {
+  const { user } = useAuth();
   const isChamado = tarefa.tipo === 'chamado';
   const OrigemIcon = tarefa.origem ? origemConfig[tarefa.origem]?.icon : null;
   const origemLabel = tarefa.origem ? origemConfig[tarefa.origem]?.label : null;
   const contexto = !isChamado ? contextoEstrategicoTarefa(tarefa.clienteId) : null;
+  const isAbertoPorMim = isChamado && tarefa.createdBy === user?.id;
+  const chamadoLabel = isAbertoPorMim ? 'Chamado aberto' : 'Chamado recebido';
+  const ChamadoIcon = isAbertoPorMim ? Send : Inbox;
 
   return (
     <Card
       className={cn(
         'cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all border-l-4',
         prioridadeBorder[tarefa.prioridade],
-        isChamado && 'ring-1 ring-orange-200'
+        isChamado && (isAbertoPorMim ? 'ring-1 ring-blue-200' : 'ring-1 ring-orange-200')
       )}
       onClick={onClick}
       draggable={draggable}
@@ -58,11 +62,11 @@ export const TaskCard = ({ tarefa, onClick, draggable, onDragStart, onDelete }: 
       <CardContent className="p-4 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <Badge
-            variant={isChamado ? 'destructive' : 'default'}
+            variant={isChamado ? (isAbertoPorMim ? 'default' : 'destructive') : 'default'}
             className="text-[10px] px-2 py-0 h-5 gap-1 font-semibold uppercase tracking-wide"
           >
-            {isChamado ? <LifeBuoy className="h-3 w-3" /> : <ClipboardList className="h-3 w-3" />}
-            {isChamado ? 'Chamado' : 'Tarefa'}
+            {isChamado ? <ChamadoIcon className="h-3 w-3" /> : <ClipboardList className="h-3 w-3" />}
+            {isChamado ? chamadoLabel : 'Tarefa'}
           </Badge>
           {onDelete && (
             <Button
