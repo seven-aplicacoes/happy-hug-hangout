@@ -366,10 +366,13 @@ export default function NovoClientePage() {
                   <Input
                     type="number"
                     min={0}
-                    step="0.01"
+                    step={1000}
                     value={form.faturamentoMensal}
-                    onChange={e => set('faturamentoMensal', e.target.value)}
-                    placeholder="Ex: 50000.00"
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === '' || Number(v) >= 0) set('faturamentoMensal', v);
+                    }}
+                    placeholder="Ex: 50000"
                   />
                 </div>
               </div>
