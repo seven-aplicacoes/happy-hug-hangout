@@ -405,20 +405,6 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
               )}
             </div>
 
-            {/* Cliente (Edição) */}
-            {isEditing && (
-              <div className="space-y-2 pt-4 border-t border-muted/60">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vincular Outro Cliente</Label>
-                <Select value={clienteId} onValueChange={setClienteId}>
-                  <SelectTrigger className="bg-white h-10 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           {/* Se estiver no status impedida, mostra o motivo atual em destaque */}
