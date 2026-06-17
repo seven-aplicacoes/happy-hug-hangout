@@ -374,7 +374,7 @@ export default function ClienteDetalhePage() {
               <div className="flex flex-wrap gap-3 mt-3">
                 <StatusTag label={labelStatus[cliente.status] || cliente.status} />
                 <Badge variant="outline" className="bg-white/50 border-muted/50 font-bold px-3 py-1 text-[10px] uppercase tracking-wider">
-                  {cliente.porte}
+                  {calcularPorteClinica(cliente.faturamentoMensal) || cliente.porte || 'Porte não calculado'}
                 </Badge>
                 <Badge variant="outline" className="bg-white/50 border-muted/50 font-bold px-3 py-1 text-[10px] uppercase tracking-wider">
                   {labelRegiao[cliente.regiao] || cliente.regiao}
