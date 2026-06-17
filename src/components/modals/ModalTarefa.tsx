@@ -14,13 +14,22 @@ import { useContractProductPhases } from '@/hooks/useContractProductPhases';
 import { ModalRegistrarImpedimento } from './ModalRegistrarImpedimento';
 import type { Tarefa, StatusTarefa, TipoDemanda, NivelRisco } from '@/types';
 
+interface DefaultContext {
+  clienteId?: string;
+  contratoId?: string;
+  contractProductId?: string;
+  contractProductPhaseId?: string;
+  consultorId?: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   tarefa?: Tarefa | null;
+  defaultContext?: DefaultContext;
 }
 
-export const ModalTarefa = ({ open, onClose, tarefa }: Props) => {
+export const ModalTarefa = ({ open, onClose, tarefa, defaultContext }: Props) => {
   const { upsertTarefa } = useTarefas();
   const { clientes } = useClientes();
   const { consultores } = useConsultores();
@@ -63,17 +72,17 @@ export const ModalTarefa = ({ open, onClose, tarefa }: Props) => {
     } else {
       setTitulo('');
       setDescricao('');
-      setClienteId('');
-      setContratoId('');
-      setContractProductId('');
-      setContractProductPhaseId('');
-      setConsultorId('');
+      setClienteId(defaultContext?.clienteId || '');
+      setContratoId(defaultContext?.contratoId || '');
+      setContractProductId(defaultContext?.contractProductId || '');
+      setContractProductPhaseId(defaultContext?.contractProductPhaseId || '');
+      setConsultorId(defaultContext?.consultorId || '');
       setStatus('a_fazer');
       setPrioridade('medio');
       setDataVencimento('');
       setTipo('consultoria');
     }
-  }, [tarefa, open]);
+  }, [tarefa, open, defaultContext]);
 
   const handleSave = async (motive?: string, overrideStatus?: StatusTarefa) => {
     const effectiveStatus = overrideStatus || status;

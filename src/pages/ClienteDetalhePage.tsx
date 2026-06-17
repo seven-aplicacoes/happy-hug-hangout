@@ -26,6 +26,8 @@ import { Accordion } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { TarefasClienteSection } from '@/components/TarefasClienteSection';
+import { ModalTarefa } from '@/components/modals/ModalTarefa';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
@@ -52,7 +54,10 @@ export default function ClienteDetalhePage() {
   const [fichaNewPain, setFichaNewPain] = useState('');
   const [fichaNewSuccessFactor, setFichaNewSuccessFactor] = useState('');
   const [isUploadingAvatar, setIsSubmittingAvatar] = useState(false);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const openNewTask = () => setTaskModalOpen(true);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -378,11 +383,16 @@ export default function ClienteDetalhePage() {
                 </Button>
               </>
             ) : (
-              (isAdmin || can('ficha_cliente', 'edit')) && (
-                <Button size="lg" onClick={handleToggleEdit} className="h-11 px-6 font-bold shadow-lg shadow-primary/20">
-                  <Pencil className="h-4 w-4 mr-2" /> Editar Ficha
+              <>
+                <Button size="lg" variant="outline" onClick={openNewTask} className="h-11 px-5 font-bold">
+                  <PlusCircle className="h-4 w-4 mr-2" /> Nova Tarefa
                 </Button>
-              )
+                {(isAdmin || can('ficha_cliente', 'edit')) && (
+                  <Button size="lg" onClick={handleToggleEdit} className="h-11 px-6 font-bold shadow-lg shadow-primary/20">
+                    <Pencil className="h-4 w-4 mr-2" /> Editar Ficha
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -664,7 +674,11 @@ export default function ClienteDetalhePage() {
             <p className="text-muted-foreground">Carregando contratos e produtos...</p>
           </div>
         ) : contratosCliente.length > 0 ? (
-          <Accordion type="single" collapsible className="w-full space-y-4">
+          <Accordion
+            type="multiple"
+            defaultValue={contratosCliente.map(c => c.id)}
+            className="w-full space-y-4"
+          >
             {contratosCliente.map(contrato => (
               <ContractJourneyCard 
                 key={contrato.id} 
@@ -687,6 +701,18 @@ export default function ClienteDetalhePage() {
           </Card>
         )}
       </section>
+
+      {/* --- Seção 3: Tarefas do Cliente --- */}
+      {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
+
+      <ModalTarefa
+        open={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        defaultContext={{
+          clienteId: id,
+          consultorId: user?.id,
+        }}
+      />
 
     </div>
   );
