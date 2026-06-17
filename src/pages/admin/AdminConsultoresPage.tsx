@@ -7,7 +7,7 @@ import { StatusTag } from '@/components/StatusTag';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { labelEspecialidade } from '@/data/mockData';
+
 import { getRepassesConsultor } from '@/data/sevenGestaoMock';
 import { calculateCapacidade, labelCapacidade, variantCapacidade, getAlertaCapacidadeFromData } from '@/data/consultorExtras';
 import { useContratos } from '@/hooks/useContratos';
