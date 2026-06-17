@@ -172,12 +172,31 @@ export const ConsultorModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Final check for mandatory fields
+
+    const isAdmin = formData.role === 'admin';
+
     if (!formData.full_name || !formData.email || (!consultor && !formData.password) || !formData.role || !formData.status) {
       toast({
-        title: "Erro de validação",
+        title: "Preencha os campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isAdmin && !formData.user_category) {
+      toast({
+        title: "Selecione o tipo de usuário",
+        description: "Informe se o usuário é Interno ou Consultor.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isAdmin && formData.user_category && !formData.consulting_area) {
+      toast({
+        title: "Selecione a área da consultoria",
+        description: "A área é obrigatória para usuários Internos e Consultores.",
         variant: "destructive",
       });
       return;
