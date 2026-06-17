@@ -130,7 +130,7 @@ export default function AdminClientesPage() {
     { 
       key: 'porte', 
       header: 'Porte', 
-      render: (c) => <span className="text-sm">{c.porte || '-'}</span>,
+      render: (c) => <span className="text-sm">{calcularPorteClinica(c.faturamentoMensal) || c.porte || '-'}</span>,
       className: 'w-[100px]'
     },
     { 
