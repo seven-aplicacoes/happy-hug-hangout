@@ -53,6 +53,8 @@ interface ConsultorRow {
   cidade: string;
   estado: string;
   status: string;
+  consultingArea: string;
+  userCategory: string;
   clientesAtivos: number;
   clientesEmRisco: number;
   clientesBloqueados: number;
