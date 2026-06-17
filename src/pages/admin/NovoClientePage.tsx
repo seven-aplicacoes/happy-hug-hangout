@@ -111,7 +111,7 @@ export default function NovoClientePage() {
         nomeFantasia: pick(prev.nomeFantasia, data.nome_fantasia),
         institutional_email: pick(prev.institutional_email, data.email),
         contact_phone: pick(prev.contact_phone, data.telefone),
-        porte: pick(prev.porte, data.porte) as any,
+        // Porte da clínica NÃO é preenchido pelo CNPJ — depende do faturamento médio atual
         cep: pick(prev.cep, data.cep),
         street: pick(prev.street, data.logradouro),
         number: pick(prev.number, data.numero),
