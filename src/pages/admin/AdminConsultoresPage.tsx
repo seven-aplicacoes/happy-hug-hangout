@@ -230,7 +230,7 @@ export default function AdminConsultoresPage() {
     { key: 'consultingArea', header: 'Área da Consultoria', render: (c) => (
       <span className="text-sm">{c.consultingArea || <span className="text-muted-foreground italic">Não informado</span>}</span>
     ) },
-    { key: 'especialidade', header: 'Especialidade', render: (c) => <span className="text-sm">{labelEspecialidade[c.especialidade]}</span> },
+    
     {
       key: 'clientesAtivos',
       header: `Clientes${sortIndicator('clientesAtivos')}`,
