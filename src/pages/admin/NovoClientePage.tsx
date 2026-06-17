@@ -362,17 +362,29 @@ export default function NovoClientePage() {
                   <Input value={form.institutional_email} onChange={e => set('institutional_email', e.target.value)} placeholder="Ex: contato@empresa.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Porte da Empresa</Label>
-                  <Select value={form.porte} onValueChange={v => set('porte', v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o porte" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MEI">MEI</SelectItem>
-                      <SelectItem value="Micro">Micro</SelectItem>
-                      <SelectItem value="Pequena">Pequena</SelectItem>
-                      <SelectItem value="Média">Média</SelectItem>
-                      <SelectItem value="Grande">Grande</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Faturamento médio atual (R$)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={form.faturamentoMensal}
+                    onChange={e => set('faturamentoMensal', e.target.value)}
+                    placeholder="Ex: 50000.00"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Porte da clínica</Label>
+                  <Input
+                    value={calcularPorteClinica(form.faturamentoMensal) || 'Não calculado'}
+                    readOnly
+                    disabled
+                    className="bg-muted/40 font-medium"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    O porte é calculado automaticamente com base no faturamento médio atual.
+                  </p>
                 </div>
               </div>
             </CardContent>
