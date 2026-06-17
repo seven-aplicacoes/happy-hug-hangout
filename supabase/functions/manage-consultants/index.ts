@@ -20,7 +20,7 @@ serve(async (req) => {
     const { action, userData } = await req.json()
 
     if (action === 'create') {
-      const { email, password, full_name, role, specialty, phone, city, state, max_clients, hours_available, status, consulting_area, user_category } = userData
+      const { email, password, full_name, role, phone, city, state, max_clients, hours_available, status, consulting_area, user_category } = userData
 
       // 1. Create user in Auth
       const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
@@ -40,7 +40,6 @@ serve(async (req) => {
           email,
           full_name,
           role: (role || 'consultor') as any,
-          specialty,
           phone,
           city,
           state,
@@ -73,11 +72,11 @@ serve(async (req) => {
     }
 
     if (action === 'update') {
-      const { id, full_name, specialty, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category } = userData
+      const { id, full_name, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category } = userData
 
       const { error } = await supabaseClient
         .from('profiles')
-        .update({ full_name, specialty, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category })
+        .update({ full_name, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category })
         .eq('id', id)
 
       if (error) throw error

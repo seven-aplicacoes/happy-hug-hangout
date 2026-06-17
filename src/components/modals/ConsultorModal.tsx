@@ -43,14 +43,6 @@ interface IBGECity {
   nome: string;
 }
 
-const ESPECIALIDADES = [
-  { label: 'Gestão', value: 'gestao' },
-  { label: 'Financeiro', value: 'financeiro' },
-  { label: 'Comercial', value: 'comercial' },
-  { label: 'Processos', value: 'processos' },
-  { label: 'Pessoas', value: 'pessoas' },
-  { label: 'Estratégia', value: 'estrategia' },
-];
 
 const CONSULTING_AREAS = [
   'Gestão de Pessoas',
@@ -75,7 +67,6 @@ export const ConsultorModal = ({
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
-    specialty: "",
     phone: "",
     city: "",
     state: "",
@@ -139,7 +130,6 @@ export const ConsultorModal = ({
       setFormData({
         full_name: consultor.full_name || "",
         email: consultor.email || "",
-        specialty: consultor.specialty || "",
         phone: consultor.phone || "",
         city: consultor.city || "",
         state: consultor.state || "",
@@ -155,7 +145,6 @@ export const ConsultorModal = ({
       setFormData({
         full_name: "",
         email: "",
-        specialty: "",
         phone: "",
         city: "",
         state: "",
@@ -285,7 +274,7 @@ export const ConsultorModal = ({
               <Select
                 value={formData.role}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, role: value, ...(value === 'admin' ? { user_category: '', consulting_area: '' } : {}) })
+                  setFormData({ ...formData, role: value })
                 }
                 disabled={modo === 'consultor'}
                 required
@@ -301,52 +290,51 @@ export const ConsultorModal = ({
               <p className="text-xs text-muted-foreground">Define as permissões do usuário no sistema.</p>
             </div>
 
-            {formData.role !== 'admin' && (
-              <div className="space-y-2">
-                <Label htmlFor="user_category">Tipo de Usuário *</Label>
-                <Select
-                  value={formData.user_category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, user_category: value })
-                  }
-                  disabled={modo === 'consultor'}
-                >
-                  <SelectTrigger id="user_category">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="interno">Interno</SelectItem>
-                    <SelectItem value="consultor">Consultor</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">Define se atua como consultor ou colaborador interno.</p>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="user_category">
+                Tipo de Usuário {formData.role !== 'admin' ? '*' : ''}
+              </Label>
+              <Select
+                value={formData.user_category}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, user_category: value })
+                }
+                disabled={modo === 'consultor'}
+              >
+                <SelectTrigger id="user_category">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interno">Interno</SelectItem>
+                  <SelectItem value="consultor">Consultor</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Define se atua como consultor ou colaborador interno.</p>
+            </div>
 
-            {(formData.role === 'admin' || formData.user_category) && (
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="consulting_area">
-                  Área da Consultoria {formData.role !== 'admin' && formData.user_category ? '*' : ''}
-                </Label>
-                <Select
-                  value={formData.consulting_area}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, consulting_area: value })
-                  }
-                  disabled={modo === 'consultor'}
-                >
-                  <SelectTrigger id="consulting_area">
-                    <SelectValue placeholder="Selecione a área" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONSULTING_AREAS.map((area) => (
-                      <SelectItem key={area} value={area}>{area}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">Área operacional à qual o usuário pertence.</p>
-              </div>
-            )}
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="consulting_area">
+                Área da Consultoria {formData.role !== 'admin' && formData.user_category ? '*' : ''}
+              </Label>
+              <Select
+                value={formData.consulting_area}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, consulting_area: value })
+                }
+                disabled={modo === 'consultor'}
+              >
+                <SelectTrigger id="consulting_area">
+                  <SelectValue placeholder="Selecione a área" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONSULTING_AREAS.map((area) => (
+                    <SelectItem key={area} value={area}>{area}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Área operacional à qual o usuário pertence.</p>
+            </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
