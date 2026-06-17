@@ -176,28 +176,40 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
     </div>
   );
 
+  const isChamado = tarefa.tipo === 'chamado';
+
   return (
-    <BaseModal 
-      open={open} 
-      onClose={onClose} 
-      titulo="Detalhes da Tarefa" 
+    <BaseModal
+      open={open}
+      onClose={onClose}
+      titulo={isChamado ? 'Detalhes do Chamado' : 'Detalhes da Tarefa'}
       size="2xl"
       footer={footer}
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-4">
         {/* Coluna Principal (Esquerda) */}
         <div className="md:col-span-2 space-y-8">
+          {/* Badge de tipo */}
+          <div>
+            <Badge
+              variant={isChamado ? 'destructive' : 'default'}
+              className="text-[11px] px-2.5 py-0.5 h-6 font-semibold uppercase tracking-wide"
+            >
+              {isChamado ? 'Chamado' : 'Tarefa'}
+            </Badge>
+          </div>
+
           {/* Título */}
           <div className="space-y-2">
             <Label className={cn("text-[11px] font-black uppercase tracking-widest text-muted-foreground", errors.titulo && "text-destructive")}>
-              Título da Tarefa {isEditing && "*"}
+              {isChamado ? 'Assunto do chamado' : 'Título da tarefa'} {isEditing && "*"}
             </Label>
             {isEditing ? (
-              <Input 
-                value={titulo} 
-                onChange={e => { setTitulo(e.target.value); setErrors(prev => ({ ...prev, titulo: '' })); }} 
+              <Input
+                value={titulo}
+                onChange={e => { setTitulo(e.target.value); setErrors(prev => ({ ...prev, titulo: '' })); }}
                 className={cn("text-lg font-bold h-12", errors.titulo && "border-destructive")}
-                placeholder="Ex: Elaborar relatório de custos"
+                placeholder={isChamado ? 'Ex: Problema com acesso ao portal' : 'Ex: Elaborar relatório de custos'}
               />
             ) : (
               <h2 className="text-2xl font-black text-foreground tracking-tight leading-tight">{tarefa.titulo}</h2>
@@ -207,15 +219,15 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
           {/* Descrição */}
           <div className="space-y-2">
             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <FileText className="h-3.5 w-3.5" /> Descrição
+              <FileText className="h-3.5 w-3.5" /> {isChamado ? 'Descrição do problema' : 'Descrição'}
             </Label>
             {isEditing ? (
-              <Textarea 
-                value={descricao} 
-                onChange={e => setDescricao(e.target.value)} 
+              <Textarea
+                value={descricao}
+                onChange={e => setDescricao(e.target.value)}
                 rows={6}
                 className="resize-none text-sm p-4 leading-relaxed"
-                placeholder="Descreva detalhadamente o que deve ser feito..."
+                placeholder="Descreva detalhadamente..."
               />
             ) : (
               <div className="bg-muted/20 p-6 rounded-xl border border-dashed text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed min-h-[150px]">
@@ -224,35 +236,32 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
             )}
           </div>
 
-          {/* Grid de Detalhes Adicionais (Somente Leitura na esquerda, inputs na direita para edição se preferir, ou aqui mesmo) */}
+          {/* Grid de vínculos (somente leitura — não editável) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-muted">
             <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <Building2 className="h-3 w-3" /> Cliente
               </Label>
-              <p className="text-sm font-bold">{tarefa.clienteNome}</p>
+              <p className="text-sm font-bold">{tarefa.clienteNome || '—'}</p>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Briefcase className="h-3 w-3" /> Contrato
-              </Label>
-              <p className="text-sm font-medium text-muted-foreground">{tarefa.contratoNome || 'Sem contrato'}</p>
-            </div>
+            {!isChamado && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <Briefcase className="h-3 w-3" /> Contrato
+                  </Label>
+                  <p className="text-sm font-medium text-muted-foreground">{tarefa.contratoNome || '—'}</p>
+                </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Zap className="h-3 w-3" /> Produto
-              </Label>
-              <p className="text-sm font-medium text-muted-foreground">{tarefa.produtoNome || 'Nenhum produto vinculado'}</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Tag className="h-3 w-3" /> Tipo
-              </Label>
-              <Badge variant="outline" className="font-bold text-[10px] uppercase">{tarefa.tipo}</Badge>
-            </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <Zap className="h-3 w-3" /> Produto
+                  </Label>
+                  <p className="text-sm font-medium text-muted-foreground">{tarefa.produtoNome || '—'}</p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Histórico de Impedimentos (se houver) */}
@@ -396,20 +405,6 @@ export const ModalDetalhesTarefa = ({ open, onClose, tarefa }: Props) => {
               )}
             </div>
 
-            {/* Cliente (Edição) */}
-            {isEditing && (
-              <div className="space-y-2 pt-4 border-t border-muted/60">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vincular Outro Cliente</Label>
-                <Select value={clienteId} onValueChange={setClienteId}>
-                  <SelectTrigger className="bg-white h-10 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           {/* Se estiver no status impedida, mostra o motivo atual em destaque */}
