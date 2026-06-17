@@ -43,14 +43,6 @@ interface IBGECity {
   nome: string;
 }
 
-const ESPECIALIDADES = [
-  { label: 'Gestão', value: 'gestao' },
-  { label: 'Financeiro', value: 'financeiro' },
-  { label: 'Comercial', value: 'comercial' },
-  { label: 'Processos', value: 'processos' },
-  { label: 'Pessoas', value: 'pessoas' },
-  { label: 'Estratégia', value: 'estrategia' },
-];
 
 const CONSULTING_AREAS = [
   'Gestão de Pessoas',
