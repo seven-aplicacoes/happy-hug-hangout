@@ -245,7 +245,7 @@ export default function ConsultorClientesPage() {
         </TooltipProvider>
       );
     }, className: 'w-[110px]' },
-    { key: 'porte', header: 'Porte', render: (c) => <span className="text-xs text-muted-foreground">{labelPorte[getPorte(c)]}</span>, className: 'w-[90px]' },
+    { key: 'porte', header: 'Porte', render: (c) => { const p = getPorte(c); return <span className="text-xs text-muted-foreground">{p ? labelPorte[p] : '—'}</span>; }, className: 'w-[90px]' },
     { key: 'status', header: 'Status', render: (c) => <StatusTag label={labelStatus[c.status]} />, className: 'w-[130px]' },
     { key: 'engajamento', header: 'Engajamento', render: (c) => { const e = calcularEngajamento(c.id, reunioes || []); return <StatusTag label={labelEngajamento[e]} variant={variantEngajamento[e]} />; }, className: 'w-[120px]' },
     { key: 'indice', header: <span className="inline-flex items-center gap-1">Índice <IndiceSevenInfo /></span>, render: (c) => <span className="font-mono">{c.indiceSeven || '—'}</span> },
