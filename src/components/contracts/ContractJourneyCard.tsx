@@ -277,7 +277,7 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
 
   return (
     <div className="space-y-4 mt-4 animate-in fade-in duration-300">
-      {mode === 'admin' && (
+      {canUpload && (
         <div className="flex justify-end">
           <input 
             type="file" 
