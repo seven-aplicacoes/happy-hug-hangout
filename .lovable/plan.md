@@ -1,62 +1,49 @@
-Este é um melhoramento amplo da área **Operacional > Tarefas**. Abaixo está o plano dividido por arquivo e regra. Preciso da sua aprovação antes de implementar — é uma mudança grande e quero confirmar o escopo.
+## Objetivo
+Implementar o PONTO 23: nova seção global de links do OneDrive por cliente e correção da permissão de upload de documentos para consultores.
 
-## 1. Abas (`ConsultorTarefasPage.tsx` e equivalente Admin)
-- Remover aba **"Delegadas pelo gestor"**.
-- Criar aba **"Todos"** (primeira, default).
-- Resultado: `Todos | Minhas tarefas | Chamados abertos | Chamados recebidos`.
-- Filtros por aba aplicados sobre o mesmo dataset vindo do hook `useTarefas`.
+## Parte 1 — OneDrive do Cliente (links globais)
 
-## 2. Cards (`TaskCard.tsx`)
-- Adicionar badge no topo: **"Tarefa"** ou **"Chamado"** (cores distintas, ícone clipboard vs headset).
-- Para **chamado**: remover linhas de contrato, produto, módulo, "Sem contrato vinculado", etc. Mostrar apenas: assunto, cliente, descrição resumida, aberto por, responsável, prioridade, status, data.
-- Para **tarefa**: manter cliente, contrato, produto, etapa/módulo (somente quando existirem — sem placeholders "não vinculado").
-- Borda lateral colorida diferenciando tipo.
+### Banco (migration)
+Criar tabela `public.client_onedrive_links`:
+- `id uuid pk`, `client_id uuid not null references clients(id) on delete cascade`
+- `title text not null`, `url text not null`
+- `category text` (pasta_principal | atas | documentos_internos | entregaveis | outros)
+- `description text`, `created_by uuid references profiles(id)`
+- `created_at`, `updated_at` (com trigger `update_updated_at_column`)
+- GRANTs para `authenticated` e `service_role`
+- RLS:
+  - admin: full access (`is_admin()`)
+  - consultor: SELECT/INSERT/UPDATE/DELETE se `check_consultant_client_access(client_id)`
+  - cliente: sem acesso (não criar policy)
 
-## 3. Modal "Nova Demanda" (`ModalNovaTarefaChamado.tsx`)
-- Aumentar largura para `max-w-3xl` (~800px) desktop; full em mobile.
-- Manter seleção inicial de tipo: **Tarefa de Consultoria** ou **Abertura de Chamado**.
-- Campos por tipo conforme spec.
-- **Cascata sempre visível** na tarefa: Cliente → Contrato → Produto → Etapa/Módulo. Campos dependentes aparecem desde o início mas `disabled` + `opacity-40 cursor-not-allowed` + helper text ("Selecione um cliente primeiro" etc.), ativando 100% conforme dependência for preenchida.
-- Chamado NÃO mostra contrato/produto/módulo.
-- Salvamento no Supabase respeitando o tipo (`tasks.task_type` ou equivalente — verificar schema antes).
+### Frontend
+- Novo hook `src/hooks/useClienteOneDriveLinks.ts` (CRUD via supabase + react-query).
+- Novo componente `src/components/cliente/OneDriveLinksCard.tsx`:
+  - Lista de links com ícone, título, categoria, botão Abrir (novo tab, `rel="noopener noreferrer"`), Editar, Excluir.
+  - Empty state com CTA "Adicionar link".
+- Novo modal `src/components/modals/ModalOneDriveLink.tsx` (campos: título*, url*, categoria, observação; validação zod incluindo URL onedrive/sharepoint).
+- Inserir `<OneDriveLinksCard />` em `ClienteDetalhePage.tsx`, logo após a Ficha Cadastral e antes de "Contratos e Jornada".
+- Permissões na UI: botões de adicionar/editar/excluir gated por `isAdmin || can('ficha_cliente','edit')` ou permissão de documentos.
 
-## 4. Modal Detalhes (`ModalDetalhesTarefa.tsx`)
-- Largura `max-w-5xl` (~1000px).
-- Layout em 2 colunas: esquerda (descrição, cliente, contexto), direita (operacional: criada por, responsável, status, prioridade, vencimento, criação).
-- Badge **"Tarefa"** ou **"Chamado"** no topo. Remover campo técnico "Tipo".
-- Chamado oculta contrato/produto/módulo.
+## Parte 2 — Upload de documentos para consultores
 
-## 5. Modal Edição (`ModalTarefa.tsx`)
-- **Bloquear edição** de: cliente, contrato, produto, etapa/módulo, tipo (renderizados como readonly).
-- Permitir editar: título/assunto, descrição, prazo, responsável, prioridade, status.
-- Linguagem adaptada conforme tipo (labels "Título da tarefa" vs "Assunto do chamado" etc.).
+### Frontend (`src/components/contracts/ContractJourneyCard.tsx`)
+- Substituir gate `mode === 'admin'` por: `isAdmin || (mode !== 'client' && can('documentos','create'))`.
+- Manter botão oculto para cliente.
+- Mensagem amigável quando consultor sem permissão tenta interagir.
 
-## 6. Remover mocks
-- Limpar usos de `Admin`, `Desconhecido`, `Sem contrato vinculado`, arrays locais em `TaskCard`, modais e página de tarefas. Tudo vem do hook Supabase.
+### Backend / RLS
+- Verificar policies de `documents` / `contract_module_documents` e do bucket `documents` em storage para permitir INSERT/SELECT por consultor responsável pelo cliente (usando `check_consultant_client_access`).
+- Se faltar policy de upload no storage para consultor, adicionar via migration:
+  - `storage.objects` INSERT/SELECT/DELETE quando bucket = 'documents' e usuário é admin OU consultor com acesso ao cliente (path encode contém client_id).
 
-## 7. Empty states
-- "Todos" → "Nenhuma demanda encontrada."
-- "Minhas tarefas" → "Nenhuma tarefa cadastrada."
-- "Chamados abertos" → "Nenhum chamado aberto."
-- "Chamados recebidos" → "Nenhum chamado recebido."
+### Mensagens
+- Tratar erros de upload com toast amigável ("Não foi possível enviar o arquivo..."), nunca expor erro técnico.
 
-## Arquivos a editar
-- `src/pages/consultor/ConsultorTarefasPage.tsx`
-- `src/pages/admin/AdminTarefasPage.tsx` (espelhar abas se aplicável)
-- `src/components/TaskCard.tsx`
-- `src/components/modals/ModalNovaTarefaChamado.tsx`
-- `src/components/modals/ModalDetalhesTarefa.tsx`
-- `src/components/modals/ModalTarefa.tsx`
-- `src/hooks/useTarefas.ts` (ajustes de filtros por aba, sem mudanças de schema)
+## Critérios de aceite
+- Links OneDrive persistem no Supabase, múltiplos por cliente, abrem em nova aba.
+- Consultor com permissão consegue fazer upload em Documentos Internos e Entregáveis.
+- Consultor sem permissão não vê o botão.
+- Estrutura existente de documentos preservada.
 
-## Detalhes técnicos
-- Sem migrations — usa schema existente de `tasks`. Confirmarei colunas existentes (`task_type`, `subject`, `opened_by`, `client_id`, `contract_id`, `contract_product_id`, `contract_phase_id`, `assignee_id`, `priority`, `status`, `due_date`, `description`, `title`) antes de tocar nos saves.
-- Estilo: badges via `Badge` shadcn com variantes semânticas já existentes; ícones `lucide-react` (`ClipboardList`, `Headset`).
-- Cascata desabilitada usa classes Tailwind `opacity-40 pointer-events-none` no wrapper do Select.
-
-## Riscos / pontos a confirmar com você
-1. **AdminTarefasPage** também deve receber as novas abas ou só o portal do consultor? Spec menciona Painel Consultor.
-2. Hoje o tipo é salvo em qual coluna? Se não houver coluna específica, preciso adicionar via migration (avisarei).
-3. Para "Chamados recebidos" — definir "área dele" como `consultant_id = auth.uid()` (responsável direto) é suficiente? Não há tabela de áreas hoje.
-
-Aprove para eu implementar, ou me diga ajustes.
+Posso seguir com a implementação?
