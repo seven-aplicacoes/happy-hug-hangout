@@ -50,7 +50,9 @@ export default function ConsultorTarefasPage() {
     return true;
   });
 
-  const chamadosAbertosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.status !== 'concluida').length;
+  const chamadosAbertosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.createdBy === user?.id).length;
+  const chamadosRecebidosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.consultorId === consultorId && t.createdBy !== user?.id).length;
+  const minhasTarefasCount = tarefasState.filter(t => t.consultorId === consultorId && t.tipo !== 'chamado').length;
 
   const emptyMessage = filtroTipo === 'todos'
     ? 'Nenhuma demanda encontrada.'
