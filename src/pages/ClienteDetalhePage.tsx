@@ -687,9 +687,6 @@ export default function ClienteDetalhePage() {
         </Card>
       </section>
 
-      {/* --- Seção: OneDrive do Cliente --- */}
-      {id && <OneDriveLinksCard clientId={id} />}
-
       {/* --- Seção 2: Contratos e Jornada --- */}
       <section className="space-y-6">
         <div className="flex items-center gap-2 mb-2">
@@ -733,6 +730,9 @@ export default function ClienteDetalhePage() {
 
       {/* --- Seção 3: Tarefas do Cliente --- */}
       {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
+
+      {/* --- Seção: OneDrive do Cliente --- */}
+      {id && <OneDriveLinksCard clientId={id} />}
 
       <ModalTarefa
         open={taskModalOpen}
