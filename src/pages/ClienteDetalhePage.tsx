@@ -514,11 +514,14 @@ export default function ClienteDetalhePage() {
                       <Input
                         type="number"
                         min={0}
-                        step="0.01"
+                        step={1000}
                         value={fichaForm?.faturamentoMensal ?? ''}
-                        onChange={e => setF('faturamentoMensal', e.target.value)}
+                        onChange={e => {
+                          const v = e.target.value;
+                          if (v === '' || Number(v) >= 0) setF('faturamentoMensal', v);
+                        }}
                         disabled={!isEditing}
-                        placeholder="Ex: 50000.00"
+                        placeholder="Ex: 50000"
                         className="bg-white font-medium"
                       />
                     </div>
