@@ -220,8 +220,18 @@ export default function ClienteDetalhePage() {
     }
     
     try {
+      const fatNum = fichaForm.faturamentoMensal === '' || fichaForm.faturamentoMensal == null
+        ? null
+        : Number(fichaForm.faturamentoMensal);
+      if (fatNum !== null && (isNaN(fatNum) || fatNum < 0)) {
+        toast({ title: 'Faturamento inválido', description: 'O faturamento não pode ser negativo.', variant: 'destructive' });
+        return;
+      }
+      const porteCalc = calcularPorteClinica(fatNum) || fichaForm.porte || null;
       await updateCliente.mutateAsync({
         ...fichaForm,
+        faturamentoMensal: fatNum ?? 0,
+        porte: porteCalc,
         pains: fichaPains,
         success_factors: fichaSuccessFactors,
       });
