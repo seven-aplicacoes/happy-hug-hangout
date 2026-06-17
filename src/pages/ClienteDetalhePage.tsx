@@ -383,11 +383,16 @@ export default function ClienteDetalhePage() {
                 </Button>
               </>
             ) : (
-              (isAdmin || can('ficha_cliente', 'edit')) && (
-                <Button size="lg" onClick={handleToggleEdit} className="h-11 px-6 font-bold shadow-lg shadow-primary/20">
-                  <Pencil className="h-4 w-4 mr-2" /> Editar Ficha
+              <>
+                <Button size="lg" variant="outline" onClick={openNewTask} className="h-11 px-5 font-bold">
+                  <PlusCircle className="h-4 w-4 mr-2" /> Nova Tarefa
                 </Button>
-              )
+                {(isAdmin || can('ficha_cliente', 'edit')) && (
+                  <Button size="lg" onClick={handleToggleEdit} className="h-11 px-6 font-bold shadow-lg shadow-primary/20">
+                    <Pencil className="h-4 w-4 mr-2" /> Editar Ficha
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
