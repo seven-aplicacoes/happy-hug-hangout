@@ -98,6 +98,8 @@ function buildRows(
       cidade: c.city || '—',
       estado: c.state || '—',
       status: c.status || 'ativo',
+      consultingArea: (c as any).consulting_area || '',
+      userCategory: (c as any).user_category || '',
       clientesAtivos: mc.filter(cl => cl.status === 'ativo').length,
       clientesEmRisco,
       clientesBloqueados,
