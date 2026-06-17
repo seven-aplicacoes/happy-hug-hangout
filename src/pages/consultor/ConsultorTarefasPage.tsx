@@ -34,8 +34,8 @@ export default function ConsultorTarefasPage() {
   const [novaDemandaOpen, setNovaDemandaOpen] = useState(false);
   const [detalhesOpen, setDetalhesOpen] = useState(false);
   const [selectedTarefa, setSelectedTarefa] = useState<Tarefa | null>(null);
-  const [filtroTipo, setFiltroTipo] = useState<'minhas' | 'delegadas' | 'chamados_abertos' | 'chamados_recebidos'>('minhas');
-  
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'minhas' | 'chamados_abertos' | 'chamados_recebidos'>('todos');
+
   const { can, isLoading: loadingPermissions } = useMyPermissions();
 
   useEffect(() => {
@@ -43,14 +43,22 @@ export default function ConsultorTarefasPage() {
   }, [tarefas]);
 
   const tarefasFiltradas = tarefasState.filter(t => {
+    if (filtroTipo === 'todos') return true;
     if (filtroTipo === 'minhas') return t.consultorId === consultorId && t.tipo !== 'chamado';
-    if (filtroTipo === 'delegadas') return t.consultorId === consultorId && (t.delegatedBy || ((t.createdByRole === 'admin' || t.createdByRole === 'gestor') && t.createdBy !== consultorId));
-    if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.status !== 'concluida';
+    if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.createdBy === user?.id;
     if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado' && t.consultorId === consultorId;
     return true;
   });
 
   const chamadosAbertosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.status !== 'concluida').length;
+
+  const emptyMessage = filtroTipo === 'todos'
+    ? 'Nenhuma demanda encontrada.'
+    : filtroTipo === 'minhas'
+      ? 'Nenhuma tarefa cadastrada.'
+      : filtroTipo === 'chamados_abertos'
+        ? 'Nenhum chamado aberto.'
+        : 'Nenhum chamado recebido.';
 
   const handleDragStart = (tarefaId: string) => setDragging(tarefaId);
 
@@ -131,8 +139,8 @@ export default function ConsultorTarefasPage() {
 
       <div className="flex flex-wrap gap-2">
         {([
+          { k: 'todos' as const, l: 'Todos' },
           { k: 'minhas' as const, l: 'Minhas tarefas' },
-          { k: 'delegadas' as const, l: 'Delegadas pelo gestor' },
           { k: 'chamados_abertos' as const, l: `Chamados abertos${chamadosAbertosCount > 0 ? ` · ${chamadosAbertosCount}` : ''}` },
           { k: 'chamados_recebidos' as const, l: 'Chamados recebidos' },
         ]).map(opt => (
@@ -162,7 +170,7 @@ export default function ConsultorTarefasPage() {
                 </div>
                 <div className="space-y-2 flex-1">
                   {items.length === 0 ? (
-                    <p className="text-xs text-muted-foreground/60 italic text-center py-6">Sem itens</p>
+                    <p className="text-xs text-muted-foreground/60 italic text-center py-6">{emptyMessage}</p>
                   ) : items.map(t => (
                     <TaskCard
                       key={t.id}
