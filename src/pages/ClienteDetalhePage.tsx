@@ -26,6 +26,7 @@ import { Accordion } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { calcularPorteClinica } from '@/data/clienteExtras';
 import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
 
