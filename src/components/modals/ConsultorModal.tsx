@@ -52,6 +52,13 @@ const ESPECIALIDADES = [
   { label: 'Estratégia', value: 'estrategia' },
 ];
 
+const CONSULTING_AREAS = [
+  'Gestão de Pessoas',
+  'Gestão de Marketing',
+  'Gestão Comercial',
+  'Gestão Financeira',
+];
+
 export const ConsultorModal = ({
   isOpen,
   onClose,
