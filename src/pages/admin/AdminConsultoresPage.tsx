@@ -236,7 +236,13 @@ export default function AdminConsultoresPage() {
       ),
     },
     { key: 'cargo', header: 'Cargo', render: (c) => <span className="text-sm">{c.cargo}</span> },
-    { key: 'especialidade', header: 'Área', render: (c) => <span className="text-sm">{labelEspecialidade[c.especialidade]}</span> },
+    { key: 'userCategory', header: 'Tipo', render: (c) => (
+      <span className="text-sm">{c.userCategory === 'interno' ? 'Interno' : c.userCategory === 'consultor' ? 'Consultor' : <span className="text-muted-foreground italic">Não informado</span>}</span>
+    ) },
+    { key: 'consultingArea', header: 'Área da Consultoria', render: (c) => (
+      <span className="text-sm">{c.consultingArea || <span className="text-muted-foreground italic">Não informado</span>}</span>
+    ) },
+    { key: 'especialidade', header: 'Especialidade', render: (c) => <span className="text-sm">{labelEspecialidade[c.especialidade]}</span> },
     {
       key: 'clientesAtivos',
       header: `Clientes${sortIndicator('clientesAtivos')}`,
