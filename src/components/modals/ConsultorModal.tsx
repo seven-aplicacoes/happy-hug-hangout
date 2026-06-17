@@ -67,7 +67,6 @@ export const ConsultorModal = ({
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
-    specialty: "",
     phone: "",
     city: "",
     state: "",
