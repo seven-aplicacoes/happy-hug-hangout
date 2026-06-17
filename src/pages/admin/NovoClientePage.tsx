@@ -215,12 +215,21 @@ export default function NovoClientePage() {
         setIsLoading(false);
         return;
       }
+      const faturamentoNum = form.faturamentoMensal === '' ? null : Number(form.faturamentoMensal);
+      if (faturamentoNum !== null && (isNaN(faturamentoNum) || faturamentoNum < 0)) {
+        toast({ title: 'Faturamento inválido', description: 'O faturamento não pode ser negativo.', variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+      const porteCalc = calcularPorteClinica(faturamentoNum) || form.porte || null;
+
       const result = await upsertCliente.mutateAsync({
         razaoSocial: form.razaoSocial,
         nomeFantasia: form.nomeFantasia,
         cnpj: form.cnpj,
         regiao: form.regiao as any,
-        porte: form.porte,
+        porte: porteCalc as any,
+        faturamentoMensal: faturamentoNum as any,
         consultorId: form.consultorId,
         cep: form.cep,
         street: form.street,
