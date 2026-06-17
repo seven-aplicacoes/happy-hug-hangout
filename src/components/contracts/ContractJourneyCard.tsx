@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
