@@ -46,7 +46,7 @@ export default function ConsultorTarefasPage() {
     if (filtroTipo === 'todos') return true;
     if (filtroTipo === 'minhas') return t.consultorId === consultorId && t.tipo !== 'chamado';
     if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.createdBy === user?.id;
-    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado' && t.consultorId === consultorId;
+    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado' && t.consultorId === consultorId && t.createdBy !== user?.id;
     return true;
   });
 
