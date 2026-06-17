@@ -340,7 +340,7 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
 }
 
 function PhaseRow({ phase, contrato, isEditing, onUpdate, onDelete, onSchedule, mode = 'admin' }: { phase: any, contrato: any, isEditing?: boolean, onUpdate?: (data: any) => void, onDelete?: () => void, onSchedule: (meeting: ContractModuleMeeting) => void, mode?: 'admin' | 'client' | 'consultor' }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const { consultores } = useConsultores();
   
   if (isEditing) {
