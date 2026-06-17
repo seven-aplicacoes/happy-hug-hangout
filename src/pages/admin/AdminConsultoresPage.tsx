@@ -187,6 +187,12 @@ export default function AdminConsultoresPage() {
     if (filterValues.especialidade && filterValues.especialidade !== 'todos') {
       rows = rows.filter(r => r.especialidade === filterValues.especialidade);
     }
+    if (filterValues.consultingArea && filterValues.consultingArea !== 'todos') {
+      rows = rows.filter(r => r.consultingArea === filterValues.consultingArea);
+    }
+    if (filterValues.userCategory && filterValues.userCategory !== 'todos') {
+      rows = rows.filter(r => r.userCategory === filterValues.userCategory);
+    }
     if (filterValues.atencao && filterValues.atencao !== 'todos') {
       if (filterValues.atencao === 'risco') rows = rows.filter(r => r.clientesEmRisco > 0);
       if (filterValues.atencao === 'atraso') rows = rows.filter(r => r.tarefasEmAtraso > 0);
