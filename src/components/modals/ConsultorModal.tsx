@@ -148,6 +148,8 @@ export const ConsultorModal = ({
         role: (consultor as any).role || "consultor",
         max_clients: consultor.max_clients || 10,
         hours_available: consultor.hours_available || 160,
+        consulting_area: (consultor as any).consulting_area || "",
+        user_category: (consultor as any).user_category || "",
       });
     } else {
       setFormData({
@@ -162,6 +164,8 @@ export const ConsultorModal = ({
         role: "consultor",
         max_clients: 10,
         hours_available: 160,
+        consulting_area: "",
+        user_category: "",
       });
     }
   }, [consultor, isOpen]);
