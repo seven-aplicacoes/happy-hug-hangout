@@ -158,6 +158,7 @@ export function useTarefas() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+      queryClient.invalidateQueries({ queryKey: ['cliente-tarefas'] });
       toast({ title: 'Sucesso', description: 'Tarefa removida.' });
     },
   });
