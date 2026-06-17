@@ -240,6 +240,10 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
 
 function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, contrato: any, type: 'internal' | 'client', mode?: 'admin' | 'client' | 'consultor' }) {
   const { perfil, user } = useAuth();
+  const { can } = useMyPermissions();
+  const isAdmin = perfil === 'admin';
+  const isClient = mode === 'client' || perfil === 'cliente';
+  const canUpload = isAdmin || (!isClient && can('documentos', 'create'));
   const { documents, isLoading, deleteDocument, downloadDocument, uploadDocument } = useContractModuleDocuments(phase.id, contrato.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
