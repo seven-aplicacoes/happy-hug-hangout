@@ -89,7 +89,7 @@ export default function AdminClientesPage() {
     }
 
     if (filters.porte && filters.porte !== 'todos') {
-      d = d.filter(c => c.porte === filters.porte);
+      d = d.filter(c => (calcularPorteClinica(c.faturamentoMensal) || c.porte) === filters.porte);
     }
     
     if (filters.consultorId && filters.consultorId !== 'todos') {
