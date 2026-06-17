@@ -731,6 +731,9 @@ export default function ClienteDetalhePage() {
       {/* --- Seção 3: Tarefas do Cliente --- */}
       {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
 
+      {/* --- Seção: OneDrive do Cliente --- */}
+      {id && <OneDriveLinksCard clientId={id} />}
+
       <ModalTarefa
         open={taskModalOpen}
         onClose={() => setTaskModalOpen(false)}
