@@ -29,6 +29,7 @@ import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard'
 import { calcularPorteClinica } from '@/data/clienteExtras';
 import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
+import { OneDriveLinksCard } from '@/components/cliente/OneDriveLinksCard';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
@@ -685,6 +686,9 @@ export default function ClienteDetalhePage() {
           </CardContent>
         </Card>
       </section>
+
+      {/* --- Seção: OneDrive do Cliente --- */}
+      {id && <OneDriveLinksCard clientId={id} />}
 
       {/* --- Seção 2: Contratos e Jornada --- */}
       <section className="space-y-6">

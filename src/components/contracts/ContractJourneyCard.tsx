@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ModalReuniao } from '@/components/modals/ModalReuniao';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ModalDetalhesReuniao } from '@/components/modals/ModalDetalhesReuniao';
 import type { ContractModuleMeeting, ContractModuleDocument, Reuniao } from '@/types';
 
@@ -240,6 +241,10 @@ function MeetingList({ phase, contrato, onSchedule, mode = 'admin' }: MeetingLis
 
 function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, contrato: any, type: 'internal' | 'client', mode?: 'admin' | 'client' | 'consultor' }) {
   const { perfil, user } = useAuth();
+  const { can } = useMyPermissions();
+  const isAdmin = perfil === 'admin';
+  const isClient = mode === 'client' || perfil === 'cliente';
+  const canUpload = isAdmin || (!isClient && can('documentos', 'create'));
   const { documents, isLoading, deleteDocument, downloadDocument, uploadDocument } = useContractModuleDocuments(phase.id, contrato.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -272,7 +277,7 @@ function DocumentList({ phase, contrato, type, mode = 'admin' }: { phase: any, c
 
   return (
     <div className="space-y-4 mt-4 animate-in fade-in duration-300">
-      {mode === 'admin' && (
+      {canUpload && (
         <div className="flex justify-end">
           <input 
             type="file" 
