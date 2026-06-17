@@ -130,7 +130,6 @@ export const ConsultorModal = ({
       setFormData({
         full_name: consultor.full_name || "",
         email: consultor.email || "",
-        specialty: consultor.specialty || "",
         phone: consultor.phone || "",
         city: consultor.city || "",
         state: consultor.state || "",
