@@ -113,15 +113,6 @@ function buildRows(
 }
 
 
-const especialidades: { label: string; value: string }[] = [
-  { label: 'Gestão', value: 'gestao' },
-  { label: 'Financeiro', value: 'financeiro' },
-  { label: 'Comercial', value: 'comercial' },
-  { label: 'Processos', value: 'processos' },
-  { label: 'Pessoas', value: 'pessoas' },
-  { label: 'Estratégia', value: 'estrategia' },
-];
-
 const CONSULTING_AREAS = [
   'Gestão de Pessoas',
   'Gestão de Marketing',
@@ -131,7 +122,6 @@ const CONSULTING_AREAS = [
 
 const filters: FilterConfig[] = [
   { key: 'status', label: 'Status', options: [{ label: 'Ativo', value: 'ativo' }, { label: 'Inativo', value: 'inativo' }] },
-  { key: 'especialidade', label: 'Especialidade', options: especialidades },
   { key: 'consultingArea', label: 'Área da Consultoria', options: CONSULTING_AREAS.map(a => ({ label: a, value: a })) },
   { key: 'userCategory', label: 'Tipo de Usuário', options: [
     { label: 'Interno', value: 'interno' },
