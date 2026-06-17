@@ -70,6 +70,7 @@ export default function NovoClientePage() {
   const [form, setForm] = useState({
     razaoSocial: '', nomeFantasia: '', cnpj: '', regiao: 'sudeste',
     porte: '' as any,
+    faturamentoMensal: '' as string,
     especialidade: 'gestao', consultorId: '',
     cep: '', street: '', number: '', complement: '', neighborhood: '',
     institutional_email: '',
