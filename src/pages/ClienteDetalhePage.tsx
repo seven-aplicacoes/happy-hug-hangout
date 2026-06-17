@@ -510,18 +510,29 @@ export default function ClienteDetalhePage() {
                       <Input value={fichaForm?.contact_phone} onChange={e => setF('contact_phone', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Porte</Label>
-                      <Select value={fichaForm?.porte} onValueChange={v => setF('porte', v)} disabled={!isEditing}>
-                        <SelectTrigger className="bg-white font-medium">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pequena">Pequena</SelectItem>
-                          <SelectItem value="Média">Média</SelectItem>
-                          <SelectItem value="Grande">Grande</SelectItem>
-                          <SelectItem value="Multinacional">Multinacional</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Faturamento médio atual (R$)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={fichaForm?.faturamentoMensal ?? ''}
+                        onChange={e => setF('faturamentoMensal', e.target.value)}
+                        disabled={!isEditing}
+                        placeholder="Ex: 50000.00"
+                        className="bg-white font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Porte da clínica</Label>
+                      <Input
+                        value={calcularPorteClinica(fichaForm?.faturamentoMensal) || fichaForm?.porte || 'Não calculado'}
+                        readOnly
+                        disabled
+                        className="bg-muted/40 font-medium"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Calculado automaticamente pelo faturamento médio atual.
+                      </p>
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Status Geral</Label>
