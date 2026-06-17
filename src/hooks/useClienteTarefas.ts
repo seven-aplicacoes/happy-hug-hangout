@@ -21,7 +21,8 @@ export function useClienteTarefas(clientId?: string) {
           *,
           clients (trade_name),
           contracts (type),
-          profiles:consultant_id (full_name)
+          profiles:consultant_id (full_name),
+          delegated_profile:delegated_by (full_name)
         `)
         .eq('client_id', clientId)
         .order('due_date', { ascending: true });
@@ -37,8 +38,8 @@ export function useClienteTarefas(clientId?: string) {
         contratoId: t.contract_id,
         contratoNome: t.contracts?.type || 'Sem contrato',
         consultorId: t.consultant_id,
-        consultorNome: t.profiles?.full_name || 'Desconhecido',
-        tipo: t.demand_type || t.origin || 'consultoria', 
+        consultorNome: t.profiles?.full_name || 'Não informado',
+        tipo: t.demand_type || t.origin || 'consultoria',
         status: normalizeTaskStatus(t.status) as StatusTarefa,
         prioridade: t.priority as any,
         dataVencimento: t.due_date ? t.due_date.split('T')[0] : '',
@@ -50,7 +51,12 @@ export function useClienteTarefas(clientId?: string) {
         contractProductPhaseId: t.contract_product_phase_id,
         methodologyPhaseId: t.methodology_phase_id,
         methodologyWeekId: t.methodology_week_id,
-        completedAt: t.completed_at
+        completedAt: t.completed_at,
+        createdBy: t.created_by,
+        createdByName: t.created_by_name,
+        createdByRole: t.created_by_role,
+        delegatedBy: t.delegated_by,
+        delegatedByName: t.delegated_profile?.full_name,
       })) as Tarefa[];
     },
     enabled: !!clientId,
