@@ -3843,6 +3843,7 @@ export type Database = {
           avatar_url: string | null
           calendly_url: string | null
           city: string | null
+          consulting_area: string | null
           created_at: string | null
           email: string
           entry_date: string | null
@@ -3858,11 +3859,13 @@ export type Database = {
           state: string | null
           status: string | null
           updated_at: string | null
+          user_category: string | null
         }
         Insert: {
           avatar_url?: string | null
           calendly_url?: string | null
           city?: string | null
+          consulting_area?: string | null
           created_at?: string | null
           email: string
           entry_date?: string | null
@@ -3878,11 +3881,13 @@ export type Database = {
           state?: string | null
           status?: string | null
           updated_at?: string | null
+          user_category?: string | null
         }
         Update: {
           avatar_url?: string | null
           calendly_url?: string | null
           city?: string | null
+          consulting_area?: string | null
           created_at?: string | null
           email?: string
           entry_date?: string | null
@@ -3898,6 +3903,7 @@ export type Database = {
           state?: string | null
           status?: string | null
           updated_at?: string | null
+          user_category?: string | null
         }
         Relationships: []
       }

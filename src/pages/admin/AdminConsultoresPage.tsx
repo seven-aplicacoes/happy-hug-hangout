@@ -53,6 +53,8 @@ interface ConsultorRow {
   cidade: string;
   estado: string;
   status: string;
+  consultingArea: string;
+  userCategory: string;
   clientesAtivos: number;
   clientesEmRisco: number;
   clientesBloqueados: number;
@@ -96,6 +98,8 @@ function buildRows(
       cidade: c.city || '—',
       estado: c.state || '—',
       status: c.status || 'ativo',
+      consultingArea: (c as any).consulting_area || '',
+      userCategory: (c as any).user_category || '',
       clientesAtivos: mc.filter(cl => cl.status === 'ativo').length,
       clientesEmRisco,
       clientesBloqueados,
@@ -118,9 +122,21 @@ const especialidades: { label: string; value: string }[] = [
   { label: 'Estratégia', value: 'estrategia' },
 ];
 
+const CONSULTING_AREAS = [
+  'Gestão de Pessoas',
+  'Gestão de Marketing',
+  'Gestão Comercial',
+  'Gestão Financeira',
+];
+
 const filters: FilterConfig[] = [
   { key: 'status', label: 'Status', options: [{ label: 'Ativo', value: 'ativo' }, { label: 'Inativo', value: 'inativo' }] },
-  { key: 'especialidade', label: 'Área', options: especialidades },
+  { key: 'especialidade', label: 'Especialidade', options: especialidades },
+  { key: 'consultingArea', label: 'Área da Consultoria', options: CONSULTING_AREAS.map(a => ({ label: a, value: a })) },
+  { key: 'userCategory', label: 'Tipo de Usuário', options: [
+    { label: 'Interno', value: 'interno' },
+    { label: 'Consultor', value: 'consultor' },
+  ]},
   { key: 'atencao', label: 'Atenção', options: [
     { label: 'Clientes em risco', value: 'risco' },
     { label: 'Tarefas em atraso', value: 'atraso' },
@@ -171,6 +187,12 @@ export default function AdminConsultoresPage() {
     if (filterValues.especialidade && filterValues.especialidade !== 'todos') {
       rows = rows.filter(r => r.especialidade === filterValues.especialidade);
     }
+    if (filterValues.consultingArea && filterValues.consultingArea !== 'todos') {
+      rows = rows.filter(r => r.consultingArea === filterValues.consultingArea);
+    }
+    if (filterValues.userCategory && filterValues.userCategory !== 'todos') {
+      rows = rows.filter(r => r.userCategory === filterValues.userCategory);
+    }
     if (filterValues.atencao && filterValues.atencao !== 'todos') {
       if (filterValues.atencao === 'risco') rows = rows.filter(r => r.clientesEmRisco > 0);
       if (filterValues.atencao === 'atraso') rows = rows.filter(r => r.tarefasEmAtraso > 0);
@@ -214,7 +236,13 @@ export default function AdminConsultoresPage() {
       ),
     },
     { key: 'cargo', header: 'Cargo', render: (c) => <span className="text-sm">{c.cargo}</span> },
-    { key: 'especialidade', header: 'Área', render: (c) => <span className="text-sm">{labelEspecialidade[c.especialidade]}</span> },
+    { key: 'userCategory', header: 'Tipo', render: (c) => (
+      <span className="text-sm">{c.userCategory === 'interno' ? 'Interno' : c.userCategory === 'consultor' ? 'Consultor' : <span className="text-muted-foreground italic">Não informado</span>}</span>
+    ) },
+    { key: 'consultingArea', header: 'Área da Consultoria', render: (c) => (
+      <span className="text-sm">{c.consultingArea || <span className="text-muted-foreground italic">Não informado</span>}</span>
+    ) },
+    { key: 'especialidade', header: 'Especialidade', render: (c) => <span className="text-sm">{labelEspecialidade[c.especialidade]}</span> },
     {
       key: 'clientesAtivos',
       header: `Clientes${sortIndicator('clientesAtivos')}`,

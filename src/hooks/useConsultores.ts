@@ -20,6 +20,8 @@ export type ConsultantProfile = {
   hours_available?: number;
   microsoft_teams_connected?: boolean;
   microsoft_teams_account?: string | null;
+  consulting_area?: string | null;
+  user_category?: string | null;
 };
 
 export const useConsultores = () => {

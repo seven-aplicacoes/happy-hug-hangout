@@ -52,6 +52,13 @@ const ESPECIALIDADES = [
   { label: 'Estratégia', value: 'estrategia' },
 ];
 
+const CONSULTING_AREAS = [
+  'Gestão de Pessoas',
+  'Gestão de Marketing',
+  'Gestão Comercial',
+  'Gestão Financeira',
+];
+
 export const ConsultorModal = ({
   isOpen,
   onClose,
@@ -77,6 +84,8 @@ export const ConsultorModal = ({
     role: "consultor",
     max_clients: 10,
     hours_available: 160,
+    consulting_area: "",
+    user_category: "",
   });
 
   const { consultantGoals } = useConsultantGoals(consultor?.id);
@@ -139,6 +148,8 @@ export const ConsultorModal = ({
         role: (consultor as any).role || "consultor",
         max_clients: consultor.max_clients || 10,
         hours_available: consultor.hours_available || 160,
+        consulting_area: (consultor as any).consulting_area || "",
+        user_category: (consultor as any).user_category || "",
       });
     } else {
       setFormData({
@@ -153,18 +164,39 @@ export const ConsultorModal = ({
         role: "consultor",
         max_clients: 10,
         hours_available: 160,
+        consulting_area: "",
+        user_category: "",
       });
     }
   }, [consultor, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Final check for mandatory fields
+
+    const isAdmin = formData.role === 'admin';
+
     if (!formData.full_name || !formData.email || (!consultor && !formData.password) || !formData.role || !formData.status) {
       toast({
-        title: "Erro de validação",
+        title: "Preencha os campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isAdmin && !formData.user_category) {
+      toast({
+        title: "Selecione o tipo de usuário",
+        description: "Informe se o usuário é Interno ou Consultor.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isAdmin && formData.user_category && !formData.consulting_area) {
+      toast({
+        title: "Selecione a área da consultoria",
+        description: "A área é obrigatória para usuários Internos e Consultores.",
         variant: "destructive",
       });
       return;
@@ -253,7 +285,7 @@ export const ConsultorModal = ({
               <Select
                 value={formData.role}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, role: value })
+                  setFormData({ ...formData, role: value, ...(value === 'admin' ? { user_category: '', consulting_area: '' } : {}) })
                 }
                 disabled={modo === 'consultor'}
                 required
@@ -266,7 +298,55 @@ export const ConsultorModal = ({
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">Define as permissões do usuário no sistema.</p>
             </div>
+
+            {formData.role !== 'admin' && (
+              <div className="space-y-2">
+                <Label htmlFor="user_category">Tipo de Usuário *</Label>
+                <Select
+                  value={formData.user_category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, user_category: value })
+                  }
+                  disabled={modo === 'consultor'}
+                >
+                  <SelectTrigger id="user_category">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="interno">Interno</SelectItem>
+                    <SelectItem value="consultor">Consultor</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Define se atua como consultor ou colaborador interno.</p>
+              </div>
+            )}
+
+            {(formData.role === 'admin' || formData.user_category) && (
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="consulting_area">
+                  Área da Consultoria {formData.role !== 'admin' && formData.user_category ? '*' : ''}
+                </Label>
+                <Select
+                  value={formData.consulting_area}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, consulting_area: value })
+                  }
+                  disabled={modo === 'consultor'}
+                >
+                  <SelectTrigger id="consulting_area">
+                    <SelectValue placeholder="Selecione a área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONSULTING_AREAS.map((area) => (
+                      <SelectItem key={area} value={area}>{area}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Área operacional à qual o usuário pertence.</p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
