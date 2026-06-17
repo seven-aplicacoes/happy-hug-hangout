@@ -168,14 +168,12 @@ export default function AdminConsultoresPage() {
       rows = rows.filter(r =>
         r.nome.toLowerCase().includes(q) ||
         r.email.toLowerCase().includes(q) ||
-        labelEspecialidade[r.especialidade]?.toLowerCase().includes(q)
+        r.consultingArea.toLowerCase().includes(q) ||
+        r.userCategory.toLowerCase().includes(q)
       );
     }
     if (filterValues.status && filterValues.status !== 'todos') {
       rows = rows.filter(r => r.status === filterValues.status);
-    }
-    if (filterValues.especialidade && filterValues.especialidade !== 'todos') {
-      rows = rows.filter(r => r.especialidade === filterValues.especialidade);
     }
     if (filterValues.consultingArea && filterValues.consultingArea !== 'todos') {
       rows = rows.filter(r => r.consultingArea === filterValues.consultingArea);
