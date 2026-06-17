@@ -114,7 +114,7 @@ export const TarefasClienteSection = ({ clientId, onCreateTask }: Props) => {
 
       <ModalDetalhesTarefa
         open={detailOpen}
-        onClose={() => { setDetailOpen(false); setSelected(null); }}
+        onClose={() => { setDetailOpen(false); setSelectedId(null); }}
         tarefa={selected}
       />
     </section>
