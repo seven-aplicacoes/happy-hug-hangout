@@ -30,11 +30,14 @@ const prioridadeColor: Record<string, string> = {
 
 export const TarefasClienteSection = ({ clientId, onCreateTask }: Props) => {
   const { tarefas, isLoading } = useClienteTarefas(clientId);
-  const [selected, setSelected] = useState<Tarefa | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
+  // Re-derive selected from the live list so edits refresh the modal automatically
+  const selected = selectedId ? (tarefas?.find(t => t.id === selectedId) || null) : null;
+
   const openDetail = (t: Tarefa) => {
-    setSelected(t);
+    setSelectedId(t.id);
     setDetailOpen(true);
   };
 
@@ -111,7 +114,7 @@ export const TarefasClienteSection = ({ clientId, onCreateTask }: Props) => {
 
       <ModalDetalhesTarefa
         open={detailOpen}
-        onClose={() => { setDetailOpen(false); setSelected(null); }}
+        onClose={() => { setDetailOpen(false); setSelectedId(null); }}
         tarefa={selected}
       />
     </section>
