@@ -136,22 +136,18 @@ export const ModalTarefa = ({ open, onClose, tarefa, defaultContext }: Props) =>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <Label>Cliente {!isEditMode && '*'}</Label>
-            {isEditMode ? (
-              <div className="h-10 px-3 flex items-center rounded-md border bg-muted/40 text-sm text-muted-foreground">{clienteNome}</div>
-            ) : (
-              <Select value={clienteId} onValueChange={v => {
-                setClienteId(v);
-                setContratoId('');
-                setContractProductId('');
-                setContractProductPhaseId('');
-              }}>
-                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>
-                  {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            )}
+            <Label>Cliente *</Label>
+            <Select value={clienteId} onValueChange={v => {
+              setClienteId(v);
+              setContratoId('');
+              setContractProductId('');
+              setContractProductPhaseId('');
+            }}>
+              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>
+                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label>{isChamado ? 'Responsável pelo atendimento *' : 'Responsável pela tarefa *'}</Label>
