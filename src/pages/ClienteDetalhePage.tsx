@@ -26,6 +26,8 @@ import { Accordion } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { TarefasClienteSection } from '@/components/TarefasClienteSection';
+import { ModalTarefa } from '@/components/modals/ModalTarefa';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
