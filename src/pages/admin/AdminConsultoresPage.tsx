@@ -122,9 +122,21 @@ const especialidades: { label: string; value: string }[] = [
   { label: 'Estratégia', value: 'estrategia' },
 ];
 
+const CONSULTING_AREAS = [
+  'Gestão de Pessoas',
+  'Gestão de Marketing',
+  'Gestão Comercial',
+  'Gestão Financeira',
+];
+
 const filters: FilterConfig[] = [
   { key: 'status', label: 'Status', options: [{ label: 'Ativo', value: 'ativo' }, { label: 'Inativo', value: 'inativo' }] },
-  { key: 'especialidade', label: 'Área', options: especialidades },
+  { key: 'especialidade', label: 'Especialidade', options: especialidades },
+  { key: 'consultingArea', label: 'Área da Consultoria', options: CONSULTING_AREAS.map(a => ({ label: a, value: a })) },
+  { key: 'userCategory', label: 'Tipo de Usuário', options: [
+    { label: 'Interno', value: 'interno' },
+    { label: 'Consultor', value: 'consultor' },
+  ]},
   { key: 'atencao', label: 'Atenção', options: [
     { label: 'Clientes em risco', value: 'risco' },
     { label: 'Tarefas em atraso', value: 'atraso' },
