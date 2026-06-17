@@ -72,11 +72,11 @@ serve(async (req) => {
     }
 
     if (action === 'update') {
-      const { id, full_name, specialty, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category } = userData
+      const { id, full_name, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category } = userData
 
       const { error } = await supabaseClient
         .from('profiles')
-        .update({ full_name, specialty, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category })
+        .update({ full_name, phone, city, state, status, role, max_clients, hours_available, consulting_area, user_category })
         .eq('id', id)
 
       if (error) throw error
