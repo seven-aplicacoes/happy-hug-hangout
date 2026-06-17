@@ -20,7 +20,7 @@ serve(async (req) => {
     const { action, userData } = await req.json()
 
     if (action === 'create') {
-      const { email, password, full_name, role, specialty, phone, city, state, max_clients, hours_available, status } = userData
+      const { email, password, full_name, role, specialty, phone, city, state, max_clients, hours_available, status, consulting_area, user_category } = userData
 
       // 1. Create user in Auth
       const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
@@ -46,7 +46,9 @@ serve(async (req) => {
           state,
           status: status || 'ativo',
           max_clients: max_clients || 10,
-          hours_available: hours_available || 160
+          hours_available: hours_available || 160,
+          consulting_area: consulting_area || null,
+          user_category: user_category || null,
         }, { onConflict: 'id' })
 
 
