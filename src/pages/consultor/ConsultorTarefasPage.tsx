@@ -46,11 +46,13 @@ export default function ConsultorTarefasPage() {
     if (filtroTipo === 'todos') return true;
     if (filtroTipo === 'minhas') return t.consultorId === consultorId && t.tipo !== 'chamado';
     if (filtroTipo === 'chamados_abertos') return t.tipo === 'chamado' && t.createdBy === user?.id;
-    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado' && t.consultorId === consultorId;
+    if (filtroTipo === 'chamados_recebidos') return t.tipo === 'chamado' && t.consultorId === consultorId && t.createdBy !== user?.id;
     return true;
   });
 
-  const chamadosAbertosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.status !== 'concluida').length;
+  const chamadosAbertosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.createdBy === user?.id).length;
+  const chamadosRecebidosCount = tarefasState.filter(t => t.tipo === 'chamado' && t.consultorId === consultorId && t.createdBy !== user?.id).length;
+  const minhasTarefasCount = tarefasState.filter(t => t.consultorId === consultorId && t.tipo !== 'chamado').length;
 
   const emptyMessage = filtroTipo === 'todos'
     ? 'Nenhuma demanda encontrada.'
@@ -140,9 +142,9 @@ export default function ConsultorTarefasPage() {
       <div className="flex flex-wrap gap-2">
         {([
           { k: 'todos' as const, l: 'Todos' },
-          { k: 'minhas' as const, l: 'Minhas tarefas' },
+          { k: 'minhas' as const, l: `Minhas tarefas${minhasTarefasCount > 0 ? ` · ${minhasTarefasCount}` : ''}` },
           { k: 'chamados_abertos' as const, l: `Chamados abertos${chamadosAbertosCount > 0 ? ` · ${chamadosAbertosCount}` : ''}` },
-          { k: 'chamados_recebidos' as const, l: 'Chamados recebidos' },
+          { k: 'chamados_recebidos' as const, l: `Chamados recebidos${chamadosRecebidosCount > 0 ? ` · ${chamadosRecebidosCount}` : ''}` },
         ]).map(opt => (
           <Button key={opt.k} size="sm"
             variant={filtroTipo === opt.k ? 'default' : 'outline'}
