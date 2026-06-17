@@ -116,34 +116,45 @@ export const ModalTarefa = ({ open, onClose, tarefa, defaultContext }: Props) =>
     onClose();
   };
 
+  const isEditMode = !!tarefa;
+  const isChamado = tipo === 'chamado';
+  const clienteNome = (clientes || []).find(c => c.id === clienteId)?.nomeFantasia || (clientes || []).find(c => c.id === clienteId)?.razaoSocial || '—';
+  const contratoNome = (contratos || []).find(c => c.id === contratoId)?.tipo || '—';
+  const produtoNome = (contractProducts || []).find(p => p.id === contractProductId)?.productNome || '—';
+  const faseNome = (productPhases || []).find(p => p.id === contractProductPhaseId)?.name || '—';
+
   return (
-    <BaseModal open={open} onClose={onClose} titulo={tarefa ? "Editar Tarefa" : "Nova Tarefa"}>
-      <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+    <BaseModal open={open} onClose={onClose} titulo={tarefa ? (isChamado ? "Editar Chamado" : "Editar Tarefa") : "Nova Tarefa"} size="xl">
+      <div className="space-y-4 py-2">
         <div className="space-y-1">
-          <Label>Título *</Label>
+          <Label>{isChamado ? 'Assunto do chamado *' : 'Título da tarefa *'}</Label>
           <Input value={titulo} onChange={e => setTitulo(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <Label>Descrição</Label>
+          <Label>{isChamado ? 'Descrição do problema' : 'Descrição'}</Label>
           <Textarea value={descricao} onChange={e => setDescricao(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <Label>Cliente *</Label>
-            <Select value={clienteId} onValueChange={v => {
-              setClienteId(v);
-              setContratoId('');
-              setContractProductId('');
-              setContractProductPhaseId('');
-            }}>
-              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>
-                {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label>Cliente {!isEditMode && '*'}</Label>
+            {isEditMode ? (
+              <div className="h-10 px-3 flex items-center rounded-md border bg-muted/40 text-sm text-muted-foreground">{clienteNome}</div>
+            ) : (
+              <Select value={clienteId} onValueChange={v => {
+                setClienteId(v);
+                setContratoId('');
+                setContractProductId('');
+                setContractProductPhaseId('');
+              }}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {(clientes || []).map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="space-y-1">
-            <Label>Usuário Responsável *</Label>
+            <Label>{isChamado ? 'Responsável pelo atendimento *' : 'Responsável pela tarefa *'}</Label>
             <Select value={consultorId} onValueChange={setConsultorId}>
               <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
               <SelectContent>
@@ -153,53 +164,84 @@ export const ModalTarefa = ({ open, onClose, tarefa, defaultContext }: Props) =>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label>Contrato</Label>
-            <Select value={contratoId || 'none'} onValueChange={v => {
-              setContratoId(v);
-              setContractProductId('');
-              setContractProductPhaseId('');
-            }}>
-              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                {contratosFiltrados.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.tipo}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>Produto Contratado</Label>
-            <Select value={contractProductId || 'none'} onValueChange={v => {
-              setContractProductId(v);
-              setContractProductPhaseId('');
-            }}>
-              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                {(contractProducts || []).map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.productNome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        {!isChamado && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Contrato</Label>
+                {isEditMode ? (
+                  <div className="h-10 px-3 flex items-center rounded-md border bg-muted/40 text-sm text-muted-foreground">{contratoNome}</div>
+                ) : (
+                  <Select value={contratoId || 'none'} onValueChange={v => {
+                    setContratoId(v === 'none' ? '' : v);
+                    setContractProductId('');
+                    setContractProductPhaseId('');
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {contratosFiltrados.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.tipo}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>Produto contratado</Label>
+                {isEditMode ? (
+                  <div className="h-10 px-3 flex items-center rounded-md border bg-muted/40 text-sm text-muted-foreground">{produtoNome}</div>
+                ) : (
+                  <Select value={contractProductId || 'none'} onValueChange={v => {
+                    setContractProductId(v === 'none' ? '' : v);
+                    setContractProductPhaseId('');
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {(contractProducts || []).map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.productNome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label>Módulo da Jornada</Label>
-            <Select value={contractProductPhaseId || 'none'} onValueChange={setContractProductPhaseId}>
-              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhuma</SelectItem>
-                {(productPhases || []).map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Etapa / Módulo</Label>
+                {isEditMode ? (
+                  <div className="h-10 px-3 flex items-center rounded-md border bg-muted/40 text-sm text-muted-foreground">{faseNome}</div>
+                ) : (
+                  <Select value={contractProductPhaseId || 'none'} onValueChange={v => setContractProductPhaseId(v === 'none' ? '' : v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhuma</SelectItem>
+                      {(productPhases || []).map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>Prioridade</Label>
+                <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="baixo">Baixa</SelectItem>
+                    <SelectItem value="medio">Média</SelectItem>
+                    <SelectItem value="alto">Alta</SelectItem>
+                    <SelectItem value="critico">Crítica</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </>
+        )}
+
+        {isChamado && (
           <div className="space-y-1">
             <Label>Prioridade</Label>
             <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}>
@@ -212,7 +254,7 @@ export const ModalTarefa = ({ open, onClose, tarefa, defaultContext }: Props) =>
               </SelectContent>
             </Select>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
