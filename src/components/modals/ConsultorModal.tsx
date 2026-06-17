@@ -84,6 +84,8 @@ export const ConsultorModal = ({
     role: "consultor",
     max_clients: 10,
     hours_available: 160,
+    consulting_area: "",
+    user_category: "",
   });
 
   const { consultantGoals } = useConsultantGoals(consultor?.id);
