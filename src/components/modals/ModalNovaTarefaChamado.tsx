@@ -142,8 +142,8 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
   const { phases: productPhases } = useContractProductPhases(contractProductId);
 
   return (
-    <BaseModal open={open} onClose={onClose} titulo="Nova Demanda" descricao="Crie uma tarefa ou abra um chamado">
-      <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-2 py-1">
+    <BaseModal open={open} onClose={onClose} titulo="Nova Demanda" descricao="Crie uma tarefa ou abra um chamado" size="xl">
+      <div className="space-y-5 py-2">
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipo da demanda *</Label>
           <Select value={tipo} onValueChange={v => { setTipo(v as any); setErrors({}); }}>
@@ -162,7 +162,7 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
             <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.cliente ? "text-destructive" : "text-muted-foreground")}>
               Cliente *
             </Label>
-            <Select value={selClienteId} onValueChange={v => { setSelClienteId(v); setErrors(prev => ({ ...prev, cliente: '' })); }}>
+            <Select value={selClienteId} onValueChange={v => { setSelClienteId(v); setContractId(''); setContractProductId(''); setContractProductPhaseId(''); setErrors(prev => ({ ...prev, cliente: '' })); }}>
               <SelectTrigger className={cn("h-10", errors.cliente && "border-destructive ring-destructive")}>
                 <SelectValue placeholder="Selecione o cliente..." />
               </SelectTrigger>
@@ -180,21 +180,21 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
               <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.titulo ? "text-destructive" : "text-muted-foreground")}>
                 Título da tarefa *
               </Label>
-              <Input 
-                value={tituloTarefa} 
-                onChange={e => { setTituloTarefa(e.target.value); setErrors(prev => ({ ...prev, titulo: '' })); }} 
+              <Input
+                value={tituloTarefa}
+                onChange={e => { setTituloTarefa(e.target.value); setErrors(prev => ({ ...prev, titulo: '' })); }}
                 placeholder="Ex: Elaborar relatório mensal de performance"
                 className={cn(errors.titulo && "border-destructive focus-visible:ring-destructive")}
               />
               {errors.titulo && <p className="text-[10px] text-destructive font-medium">{errors.titulo}</p>}
             </div>
-            
+
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição</Label>
-              <Textarea 
-                value={descricao} 
-                onChange={e => setDescricao(e.target.value)} 
-                placeholder="Detalhes importantes para a execução da tarefa..." 
+              <Textarea
+                value={descricao}
+                onChange={e => setDescricao(e.target.value)}
+                placeholder="Detalhes importantes para a execução da tarefa..."
                 rows={3}
                 className="resize-none"
               />
@@ -203,18 +203,18 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.prazo ? "text-destructive" : "text-muted-foreground")}>
-                  Prazo de Entrega *
+                  Prazo de entrega *
                 </Label>
-                <Input 
-                  type="date" 
-                  value={prazo} 
-                  onChange={e => { setPrazo(e.target.value); setErrors(prev => ({ ...prev, prazo: '' })); }} 
+                <Input
+                  type="date"
+                  value={prazo}
+                  onChange={e => { setPrazo(e.target.value); setErrors(prev => ({ ...prev, prazo: '' })); }}
                   className={cn("h-10", errors.prazo && "border-destructive focus-visible:ring-destructive")}
                 />
                 {errors.prazo && <p className="text-[10px] text-destructive font-medium">{errors.prazo}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.responsavel ? "text-destructive" : "text-muted-foreground")}>Responsável *</Label>
+                <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.responsavel ? "text-destructive" : "text-muted-foreground")}>Responsável pela tarefa *</Label>
                 <Select value={responsavel} onValueChange={v => { setResponsavel(v); setErrors(prev => ({ ...prev, responsavel: '' })); }}>
                   <SelectTrigger className={cn("h-10", errors.responsavel && "border-destructive ring-destructive")}>
                     <SelectValue placeholder="Selecione..." />
@@ -227,7 +227,107 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
               </div>
             </div>
 
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Prioridade</Label>
+              <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="baixo">Baixa</SelectItem>
+                  <SelectItem value="medio">Média</SelectItem>
+                  <SelectItem value="alto">Alta</SelectItem>
+                  <SelectItem value="critico">Crítica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Cascade fields — always visible, disabled until dependency is set */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
+              {(() => {
+                const hasCliente = !!(selClienteId || clienteId);
+                const hasContrato = !!contractId;
+                const hasProduto = !!contractProductId;
+                return (
+                  <>
+                    <div className={cn("space-y-1.5", !hasCliente && "opacity-40 pointer-events-none")}>
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contrato do cliente</Label>
+                      <Select value={contractId} onValueChange={v => { setContractId(v); setContractProductId(''); setContractProductPhaseId(''); }} disabled={!hasCliente}>
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder={hasCliente ? "Selecione o contrato..." : "Selecione um cliente primeiro"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contratosFiltrados.map(c => <SelectItem key={c.id} value={c.id}>{c.tipo} ({c.status})</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className={cn("space-y-1.5", !hasContrato && "opacity-40 pointer-events-none")}>
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Produto contratado</Label>
+                      <Select value={contractProductId} onValueChange={v => { setContractProductId(v); setContractProductPhaseId(''); }} disabled={!hasContrato}>
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder={hasContrato ? "Selecione o produto..." : "Selecione um contrato primeiro"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {produtosFiltrados.map(cp => <SelectItem key={cp.id} value={cp.id}>{cp.productNome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className={cn("space-y-1.5 sm:col-span-2", !hasProduto && "opacity-40 pointer-events-none")}>
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Etapa / Módulo</Label>
+                      <Select value={contractProductPhaseId} onValueChange={setContractProductPhaseId} disabled={!hasProduto}>
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder={hasProduto ? "Selecione a etapa..." : "Selecione um produto primeiro"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(productPhases || []).map(ph => <SelectItem key={ph.id} value={ph.id}>{ph.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.assunto ? "text-destructive" : "text-muted-foreground")}>
+                Assunto do chamado *
+              </Label>
+              <Input
+                value={assunto}
+                onChange={e => { setAssunto(e.target.value); setErrors(prev => ({ ...prev, assunto: '' })); }}
+                placeholder="Ex: Problema com acesso ao portal ou dúvida técnica"
+                className={cn(errors.assunto && "border-destructive focus-visible:ring-destructive")}
+              />
+              {errors.assunto && <p className="text-[10px] text-destructive font-medium">{errors.assunto}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição do problema</Label>
+              <Textarea
+                value={descricao}
+                onChange={e => setDescricao(e.target.value)}
+                placeholder="Detalhe o ocorrido para agilizar o suporte..."
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Responsável pelo atendimento</Label>
+                <Select value={responsavel} onValueChange={setResponsavel}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(consultores || []).map(c => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Prioridade</Label>
                 <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}>
@@ -237,89 +337,6 @@ export const ModalNovaTarefaChamado = ({ open, onClose, clienteId, clienteNome, 
                   <SelectContent>
                     <SelectItem value="baixo">Baixa</SelectItem>
                     <SelectItem value="medio">Média</SelectItem>
-                    <SelectItem value="alto">Alta</SelectItem>
-                    <SelectItem value="critico">Crítica</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contrato do Cliente</Label>
-                <Select value={contractId} onValueChange={v => { setContractId(v); setContractProductId(''); setContractProductPhaseId(''); }}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Selecione o contrato..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contratosFiltrados.map(c => <SelectItem key={c.id} value={c.id}>{c.tipo} ({c.status})</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {produtosFiltrados.length > 0 && (
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Produto Contratado</Label>
-                  <Select value={contractProductId} onValueChange={v => { setContractProductId(v); setContractProductPhaseId(''); }}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Selecione o produto..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {produtosFiltrados.map(cp => <SelectItem key={cp.id} value={cp.id}>{cp.productNome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {productPhases && productPhases.length > 0 && (
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Etapa / Módulo</Label>
-                  <Select value={contractProductPhaseId} onValueChange={setContractProductPhaseId}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Selecione a etapa..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {productPhases.map(ph => <SelectItem key={ph.id} value={ph.id}>{ph.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-
-          </>
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              <Label className={cn("text-xs font-semibold uppercase tracking-wider", errors.assunto ? "text-destructive" : "text-muted-foreground")}>
-                Assunto do Chamado *
-              </Label>
-              <Input 
-                value={assunto} 
-                onChange={e => { setAssunto(e.target.value); setErrors(prev => ({ ...prev, assunto: '' })); }} 
-                placeholder="Ex: Problema com acesso ao portal ou dúvida técnica"
-                className={cn(errors.assunto && "border-destructive focus-visible:ring-destructive")}
-              />
-              {errors.assunto && <p className="text-[10px] text-destructive font-medium">{errors.assunto}</p>}
-            </div>
-            
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição do Problema</Label>
-              <Textarea 
-                value={descricao} 
-                onChange={e => setDescricao(e.target.value)} 
-                placeholder="Detalhe o ocorrido para agilizar o suporte..." 
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Prioridade</Label>
-                <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="baixo">Média</SelectItem>
                     <SelectItem value="alto">Alta</SelectItem>
                     <SelectItem value="critico">Crítica / Urgente</SelectItem>
                   </SelectContent>
