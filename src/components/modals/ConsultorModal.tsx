@@ -274,7 +274,7 @@ export const ConsultorModal = ({
               <Select
                 value={formData.role}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, role: value, ...(value === 'admin' ? { user_category: '', consulting_area: '' } : {}) })
+                  setFormData({ ...formData, role: value })
                 }
                 disabled={modo === 'consultor'}
                 required
