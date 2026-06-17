@@ -45,12 +45,12 @@ const STATUS_OPTIONS = [
 ];
 
 const PORTE_OPTIONS = [
-  { label: 'MEI', value: 'MEI' },
-  { label: 'Micro', value: 'Micro' },
   { label: 'Pequena', value: 'Pequena' },
   { label: 'Média', value: 'Média' },
   { label: 'Grande', value: 'Grande' },
 ];
+
+import { calcularPorteClinica } from '@/data/clienteExtras';
 
 export default function AdminClientesPage() {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ export default function AdminClientesPage() {
     }
 
     if (filters.porte && filters.porte !== 'todos') {
-      d = d.filter(c => c.porte === filters.porte);
+      d = d.filter(c => (calcularPorteClinica(c.faturamentoMensal) || c.porte) === filters.porte);
     }
     
     if (filters.consultorId && filters.consultorId !== 'todos') {
@@ -130,7 +130,7 @@ export default function AdminClientesPage() {
     { 
       key: 'porte', 
       header: 'Porte', 
-      render: (c) => <span className="text-sm">{c.porte || '-'}</span>,
+      render: (c) => <span className="text-sm">{calcularPorteClinica(c.faturamentoMensal) || c.porte || '-'}</span>,
       className: 'w-[100px]'
     },
     { 

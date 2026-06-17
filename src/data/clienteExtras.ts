@@ -10,28 +10,40 @@ const hashStr = (s: string): number => {
   return Math.abs(h);
 };
 
-// ─── Porte (derivado do faturamento mensal) ──────────────
-export type Porte = 'mei' | 'micro' | 'pequena' | 'media' | 'grande';
+// ─── Porte da Clínica (derivado do faturamento médio atual) ──────────────
+export type Porte = 'Pequena' | 'Média' | 'Grande';
 
 export const labelPorte: Record<Porte, string> = {
-  mei: 'MEI',
-  micro: 'Micro',
-  pequena: 'Pequena',
-  media: 'Média',
-  grande: 'Grande',
+  Pequena: 'Pequena',
+  'Média': 'Média',
+  Grande: 'Grande',
 };
 
 export const PORTE_OPTIONS = (Object.keys(labelPorte) as Porte[]).map(v => ({ value: v, label: labelPorte[v] }));
 
-export function getPorte(cliente: Cliente): Porte {
-  const f = cliente.faturamentoMensal || 0;
-  // anual aproximado (12 × mensal) com faixas Receita Federal
-  const anual = f * 12;
-  if (anual <= 81_000) return 'mei';
-  if (anual <= 360_000) return 'micro';
-  if (anual <= 4_800_000) return 'pequena';
-  if (anual <= 300_000_000) return 'media';
-  return 'grande';
+/**
+ * Calcula o porte da clínica a partir do faturamento médio atual (R$/mês).
+ * Regras:
+ * - Até R$ 50.000,00            → Pequena
+ * - De R$ 50.000,01 a R$ 200.000,00 → Média
+ * - Acima de R$ 200.000,00      → Grande
+ * Retorna null quando o faturamento não está informado.
+ */
+export function calcularPorteClinica(faturamento?: number | string | null): Porte | null {
+  if (faturamento === null || faturamento === undefined || faturamento === '') return null;
+  const v = Number(faturamento);
+  if (!isFinite(v) || v <= 0) return null;
+  if (v <= 50_000) return 'Pequena';
+  if (v <= 200_000) return 'Média';
+  return 'Grande';
+}
+
+export function getPorte(cliente: Cliente): Porte | null {
+  const calc = calcularPorteClinica(cliente?.faturamentoMensal);
+  if (calc) return calc;
+  const stored = (cliente?.porte as string) || '';
+  if (stored === 'Pequena' || stored === 'Média' || stored === 'Grande') return stored as Porte;
+  return null;
 }
 
 // ─── Datas-Chave ─────────────────────────────────────────

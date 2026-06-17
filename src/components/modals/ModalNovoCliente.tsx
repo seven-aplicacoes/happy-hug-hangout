@@ -144,7 +144,7 @@ export const ModalNovoCliente = ({ open, onClose }: Props) => {
             <Input value={form.institutional_email} onChange={e => set('institutional_email', e.target.value)} placeholder="Ex: contato@empresa.com" />
           </div>
           <div className="space-y-0.5">
-            <Label>Porte da Empresa</Label>
+            <Label>Porte da clínica</Label>
             <Select value={form.porte} onValueChange={v => set('porte', v)}>
               <SelectTrigger><SelectValue placeholder="Selecione o porte" /></SelectTrigger>
               <SelectContent>

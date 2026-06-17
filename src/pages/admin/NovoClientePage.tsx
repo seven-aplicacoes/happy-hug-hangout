@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { calcularPorteClinica } from '@/data/clienteExtras';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -70,6 +71,7 @@ export default function NovoClientePage() {
   const [form, setForm] = useState({
     razaoSocial: '', nomeFantasia: '', cnpj: '', regiao: 'sudeste',
     porte: '' as any,
+    faturamentoMensal: '' as string,
     especialidade: 'gestao', consultorId: '',
     cep: '', street: '', number: '', complement: '', neighborhood: '',
     institutional_email: '',
@@ -109,7 +111,7 @@ export default function NovoClientePage() {
         nomeFantasia: pick(prev.nomeFantasia, data.nome_fantasia),
         institutional_email: pick(prev.institutional_email, data.email),
         contact_phone: pick(prev.contact_phone, data.telefone),
-        porte: pick(prev.porte, data.porte) as any,
+        // Porte da clínica NÃO é preenchido pelo CNPJ — depende do faturamento médio atual
         cep: pick(prev.cep, data.cep),
         street: pick(prev.street, data.logradouro),
         number: pick(prev.number, data.numero),
@@ -213,12 +215,21 @@ export default function NovoClientePage() {
         setIsLoading(false);
         return;
       }
+      const faturamentoNum = form.faturamentoMensal === '' ? null : Number(form.faturamentoMensal);
+      if (faturamentoNum !== null && (isNaN(faturamentoNum) || faturamentoNum < 0)) {
+        toast({ title: 'Faturamento inválido', description: 'O faturamento não pode ser negativo.', variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+      const porteCalc = calcularPorteClinica(faturamentoNum) || form.porte || null;
+
       const result = await upsertCliente.mutateAsync({
         razaoSocial: form.razaoSocial,
         nomeFantasia: form.nomeFantasia,
         cnpj: form.cnpj,
         regiao: form.regiao as any,
-        porte: form.porte,
+        porte: porteCalc as any,
+        faturamentoMensal: faturamentoNum as any,
         consultorId: form.consultorId,
         cep: form.cep,
         street: form.street,
@@ -351,17 +362,29 @@ export default function NovoClientePage() {
                   <Input value={form.institutional_email} onChange={e => set('institutional_email', e.target.value)} placeholder="Ex: contato@empresa.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Porte da Empresa</Label>
-                  <Select value={form.porte} onValueChange={v => set('porte', v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o porte" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MEI">MEI</SelectItem>
-                      <SelectItem value="Micro">Micro</SelectItem>
-                      <SelectItem value="Pequena">Pequena</SelectItem>
-                      <SelectItem value="Média">Média</SelectItem>
-                      <SelectItem value="Grande">Grande</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Faturamento médio atual (R$)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={form.faturamentoMensal}
+                    onChange={e => set('faturamentoMensal', e.target.value)}
+                    placeholder="Ex: 50000.00"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Porte da clínica</Label>
+                  <Input
+                    value={calcularPorteClinica(form.faturamentoMensal) || 'Não calculado'}
+                    readOnly
+                    disabled
+                    className="bg-muted/40 font-medium"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    O porte é calculado automaticamente com base no faturamento médio atual.
+                  </p>
                 </div>
               </div>
             </CardContent>

@@ -26,6 +26,7 @@ import { Accordion } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyPermissions } from '@/hooks/useConsultantPermissions';
 import { ContractJourneyCard } from '@/components/contracts/ContractJourneyCard';
+import { calcularPorteClinica } from '@/data/clienteExtras';
 import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
 
@@ -220,8 +221,18 @@ export default function ClienteDetalhePage() {
     }
     
     try {
+      const fatNum = fichaForm.faturamentoMensal === '' || fichaForm.faturamentoMensal == null
+        ? null
+        : Number(fichaForm.faturamentoMensal);
+      if (fatNum !== null && (isNaN(fatNum) || fatNum < 0)) {
+        toast({ title: 'Faturamento inválido', description: 'O faturamento não pode ser negativo.', variant: 'destructive' });
+        return;
+      }
+      const porteCalc = calcularPorteClinica(fatNum) || fichaForm.porte || null;
       await updateCliente.mutateAsync({
         ...fichaForm,
+        faturamentoMensal: fatNum ?? 0,
+        porte: porteCalc,
         pains: fichaPains,
         success_factors: fichaSuccessFactors,
       });
@@ -363,7 +374,7 @@ export default function ClienteDetalhePage() {
               <div className="flex flex-wrap gap-3 mt-3">
                 <StatusTag label={labelStatus[cliente.status] || cliente.status} />
                 <Badge variant="outline" className="bg-white/50 border-muted/50 font-bold px-3 py-1 text-[10px] uppercase tracking-wider">
-                  {cliente.porte}
+                  {calcularPorteClinica(cliente.faturamentoMensal) || cliente.porte || 'Porte não calculado'}
                 </Badge>
                 <Badge variant="outline" className="bg-white/50 border-muted/50 font-bold px-3 py-1 text-[10px] uppercase tracking-wider">
                   {labelRegiao[cliente.regiao] || cliente.regiao}
@@ -499,18 +510,29 @@ export default function ClienteDetalhePage() {
                       <Input value={fichaForm?.contact_phone} onChange={e => setF('contact_phone', e.target.value)} disabled={!isEditing} className="bg-white font-medium" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Porte</Label>
-                      <Select value={fichaForm?.porte} onValueChange={v => setF('porte', v)} disabled={!isEditing}>
-                        <SelectTrigger className="bg-white font-medium">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pequena">Pequena</SelectItem>
-                          <SelectItem value="Média">Média</SelectItem>
-                          <SelectItem value="Grande">Grande</SelectItem>
-                          <SelectItem value="Multinacional">Multinacional</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Faturamento médio atual (R$)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={fichaForm?.faturamentoMensal ?? ''}
+                        onChange={e => setF('faturamentoMensal', e.target.value)}
+                        disabled={!isEditing}
+                        placeholder="Ex: 50000.00"
+                        className="bg-white font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-bold text-muted-foreground uppercase">Porte da clínica</Label>
+                      <Input
+                        value={calcularPorteClinica(fichaForm?.faturamentoMensal) || fichaForm?.porte || 'Não calculado'}
+                        readOnly
+                        disabled
+                        className="bg-muted/40 font-medium"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Calculado automaticamente pelo faturamento médio atual.
+                      </p>
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label className="text-[11px] font-bold text-muted-foreground uppercase">Status Geral</Label>

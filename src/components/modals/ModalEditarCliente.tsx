@@ -218,7 +218,7 @@ export const ModalEditarCliente = ({ open, onClose, cliente }: Props) => {
               <Input value={form.clinicSpecialty} onChange={e => set('clinicSpecialty', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Porte da Empresa</Label>
+              <Label>Porte da clínica</Label>
               <Select value={form.porte} onValueChange={v => set('porte', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
