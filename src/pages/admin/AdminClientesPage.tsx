@@ -45,12 +45,12 @@ const STATUS_OPTIONS = [
 ];
 
 const PORTE_OPTIONS = [
-  { label: 'MEI', value: 'MEI' },
-  { label: 'Micro', value: 'Micro' },
   { label: 'Pequena', value: 'Pequena' },
   { label: 'Média', value: 'Média' },
   { label: 'Grande', value: 'Grande' },
 ];
+
+import { calcularPorteClinica } from '@/data/clienteExtras';
 
 export default function AdminClientesPage() {
   const navigate = useNavigate();
