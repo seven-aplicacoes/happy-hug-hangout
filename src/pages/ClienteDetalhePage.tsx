@@ -61,6 +61,9 @@ export default function ClienteDetalhePage() {
   const [fichaNewSuccessFactor, setFichaNewSuccessFactor] = useState('');
   const [isUploadingAvatar, setIsSubmittingAvatar] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [organizeOpen, setOrganizeOpen] = useState(false);
+  const { order: sectionOrder } = useClientPageSectionOrder();
+  const canOrganize = isAdmin || perfil === 'consultor';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const openNewTask = () => setTaskModalOpen(true);
