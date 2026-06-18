@@ -27,6 +27,7 @@ import AdminAnaliseAvancadaPage from "@/pages/admin/AdminAnaliseAvancadaPage";
 import AdminConsultantPermissionsPage from "@/pages/admin/ConsultantPermissionsPage";
 import AdminConsultantGoalsPage from "@/pages/admin/AdminConsultantGoalsPage";
 import AdminTarefasPage from "@/pages/admin/AdminTarefasPage";
+import AdminFichaOrderPage from "@/pages/admin/AdminFichaOrderPage";
 import AdminReunioesPage from "@/pages/admin/AdminReunioesPage";
 import AdminContratoDetalhePage from "@/pages/admin/AdminContratoDetalhePage";
 import ConsultorLayout from "@/layouts/ConsultorLayout";
@@ -139,6 +140,7 @@ const AppContent = () => {
               <Route path="tarefas" element={<AdminTarefasPage />} />
               <Route path="reunioes" element={<AdminReunioesPage />} />
               <Route path="integracoes" element={<IntegracoesPage />} />
+              <Route path="configuracoes/ficha" element={<AdminFichaOrderPage />} />
             </Route>
 
             <Route path="/consultor" element={<ConsultorLayout />}>
