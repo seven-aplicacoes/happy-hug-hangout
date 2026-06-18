@@ -425,13 +425,6 @@ export default function ClienteDetalhePage() {
       <ClienteSectionNav order={sectionOrder} />
 
       <div className="flex flex-col gap-10">
-        {(() => {
-          const idxOf = (k: ClientSectionKey) => {
-            const i = sectionOrder.indexOf(k);
-            return i === -1 ? 99 : i;
-          };
-          return null;
-        })()}
 
       {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
       <section id="ficha-cadastral" className="space-y-6 scroll-mt-28">
