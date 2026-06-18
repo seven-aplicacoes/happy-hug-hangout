@@ -1,34 +1,22 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { FileText, Briefcase, ListChecks, Cloud, type LucideIcon } from 'lucide-react';
-import { useFichaSectionOrder, DEFAULT_FICHA_SECTIONS, type FichaSectionKey } from '@/hooks/useFichaSectionOrder';
+import { FileText, Briefcase, ListChecks, Cloud } from 'lucide-react';
 
-const SECTION_META: Record<FichaSectionKey, { anchorId: string; icon: LucideIcon }> = {
-  ficha_cadastral: { anchorId: 'ficha-cadastral', icon: FileText },
-  contratos_jornada: { anchorId: 'contratos-jornada', icon: Briefcase },
-  tarefas_cliente: { anchorId: 'tarefas-cliente', icon: ListChecks },
-  onedrive_cliente: { anchorId: 'onedrive-cliente', icon: Cloud },
-};
+const SECTIONS = [
+  { id: 'ficha-cadastral', label: 'Ficha Cadastral', icon: FileText },
+  { id: 'contratos-jornada', label: 'Contratos e Jornada', icon: Briefcase },
+  { id: 'tarefas-cliente', label: 'Tarefas do Cliente', icon: ListChecks },
+  { id: 'onedrive-cliente', label: 'OneDrive do Cliente', icon: Cloud },
+];
 
 export function ClienteSectionNav() {
-  const { sections } = useFichaSectionOrder();
-  const ordered = sections.length
-    ? sections
-    : DEFAULT_FICHA_SECTIONS.map((s, i) => ({ ...s, id: `default-${i}` }));
-
-  const items = ordered.map(s => {
-    const meta = SECTION_META[s.section_key as FichaSectionKey];
-    return meta ? { id: meta.anchorId, label: s.section_label, icon: meta.icon } : null;
-  }).filter(Boolean) as { id: string; label: string; icon: LucideIcon }[];
-
-  const [active, setActive] = useState<string>(items[0]?.id ?? '');
+  const [active, setActive] = useState<string>(SECTIONS[0].id);
 
   useEffect(() => {
-    if (!items.length) return;
     const handler = () => {
       const offset = 160;
-      let current = items[0].id;
-      for (const s of items) {
+      let current = SECTIONS[0].id;
+      for (const s of SECTIONS) {
         const el = document.getElementById(s.id);
         if (el && el.getBoundingClientRect().top - offset <= 0) {
           current = s.id;
@@ -39,7 +27,7 @@ export function ClienteSectionNav() {
     handler();
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
-  }, [items.map(i => i.id).join(',')]);
+  }, []);
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
@@ -51,7 +39,7 @@ export function ClienteSectionNav() {
   return (
     <div className="sticky top-0 z-30 -mx-4 px-4 bg-background/85 backdrop-blur-md border-b border-border/60">
       <nav className="max-w-7xl mx-auto flex gap-1 overflow-x-auto py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {items.map((s) => {
+        {SECTIONS.map((s) => {
           const Icon = s.icon;
           const isActive = active === s.id;
           return (

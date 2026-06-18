@@ -32,7 +32,6 @@ const adminConfigLinks = [
   { title: 'Permissões', url: '/admin/permissoes-consultores', icon: ShieldCheck, module: 'permissoes-consultores' },
   { title: 'Metas dos Consultores', url: '/admin/metas-consultores', icon: TrendingUp, module: 'metas-consultores' },
   { title: 'Integrações', url: '/admin/integracoes', icon: Plug, module: 'integracoes' },
-  { title: 'Ficha do Cliente', url: '/admin/configuracoes/ficha', icon: Settings, module: 'configuracoes-ficha' },
 ];
 
 const comingSoonLinks = [
