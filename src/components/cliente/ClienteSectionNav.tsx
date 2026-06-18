@@ -38,7 +38,7 @@ export function ClienteSectionNav() {
 
   return (
     <div className="sticky top-0 z-30 -mx-4 px-4 bg-background/85 backdrop-blur-md border-b border-border/60">
-      <nav className="max-w-7xl mx-auto flex gap-1 overflow-x-auto no-scrollbar py-2">
+      <nav className="max-w-7xl mx-auto flex gap-1 overflow-x-auto py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {SECTIONS.map((s) => {
           const Icon = s.icon;
           const isActive = active === s.id;
