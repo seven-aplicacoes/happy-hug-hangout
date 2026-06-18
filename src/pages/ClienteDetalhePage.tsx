@@ -31,6 +31,9 @@ import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
 import { OneDriveLinksCard } from '@/components/cliente/OneDriveLinksCard';
 import { ClienteSectionNav } from '@/components/cliente/ClienteSectionNav';
+import { OrganizeFichaModal } from '@/components/cliente/OrganizeFichaModal';
+import { useClientPageSectionOrder, ClientSectionKey } from '@/hooks/useClientPageSectionOrder';
+import { LayoutList } from 'lucide-react';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
@@ -58,6 +61,9 @@ export default function ClienteDetalhePage() {
   const [fichaNewSuccessFactor, setFichaNewSuccessFactor] = useState('');
   const [isUploadingAvatar, setIsSubmittingAvatar] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [organizeOpen, setOrganizeOpen] = useState(false);
+  const { order: sectionOrder } = useClientPageSectionOrder();
+  const canOrganize = isAdmin || perfil === 'consultor';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const openNewTask = () => setTaskModalOpen(true);
@@ -400,6 +406,11 @@ export default function ClienteDetalhePage() {
                 <Button size="lg" variant="outline" onClick={openNewTask} className="h-11 px-5 font-bold">
                   <PlusCircle className="h-4 w-4 mr-2" /> Nova Tarefa
                 </Button>
+                {canOrganize && (
+                  <Button size="lg" variant="outline" onClick={() => setOrganizeOpen(true)} className="h-11 px-5 font-bold">
+                    <LayoutList className="h-4 w-4 mr-2" /> Organizar Ficha
+                  </Button>
+                )}
                 {(isAdmin || can('ficha_cliente', 'edit')) && (
                   <Button size="lg" onClick={handleToggleEdit} className="h-11 px-6 font-bold shadow-lg shadow-primary/20">
                     <Pencil className="h-4 w-4 mr-2" /> Editar Ficha
@@ -411,10 +422,12 @@ export default function ClienteDetalhePage() {
         </div>
       </div>
 
-      <ClienteSectionNav />
+      <ClienteSectionNav order={sectionOrder} />
+
+      <div className="flex flex-col gap-10">
 
       {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
-      <section id="ficha-cadastral" className="space-y-6 scroll-mt-28">
+      <section id="ficha-cadastral" className="space-y-6 scroll-mt-28" style={{ order: sectionOrder.indexOf('ficha_cadastral') }}>
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-primary" />
           <h2 className="text-xl font-black uppercase tracking-tight">Ficha Cadastral</h2>
@@ -691,7 +704,7 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 2: Contratos e Jornada --- */}
-      <section id="contratos-jornada" className="space-y-6 scroll-mt-28">
+      <section id="contratos-jornada" className="space-y-6 scroll-mt-28" style={{ order: sectionOrder.indexOf('contratos_jornada') }}>
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-seven-warning" />
           <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
@@ -732,14 +745,19 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 3: Tarefas do Cliente --- */}
-      <div id="tarefas-cliente" className="scroll-mt-28">
+      <div id="tarefas-cliente" className="scroll-mt-28" style={{ order: sectionOrder.indexOf('tarefas_cliente') }}>
         {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
       </div>
 
       {/* --- Seção: OneDrive do Cliente --- */}
-      <div id="onedrive-cliente" className="scroll-mt-28">
+      <div id="onedrive-cliente" className="scroll-mt-28" style={{ order: sectionOrder.indexOf('onedrive_cliente') }}>
         {id && <OneDriveLinksCard clientId={id} />}
       </div>
+
+      </div>
+
+      <OrganizeFichaModal open={organizeOpen} onOpenChange={setOrganizeOpen} />
+
 
       <ModalTarefa
         open={taskModalOpen}
