@@ -30,6 +30,7 @@ import { calcularPorteClinica } from '@/data/clienteExtras';
 import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
 import { OneDriveLinksCard } from '@/components/cliente/OneDriveLinksCard';
+import { ClienteSectionNav } from '@/components/cliente/ClienteSectionNav';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
