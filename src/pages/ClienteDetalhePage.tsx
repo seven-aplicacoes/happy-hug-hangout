@@ -699,7 +699,7 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 2: Contratos e Jornada --- */}
-      <section id="contratos-jornada" className="space-y-6 scroll-mt-28">
+      <section id="contratos-jornada" style={{ order: fichaOrderMap['contratos_jornada'] }} className="space-y-6 scroll-mt-28">
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-seven-warning" />
           <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
