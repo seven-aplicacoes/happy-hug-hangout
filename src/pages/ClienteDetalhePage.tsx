@@ -51,6 +51,10 @@ export default function ClienteDetalhePage() {
   const { contratos: contratosCliente = [], isLoading: loadingContratos } = useClienteContratos(id);
   const { consultores, isLoading: loadingConsultores } = useConsultores();
   const { sections: fichaSections } = useFichaSectionOrder();
+  const fichaOrderMap = useMemo<Record<string, number>>(() => {
+    const src = fichaSections.length ? fichaSections : DEFAULT_FICHA_SECTIONS;
+    return Object.fromEntries(src.map((s, i) => [s.section_key, i + 1]));
+  }, [fichaSections]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [fichaForm, setFichaForm] = useState<any>(null);
