@@ -427,7 +427,7 @@ export default function ClienteDetalhePage() {
       <div className="flex flex-col gap-10">
 
       {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
-      <section id="ficha-cadastral" className="space-y-6 scroll-mt-28">
+      <section id="ficha-cadastral" className="space-y-6 scroll-mt-28" style={{ order: sectionOrder.indexOf('ficha_cadastral') }}>
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-primary" />
           <h2 className="text-xl font-black uppercase tracking-tight">Ficha Cadastral</h2>
@@ -704,7 +704,7 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 2: Contratos e Jornada --- */}
-      <section id="contratos-jornada" className="space-y-6 scroll-mt-28">
+      <section id="contratos-jornada" className="space-y-6 scroll-mt-28" style={{ order: sectionOrder.indexOf('contratos_jornada') }}>
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-seven-warning" />
           <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
@@ -745,14 +745,19 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 3: Tarefas do Cliente --- */}
-      <div id="tarefas-cliente" className="scroll-mt-28">
+      <div id="tarefas-cliente" className="scroll-mt-28" style={{ order: sectionOrder.indexOf('tarefas_cliente') }}>
         {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
       </div>
 
       {/* --- Seção: OneDrive do Cliente --- */}
-      <div id="onedrive-cliente" className="scroll-mt-28">
+      <div id="onedrive-cliente" className="scroll-mt-28" style={{ order: sectionOrder.indexOf('onedrive_cliente') }}>
         {id && <OneDriveLinksCard clientId={id} />}
       </div>
+
+      </div>
+
+      <OrganizeFichaModal open={organizeOpen} onOpenChange={setOrganizeOpen} />
+
 
       <ModalTarefa
         open={taskModalOpen}
