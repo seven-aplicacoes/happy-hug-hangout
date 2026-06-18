@@ -31,6 +31,7 @@ import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
 import { OneDriveLinksCard } from '@/components/cliente/OneDriveLinksCard';
 import { ClienteSectionNav } from '@/components/cliente/ClienteSectionNav';
+import { useFichaSectionOrder, DEFAULT_FICHA_SECTIONS, type FichaSectionKey } from '@/hooks/useFichaSectionOrder';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
