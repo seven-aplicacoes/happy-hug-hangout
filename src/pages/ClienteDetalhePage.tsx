@@ -415,6 +415,8 @@ export default function ClienteDetalhePage() {
 
       <ClienteSectionNav />
 
+      <div className="flex flex-col gap-6">
+      {(() => { const __orderMap: Record<string, number> = Object.fromEntries((fichaSections.length ? fichaSections : DEFAULT_FICHA_SECTIONS).map((s, i) => [s.section_key, i + 1])); (window as any).__fichaOrderMap = __orderMap; return null; })()}
 
       {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
       <section id="ficha-cadastral" className="space-y-6 scroll-mt-28">
