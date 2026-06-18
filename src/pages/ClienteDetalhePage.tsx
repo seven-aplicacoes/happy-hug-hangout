@@ -50,6 +50,7 @@ export default function ClienteDetalhePage() {
   const { cliente, isLoading: loadingClientes, updateCliente } = useClienteFicha(id);
   const { contratos: contratosCliente = [], isLoading: loadingContratos } = useClienteContratos(id);
   const { consultores, isLoading: loadingConsultores } = useConsultores();
+  const { sections: fichaSections } = useFichaSectionOrder();
 
   const [isEditing, setIsEditing] = useState(false);
   const [fichaForm, setFichaForm] = useState<any>(null);
