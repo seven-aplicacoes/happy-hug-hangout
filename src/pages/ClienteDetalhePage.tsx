@@ -30,6 +30,7 @@ import { calcularPorteClinica } from '@/data/clienteExtras';
 import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
 import { OneDriveLinksCard } from '@/components/cliente/OneDriveLinksCard';
+import { ClienteSectionNav } from '@/components/cliente/ClienteSectionNav';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
@@ -410,8 +411,10 @@ export default function ClienteDetalhePage() {
         </div>
       </div>
 
+      <ClienteSectionNav />
+
       {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
-      <section className="space-y-6">
+      <section id="ficha-cadastral" className="space-y-6 scroll-mt-28">
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-primary" />
           <h2 className="text-xl font-black uppercase tracking-tight">Ficha Cadastral</h2>
@@ -688,7 +691,7 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 2: Contratos e Jornada --- */}
-      <section className="space-y-6">
+      <section id="contratos-jornada" className="space-y-6 scroll-mt-28">
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-seven-warning" />
           <h2 className="text-xl font-black uppercase tracking-tight">Contratos e Jornada</h2>
@@ -729,10 +732,14 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 3: Tarefas do Cliente --- */}
-      {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
+      <div id="tarefas-cliente" className="scroll-mt-28">
+        {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
+      </div>
 
       {/* --- Seção: OneDrive do Cliente --- */}
-      {id && <OneDriveLinksCard clientId={id} />}
+      <div id="onedrive-cliente" className="scroll-mt-28">
+        {id && <OneDriveLinksCard clientId={id} />}
+      </div>
 
       <ModalTarefa
         open={taskModalOpen}
