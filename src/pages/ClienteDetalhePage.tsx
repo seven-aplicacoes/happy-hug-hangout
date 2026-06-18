@@ -31,6 +31,9 @@ import { TarefasClienteSection } from '@/components/TarefasClienteSection';
 import { ModalTarefa } from '@/components/modals/ModalTarefa';
 import { OneDriveLinksCard } from '@/components/cliente/OneDriveLinksCard';
 import { ClienteSectionNav } from '@/components/cliente/ClienteSectionNav';
+import { OrganizeFichaModal } from '@/components/cliente/OrganizeFichaModal';
+import { useClientPageSectionOrder, ClientSectionKey } from '@/hooks/useClientPageSectionOrder';
+import { LayoutList } from 'lucide-react';
 
 // --- Sub-componentes movidos para ContractJourneyCard ---
 
