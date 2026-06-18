@@ -740,14 +740,17 @@ export default function ClienteDetalhePage() {
       </section>
 
       {/* --- Seção 3: Tarefas do Cliente --- */}
-      <div id="tarefas-cliente" className="scroll-mt-28">
+      <div id="tarefas-cliente" style={{ order: fichaOrderMap['tarefas_cliente'] }} className="scroll-mt-28">
         {id && <TarefasClienteSection clientId={id} onCreateTask={openNewTask} />}
       </div>
 
       {/* --- Seção: OneDrive do Cliente --- */}
-      <div id="onedrive-cliente" className="scroll-mt-28">
+      <div id="onedrive-cliente" style={{ order: fichaOrderMap['onedrive_cliente'] }} className="scroll-mt-28">
         {id && <OneDriveLinksCard clientId={id} />}
       </div>
+
+      </div>
+
 
       <ModalTarefa
         open={taskModalOpen}
