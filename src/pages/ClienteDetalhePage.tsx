@@ -411,8 +411,10 @@ export default function ClienteDetalhePage() {
         </div>
       </div>
 
+      <ClienteSectionNav />
+
       {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
-      <section className="space-y-6">
+      <section id="ficha-cadastral" className="space-y-6 scroll-mt-28">
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-1.5 rounded-full bg-primary" />
           <h2 className="text-xl font-black uppercase tracking-tight">Ficha Cadastral</h2>
