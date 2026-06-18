@@ -414,6 +414,15 @@ export default function ClienteDetalhePage() {
 
       <ClienteSectionNav />
 
+      <FichaSectionsRenderer
+        fichaCadastral={fichaCadastralNode}
+        contratosJornada={contratosJornadaNode}
+        tarefasCliente={tarefasClienteNode}
+        onedriveCliente={onedriveClienteNode}
+      />
+      <></>
+      <div style={{ display: 'none' }}>{/* legacy markers */}</div>
+
       {/* --- Seção 1: Ficha Cadastral (Sempre visível) --- */}
       <section id="ficha-cadastral" className="space-y-6 scroll-mt-28">
         <div className="flex items-center gap-2 mb-2">
